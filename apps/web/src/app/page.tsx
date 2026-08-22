@@ -39,7 +39,7 @@ const jsonLd = {
       '@id': `${SITE}/#organization`,
       name: 'Mithila Jodi',
       url: SITE,
-      slogan: 'Find your match. Keep your roots.',
+      slogan: 'जहाँ परम्परा मिले, प्रेम से | Where tradition meets love.',
       description:
         'A matrimonial platform for the Mithila (Maithili) community of India, offering marriage biodata creation in English, Hindi, Maithili and Sanskrit.',
       areaServed: { '@type': 'Country', name: 'India' },

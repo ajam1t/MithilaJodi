@@ -22,8 +22,8 @@ export function HeroSection() {
             <br />
             <span className="text-terra">Mithila ke Saath</span>
           </h1>
-          <p className="font-sans text-lg text-maroon leading-relaxed opacity-90 italic">
-            Find your match. Keep your roots.
+          <p className="font-deva text-lg text-maroon leading-relaxed opacity-90 italic" lang="hi">
+            जहाँ परम्परा मिले, प्रेम से
           </p>
 
           {/* Sub heading */}

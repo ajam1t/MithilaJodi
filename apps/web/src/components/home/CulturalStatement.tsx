@@ -20,11 +20,11 @@ export function CulturalStatement() {
 
         {/* Text */}
         <div>
-          <p className="font-deva text-2xl sm:text-3xl text-gold-lt leading-tight" lang="mai">
-            मिथिला जोड़ी — परम्परा आ प्रेमक संगम
+          <p className="font-deva text-2xl sm:text-3xl text-gold-lt leading-tight" lang="hi">
+            मिथिला जोड़ी — जहाँ परम्परा मिले, प्रेम से
           </p>
           <p className="font-serif text-[14px] text-paper-3 italic mt-1">
-            Mithila Jodi — where tradition and love meet
+            Mithila Jodi — Where tradition meets love.
           </p>
         </div>
 

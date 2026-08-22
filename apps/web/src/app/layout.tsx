@@ -28,11 +28,11 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mithilajodi.com'
   ),
   title: {
-    default: 'Mithila Jodi — Find your match. Keep your roots.',
+    default: 'Mithila Jodi — जहाँ परम्परा मिले, प्रेम से',
     template: '%s | Mithila Jodi',
   },
   description:
-    'Mithila Jodi is a trusted matrimonial platform for the Mithila community. Create a marriage biodata in English, Hindi, Maithili & Sanskrit, connect families, and discover matches rooted in Mithila heritage.',
+    'Mithila Jodi — जहाँ परम्परा मिले, प्रेम से | Where tradition meets love. A trusted matrimonial platform for the Mithila community. Create a marriage biodata in English, Hindi, Maithili & Sanskrit, connect families, and discover matches rooted in Mithila heritage.',
   keywords: [
     'Mithila matrimony',
     'Maithil matrimonial',
@@ -41,11 +41,16 @@ export const metadata: Metadata = {
     'marriage biodata',
     'Maithili biodata',
   ],
+  icons: {
+    icon: '/favicon.png',
+    shortcut: '/favicon.png',
+    apple: '/apple-touch-icon.png',
+  },
   openGraph: {
     type: 'website',
     siteName: 'Mithila Jodi',
-    title: 'Mithila Jodi — Find your match. Keep your roots.',
-    description: 'A trusted matrimonial platform for the Mithila community of India.',
+    title: 'Mithila Jodi — जहाँ परम्परा मिले, प्रेम से',
+    description: 'Where tradition meets love. A trusted matrimonial platform for the Mithila community of India.',
   },
   twitter: {
     card: 'summary_large_image',

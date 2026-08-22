@@ -154,9 +154,9 @@ export default function RegisterPage() {
     <div className="w-full max-w-sm">
       <div className="text-center mb-8">
         <Link href="/" className="inline-block">
-          <h1 className="text-4xl font-display text-maroon tracking-wide">Mithila Jodi</h1>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="Mithila Jodi" className="h-24 w-auto object-contain mx-auto" />
         </Link>
-        <p className="text-ink-soft font-serif italic text-base mt-1">Find your match. Keep your roots.</p>
       </div>
 
       <div className="card p-6 sm:p-8">

@@ -40,16 +40,12 @@ export function MithilaFooter() {
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
           {/* Brand */}
           <div className="flex-shrink-0">
-            <Link href="/" className="flex items-center gap-2 mb-1.5">
-              <svg width="28" height="22" viewBox="0 0 40 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path d="M 2 16 Q 10 5 22 16 Q 10 27 2 16 Z" fill="#E4C572" stroke="#B98A2E" strokeWidth="1.5" />
-                <path d="M 22 16 Q 30 9 38 16 L 31 11 L 38 16 L 31 21 L 38 16 Z" fill="#E4C572" stroke="#B98A2E" strokeWidth="1.2" />
-                <circle cx="11" cy="15" r="3" fill="#7A1220" />
-                <circle cx="12" cy="14" r="1.1" fill="#E4C572" />
-              </svg>
-              <span className="font-serif text-lg text-gold-lt leading-none">Mithila Jodi</span>
+            <Link href="/" className="inline-block mb-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt="Mithila Jodi" className="h-16 w-auto object-contain rounded" />
             </Link>
-            <p className="font-serif text-paper-3 text-[12px] italic opacity-75">Where tradition and love meet</p>
+            <p className="font-deva text-paper-3 text-[13px] opacity-80 leading-snug">जहाँ परम्परा मिले, प्रेम से</p>
+            <p className="font-serif text-paper-3 text-[11px] italic opacity-60 mt-0.5">Where tradition meets love.</p>
           </div>
 
           {/* Nav groups — desktop horizontal, mobile stacked */}

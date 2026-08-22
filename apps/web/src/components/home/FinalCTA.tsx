@@ -33,11 +33,11 @@ export function FinalCTA() {
 
       <div className="wrap relative z-10 text-center max-w-3xl mx-auto">
         {/* Devanagari tagline */}
-        <p className="font-deva text-3xl text-gold-lt mb-2" lang="mai">
-          मिथिला जोड़ी — परम्परा आ प्रेमक संगम
+        <p className="font-deva text-3xl text-gold-lt mb-2" lang="hi">
+          मिथिला जोड़ी — जहाँ परम्परा मिले, प्रेम से
         </p>
         <p className="font-serif text-[15px] text-paper-3 italic mb-8">
-          Mithila Jodi — where tradition and love meet
+          Mithila Jodi — Where tradition meets love.
         </p>
 
         <h2 className="font-serif text-display-md text-paper leading-snug mb-6">

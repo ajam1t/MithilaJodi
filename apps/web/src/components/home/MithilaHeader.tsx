@@ -46,20 +46,9 @@ export function MithilaHeader() {
   }
 
   const Brand = (
-    <Link href="/" className="flex items-center gap-3 group">
-      <svg width="36" height="28" viewBox="0 0 36 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M 2 14 Q 10 4 20 14 Q 10 24 2 14 Z" fill="#E4C572" stroke="#B98A2E" strokeWidth="1.2" />
-        <path d="M 20 14 Q 28 8 34 14 L 28 10 L 34 14 L 28 18 L 34 14 Z" fill="#E4C572" stroke="#B98A2E" strokeWidth="1" />
-        <circle cx="10" cy="13" r="2.5" fill="#7A1220" />
-        <circle cx="11" cy="12.5" r="0.9" fill="#E4C572" />
-        {[0,1,2,3].map(i => (
-          <path key={i} d={`M ${6 + i * 3.5} 10 Q ${7 + i * 3.5} 14 ${6 + i * 3.5} 18`} fill="none" stroke="#B98A2E" strokeWidth="0.9" />
-        ))}
-      </svg>
-      <div>
-        <span className="font-serif text-xl text-maroon leading-none tracking-wide block">Mithila Jodi</span>
-        <span className="text-[11px] text-ink-soft italic leading-none hidden sm:block">Find your match. Keep your roots.</span>
-      </div>
+    <Link href="/" className="flex items-center group">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/logo.png" alt="Mithila Jodi" className="h-12 w-auto object-contain" />
     </Link>
   )
 
