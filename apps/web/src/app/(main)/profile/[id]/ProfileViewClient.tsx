@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import ProfileCard3D from '@/components/ProfileCard3D'
+import type { SearchCard } from '@/components/ProfileCard'
 
 type ProfileData = {
   id: string
@@ -25,6 +27,7 @@ type ProfileData = {
   interestReceived: { id: string; status: string } | null
   shortlisted: boolean
   blocked: boolean
+  cardData: SearchCard
 }
 
 function Row({ label, value }: { label: string; value: string | null }) {
@@ -126,6 +129,11 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
               {msg.text}
             </div>
           )}
+
+          {/* 3D Profile Card */}
+          <div className="flex justify-center">
+            <ProfileCard3D profile={data.cardData} hideActions />
+          </div>
 
           {/* Profile header */}
           <div className="card p-5 flex gap-5">

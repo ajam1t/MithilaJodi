@@ -28,7 +28,7 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
   const { data: profile } = await admin
     .from('profiles')
     .select(
-      'id, first_name, last_name, gender, dob, religion, caste, self_gotra, mool, gram, height_cm, diet, about_me, profile_complete, profile_status, discoverable, native_place_id, current_loc_id'
+      'id, first_name, last_name, gender, dob, religion, caste, self_gotra, mool, gram, height_cm, diet, about_me, profile_complete, profile_status, discoverable, native_place_id, current_loc_id, employer, profession_detail, education_detail, smoking, drinking, maternal_gotra, job_loc_id, marriage_timeline'
     )
     .eq('id', profileId)
     .eq('discoverable', true)
@@ -52,7 +52,7 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
   }
 
   // Location names
-  const locIds = [p.native_place_id, p.current_loc_id].filter(Boolean)
+  const locIds = [p.native_place_id, p.current_loc_id, p.job_loc_id].filter(Boolean)
   const locMap: Record<number, string> = {}
   if (locIds.length > 0) {
     const { data: locs } = await admin
@@ -128,6 +128,11 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
   const lastName = p.last_name as string | null
   const displayName = lastName ? `${p.first_name} ${lastName[0]}.` : p.first_name
 
+  const nativeName = p.native_place_id ? locMap[p.native_place_id] ?? null : null
+  const currentName = p.current_loc_id ? locMap[p.current_loc_id] ?? null : null
+  const jobLocName = p.job_loc_id ? locMap[p.job_loc_id] ?? null : null
+  const displayAge = age ?? 0
+
   return {
     id: profileId,
     display_name: displayName,
@@ -142,14 +147,42 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
     diet: p.diet,
     about_me: p.about_me,
     profile_complete: p.profile_complete,
-    native_place_name: p.native_place_id ? locMap[p.native_place_id] ?? null : null,
-    current_loc_name: p.current_loc_id ? locMap[p.current_loc_id] ?? null : null,
+    native_place_name: nativeName,
+    current_loc_name: currentName,
     photo_url: photoUrl,
     myProfileId,
     interestSent,
     interestReceived,
     shortlisted,
     blocked,
+    cardData: {
+      id: profileId,
+      display_name: displayName,
+      gender: p.gender as string,
+      age: displayAge,
+      religion: (p.religion as string | null) ?? null,
+      caste: (p.caste as string | null) ?? null,
+      self_gotra: (p.self_gotra as string | null) ?? null,
+      mool: (p.mool as string | null) ?? null,
+      gram: (p.gram as string | null) ?? null,
+      height_cm: (p.height_cm as number | null) ?? null,
+      diet: (p.diet as string | null) ?? null,
+      about_snippet: p.about_me ? String(p.about_me).slice(0, 200) : null,
+      profile_complete: (p.profile_complete as number) ?? 0,
+      profile_status: p.profile_status as string,
+      native_place_name: nativeName,
+      current_loc_name: currentName,
+      has_photo: !!photoUrl,
+      primary_photo_url: photoUrl,
+      employer: (p.employer as string | null) ?? null,
+      profession_detail: (p.profession_detail as string | null) ?? null,
+      education_detail: (p.education_detail as string | null) ?? null,
+      smoking: (p.smoking as string | null) ?? null,
+      drinking: (p.drinking as string | null) ?? null,
+      maternal_gotra: (p.maternal_gotra as string | null) ?? null,
+      job_loc_name: jobLocName,
+      marriage_timeline: (p.marriage_timeline as string | null) ?? null,
+    },
   }
 }
 

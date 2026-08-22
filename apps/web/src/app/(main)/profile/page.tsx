@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import ProfileCard3D from '@/components/ProfileCard3D'
+import type { SearchCard } from '@/components/ProfileCard'
 
 type AccountInfo = { id: string; mobile: string; role: string }
 
@@ -110,6 +112,8 @@ export default function ProfilePage() {
   const [tab, setTab] = useState<Tab>('about')
   const [loading, setLoading] = useState(true)
   const [logoutLoading, setLogoutLoading] = useState(false)
+  const [cardMode, setCardMode] = useState<'own' | 'preview'>('own')
+  const [locationNames, setLocationNames] = useState<{ native_place_name: string | null; current_loc_name: string | null }>({ native_place_name: null, current_loc_name: null })
 
   useEffect(() => {
     Promise.all([
@@ -122,6 +126,7 @@ export default function ProfilePage() {
         setAccount(authData.account ?? null)
         if (profileData.profile) setProfile(profileData.profile)
         setPhotos(profileData.photos ?? [])
+        setLocationNames({ native_place_name: profileData.native_place_name ?? null, current_loc_name: profileData.current_loc_name ?? null })
         if (prefsData.ok && prefsData.preferences) setPrefs(prefsData.preferences)
       })
       .catch(() => router.replace('/login'))
@@ -149,6 +154,38 @@ export default function ProfilePage() {
     ? [profile.first_name, profile.last_name].filter(Boolean).join(' ') || 'No name yet'
     : null
   const pct = profile?.profile_complete ?? 0
+
+  const ownPhotoUrl = primaryPhoto?.signed_url ?? null
+  const previewPhotoUrl = photos.find(p => p.is_primary && p.status === 'approved')?.signed_url ?? null
+
+  const cardProfile: SearchCard | null = profile ? {
+    id: profile.id,
+    display_name: [profile.first_name, profile.last_name].filter(Boolean).join(' ') || 'Your Profile',
+    gender: profile.gender ?? '',
+    age: profile.dob ? Math.floor((Date.now() - new Date(profile.dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 0,
+    religion: null,
+    caste: profile.caste,
+    self_gotra: profile.self_gotra,
+    mool: profile.mool,
+    gram: profile.gram,
+    height_cm: profile.height_cm,
+    diet: profile.diet,
+    about_snippet: profile.about_me ? profile.about_me.slice(0, 200) : null,
+    profile_complete: profile.profile_complete ?? 0,
+    profile_status: profile.profile_status ?? 'active',
+    native_place_name: locationNames.native_place_name,
+    current_loc_name: locationNames.current_loc_name,
+    has_photo: cardMode === 'preview' ? !!previewPhotoUrl : !!ownPhotoUrl,
+    primary_photo_url: cardMode === 'preview' ? previewPhotoUrl : ownPhotoUrl,
+    employer: profile.employer,
+    profession_detail: profile.profession_detail,
+    education_detail: profile.education_detail,
+    smoking: profile.smoking,
+    drinking: profile.drinking,
+    maternal_gotra: profile.maternal_gotra,
+    job_loc_name: null,
+    marriage_timeline: profile.marriage_timeline,
+  } : null
 
   return (
     <main className="min-h-screen bg-paper">
@@ -241,6 +278,35 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+
+      {/* ── 3D Profile Card ── */}
+      {profile && cardProfile && (
+        <div className="border-b border-ink/10">
+          <div className="max-w-2xl mx-auto px-4 py-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Profile Card</h3>
+              <div className="flex gap-1.5">
+                <button type="button" onClick={() => setCardMode('own')}
+                  className={`text-xs px-3 py-1 rounded-mj-sm transition-colors ${cardMode === 'own' ? 'bg-maroon text-cream' : 'text-ink-soft border border-ink/20 hover:text-ink'}`}>
+                  Your View
+                </button>
+                <button type="button" onClick={() => setCardMode('preview')}
+                  className={`text-xs px-3 py-1 rounded-mj-sm transition-colors ${cardMode === 'preview' ? 'bg-maroon text-cream' : 'text-ink-soft border border-ink/20 hover:text-ink'}`}>
+                  As Others See
+                </button>
+              </div>
+            </div>
+            <div className="flex justify-center">
+              <ProfileCard3D profile={cardProfile} hideActions />
+            </div>
+            {cardMode === 'preview' && (
+              <p className="text-xs text-ink-soft text-center mt-3">
+                This is how your card appears to other members.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Tab content ── */}
       {!profile ? (

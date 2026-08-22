@@ -90,7 +90,24 @@ export async function GET() {
     }
   }
 
-  return NextResponse.json({ ok: true, profile, photos })
+  // Resolve location display names for the 3D profile card
+  let native_place_name: string | null = null
+  let current_loc_name: string | null = null
+  if (profile) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const p = profile as any
+    const locIds = [p.native_place_id, p.current_loc_id].filter(Boolean)
+    if (locIds.length > 0) {
+      const { data: locs } = await admin.from('india_locations').select('id, name_en').in('id', locIds)
+      const locMap: Record<number, string> = {}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      for (const l of (locs ?? [])) { locMap[(l as any).id] = (l as any).name_en }
+      native_place_name = p.native_place_id ? locMap[p.native_place_id] ?? null : null
+      current_loc_name = p.current_loc_id ? locMap[p.current_loc_id] ?? null : null
+    }
+  }
+
+  return NextResponse.json({ ok: true, profile, photos, native_place_name, current_loc_name })
 }
 
 export async function PUT(request: NextRequest) {

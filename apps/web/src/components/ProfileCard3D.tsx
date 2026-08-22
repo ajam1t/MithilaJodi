@@ -9,6 +9,7 @@ interface ProfileCard3DProps {
   profile: SearchCard
   onShortlist?: (id: string) => Promise<void> | void
   onSendInterest?: (id: string) => Promise<void> | void
+  hideActions?: boolean
   className?: string
 }
 
@@ -157,6 +158,7 @@ export function ProfileCard3D({
   profile,
   onShortlist,
   onSendInterest,
+  hideActions,
   className,
 }: ProfileCard3DProps) {
   const [face, setFace] = useState(0)
@@ -474,6 +476,7 @@ export function ProfileCard3D({
               </div>
 
               {/* CTAs */}
+              {!hideActions && (
               <div className="flex flex-col gap-2 mt-auto">
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -524,6 +527,7 @@ export function ProfileCard3D({
                   View Full Profile →
                 </a>
               </div>
+              )}
             </div>
           )}
         </div>
