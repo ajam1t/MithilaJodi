@@ -32,6 +32,14 @@ type SearchCard = {
   current_loc_name: string | null
   has_photo: boolean
   primary_photo_url: string | null  // signed URL only; storage_path never returned
+  employer: string | null
+  profession_detail: string | null
+  education_detail: string | null
+  smoking: string | null
+  drinking: string | null
+  maternal_gotra: string | null
+  job_loc_name: string | null
+  marriage_timeline: string | null
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -176,6 +184,14 @@ export async function GET(request: NextRequest) {
         'native_place_id',
         'current_loc_id',
         'updated_at',
+        'employer',
+        'profession_detail',
+        'education_detail',
+        'smoking',
+        'drinking',
+        'maternal_gotra',
+        'job_loc_id',
+        'marriage_timeline',
       ].join(', ')
     )
     // Security: server-enforced visibility gates
@@ -324,6 +340,7 @@ export async function GET(request: NextRequest) {
   for (const p of validProfiles) {
     if (p.native_place_id != null) locationIdSet.add(p.native_place_id as number)
     if (p.current_loc_id   != null) locationIdSet.add(p.current_loc_id   as number)
+    if (p.job_loc_id       != null) locationIdSet.add(p.job_loc_id       as number)
   }
 
   const locationMap = new Map<number, string>()
@@ -455,6 +472,14 @@ export async function GET(request: NextRequest) {
       current_loc_name:  locationMap.get(p.current_loc_id  as number) ?? null,
       has_photo:        hasPhoto,
       primary_photo_url: primaryPhotoUrl,
+      employer:          (p.employer          as string | null) ?? null,
+      profession_detail: (p.profession_detail as string | null) ?? null,
+      education_detail:  (p.education_detail  as string | null) ?? null,
+      smoking:           (p.smoking           as string | null) ?? null,
+      drinking:          (p.drinking          as string | null) ?? null,
+      maternal_gotra:    (p.maternal_gotra    as string | null) ?? null,
+      job_loc_name:      locationMap.get(p.job_loc_id as number) ?? null,
+      marriage_timeline: (p.marriage_timeline as string | null) ?? null,
     } satisfies SearchCard
   })
 

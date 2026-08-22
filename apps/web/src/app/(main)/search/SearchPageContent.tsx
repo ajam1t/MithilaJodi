@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ProfileCard, type SearchCard } from '@/components/ProfileCard'
+import { type SearchCard } from '@/components/ProfileCard'
+import { ProfileCard3D } from '@/components/ProfileCard3D'
 
 type Filters = {
   gender: string
@@ -291,14 +292,18 @@ export default function SearchPageContent() {
             )}
 
             {loading && (
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="card p-4 flex gap-4 animate-pulse">
-                    <div className="w-20 h-24 rounded-mj-sm bg-paper-3" />
-                    <div className="flex-1 space-y-2 py-1">
-                      <div className="h-4 bg-paper-3 rounded w-1/3" />
-                      <div className="h-3 bg-paper-3 rounded w-1/2" />
-                      <div className="h-3 bg-paper-3 rounded w-2/3" />
+                  <div key={i} className="flex justify-center">
+                    <div className="w-full max-w-[360px] rounded-mj overflow-hidden shadow-mj-sm animate-pulse">
+                      <div className="h-2 bg-gold/30" />
+                      <div className="bg-paper flex flex-col items-center gap-3 pt-8 pb-6 px-5" style={{ height: 420 }}>
+                        <div className="w-24 h-24 rounded-full bg-cream" />
+                        <div className="h-5 bg-cream rounded w-32" />
+                        <div className="h-3 bg-cream rounded w-24" />
+                      </div>
+                      <div className="h-10 bg-maroon-deep" />
+                      <div className="h-1.5 bg-gold/30" />
                     </div>
                   </div>
                 ))}
@@ -328,9 +333,11 @@ export default function SearchPageContent() {
                 <div className="text-xs text-ink-soft mb-3">
                   Page {page}{hasMore ? ' — more results available' : ' — end of results'}
                 </div>
-                <div className="space-y-3">
-                  {results.map(card => (
-                    <ProfileCard key={card.id} card={card} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {results.map(p => (
+                    <div key={p.id} className="flex justify-center">
+                      <ProfileCard3D profile={p} />
+                    </div>
                   ))}
                 </div>
                 <div className="flex items-center justify-between mt-6 pt-4 border-t border-paper-3">

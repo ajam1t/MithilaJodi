@@ -19,6 +19,15 @@ export type SearchCard = {
   current_loc_name: string | null
   has_photo: boolean
   primary_photo_url: string | null
+  // Extended fields for ProfileCard3D
+  employer: string | null
+  profession_detail: string | null
+  education_detail: string | null
+  smoking: string | null
+  drinking: string | null
+  maternal_gotra: string | null
+  job_loc_name: string | null
+  marriage_timeline: string | null
 }
 
 function CompletionDot({ pct }: { pct: number }) {
