@@ -1,6 +1,7 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { OtpBoxInput } from '@/components/OtpBoxInput'
 
 type Mode = 'password' | 'otp'
 type OtpStep = 'mobile' | 'sent' | 'otp'
@@ -15,6 +16,20 @@ export default function LoginPage() {
   const [loading, setLoading]               = useState(false)
   const [error, setError]                   = useState('')
   const [resendCooldown, setResendCooldown] = useState(false)
+  const [resendTimer, setResendTimer]       = useState(0)
+  const resendIntervalRef                   = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  function startResendCountdown() {
+    setResendCooldown(true)
+    setResendTimer(30)
+    if (resendIntervalRef.current) clearInterval(resendIntervalRef.current)
+    resendIntervalRef.current = setInterval(() => {
+      setResendTimer(t => {
+        if (t <= 1) { if (resendIntervalRef.current) clearInterval(resendIntervalRef.current); setResendCooldown(false); return 0 }
+        return t - 1
+      })
+    }, 1000)
+  }
 
   const maskedMobile = mobile.length === 10
     ? `+91 ${mobile.slice(0, 5)} ${mobile.slice(5)}`
@@ -66,6 +81,7 @@ export default function LoginPage() {
       if (!data.ok) { setError(data.message ?? 'Could not send OTP. Please try again.'); return }
       setOtp('')
       setOtpStep('sent')
+      startResendCountdown()
       setTimeout(() => setOtpStep('otp'), 1800)
     } catch {
       setError('Network error. Please check your connection and try again.')
@@ -77,8 +93,7 @@ export default function LoginPage() {
   async function handleResend() {
     if (resendCooldown) return
     setError('')
-    setResendCooldown(true)
-    setTimeout(() => setResendCooldown(false), 30000)
+    startResendCountdown()
     try {
       const res = await fetch('/api/auth/otp/challenge', {
         method: 'POST',
@@ -228,18 +243,34 @@ export default function LoginPage() {
           <>
             <p className="eyebrow mb-2">Verify OTP</p>
             <h2 className="text-xl font-display text-ink mb-1">Enter the code</h2>
-            <p className="text-sm text-ink-soft mb-6">Sent to <span className="font-mono text-ink">{maskedMobile}</span></p>
+            <p className="text-sm text-ink-soft mb-6">
+              Sent to <span className="font-mono font-medium text-ink">{maskedMobile}</span>
+            </p>
+
+            <div className="mb-2">
+              <OtpBoxInput
+                value={otp}
+                onChange={v => { setError(''); setOtp(v) }}
+                onComplete={() => handleOtpVerify({ preventDefault: () => {} } as React.FormEvent)}
+                disabled={loading}
+                hasError={!!error}
+                autoFocus
+              />
+            </div>
+
+            {loading && (
+              <div className="flex justify-center gap-1.5 my-3" aria-hidden="true">
+                {[0, 1, 2].map(i => (
+                  <div key={i} className="w-2 h-2 rounded-full bg-maroon"
+                    style={{ animation: `bounce 0.7s ease-in-out ${i * 0.15}s infinite alternate` }} />
+                ))}
+                <style>{`@keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-5px); } }`}</style>
+              </div>
+            )}
+
+            {error && <p className="mt-3 text-sm text-terra text-center">{error}</p>}
+
             <form onSubmit={handleOtpVerify} noValidate>
-              <label className="block mb-1.5">
-                <span className="text-sm font-medium text-ink">OTP</span>
-                <input
-                  type="text" inputMode="numeric" maxLength={8} placeholder="— — — — — —"
-                  value={otp} autoFocus autoComplete="one-time-code"
-                  onChange={e => { setError(''); setOtp(e.target.value.replace(/\D/g, '').slice(0, 8)) }}
-                  className="mt-1.5 block w-full px-4 py-3 text-center text-2xl font-mono tracking-[0.5em] border border-ink/20 rounded-mj focus:ring-2 focus:ring-maroon/30 focus:outline-none bg-white text-ink"
-                />
-              </label>
-              {error && <p className="mt-3 text-sm text-terra">{error}</p>}
               <button type="submit" disabled={loading || otp.length < 6} className="btn btn-primary w-full mt-5">
                 {loading ? 'Verifying…' : 'Log In'}
               </button>
@@ -249,7 +280,7 @@ export default function LoginPage() {
                 ← Change number
               </button>
               <button type="button" onClick={handleResend} disabled={resendCooldown} className="hover:text-ink hover:underline disabled:opacity-40">
-                {resendCooldown ? 'Resend in 30s' : 'Resend OTP'}
+                {resendCooldown ? `Resend in ${resendTimer}s` : 'Resend OTP'}
               </button>
             </div>
           </>

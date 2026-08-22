@@ -203,14 +203,17 @@ function CommunitySearch({
   )
 }
 
+type SaveState = 'idle' | 'saving' | 'success' | 'error'
+
 export default function ProfileEditPage() {
   const router = useRouter()
   const [form, setForm] = useState<FormData>(EMPTY_FORM)
   const [photos, setPhotos] = useState<PhotoRow[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [saveState, setSaveState] = useState<SaveState>('idle')
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const [profileComplete, setProfileComplete] = useState<number>(0)
   const [uploadState, setUploadState] = useState<UploadState>({
     progress: 0, failed: false, message: '', file: null
   })
@@ -224,6 +227,7 @@ export default function ProfileEditPage() {
       .then(j => {
         if (j.profile) {
           const p = j.profile
+          setProfileComplete(p.profile_complete ?? 0)
           setForm({
             profile_for: p.profile_for ?? 'self',
             first_name: p.first_name ?? '',
@@ -263,9 +267,10 @@ export default function ProfileEditPage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
+    if (saving) return
     setSaving(true)
+    setSaveState('saving')
     setError('')
-    setSuccess('')
 
     const payload = {
       ...form,
@@ -274,17 +279,28 @@ export default function ProfileEditPage() {
       current_loc_id: form.current_loc_id,
     }
 
-    const r = await fetch('/api/profile', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-    const j = await r.json()
-    setSaving(false)
-    if (j.ok) {
-      setSuccess('Profile saved.')
-    } else {
-      setError(j.message ?? 'Failed to save. Please try again.')
+    try {
+      const r = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const j = await r.json()
+      if (j.ok) {
+        // Fetch updated completion %
+        const r2 = await fetch('/api/profile')
+        const j2 = await r2.json()
+        if (j2.profile?.profile_complete != null) setProfileComplete(j2.profile.profile_complete)
+        setSaveState('success')
+      } else {
+        setSaveState('error')
+        setError(j.message ?? 'Failed to save. Please try again.')
+      }
+    } catch {
+      setSaveState('error')
+      setError('Network error. Please try again.')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -395,12 +411,46 @@ export default function ProfileEditPage() {
     )
   }
 
+  const sections = [
+    { label: 'Basic Info',        done: !!(form.first_name && form.gender && form.dob) },
+    { label: 'Community',         done: !!(form.caste) },
+    { label: 'Location',          done: !!(form.current_loc_id) },
+    { label: 'Education & Career',done: !!(form.education_detail || form.profession_detail) },
+    { label: 'Lifestyle',         done: !!(form.diet || form.marriage_timeline) },
+    { label: 'About Me',          done: !!(form.about_me) },
+    { label: 'Photos',            done: photos.some(p => p.status === 'approved' || p.status === 'pending_moderation') },
+  ]
+  const doneSections = sections.filter(s => s.done).length
+
   return (
-    <main className="min-h-screen bg-paper py-12 px-4">
+    <main className="min-h-screen bg-paper py-8 px-4">
       <div className="max-w-2xl mx-auto">
-        <div className="mb-8">
-          <h1 className="font-serif text-3xl text-ink">Edit Profile</h1>
-          <p className="text-ink-soft text-sm mt-1">Your profile helps families find the right match for your community.</p>
+        {/* ── Progress header ── */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="font-serif text-2xl text-ink">Edit Profile</h1>
+            <span className="text-sm font-semibold text-maroon">{profileComplete}% complete</span>
+          </div>
+          <div className="w-full bg-ink/10 rounded-full h-2 overflow-hidden">
+            <div
+              className="h-full bg-maroon rounded-full transition-all duration-700"
+              style={{ width: `${profileComplete}%` }}
+            />
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {sections.map(s => (
+              <span
+                key={s.label}
+                className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                  s.done
+                    ? 'bg-green-50 border-green-200 text-green-700'
+                    : 'bg-paper border-ink/20 text-ink-soft'
+                }`}
+              >
+                {s.done ? '✓' : '○'} {s.label}
+              </span>
+            ))}
+          </div>
         </div>
 
         <form onSubmit={handleSave} className="space-y-8">
@@ -639,7 +689,7 @@ export default function ProfileEditPage() {
           </section>
 
           {/* ── Section: Photos ── */}
-          <section className="card p-6">
+          <section id="photos-section" className="card p-6">
             <h2 className="font-semibold text-ink mb-1">Photos</h2>
             <p className="text-xs text-ink-soft mb-4">
               Photos are reviewed by our team. Max 5 photos, 5 MB each. JPEG, PNG, WebP, HEIC accepted.
@@ -723,25 +773,138 @@ export default function ProfileEditPage() {
             </label>
           </section>
 
-          {error && (
+          {error && saveState === 'error' && (
             <div className="rounded-mj-sm bg-red-50 border border-red-200 px-4 py-3 text-red-700 text-sm">{error}</div>
           )}
-          {success && (
-            <div className="rounded-mj-sm bg-green-50 border border-green-200 px-4 py-3 text-green-700 text-sm">{success}</div>
-          )}
 
-          <div className="flex gap-3">
-            <button type="submit" disabled={saving}
-              className="btn-primary flex-1 justify-center">
-              {saving ? 'Saving…' : 'Save Profile'}
-            </button>
-            <button type="button" onClick={() => router.push('/profile')}
-              className="btn-ghost px-6">
-              Cancel
-            </button>
-          </div>
+          {/* ── Animated save area ── */}
+          {saveState === 'success' ? (
+            <SaveSuccessCard
+              profileComplete={profileComplete}
+              doneSections={doneSections}
+              totalSections={sections.length}
+              onContinueEditing={() => setSaveState('idle')}
+              onViewProfile={() => router.push('/profile')}
+            />
+          ) : (
+            <div className="flex gap-3">
+              <button
+                type="submit"
+                disabled={saving}
+                className={`flex-1 relative overflow-hidden rounded-mj py-3 font-semibold text-sm transition-all duration-300 ${
+                  saving
+                    ? 'bg-maroon/80 text-gold-lt cursor-wait'
+                    : 'btn-primary'
+                }`}
+              >
+                {saving ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z" />
+                    </svg>
+                    Saving your profile…
+                  </span>
+                ) : 'Save Profile'}
+              </button>
+              <button type="button" onClick={() => router.push('/profile')} className="btn-ghost px-6">
+                Cancel
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </main>
+  )
+}
+
+/* ── Save Success Card ──────────────────────────────────────── */
+function SaveSuccessCard({
+  profileComplete,
+  doneSections,
+  totalSections,
+  onContinueEditing,
+  onViewProfile,
+}: {
+  profileComplete: number
+  doneSections: number
+  totalSections: number
+  onContinueEditing: () => void
+  onViewProfile: () => void
+}) {
+  const [visible, setVisible] = useState(false)
+  const [lineW, setLineW]     = useState(0)
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setVisible(true), 60)
+    const t2 = setTimeout(() => setLineW(100), 200)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [])
+
+  const isStrong = profileComplete >= 70
+
+  return (
+    <div
+      className="rounded-mj border border-gold/40 bg-gradient-to-br from-cream to-paper p-6 text-center"
+      style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(12px)', transition: 'opacity 0.5s ease, transform 0.5s ease' }}
+    >
+      {/* Gold progress line */}
+      <div className="w-full h-0.5 bg-ink/10 rounded-full mb-5 overflow-hidden">
+        <div
+          className="h-full bg-gradient-to-r from-gold to-maroon rounded-full"
+          style={{ width: `${lineW}%`, transition: 'width 0.8s ease' }}
+        />
+      </div>
+
+      {/* Checkmark */}
+      <div className="w-14 h-14 rounded-full bg-maroon mx-auto mb-3 flex items-center justify-center shadow-mj-xs">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+          <path
+            d="M 6 14 L 11 19 L 22 8"
+            stroke="#E4C572" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"
+            style={{ strokeDasharray: 28, strokeDashoffset: visible ? 0 : 28, transition: 'stroke-dashoffset 0.5s ease 0.3s' }}
+          />
+        </svg>
+      </div>
+
+      <p className="font-serif text-xl text-maroon mb-1">Profile Saved</p>
+      <p className="text-sm text-ink-soft mb-4">
+        {doneSections}/{totalSections} sections complete — your profile is <strong className="text-maroon">{profileComplete}%</strong> filled in.
+      </p>
+
+      {/* Progress bar */}
+      <div className="w-full bg-ink/10 rounded-full h-2 overflow-hidden mb-4">
+        <div
+          className="h-full bg-maroon rounded-full"
+          style={{ width: `${profileComplete}%`, transition: 'width 0.9s ease 0.4s' }}
+        />
+      </div>
+
+      {/* Subtle petal decoration */}
+      <div className="flex justify-center gap-1 mb-5" aria-hidden="true">
+        {['#C4562F', '#E4C572', '#7A1220', '#E4C572', '#C4562F'].map((c, i) => (
+          <div key={i} className="w-2 h-2 rounded-full opacity-60" style={{ background: c }} />
+        ))}
+      </div>
+
+      {/* Next actions */}
+      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <button onClick={onViewProfile} className="btn-primary px-6 py-2.5 text-sm">
+          View My Profile
+        </button>
+        {!isStrong && (
+          <button onClick={onContinueEditing} className="btn-ghost px-6 py-2.5 text-sm">
+            Keep Editing
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => { onContinueEditing(); setTimeout(() => document.getElementById('photos-section')?.scrollIntoView({ behavior: 'smooth' }), 100) }}
+          className="btn-ghost px-6 py-2.5 text-sm"
+        >
+          Add Photos
+        </button>
+      </div>
+    </div>
   )
 }

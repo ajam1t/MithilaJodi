@@ -1,7 +1,8 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { checkPassword, PASSWORD_RULES } from '@/lib/password'
+import { OtpBoxInput } from '@/components/OtpBoxInput'
 
 type Step = 'mobile' | 'human' | 'sent' | 'otp' | 'password'
 
@@ -20,6 +21,8 @@ export default function RegisterPage() {
   const [loading, setLoading]                   = useState(false)
   const [error, setError]                       = useState('')
   const [resendCooldown, setResendCooldown]     = useState(false)
+  const [resendTimer, setResendTimer]           = useState(0)
+  const resendIntervalRef                       = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const maskedMobile = mobile.length === 10
     ? `+91 ${mobile.slice(0, 5)} ${mobile.slice(5)}`
@@ -73,6 +76,7 @@ export default function RegisterPage() {
 
       setOtp('')
       setStep('sent')
+      startResendCountdown()
       setTimeout(() => setStep('otp'), 1800)
     } catch {
       setError('Network error. Please check your connection and try again.')
@@ -81,11 +85,26 @@ export default function RegisterPage() {
     }
   }
 
+  function startResendCountdown() {
+    setResendCooldown(true)
+    setResendTimer(30)
+    if (resendIntervalRef.current) clearInterval(resendIntervalRef.current)
+    resendIntervalRef.current = setInterval(() => {
+      setResendTimer(t => {
+        if (t <= 1) {
+          if (resendIntervalRef.current) clearInterval(resendIntervalRef.current)
+          setResendCooldown(false)
+          return 0
+        }
+        return t - 1
+      })
+    }, 1000)
+  }
+
   async function handleResend() {
     if (resendCooldown) return
     setError('')
-    setResendCooldown(true)
-    setTimeout(() => setResendCooldown(false), 30000)
+    startResendCountdown()
     try {
       const res = await fetch('/api/auth/otp/challenge', {
         method: 'POST',
@@ -231,17 +250,34 @@ export default function RegisterPage() {
           <>
             <p className="eyebrow mb-2">Verify &amp; Agree</p>
             <h2 className="text-xl font-display text-ink mb-1">Enter the OTP</h2>
-            <p className="text-sm text-ink-soft mb-5">Sent to <span className="font-mono text-ink">{maskedMobile}</span></p>
+            <p className="text-sm text-ink-soft mb-6">
+              Sent to <span className="font-mono font-medium text-ink">{maskedMobile}</span>
+            </p>
+
+            {/* 6-box OTP input */}
+            <div className="mb-2">
+              <OtpBoxInput
+                value={otp}
+                onChange={v => { setError(''); setOtp(v) }}
+                onComplete={() => { if (consentTerms && consentPrivacy) handleOtpVerify({ preventDefault: () => {} } as React.FormEvent) }}
+                disabled={loading}
+                hasError={!!error}
+                autoFocus
+              />
+            </div>
+
+            {/* Loading dots */}
+            {loading && (
+              <div className="flex justify-center gap-1.5 my-3" aria-hidden="true">
+                {[0, 1, 2].map(i => (
+                  <div key={i} className="w-2 h-2 rounded-full bg-maroon"
+                    style={{ animation: `bounce 0.7s ease-in-out ${i * 0.15}s infinite alternate` }} />
+                ))}
+                <style>{`@keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-5px); } }`}</style>
+              </div>
+            )}
+
             <form onSubmit={handleOtpVerify} noValidate>
-              <label className="block mb-1.5">
-                <span className="text-sm font-medium text-ink">OTP</span>
-                <input
-                  type="text" inputMode="numeric" maxLength={8} placeholder="— — — — — —"
-                  value={otp} autoFocus autoComplete="one-time-code"
-                  onChange={e => { setError(''); setOtp(e.target.value.replace(/\D/g, '').slice(0, 8)) }}
-                  className="mt-1.5 block w-full px-4 py-3 text-center text-2xl font-mono tracking-[0.5em] border border-ink/20 rounded-mj focus:ring-2 focus:ring-maroon/30 focus:outline-none bg-white text-ink"
-                />
-              </label>
               <div className="mt-5 space-y-3 border-t border-ink/10 pt-5">
                 <p className="text-xs text-ink-soft font-medium uppercase tracking-wide">Required consents</p>
                 <label className="flex items-start gap-3 cursor-pointer">
@@ -260,17 +296,18 @@ export default function RegisterPage() {
                   </span>
                 </label>
               </div>
-              {error && <p className="mt-3 text-sm text-terra">{error}</p>}
+              {error && <p className="mt-3 text-sm text-terra text-center">{error}</p>}
               <button type="submit" disabled={loading || otp.length < 6 || !consentTerms || !consentPrivacy} className="btn btn-primary w-full mt-5">
                 {loading ? 'Verifying…' : 'Verify & Continue'}
               </button>
             </form>
+
             <div className="mt-5 flex items-center justify-between text-sm text-ink-soft">
               <button type="button" onClick={() => { setStep('mobile'); setOtp(''); setError('') }} className="hover:text-ink hover:underline">
                 ← Change number
               </button>
               <button type="button" onClick={handleResend} disabled={resendCooldown} className="hover:text-ink hover:underline disabled:opacity-40">
-                {resendCooldown ? 'Resend in 30s' : 'Resend OTP'}
+                {resendCooldown ? `Resend in ${resendTimer}s` : 'Resend OTP'}
               </button>
             </div>
           </>

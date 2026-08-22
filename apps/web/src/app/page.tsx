@@ -8,6 +8,7 @@ import { FamilyRoots } from '@/components/home/SuccessStories'
 import { CulturalStatement } from '@/components/home/CulturalStatement'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
+import { IntroAnimation } from '@/components/IntroAnimation'
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mithilajodi.com'
 
@@ -58,6 +59,7 @@ const jsonLd = {
 export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-hidden">
+      <IntroAnimation />
       {/* eslint-disable-next-line react/no-danger */}
       <script
         type="application/ld+json"
