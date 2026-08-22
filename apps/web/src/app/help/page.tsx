@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
-import { MithilaBorder } from '@/components/home/MithilaBorder'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 
 export const metadata: Metadata = {
@@ -35,9 +34,8 @@ const FAQS = [
 
 export default function HelpPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-paper overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
       <MithilaHeader />
-      <MithilaBorder variant="bottom" />
       <main className="flex-1 wrap py-14 max-w-3xl">
         <div className="text-center mb-10">
           <p className="eyebrow mb-3">Help &amp; Support</p>

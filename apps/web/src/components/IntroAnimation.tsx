@@ -40,6 +40,14 @@ export function IntroAnimation() {
     }, TOTAL)
   }, [])
 
+  function handleSkip() {
+    setExiting(true)
+    setTimeout(() => {
+      setShow(false)
+      try { sessionStorage.setItem('mj-intro-seen', '1') } catch {}
+    }, 450)
+  }
+
   if (!show) return null
 
   return (
@@ -116,6 +124,30 @@ export function IntroAnimation() {
 
       {/* ── Floating petals ── */}
       {phase >= 2 && <FloatingPetals />}
+
+      {/* ── Skip button ── */}
+      <button
+        type="button"
+        onClick={handleSkip}
+        aria-label="Skip intro animation"
+        style={{
+          position: 'absolute',
+          bottom: 20,
+          right: 20,
+          zIndex: 3,
+          fontSize: 13,
+          fontFamily: 'var(--font-marcellus), serif',
+          color: '#7A1220',
+          background: 'rgba(255,248,234,0.92)',
+          border: '1px solid rgba(185,138,46,0.5)',
+          borderRadius: 999,
+          padding: '6px 16px',
+          cursor: 'pointer',
+          pointerEvents: 'auto',
+        }}
+      >
+        Skip →
+      </button>
     </div>
   )
 }

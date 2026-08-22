@@ -58,7 +58,7 @@ const jsonLd = {
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen flex flex-col bg-paper overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
       <IntroAnimation />
       {/* eslint-disable-next-line react/no-danger */}
       <script
@@ -66,7 +66,6 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <MithilaHeader />
-      <MithilaBorder variant="bottom" />
       <main className="flex-1 pb-16 lg:pb-0">
         <HeroSection />
         <MithilaBorder variant="top" />

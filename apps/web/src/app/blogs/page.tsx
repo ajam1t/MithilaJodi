@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
-import { MithilaBorder } from '@/components/home/MithilaBorder'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 
 export const metadata: Metadata = {
@@ -12,9 +11,8 @@ export const metadata: Metadata = {
 
 export default function BlogsPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-paper overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
       <MithilaHeader />
-      <MithilaBorder variant="bottom" />
       <main className="flex-1 wrap py-20 text-center max-w-2xl">
         <p className="eyebrow mb-3">Mithila Jodi Journal</p>
         <h1 className="section-heading">Blogs — Coming Soon</h1>

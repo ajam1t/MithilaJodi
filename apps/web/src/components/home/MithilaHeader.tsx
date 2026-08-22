@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
+import { MithilaBorder } from '@/components/home/MithilaBorder'
 
 const NAV_LINKS = [
   { href: '/', label: 'Home' },
@@ -46,9 +47,18 @@ export function MithilaHeader() {
   }
 
   const Brand = (
-    <Link href="/" className="flex items-center group">
+    <Link href="/" className="flex items-center gap-2.5 group shrink-0" aria-label="Mithila Jodi — home">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo.png" alt="Mithila Jodi" className="h-12 w-auto object-contain" />
+      <img src="/logo.png" alt="" className="h-10 sm:h-11 w-auto object-contain shrink-0" />
+      <span className="flex flex-col leading-none min-w-0">
+        <span className="font-serif text-[17px] sm:text-[19px] text-maroon leading-tight">Mithila Jodi</span>
+        <span className="font-deva text-[10px] sm:text-[11px] text-maroon opacity-80 leading-tight mt-0.5" lang="hi">
+          जहाँ परम्परा मिले, प्रेम से
+        </span>
+        <span className="text-[9px] sm:text-[10px] text-ink-soft italic leading-tight">
+          Where tradition meets love.
+        </span>
+      </span>
     </Link>
   )
 
@@ -166,8 +176,8 @@ export function MithilaHeader() {
         </div>
       )}
 
-      {/* Bottom gold strip */}
-      <div className="h-[2px] w-full bg-gradient-to-r from-cream via-gold to-cream" />
+      {/* Decorative Mithila border — part of the sticky header so it never scrolls away */}
+      <MithilaBorder variant="bottom" className="h-6 sm:h-9 overflow-hidden" />
     </header>
   )
 }
