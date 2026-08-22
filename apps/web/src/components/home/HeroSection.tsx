@@ -18,12 +18,13 @@ export function HeroSection() {
 
           {/* Main heading */}
           <h1 className="font-serif text-display-lg text-maroon leading-[1.05]">
-            Rishton ka Sundar Kal,
-            <br />
-            <span className="text-terra">Mithila ke Saath</span>
+            Mithila Jodi
           </h1>
-          <p className="font-deva text-lg text-maroon leading-relaxed opacity-90 italic" lang="hi">
+          <p className="font-deva text-xl text-maroon leading-relaxed opacity-90 italic" lang="hi">
             जहाँ परम्परा मिले, प्रेम से
+          </p>
+          <p className="font-serif text-[15px] text-ink-soft italic leading-snug -mt-3">
+            Where tradition meets love.
           </p>
 
           {/* Sub heading */}
@@ -74,12 +75,6 @@ export function HeroSection() {
           {/* Card frame */}
           <div className="relative rounded-mj overflow-hidden border-2 border-gold shadow-mj">
             <VarmalaScene />
-            {/* Caption ribbon */}
-            <div className="absolute bottom-0 left-0 right-0 bg-maroon bg-opacity-90 py-2.5 px-4 text-center">
-              <p className="font-serif text-gold-lt text-sm tracking-widest">
-                वर माला — Varmala Ceremony
-              </p>
-            </div>
           </div>
         </div>
       </div>

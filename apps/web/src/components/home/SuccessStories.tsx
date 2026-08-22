@@ -45,24 +45,24 @@ const VALUES = [
 
 export function FamilyRoots() {
   return (
-    <section id="stories" className="relative bg-paper py-10" aria-label="Family and values at Mithila Jodi">
+    <section id="stories" className="relative bg-paper py-8" aria-label="Family and values at Mithila Jodi">
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-maroon-deep via-gold to-maroon-deep opacity-60" aria-hidden="true" />
 
       <div className="wrap">
-        <div className="text-center mb-8">
-          <p className="eyebrow mb-2">Family &amp; Values</p>
+        <div className="text-center mb-6">
+          <p className="eyebrow mb-1.5">Family &amp; Values</p>
           <h2 className="section-heading">Rooted in Family, Built for Marriage</h2>
-          <div className="ornament-line w-20 mx-auto mt-3" />
+          <div className="ornament-line w-16 mx-auto mt-2" />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div className="grid grid-cols-3 gap-3 sm:gap-4">
           {VALUES.map(({ title, desc, icon }) => (
-            <article key={title} className="card p-5 flex flex-col gap-3 hover:-translate-y-1 hover:shadow-mj transition-all duration-200">
-              <div className="w-12 h-12 rounded-full bg-cream flex items-center justify-center border-2 border-gold border-opacity-30 flex-shrink-0">
+            <article key={title} className="card p-3 sm:p-4 flex flex-col gap-2 hover:-translate-y-1 hover:shadow-mj transition-all duration-200">
+              <div className="w-10 h-10 rounded-full bg-cream flex items-center justify-center border border-gold border-opacity-40 flex-shrink-0">
                 {icon}
               </div>
-              <h3 className="font-serif text-[16px] text-maroon leading-snug">{title}</h3>
-              <p className="text-[13px] text-ink-soft leading-relaxed">{desc}</p>
+              <h3 className="font-serif text-[13px] sm:text-[14px] text-maroon leading-snug">{title}</h3>
+              <p className="text-[11px] sm:text-[12px] text-ink-soft leading-relaxed">{desc}</p>
             </article>
           ))}
         </div>

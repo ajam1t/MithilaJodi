@@ -49,9 +49,9 @@ export function ProfileCard({ card }: { card: SearchCard }) {
     .filter(Boolean).join(' · ')
 
   return (
-    <article className="card flex gap-4 p-4 hover:shadow-mj transition-shadow">
+    <article className="card flex gap-3 p-3 hover:shadow-mj transition-shadow">
       {/* Avatar */}
-      <div className="shrink-0 w-20 h-24 sm:w-24 sm:h-28 rounded-mj-sm overflow-hidden bg-cream border border-paper-3 flex items-center justify-center">
+      <div className="shrink-0 w-16 h-20 sm:w-20 sm:h-24 rounded-mj-sm overflow-hidden bg-cream border border-paper-3 flex items-center justify-center">
         {card.primary_photo_url ? (
           <img
             src={card.primary_photo_url}
@@ -69,7 +69,7 @@ export function ProfileCard({ card }: { card: SearchCard }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <h3 className="font-serif text-lg text-ink leading-tight truncate">
+            <h3 className="font-serif text-base text-ink leading-tight">
               {card.display_name}
             </h3>
             <p className="text-sm text-ink-soft mt-0.5">
@@ -99,12 +99,12 @@ export function ProfileCard({ card }: { card: SearchCard }) {
         )}
 
         {card.about_snippet && (
-          <p className="text-xs text-ink-soft mt-2 line-clamp-2 leading-relaxed">
+          <p className="text-xs text-ink-soft mt-1 line-clamp-1 leading-relaxed">
             {card.about_snippet}
           </p>
         )}
 
-        <div className="mt-3">
+        <div className="mt-2">
           <Link
             href={`/profile/${card.id}`}
             className="text-xs font-medium text-maroon hover:underline"

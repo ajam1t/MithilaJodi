@@ -35,28 +35,30 @@ export function MithilaFooter() {
       <div className="h-[3px] bg-gradient-to-r from-maroon-deep via-gold to-maroon-deep" aria-hidden="true" />
 
       {/* Compact main area */}
-      <div className="wrap py-6">
-        {/* Desktop: logo + nav groups in one row. Mobile: stacked */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
-          {/* Brand */}
-          <div className="flex-shrink-0">
-            <Link href="/" className="inline-block mb-2">
+      <div className="wrap py-4">
+        {/* Top: brand + nav groups */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          {/* Brand — compact on mobile */}
+          <div className="flex sm:flex-col items-center sm:items-start gap-3 sm:gap-0 flex-shrink-0">
+            <Link href="/" className="inline-block sm:mb-1.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png" alt="Mithila Jodi" className="h-16 w-auto object-contain rounded" />
+              <img src="/logo.png" alt="Mithila Jodi" className="h-10 w-auto object-contain rounded" />
             </Link>
-            <p className="font-deva text-paper-3 text-[13px] opacity-80 leading-snug">जहाँ परम्परा मिले, प्रेम से</p>
-            <p className="font-serif text-paper-3 text-[11px] italic opacity-60 mt-0.5">Where tradition meets love.</p>
+            <div>
+              <p className="font-deva text-paper-3 text-[12px] opacity-80 leading-snug">जहाँ परम्परा मिले, प्रेम से</p>
+              <p className="font-serif text-paper-3 text-[10px] italic opacity-60 mt-0.5">Where tradition meets love.</p>
+            </div>
           </div>
 
-          {/* Nav groups — desktop horizontal, mobile stacked */}
-          <div className="flex flex-col sm:flex-row gap-5 sm:gap-8">
+          {/* Nav groups — 3 columns always (mobile & desktop) */}
+          <div className="grid grid-cols-3 gap-x-4 gap-y-1 sm:gap-x-8">
             {GROUPS.map(({ label, links }) => (
               <div key={label}>
-                <p className="text-gold text-[11px] font-semibold tracking-widest uppercase mb-2 opacity-80">{label}</p>
-                <ul className="flex flex-col gap-1.5">
+                <p className="text-gold text-[10px] font-semibold tracking-widest uppercase mb-1.5 opacity-80 whitespace-nowrap">{label}</p>
+                <ul className="flex flex-col gap-1">
                   {links.map(({ href, label: linkLabel }) => (
                     <li key={linkLabel}>
-                      <Link href={href} className="text-paper-3 text-[12px] hover:text-gold-lt transition-colors opacity-75 hover:opacity-100 leading-snug">
+                      <Link href={href} className="text-paper-3 text-[11px] hover:text-gold-lt transition-colors opacity-75 hover:opacity-100 leading-snug block">
                         {linkLabel}
                       </Link>
                     </li>
@@ -68,7 +70,7 @@ export function MithilaFooter() {
         </div>
 
         {/* Bottom micro bar */}
-        <div className="mt-5 pt-4 border-t border-gold border-opacity-15 flex flex-col sm:flex-row items-center justify-between gap-1.5 text-[11px] text-paper-3 opacity-50">
+        <div className="mt-3 pt-3 border-t border-gold border-opacity-15 flex flex-col sm:flex-row items-center justify-between gap-1 text-[10px] text-paper-3 opacity-50">
           <p>© {new Date().getFullYear()} Mithila Jodi. All rights reserved.</p>
           <p>India only · No data transferred outside India</p>
         </div>

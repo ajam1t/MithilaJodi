@@ -106,25 +106,25 @@ const FEATURES = [
 
 export function WhyMithilaJodi() {
   return (
-    <section id="how" className="relative bg-cream py-10" aria-label="Why choose Mithila Jodi">
+    <section id="how" className="relative bg-cream py-8" aria-label="Why choose Mithila Jodi">
       <div className="wrap">
-        <div className="text-center mb-8">
-          <p className="eyebrow mb-2">The Mithila Jodi Difference</p>
+        <div className="text-center mb-6">
+          <p className="eyebrow mb-1.5">The Mithila Jodi Difference</p>
           <h2 className="section-heading">Why Mithila Jodi</h2>
-          <div className="ornament-line w-20 mx-auto mt-3" />
+          <div className="ornament-line w-16 mx-auto mt-2" />
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {FEATURES.map(({ icon, title, desc }) => (
             <div
               key={title}
-              className="group flex flex-col items-center text-center gap-3 p-4 rounded-mj-sm border border-paper-3 bg-paper hover:border-gold hover:shadow-mj-xs transition-all duration-200"
+              className="group flex flex-col items-center text-center gap-2 p-3 rounded-mj-sm border border-paper-3 bg-paper hover:border-gold hover:shadow-mj-xs transition-all duration-200"
             >
-              <div className="w-12 h-12 rounded-full bg-cream flex items-center justify-center border-2 border-gold border-opacity-30 group-hover:border-opacity-70 transition-all flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-cream flex items-center justify-center border border-gold border-opacity-40 group-hover:border-opacity-70 transition-all flex-shrink-0">
                 {icon}
               </div>
-              <h3 className="font-serif text-[14px] text-maroon leading-snug">{title}</h3>
-              <p className="text-[12px] text-ink-soft leading-snug">{desc}</p>
+              <h3 className="font-serif text-[13px] text-maroon leading-snug">{title}</h3>
+              <p className="text-[11px] text-ink-soft leading-snug">{desc}</p>
             </div>
           ))}
         </div>
