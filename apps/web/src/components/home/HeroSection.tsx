@@ -19,7 +19,7 @@ export function HeroSection() {
 
           {/* Matrimonial headline — the dominant message */}
           <h1 className="font-serif text-display-lg text-maroon leading-[1.06]">
-            Find Your Match.
+            Find Your Life Partner,
             <br />
             <span className="text-terra">Keep Your Mithila Roots.</span>
           </h1>
