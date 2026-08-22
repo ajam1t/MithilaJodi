@@ -503,9 +503,11 @@ export function ProfileCard3D({
                 onClick={async () => {
                   if (shortlisted || busy) return
                   setBusy('shortlist')
-                  await onShortlist?.(profile.id)
-                  setShortlisted(true)
-                  setBusy(null)
+                  try {
+                    await onShortlist?.(profile.id)
+                    setShortlisted(true)
+                  } catch { /* handler surfaces its own error */ }
+                  finally { setBusy(null) }
                 }}
                 className={[
                   'flex items-center justify-center gap-1.5 py-2.5 rounded-mj-sm text-[13px] font-semibold border transition-all',
@@ -521,9 +523,11 @@ export function ProfileCard3D({
                 onClick={async () => {
                   if (interestSent || busy) return
                   setBusy('interest')
-                  await onSendInterest?.(profile.id)
-                  setInterestSent(true)
-                  setBusy(null)
+                  try {
+                    await onSendInterest?.(profile.id)
+                    setInterestSent(true)
+                  } catch { /* handler surfaces its own error */ }
+                  finally { setBusy(null) }
                 }}
                 className={[
                   'flex items-center justify-center gap-1.5 py-2.5 rounded-mj-sm text-[13px] font-semibold border transition-all',

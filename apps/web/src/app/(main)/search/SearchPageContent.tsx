@@ -229,6 +229,31 @@ export default function SearchPageContent() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  // Send interest directly from a search card. Throws on failure so the card
+  // does not show a false "Sent!" state; the message is surfaced to the user.
+  async function handleSendInterest(profileId: string) {
+    const res = await fetch('/api/interests', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to_profile_id: profileId }),
+    })
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok || !json.ok) {
+      alert(json.message ?? 'Could not send interest. Please try again.')
+      throw new Error(json.message ?? 'send interest failed')
+    }
+  }
+
+  // Shortlist directly from a search card.
+  async function handleShortlist(profileId: string) {
+    const res = await fetch(`/api/shortlists/${profileId}`, { method: 'POST' })
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok || !json.ok) {
+      alert(json.message ?? 'Could not shortlist. Please try again.')
+      throw new Error(json.message ?? 'shortlist failed')
+    }
+  }
+
   return (
     <main className="min-h-screen bg-paper">
       {/* Search bar */}
@@ -336,7 +361,11 @@ export default function SearchPageContent() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                   {results.map(p => (
                     <div key={p.id} className="flex justify-center">
-                      <ProfileCard3D profile={p} />
+                      <ProfileCard3D
+                        profile={p}
+                        onShortlist={handleShortlist}
+                        onSendInterest={handleSendInterest}
+                      />
                     </div>
                   ))}
                 </div>
