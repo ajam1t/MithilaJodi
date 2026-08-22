@@ -283,18 +283,16 @@ export default function ProfilePage() {
       {profile && cardProfile && (
         <div className="border-b border-ink/10">
           <div className="max-w-2xl mx-auto px-4 py-5">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Profile Card</h3>
-              <div className="flex gap-1.5">
-                <button type="button" onClick={() => setCardMode('own')}
-                  className={`text-xs px-3 py-1 rounded-mj-sm transition-colors ${cardMode === 'own' ? 'bg-maroon text-cream' : 'text-ink-soft border border-ink/20 hover:text-ink'}`}>
-                  Your View
-                </button>
-                <button type="button" onClick={() => setCardMode('preview')}
-                  className={`text-xs px-3 py-1 rounded-mj-sm transition-colors ${cardMode === 'preview' ? 'bg-maroon text-cream' : 'text-ink-soft border border-ink/20 hover:text-ink'}`}>
-                  As Others See
-                </button>
-              </div>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft mb-2">Your Profile Card</h3>
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              <button type="button" onClick={() => setCardMode('own')}
+                className={`text-xs px-3 py-1.5 rounded-mj-sm transition-colors ${cardMode === 'own' ? 'bg-maroon text-cream' : 'text-ink-soft border border-ink/20 hover:text-ink'}`}>
+                View Your Profile
+              </button>
+              <button type="button" onClick={() => setCardMode('preview')}
+                className={`text-xs px-3 py-1.5 rounded-mj-sm transition-colors ${cardMode === 'preview' ? 'bg-maroon text-cream' : 'text-ink-soft border border-ink/20 hover:text-ink'}`}>
+                Preview as Other Members
+              </button>
             </div>
             <div className="flex justify-center">
               <ProfileCard3D profile={cardProfile} hideActions />

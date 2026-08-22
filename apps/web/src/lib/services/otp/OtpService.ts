@@ -10,7 +10,7 @@ const OTP_TTL_MINUTES = 10
 const MAX_ATTEMPTS = 5
 
 // Fallback dev code if DEV_OTP env var is not set. Server-only — never sent to clients.
-const DEFAULT_DEV_OTP = '01071994'
+const DEFAULT_DEV_OTP = '010794'
 
 /**
  * Resolves the fixed development OTP from configuration.
