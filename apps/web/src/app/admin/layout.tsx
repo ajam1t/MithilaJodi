@@ -3,14 +3,15 @@ import Link from 'next/link'
 import { getSessionAccount } from '@/lib/auth'
 
 const NAV = [
-  { href: '/admin',          label: 'Dashboard' },
-  { href: '/admin/photos',   label: 'Photos' },
-  { href: '/admin/profiles', label: 'Profiles' },
-  { href: '/admin/reports',  label: 'Reports' },
-  { href: '/admin/flags',    label: 'Flags' },
-  { href: '/admin/accounts', label: 'Accounts' },
-  { href: '/admin/config',   label: 'Plan Config' },
-  { href: '/admin/audit',    label: 'Audit Log' },
+  { href: '/admin',           label: 'Dashboard' },
+  { href: '/admin/photos',    label: 'Photos' },
+  { href: '/admin/profiles',  label: 'Profiles' },
+  { href: '/admin/messages',  label: 'Messages' },
+  { href: '/admin/reports',   label: 'Reports' },
+  { href: '/admin/flags',     label: 'Flags' },
+  { href: '/admin/accounts',  label: 'Accounts' },
+  { href: '/admin/config',    label: 'Plan Config' },
+  { href: '/admin/audit',     label: 'Audit Log' },
 ]
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

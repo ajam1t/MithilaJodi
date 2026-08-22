@@ -75,3 +75,56 @@ export async function PATCH(
 
   return NextResponse.json({ ok: true })
 }
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await getSessionAccount()
+  if (!session || (session.role !== 'admin' && session.role !== 'moderator')) {
+    return NextResponse.json({ ok: false }, { status: 403 })
+  }
+
+  const { id } = await params
+  const admin = await createAdminClient()
+
+  const { data: photo } = await admin
+    .from('profile_photos')
+    .select('id, profile_id, storage_path')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (!photo) {
+    return NextResponse.json({ ok: false, message: 'Photo not found.' }, { status: 404 })
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const storagePath = (photo as any).storage_path as string | null
+  if (storagePath) {
+    await admin.storage.from('profile-photos').remove([storagePath])
+  }
+
+  const { error } = await admin
+    .from('profile_photos')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.error('[admin/photos/[id] DELETE] db error:', error.message)
+    return NextResponse.json({ ok: false }, { status: 500 })
+  }
+
+  await admin.from('admin_audit_logs').insert({
+    actor_id: session.id,
+    action: 'delete_photo',
+    target_type: 'photo',
+    target_id: id,
+    payload: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      profile_id: (photo as any).profile_id,
+      storage_path: storagePath,
+    },
+  })
+
+  return NextResponse.json({ ok: true })
+}

@@ -79,7 +79,6 @@ export default function AdminAccountsPage() {
           <option value="pending_verification">Pending verification</option>
           <option value="suspended">Suspended</option>
           <option value="banned">Banned</option>
-          <option value="deactivated">Deactivated</option>
         </select>
       </div>
 
@@ -117,7 +116,6 @@ export default function AdminAccountsPage() {
                   <option value="active">Set active</option>
                   <option value="suspended">Suspend</option>
                   <option value="banned">Ban</option>
-                  <option value="deactivated">Deactivate</option>
                 </select>
                 <input
                   type="text"

@@ -54,6 +54,15 @@ export default function AdminPhotosPage() {
     setBusy(null)
   }
 
+  async function deletePhoto(photoId: string) {
+    if (!window.confirm('Permanently delete this photo?')) return
+    setBusy(photoId)
+    const res = await fetch(`/api/admin/photos/${photoId}`, { method: 'DELETE' })
+    const json = await res.json()
+    if (json.ok) setPhotos(p => p.filter(x => x.id !== photoId))
+    setBusy(null)
+  }
+
   const isPending = filter === 'pending_moderation'
 
   return (
@@ -142,6 +151,12 @@ export default function AdminPhotosPage() {
                   </div>
                 </>
               )}
+
+              <button type="button" onClick={() => deletePhoto(photo.id)}
+                disabled={busy === photo.id}
+                className="w-full text-xs py-1.5 px-3 border border-red-200 text-red-600 rounded-mj-sm hover:bg-red-50 disabled:opacity-60">
+                Delete photo
+              </button>
             </div>
           ))}
         </div>
