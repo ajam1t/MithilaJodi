@@ -2,10 +2,10 @@ import type { Metadata } from 'next'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaBorder } from '@/components/home/MithilaBorder'
 import { HeroSection } from '@/components/home/HeroSection'
-import { FeatureStrip } from '@/components/home/FeatureStrip'
+import { WhyMithilaJodi } from '@/components/home/FeatureStrip'
 import { BiodataSection } from '@/components/home/BiodataSection'
-import { SuccessStories } from '@/components/home/SuccessStories'
-import { FinalCTA } from '@/components/home/FinalCTA'
+import { FamilyRoots } from '@/components/home/SuccessStories'
+import { CulturalStatement } from '@/components/home/CulturalStatement'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 
@@ -31,7 +31,6 @@ export const metadata: Metadata = {
   },
 }
 
-// Structured data — Organization + WebSite (no fabricated stats/claims)
 const jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -67,19 +66,14 @@ export default function HomePage() {
       <MithilaHeader />
       <MithilaBorder variant="bottom" />
       <main className="flex-1 pb-16 lg:pb-0">
-        {/* 1. Hero */}
         <HeroSection />
         <MithilaBorder variant="top" />
-        {/* 2. Key features */}
-        <FeatureStrip />
+        <WhyMithilaJodi />
         <MithilaBorder variant="bottom" />
-        {/* 3. Marriage biodata */}
         <BiodataSection />
         <MithilaBorder variant="top" />
-        {/* 4. Family & values */}
-        <SuccessStories />
-        {/* 5. Final CTA */}
-        <FinalCTA />
+        <FamilyRoots />
+        <CulturalStatement />
       </main>
       <MithilaFooter />
       <MobileBottomNav />
