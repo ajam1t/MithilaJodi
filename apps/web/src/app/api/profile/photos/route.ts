@@ -37,24 +37,25 @@ export async function GET() {
     .neq('status', 'deleted')
     .order('display_order', { ascending: true })
 
-  const photos = []
-  for (const p of (photoRows ?? [])) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const photo = p as any
-    const { data: signed } = await admin.storage
-      .from('profile-photos')
-      .createSignedUrl(photo.storage_path, 3600)
-    photos.push({
-      id: photo.id,
-      is_primary: photo.is_primary,
-      display_order: photo.display_order,
-      status: photo.status,
-      blurhash: photo.blurhash,
-      width_px: photo.width_px,
-      height_px: photo.height_px,
-      signed_url: signed?.signedUrl ?? null,
+  const photos = await Promise.all(
+    (photoRows ?? []).map(async (p) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const photo = p as any
+      const { data: signed } = await admin.storage
+        .from('profile-photos')
+        .createSignedUrl(photo.storage_path, 3600)
+      return {
+        id: photo.id,
+        is_primary: photo.is_primary,
+        display_order: photo.display_order,
+        status: photo.status,
+        blurhash: photo.blurhash,
+        width_px: photo.width_px,
+        height_px: photo.height_px,
+        signed_url: signed?.signedUrl ?? null,
+      }
     })
-  }
+  )
 
   return NextResponse.json({ ok: true, photos })
 }

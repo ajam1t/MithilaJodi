@@ -1,22 +1,30 @@
 import 'server-only'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
 
-export async function GET() {
+type PhotoStatus = 'pending_moderation' | 'approved' | 'rejected'
+
+export async function GET(request: NextRequest) {
   const session = await getSessionAccount()
   if (!session || (session.role !== 'admin' && session.role !== 'moderator')) {
     return NextResponse.json({ ok: false }, { status: 403 })
+  }
+
+  const status = (request.nextUrl.searchParams.get('status') ?? 'pending_moderation') as PhotoStatus
+  const allowed: PhotoStatus[] = ['pending_moderation', 'approved', 'rejected']
+  if (!allowed.includes(status)) {
+    return NextResponse.json({ ok: false, message: 'Invalid status filter.' }, { status: 400 })
   }
 
   const admin = await createAdminClient()
 
   const { data: photos, error } = await admin
     .from('profile_photos')
-    .select('id, profile_id, is_primary, created_at, storage_path')
-    .eq('status', 'pending_moderation')
-    .order('created_at')
-    .limit(30)
+    .select('id, profile_id, is_primary, created_at, storage_path, status, moderation_note')
+    .eq('status', status)
+    .order('created_at', { ascending: status === 'pending_moderation' })
+    .limit(50)
 
   if (error) {
     console.error('[admin/photos GET] query error:', error.message)
@@ -32,13 +40,27 @@ export async function GET() {
 
   const { data: profileRows } = await admin
     .from('profiles')
-    .select('id, first_name, last_name')
+    .select('id, first_name, last_name, account_id')
     .in('id', profileIds)
 
-  const nameMap: Record<string, string> = {}
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const profileAccountIds = (profileRows as any[] ?? []).map(p => p.account_id).filter(Boolean)
+  const { data: accountRows } = await admin
+    .from('accounts')
+    .select('id, mobile')
+    .in('id', profileAccountIds)
+
+  const profileMap: Record<string, { name: string; mobile: string | null }> = {}
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const accountMobileMap: Record<string, string> = {}
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ;(accountRows as any[] ?? []).forEach(a => { accountMobileMap[a.id] = a.mobile })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ;(profileRows as any[] ?? []).forEach((p) => {
-    nameMap[p.id] = [p.first_name, p.last_name].filter(Boolean).join(' ')
+    profileMap[p.id] = {
+      name: [p.first_name, p.last_name].filter(Boolean).join(' ') || '(no name)',
+      mobile: accountMobileMap[p.account_id] ?? null,
+    }
   })
 
   const result = await Promise.all(
@@ -51,10 +73,13 @@ export async function GET() {
       return {
         id: photo.id,
         profile_id: photo.profile_id,
-        profile_name: nameMap[photo.profile_id] ?? null,
+        profile_name: profileMap[photo.profile_id]?.name ?? null,
+        profile_mobile: profileMap[photo.profile_id]?.mobile ?? null,
         is_primary: photo.is_primary,
         photo_url: signedData?.signedUrl ?? null,
         created_at: photo.created_at,
+        status: photo.status,
+        moderation_note: photo.moderation_note ?? null,
       }
     })
   )

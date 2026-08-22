@@ -12,6 +12,14 @@ type PhotoRow = {
   status: string
   display_order: number
   signed_url: string | null
+  local_preview?: string
+}
+
+type UploadState = {
+  progress: number   // 0–100
+  failed: boolean
+  message: string
+  file: File | null
 }
 
 type FormData = {
@@ -203,7 +211,10 @@ export default function ProfileEditPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [uploading, setUploading] = useState(false)
+  const [uploadState, setUploadState] = useState<UploadState>({
+    progress: 0, failed: false, message: '', file: null
+  })
+  const uploadingRef = useRef(false)
   const [locationNames, setLocationNames] = useState<{ native: string; current: string }>({ native: '', current: '' })
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -277,28 +288,95 @@ export default function ProfileEditPage() {
     }
   }
 
+  // ── Photo helpers ────────────────────────────────────────────────────────────
+  function compressImage(file: File): Promise<File> {
+    const MAX_DIM = 1200
+    const QUALITY = 0.85
+    if (file.type === 'image/heic' || file.type === 'image/heif') return Promise.resolve(file)
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file)
+      const img = new Image()
+      img.onload = () => {
+        URL.revokeObjectURL(url)
+        const { width, height } = img
+        let newW = width, newH = height
+        if (width > MAX_DIM || height > MAX_DIM) {
+          const ratio = Math.min(MAX_DIM / width, MAX_DIM / height)
+          newW = Math.round(width * ratio)
+          newH = Math.round(height * ratio)
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = newW; canvas.height = newH
+        const ctx = canvas.getContext('2d')!
+        ctx.drawImage(img, 0, 0, newW, newH)
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) { reject(new Error('Compression failed')); return }
+            resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }))
+          },
+          'image/jpeg', QUALITY
+        )
+      }
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image load failed')) }
+      img.src = url
+    })
+  }
+
+  function uploadWithXhr(file: File, onProgress: (pct: number) => void): Promise<{ ok: boolean; photo_id?: string; message?: string }> {
+    return new Promise((resolve) => {
+      const xhr = new XMLHttpRequest()
+      const fd = new globalThis.FormData()
+      fd.append('photo', file)
+      xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100)) }
+      xhr.onload = () => { try { resolve(JSON.parse(xhr.responseText)) } catch { resolve({ ok: false, message: 'Upload failed' }) } }
+      xhr.onerror = () => resolve({ ok: false, message: 'Network error. Please try again.' })
+      xhr.ontimeout = () => resolve({ ok: false, message: 'Upload timed out. Please try again.' })
+      xhr.timeout = 120000
+      xhr.open('POST', '/api/profile/photos')
+      xhr.send(fd)
+    })
+  }
+
+  async function doUpload(file: File) {
+    if (uploadingRef.current) return
+    uploadingRef.current = true
+    setUploadState({ progress: 0, failed: false, message: '', file })
+    setError('')
+
+    let compressed: File
+    try {
+      compressed = await compressImage(file)
+    } catch {
+      compressed = file
+    }
+
+    const result = await uploadWithXhr(compressed, (pct) =>
+      setUploadState(s => ({ ...s, progress: pct }))
+    )
+    uploadingRef.current = false
+
+    if (result.ok) {
+      // Show local preview immediately (status = pending_moderation)
+      const preview = URL.createObjectURL(file)
+      setPhotos(prev => [...prev, {
+        id: result.photo_id!,
+        is_primary: prev.length === 0,
+        status: 'pending_moderation',
+        display_order: prev.length,
+        signed_url: null,
+        local_preview: preview,
+      }])
+      setUploadState({ progress: 0, failed: false, message: '', file: null })
+    } else {
+      setUploadState(s => ({ ...s, progress: 0, failed: true, message: result.message ?? 'Upload failed. Please try again.' }))
+    }
+    if (fileRef.current) fileRef.current.value = ''
+  }
+
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    setUploading(true)
-    setError('')
-
-    const fd = new FormData()
-    fd.append('photo', file)
-
-    const r = await fetch('/api/profile/photos', { method: 'POST', body: fd })
-    const j = await r.json()
-    setUploading(false)
-
-    if (j.ok) {
-      // Reload photos
-      const pr = await fetch('/api/profile/photos')
-      const pj = await pr.json()
-      setPhotos(pj.photos ?? [])
-    } else {
-      setError(j.message ?? 'Photo upload failed.')
-    }
-    if (fileRef.current) fileRef.current.value = ''
+    await doUpload(file)
   }
 
   async function handleDeletePhoto(photoId: string) {
@@ -564,19 +642,20 @@ export default function ProfileEditPage() {
           <section className="card p-6">
             <h2 className="font-semibold text-ink mb-1">Photos</h2>
             <p className="text-xs text-ink-soft mb-4">
-              Photos are reviewed by our team before being visible. Max 5 photos, 5 MB each. Allowed: JPEG, PNG, WebP, HEIC.
+              Photos are reviewed by our team. Max 5 photos, 5 MB each. JPEG, PNG, WebP, HEIC accepted.
             </p>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
               {photos.map(photo => (
                 <div key={photo.id} className="relative rounded-mj-sm overflow-hidden border border-ink/10 bg-cream aspect-square">
-                  {photo.signed_url ? (
-                    <img src={photo.signed_url} alt="Profile photo"
+                  {(photo.signed_url || photo.local_preview) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={photo.signed_url ?? photo.local_preview!} alt="Profile photo"
                       className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-ink-soft text-xs">No preview</div>
                   )}
-                  <div className="absolute inset-x-0 bottom-0 bg-ink/60 px-2 py-1 flex items-center justify-between">
+                  <div className="absolute inset-x-0 bottom-0 bg-ink/70 px-2 py-1 flex items-center justify-between">
                     <span className={`text-[10px] font-medium ${
                       photo.status === 'approved' ? 'text-green-300' :
                       photo.status === 'rejected' ? 'text-red-300' : 'text-amber-300'
@@ -591,12 +670,38 @@ export default function ProfileEditPage() {
                 </div>
               ))}
 
-              {photos.length < 5 && (
+              {/* Upload progress card */}
+              {uploadState.file && !uploadState.failed && (
+                <div className="relative rounded-mj-sm border border-maroon/30 bg-cream aspect-square flex flex-col items-center justify-center gap-2 px-3">
+                  <div className="w-full bg-ink/10 rounded-full h-1.5 overflow-hidden">
+                    <div className="h-full bg-maroon rounded-full transition-all duration-200"
+                      style={{ width: `${uploadState.progress}%` }} />
+                  </div>
+                  <p className="text-xs text-ink-soft text-center">
+                    {uploadState.progress < 100 ? `Uploading… ${uploadState.progress}%` : 'Processing…'}
+                  </p>
+                </div>
+              )}
+
+              {/* Failed upload retry card */}
+              {uploadState.failed && uploadState.file && (
+                <div className="relative rounded-mj-sm border-2 border-red-200 bg-red-50 aspect-square flex flex-col items-center justify-center gap-2 px-3">
+                  <p className="text-[10px] text-red-600 text-center leading-tight">{uploadState.message}</p>
+                  <button type="button"
+                    onClick={() => { if (uploadState.file) doUpload(uploadState.file) }}
+                    className="text-xs text-maroon border border-maroon/30 rounded px-2 py-1 hover:bg-maroon/5">
+                    Retry
+                  </button>
+                </div>
+              )}
+
+              {/* Add photo button */}
+              {photos.length < 5 && !uploadState.file && (
                 <label className="aspect-square rounded-mj-sm border-2 border-dashed border-ink/20 flex flex-col items-center justify-center cursor-pointer hover:border-maroon transition-colors bg-cream">
                   <span className="text-2xl text-ink-soft">+</span>
-                  <span className="text-xs text-ink-soft mt-1">{uploading ? 'Uploading…' : 'Add photo'}</span>
+                  <span className="text-xs text-ink-soft mt-1">Add photo</span>
                   <input ref={fileRef} type="file" className="sr-only" accept="image/jpeg,image/png,image/webp,image/heic"
-                    disabled={uploading} onChange={handlePhotoUpload} />
+                    onChange={handlePhotoUpload} />
                 </label>
               )}
             </div>
