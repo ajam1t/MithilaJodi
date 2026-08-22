@@ -33,6 +33,10 @@ type FormData = {
   diet: string
   smoking: string
   drinking: string
+  marriage_timeline: string
+  education_detail: string
+  profession_detail: string
+  employer: string
   about_me: string
   family_about: string
   discoverable: boolean
@@ -57,6 +61,10 @@ const EMPTY_FORM: FormData = {
   diet: '',
   smoking: '',
   drinking: '',
+  marriage_timeline: '',
+  education_detail: '',
+  profession_detail: '',
+  employer: '',
   about_me: '',
   family_about: '',
   discoverable: false,
@@ -224,6 +232,10 @@ export default function ProfileEditPage() {
             diet: p.diet ?? '',
             smoking: p.smoking ?? '',
             drinking: p.drinking ?? '',
+            marriage_timeline: p.marriage_timeline ?? '',
+            education_detail: p.education_detail ?? '',
+            profession_detail: p.profession_detail ?? '',
+            employer: p.employer ?? '',
             about_me: p.about_me ?? '',
             family_about: p.family_about ?? '',
             discoverable: p.discoverable ?? false,
@@ -446,7 +458,7 @@ export default function ProfileEditPage() {
           {/* ── Section: Lifestyle ── */}
           <section className="card p-6">
             <h2 className="font-semibold text-ink mb-4">Lifestyle</h2>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-ink mb-1">Diet</label>
                 <select value={form.diet} onChange={e => set('diet', e.target.value)}
@@ -456,6 +468,18 @@ export default function ProfileEditPage() {
                   <option value="non_vegetarian">Non-vegetarian</option>
                   <option value="eggetarian">Eggetarian</option>
                   <option value="vegan">Vegan</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">Looking to marry</label>
+                <select value={form.marriage_timeline} onChange={e => set('marriage_timeline', e.target.value)}
+                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon bg-white">
+                  <option value="">Select…</option>
+                  <option value="within_3_months">Within 3 months</option>
+                  <option value="within_6_months">Within 6 months</option>
+                  <option value="within_1_year">Within 1 year</option>
+                  <option value="within_2_years">Within 2 years</option>
+                  <option value="no_rush">No rush</option>
                 </select>
               </div>
               <div>
@@ -477,6 +501,36 @@ export default function ProfileEditPage() {
                   <option value="occasionally">Occasionally</option>
                   <option value="yes">Yes</option>
                 </select>
+              </div>
+            </div>
+          </section>
+
+          {/* ── Section: Education & Career ── */}
+          <section className="card p-6">
+            <h2 className="font-semibold text-ink mb-4">Education & Career</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">Education</label>
+                <input type="text" maxLength={500} value={form.education_detail}
+                  onChange={e => set('education_detail', e.target.value)}
+                  placeholder="e.g. B.Tech Computer Science, IIT Delhi"
+                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1">Profession / Job Title</label>
+                  <input type="text" maxLength={500} value={form.profession_detail}
+                    onChange={e => set('profession_detail', e.target.value)}
+                    placeholder="e.g. Software Engineer"
+                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1">Employer / Company</label>
+                  <input type="text" maxLength={500} value={form.employer}
+                    onChange={e => set('employer', e.target.value)}
+                    placeholder="e.g. Infosys, Self-employed"
+                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
+                </div>
               </div>
             </div>
           </section>
