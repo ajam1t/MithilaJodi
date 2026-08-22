@@ -400,8 +400,6 @@ export function ProfileCard3D({
     ? 'none'
     : 'transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.6s ease'
 
-  const showActionBar = !hideActions && (!!onShortlist || !!onSendInterest)
-
   return (
     <div className={`w-full max-w-[400px] mx-auto select-none ${className ?? ''}`}>
       {/* ── 3D stage ── */}
@@ -494,52 +492,55 @@ export function ProfileCard3D({
         {active + 1} / {CARD_COUNT} · <span className="text-maroon">{FACE_LABELS[active]}</span>
       </p>
 
-      {/* ── Action bar (only when handlers supplied and not hidden) ── */}
-      {showActionBar && (
+      {/* ── Action bar (hidden on own-profile / preview) ── */}
+      {!hideActions && (
         <div className="mt-3 max-w-[300px] mx-auto flex flex-col gap-2">
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              disabled={shortlisted || busy === 'shortlist'}
-              onClick={async () => {
-                if (shortlisted || busy) return
-                setBusy('shortlist')
-                await onShortlist?.(profile.id)
-                setShortlisted(true)
-                setBusy(null)
-              }}
-              className={[
-                'flex items-center justify-center gap-1.5 py-2.5 rounded-mj-sm text-[13px] font-semibold border transition-all',
-                shortlisted ? 'bg-gold border-gold text-maroon' : 'bg-cream border-gold/50 text-maroon hover:bg-gold/10',
-              ].join(' ')}
-            >
-              <StarIcon />
-              {shortlisted ? 'Shortlisted' : 'Shortlist'}
-            </button>
-            <button
-              type="button"
-              disabled={interestSent || busy === 'interest'}
-              onClick={async () => {
-                if (interestSent || busy) return
-                setBusy('interest')
-                await onSendInterest?.(profile.id)
-                setInterestSent(true)
-                setBusy(null)
-              }}
-              className={[
-                'flex items-center justify-center gap-1.5 py-2.5 rounded-mj-sm text-[13px] font-semibold border transition-all',
-                interestSent ? 'bg-maroon border-maroon text-gold-lt' : 'bg-maroon border-maroon text-gold-lt hover:bg-maroon-deep',
-              ].join(' ')}
-            >
-              <HeartSmallIcon />
-              {interestSent ? 'Sent!' : 'Send Interest'}
-            </button>
-          </div>
+          {(onShortlist || onSendInterest) && (
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                disabled={shortlisted || busy === 'shortlist'}
+                onClick={async () => {
+                  if (shortlisted || busy) return
+                  setBusy('shortlist')
+                  await onShortlist?.(profile.id)
+                  setShortlisted(true)
+                  setBusy(null)
+                }}
+                className={[
+                  'flex items-center justify-center gap-1.5 py-2.5 rounded-mj-sm text-[13px] font-semibold border transition-all',
+                  shortlisted ? 'bg-gold border-gold text-maroon' : 'bg-cream border-gold/50 text-maroon hover:bg-gold/10',
+                ].join(' ')}
+              >
+                <StarIcon />
+                {shortlisted ? 'Shortlisted' : 'Shortlist'}
+              </button>
+              <button
+                type="button"
+                disabled={interestSent || busy === 'interest'}
+                onClick={async () => {
+                  if (interestSent || busy) return
+                  setBusy('interest')
+                  await onSendInterest?.(profile.id)
+                  setInterestSent(true)
+                  setBusy(null)
+                }}
+                className={[
+                  'flex items-center justify-center gap-1.5 py-2.5 rounded-mj-sm text-[13px] font-semibold border transition-all',
+                  interestSent ? 'bg-maroon border-maroon text-gold-lt' : 'bg-maroon border-maroon text-gold-lt hover:bg-maroon-deep',
+                ].join(' ')}
+              >
+                <HeartSmallIcon />
+                {interestSent ? 'Sent!' : 'Send Interest'}
+              </button>
+            </div>
+          )}
+          {/* Always available: navigate to the full profile (to view details & send interest) */}
           <a
             href={`/profile/${profile.id}`}
-            className="flex items-center justify-center gap-1 text-[12px] text-maroon hover:text-terra transition-colors py-1"
+            className="flex items-center justify-center gap-1.5 py-2.5 rounded-mj-sm text-[13px] font-semibold border border-maroon bg-maroon text-gold-lt hover:bg-maroon-deep transition-colors"
           >
-            View Full Profile →
+            View Full Profile & Send Interest →
           </a>
         </div>
       )}

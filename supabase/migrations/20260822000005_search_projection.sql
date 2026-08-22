@@ -76,8 +76,11 @@ BEGIN
   SELECT parent_id INTO native_state_id FROM india_locations WHERE id = native_dist_id;
   SELECT parent_id INTO current_dist_id FROM india_locations WHERE id = p.current_loc_id;
   SELECT parent_id INTO current_state_id FROM india_locations WHERE id = current_dist_id;
-  SELECT parent_id INTO job_state_id FROM india_locations
-    JOIN india_locations d ON d.id = p.job_loc_id WHERE india_locations.id = d.parent_id LIMIT 1;
+  SELECT il.parent_id INTO job_state_id
+    FROM india_locations il
+    JOIN india_locations d ON d.id = p.job_loc_id
+    WHERE il.id = d.parent_id
+    LIMIT 1;
 
   -- Age
   computed_age := DATE_PART('year', AGE(p.dob))::integer;
