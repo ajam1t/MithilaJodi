@@ -37,7 +37,7 @@ export default function AdminFlagsPage() {
   }
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-4 sm:p-8 max-w-4xl">
       <h1 className="font-serif text-2xl text-ink mb-2">Moderation Flags</h1>
       <p className="text-xs text-ink-soft mb-6">
         Automated risk signals for admin review. Flags do not trigger automatic bans.

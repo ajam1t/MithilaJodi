@@ -34,7 +34,7 @@ export default function AdminAuditPage() {
   useEffect(() => { load(0) }, [load])
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-4 sm:p-8 max-w-4xl">
       <h1 className="font-serif text-2xl text-ink mb-6">Audit Log</h1>
 
       <div className="space-y-2">

@@ -94,7 +94,7 @@ export default function AdminProfilesPage() {
   }
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-4 sm:p-8 max-w-5xl">
       <h1 className="font-serif text-2xl text-ink mb-5">Profiles</h1>
 
       <div className="flex gap-1 mb-6 border-b border-paper-3">

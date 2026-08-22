@@ -43,7 +43,7 @@ export default function AdminReportsPage() {
   }
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-4 sm:p-8 max-w-4xl">
       <h1 className="font-serif text-2xl text-ink mb-5">Reports</h1>
 
       <div className="flex border-b border-paper-3 mb-5">

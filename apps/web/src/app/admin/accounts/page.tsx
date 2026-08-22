@@ -57,7 +57,7 @@ export default function AdminAccountsPage() {
   }
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-4 sm:p-8 max-w-5xl">
       <h1 className="font-serif text-2xl text-ink mb-5">Accounts</h1>
 
       <div className="flex gap-3 mb-5">

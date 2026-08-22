@@ -35,19 +35,19 @@ export default function AdminDashboard() {
   }, [])
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-4 sm:p-8 max-w-4xl">
       <h1 className="font-serif text-2xl text-ink mb-6">Dashboard</h1>
 
       {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
 
       {!stats ? (
-        <div className="grid grid-cols-3 gap-4 animate-pulse">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 animate-pulse">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="card p-5 h-24 bg-paper-3" />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
           <StatCard label="Pending photos" value={stats.pending_photos} href="/admin/photos" warn />
           <StatCard label="Pending profiles" value={stats.pending_profiles} href="/admin/profiles" warn />
           <StatCard label="Open reports" value={stats.open_reports} href="/admin/reports" warn />

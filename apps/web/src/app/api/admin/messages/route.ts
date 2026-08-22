@@ -1,9 +1,14 @@
 import 'server-only'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
 
-export async function GET() {
+// Strip PostgREST filter-syntax special chars from a free-text search term.
+function sanitize(raw: string): string {
+  return raw.replace(/[,()\r\n]+/g, ' ').trim()
+}
+
+export async function GET(request: NextRequest) {
   const session = await getSessionAccount()
   if (!session || (session.role !== 'admin' && session.role !== 'moderator')) {
     return NextResponse.json({ ok: false }, { status: 403 })
@@ -11,11 +16,39 @@ export async function GET() {
 
   const admin = await createAdminClient()
 
-  const { data: convsData, error } = await admin
+  // Optional user filter: ?q=<name or mobile>. When present, only conversations
+  // that involve a profile matching the term are returned.
+  const q = sanitize(request.nextUrl.searchParams.get('q') ?? '')
+  let matchProfileIds: string[] | null = null
+  if (q.length > 0) {
+    const { data: acctRows } = await admin.from('accounts').select('id').ilike('mobile', `%${q}%`)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const acctIds = (acctRows as any[] ?? []).map((a) => a.id as string)
+
+    const ors = [`first_name.ilike.%${q}%`, `last_name.ilike.%${q}%`]
+    if (acctIds.length > 0) ors.push(`account_id.in.(${acctIds.join(',')})`)
+
+    const { data: profRows } = await admin.from('profiles').select('id').or(ors.join(','))
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    matchProfileIds = (profRows as any[] ?? []).map((p) => p.id as string)
+
+    if (matchProfileIds.length === 0) {
+      return NextResponse.json({ ok: true, conversations: [] })
+    }
+  }
+
+  let convQuery = admin
     .from('conversations')
     .select('id, profile_a, profile_b, status, created_at, updated_at')
     .order('updated_at', { ascending: false })
     .limit(50)
+
+  if (matchProfileIds) {
+    const list = matchProfileIds.join(',')
+    convQuery = convQuery.or(`profile_a.in.(${list}),profile_b.in.(${list})`)
+  }
+
+  const { data: convsData, error } = await convQuery
 
   if (error) {
     console.error('[admin/messages GET] error:', error.message)

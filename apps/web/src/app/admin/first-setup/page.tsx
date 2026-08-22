@@ -15,7 +15,7 @@ export default async function FirstSetupPage() {
   const hasAdmins = (adminCount ?? 0) > 0
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-4 sm:p-8 max-w-2xl">
       <h1 className="font-serif text-2xl text-ink mb-2">Admin Setup</h1>
       <p className="text-sm text-ink-soft mb-6">
         This page is only accessible when logged in. Use it to promote an account to admin role.

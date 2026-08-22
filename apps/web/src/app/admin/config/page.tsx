@@ -55,7 +55,7 @@ export default function AdminConfigPage() {
     (edits[plan.plan]?.[field] ?? plan[field]) as string | number
 
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="p-4 sm:p-8 max-w-3xl">
       <h1 className="font-serif text-2xl text-ink mb-2">Plan Configuration</h1>
       <p className="text-xs text-ink-soft mb-6">
         Membership price and duration are managed here, not in code. Changes take effect for new payments immediately.
