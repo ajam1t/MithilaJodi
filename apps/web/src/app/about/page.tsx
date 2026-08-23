@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MithilaBorder } from '@/components/home/MithilaBorder'
+import { TeamSection, type TeamMemberData } from './TeamSection'
 import { createAdminClient } from '@/lib/supabase/server'
 import { SITE_URL } from '@/lib/constants'
 
@@ -33,29 +33,6 @@ export const metadata: Metadata = {
   },
 }
 
-type TeamMember = {
-  id: string
-  display_name: string
-  role: string
-  bio: string | null
-  responsibilities: string[]
-  photo_storage_path: string | null
-  display_order: number
-  is_enabled: boolean
-}
-
-function teamPhotoUrl(path: string | null): string | null {
-  const base = process.env.NEXT_PUBLIC_SUPABASE_URL
-  if (!path || !base) return null
-  return `${base}/storage/v1/object/public/team-photos/${path}`
-}
-
-function initials(name: string): string {
-  const caps = name.split(/\s+/).filter(w => /^[A-Z]/.test(w))
-  if (caps.length >= 2) return (caps[0][0] + caps[1][0]).toUpperCase()
-  if (caps.length === 1) return caps[0][0].toUpperCase()
-  return name[0]?.toUpperCase() ?? '?'
-}
 
 const STEPS = [
   {
@@ -149,18 +126,18 @@ const jsonLd = {
 }
 
 export default async function AboutPage() {
-  let team: TeamMember[] = []
+  let dbTeam: TeamMemberData[] = []
   try {
     const admin = await createAdminClient()
     const { data } = await admin
       .from('team_members')
-      .select('id, display_name, role, bio, responsibilities, photo_storage_path, display_order, is_enabled')
+      .select('id, display_name, role, bio, responsibilities, photo_storage_path')
       .eq('is_enabled', true)
       .order('display_order', { ascending: true })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    team = ((data ?? []) as any[]) as TeamMember[]
+    dbTeam = ((data ?? []) as any[]) as TeamMemberData[]
   } catch {
-    // Render page without team section if DB unavailable
+    // TeamSection will fall back to static data
   }
 
   return (
@@ -330,65 +307,7 @@ export default async function AboutPage() {
         <MithilaBorder variant="bottom" />
 
         {/* ── Team ── */}
-        {team.length > 0 && (
-          <section className="bg-paper py-14 sm:py-20">
-            <div className="wrap max-w-5xl">
-              <div className="text-center mb-12">
-                <p className="eyebrow mb-2">The people behind the platform</p>
-                <h2 className="section-heading text-2xl">Meet Our Team</h2>
-                <div className="ornament-line w-16 mx-auto mt-3" />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {team.map((member) => {
-                  const photoUrl = teamPhotoUrl(member.photo_storage_path)
-                  const ini = initials(member.display_name)
-                  return (
-                    <div key={member.id} className="card p-6 flex flex-col gap-4">
-                      {/* Avatar */}
-                      <div className="flex items-center gap-4">
-                        <div className="relative shrink-0 w-16 h-16 rounded-full ring-2 ring-gold ring-offset-2 ring-offset-white overflow-hidden bg-maroon flex items-center justify-center">
-                          {photoUrl ? (
-                            <Image
-                              src={photoUrl}
-                              alt={member.display_name}
-                              fill
-                              className="object-cover"
-                              sizes="64px"
-                            />
-                          ) : (
-                            <span className="font-serif text-gold text-xl font-bold select-none">{ini}</span>
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <h3 className="font-serif text-maroon text-[16px] leading-snug">{member.display_name}</h3>
-                          <p className="text-[12px] text-gold font-medium mt-0.5 uppercase tracking-wider leading-tight">{member.role}</p>
-                        </div>
-                      </div>
-
-                      {/* Bio */}
-                      {member.bio && (
-                        <p className="text-ink-soft text-[14px] leading-relaxed">{member.bio}</p>
-                      )}
-
-                      {/* Responsibilities */}
-                      {member.responsibilities.length > 0 && (
-                        <ul className="space-y-1 border-t border-gold/20 pt-4 mt-auto">
-                          {member.responsibilities.map((r) => (
-                            <li key={r} className="flex items-start gap-2 text-[13px] text-ink-soft">
-                              <span className="text-gold mt-0.5 shrink-0">›</span>
-                              <span>{r}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          </section>
-        )}
+        <TeamSection dbMembers={dbTeam} />
 
         {/* ── CTA ── */}
         <section className="bg-cream py-12 sm:py-16">
