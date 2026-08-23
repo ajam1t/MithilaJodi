@@ -24,6 +24,25 @@ const AUTH_NAV_LINKS = [
 
 type AuthState = { loggedIn: false } | { loggedIn: true; mobile: string }
 
+/* Subtle Mithila-inspired floral line-art for the header edges (mobile). */
+function FloralEdge({ side }: { side: 'left' | 'right' }) {
+  return (
+    <div
+      aria-hidden="true"
+      className={`pointer-events-none absolute top-1/2 -translate-y-1/2 opacity-40 ${
+        side === 'left' ? 'left-1' : 'right-1 scale-x-[-1]'
+      }`}
+    >
+      <svg width="24" height="46" viewBox="0 0 24 46" fill="none" stroke="#B98A2E" strokeWidth="1" strokeLinecap="round">
+        <path d="M12 2 C12 12, 6 16, 8 24 C10 32, 15 34, 12 44" />
+        <path d="M8 12 C3 10, 1 13, 4 16 C7 18, 10 15, 8 12 Z" fill="#E4C572" fillOpacity="0.5" />
+        <path d="M15 22 C20 20, 22 23, 19 26 C16 28, 13 25, 15 22 Z" fill="#E4C572" fillOpacity="0.5" />
+        <path d="M8 34 C3 32, 1 35, 4 38 C7 40, 10 37, 8 34 Z" fill="#E4C572" fillOpacity="0.5" />
+      </svg>
+    </div>
+  )
+}
+
 export function MithilaHeader() {
   const [open, setOpen] = useState(false)
   const [auth, setAuth] = useState<AuthState>({ loggedIn: false })
@@ -67,12 +86,52 @@ export function MithilaHeader() {
       {/* Thin top accent */}
       <div className="h-[3px] w-full bg-gradient-to-r from-cream via-gold to-cream" />
 
-      <div className="wrap flex items-center justify-between h-16">
+      {/* ── Mobile: centered brand ── */}
+      <div className="lg:hidden relative px-12 py-3">
+        <FloralEdge side="left" />
+        <FloralEdge side="right" />
+
+        {/* Hamburger — corner, never overlaps the centered brand */}
+        <button
+          onClick={() => setOpen(v => !v)}
+          className="absolute top-2 right-1.5 text-maroon p-2 rounded"
+          aria-expanded={open}
+          aria-label="Toggle menu"
+        >
+          {open ? (
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="4" y1="4" x2="18" y2="18" /><line x1="18" y1="4" x2="4" y2="18" />
+            </svg>
+          ) : (
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="3" y1="7" x2="19" y2="7" /><line x1="3" y1="12" x2="19" y2="12" /><line x1="3" y1="17" x2="19" y2="17" />
+            </svg>
+          )}
+        </button>
+
+        <Link href="/" className="flex flex-col items-center text-center" aria-label="Mithila Jodi — home">
+          <span className="font-serif text-[24px] sm:text-[30px] text-maroon leading-none tracking-tight">
+            Mithila Jodi
+          </span>
+          <span className="font-deva text-[11px] sm:text-[12px] text-maroon opacity-80 mt-1.5" lang="hi">
+            जहाँ परम्परा मिले, प्रेम से
+          </span>
+          <span className="font-serif italic text-[10px] sm:text-[11px] text-ink-soft mt-0.5">
+            Where tradition meets love.
+          </span>
+        </Link>
+
+        {/* Thin gold divider */}
+        <div className="mx-auto mt-2 h-px w-24 bg-gradient-to-r from-transparent via-gold to-transparent" />
+      </div>
+
+      {/* ── Desktop: brand + nav row ── */}
+      <div className="hidden lg:flex wrap items-center justify-between h-16">
         {/* Brand */}
         {Brand}
 
         {/* Desktop nav */}
-        <nav className="hidden lg:flex items-center gap-6" aria-label="Main navigation">
+        <nav className="flex items-center gap-6" aria-label="Main navigation">
           {auth.loggedIn ? (
             <>
               {AUTH_NAV_LINKS.map(({ href, label }) => (
@@ -119,24 +178,6 @@ export function MithilaHeader() {
             </>
           )}
         </nav>
-
-        {/* Mobile hamburger */}
-        <button
-          onClick={() => setOpen(v => !v)}
-          className="lg:hidden text-maroon p-2 rounded"
-          aria-expanded={open}
-          aria-label="Toggle menu"
-        >
-          {open ? (
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="4" y1="4" x2="18" y2="18" /><line x1="18" y1="4" x2="4" y2="18" />
-            </svg>
-          ) : (
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="3" y1="7" x2="19" y2="7" /><line x1="3" y1="12" x2="19" y2="12" /><line x1="3" y1="17" x2="19" y2="17" />
-            </svg>
-          )}
-        </button>
       </div>
 
       {/* Mobile menu */}
