@@ -132,13 +132,31 @@ export async function POST(request: NextRequest) {
     const entity = event.payload?.refund?.entity
     if (!entity) return NextResponse.json({ ok: true })
 
-    await admin.from('payments').update({
-      status: 'refunded',
-      refund_id: entity.id,
-      refunded_amount_paise: entity.amount,
-      refunded_at: new Date().toISOString(),
-      raw_webhook: event,
-    }).eq('gateway_payment_id', entity.payment_id)
+    const { data: refundedPayment } = await admin
+      .from('payments')
+      .update({
+        status: 'refunded',
+        refund_id: entity.id,
+        refunded_amount_paise: entity.amount,
+        refunded_at: new Date().toISOString(),
+        raw_webhook: event,
+      })
+      .eq('gateway_payment_id', entity.payment_id)
+      .select('id, account_id')
+      .maybeSingle()
+
+    // Downgrade the linked membership so refunded users lose paid access and
+    // discoverability. Without this, a refunded member keeps every feature.
+    if (refundedPayment) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const rp = refundedPayment as any
+      await admin.from('memberships')
+        .update({ status: 'refunded' })
+        .eq('payment_id', rp.id)
+      await admin.from('profiles')
+        .update({ discoverable: false })
+        .eq('account_id', rp.account_id)
+    }
   }
 
   // All other events: acknowledge and ignore

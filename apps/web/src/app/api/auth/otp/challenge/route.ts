@@ -28,6 +28,32 @@ export async function POST(request: NextRequest) {
 
   try {
     const admin = await createAdminClient()
+
+    // ── Rate limit (per mobile) ─────────────────────────────────────────────
+    // Prevents OTP/SMS flooding once real SMS is enabled. Uses the existing
+    // otp_challenges rows (created_at) as the counter — no extra table needed.
+    const now = Date.now()
+    const { data: recentRows } = await admin
+      .from('otp_challenges')
+      .select('created_at')
+      .eq('mobile', mobile)
+      .gte('created_at', new Date(now - 60 * 60 * 1000).toISOString())
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const recent = (recentRows ?? []) as any[]
+    const lastMinute = recent.filter(r => new Date(r.created_at).getTime() > now - 45 * 1000).length
+    if (lastMinute >= 1) {
+      return NextResponse.json(
+        { ok: false, message: 'Please wait a moment before requesting another OTP.' },
+        { status: 429 },
+      )
+    }
+    if (recent.length >= 5) {
+      return NextResponse.json(
+        { ok: false, message: 'Too many OTP requests. Please try again later.' },
+        { status: 429 },
+      )
+    }
+
     const otpService = createOtpService()
 
     const { sent, error } = await otpService.challenge(mobile, admin)

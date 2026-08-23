@@ -59,6 +59,23 @@ export function isMembershipLive(status: MembershipStatus): boolean {
 }
 
 /**
+ * Runtime liveness check that also honours the calendar, not just the stored
+ * status string. The scheduled `refresh_membership_statuses()` job may not have
+ * run yet (or at all), so a membership row can still say 'active' after its
+ * expiry has passed. This treats such a membership as not-live: access is denied
+ * once we are past `grace_until` (if a grace window exists) or `expires_at`.
+ * No data is mutated here — this is a read-time safeguard only.
+ */
+export function isMembershipCurrentlyLive(m: ActiveMembership): boolean {
+  if (!isMembershipLive(m.status)) return false
+  const now = Date.now()
+  // Prefer the grace deadline when present; otherwise fall back to expiry.
+  const deadline = m.grace_until ?? m.expires_at
+  if (deadline && new Date(deadline).getTime() < now) return false
+  return true
+}
+
+/**
  * Free-access testing mode. When FREE_ACCESS_MODE=true, membership/payment gates
  * are bypassed so every feature is free (registration, interests, messaging,
  * biodata, etc.). Set FREE_ACCESS_MODE=false (or remove it) to re-enable the
@@ -75,5 +92,5 @@ export function isFreeAccessMode(): boolean {
 export async function hasFeatureAccess(accountId: string): Promise<boolean> {
   if (isFreeAccessMode()) return true
   const membership = await getActiveMembership(accountId)
-  return !!membership && isMembershipLive(membership.status)
+  return !!membership && isMembershipCurrentlyLive(membership)
 }

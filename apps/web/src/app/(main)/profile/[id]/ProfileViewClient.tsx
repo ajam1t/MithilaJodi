@@ -13,14 +13,40 @@ type ProfileData = {
   height_cm: number | null
   religion: string | null
   caste: string | null
+  sub_caste: string | null
   self_gotra: string | null
+  maternal_gotra: string | null
   mool: string | null
   gram: string | null
   diet: string | null
+  marital_status: string | null
+  mother_tongue: string | null
   about_me: string | null
+  family_about: string | null
   profile_complete: number
   native_place_name: string | null
   current_loc_name: string | null
+  job_loc_name: string | null
+  marriage_timeline: string | null
+  education_detail: string | null
+  degree: string | null
+  specialization: string | null
+  institution: string | null
+  passing_year: number | null
+  job_title: string | null
+  profession_detail: string | null
+  employer: string | null
+  employment_type: string | null
+  industry: string | null
+  work_type: string | null
+  experience_years: number | null
+  family_type: string | null
+  managed_by: string | null
+  family_values: string | null
+  parents_info: string | null
+  siblings_info: string | null
+  family_expectations: string | null
+  family_introduction: string | null
   photo_url: string | null
   myProfileId: string | null
   interestSent: { id: string; status: string } | null
@@ -28,6 +54,21 @@ type ProfileData = {
   shortlisted: boolean
   blocked: boolean
   cardData: SearchCard
+}
+
+const TIMELINE_LABELS: Record<string, string> = {
+  within_3_months: 'Within 3 months',
+  within_6_months: 'Within 6 months',
+  within_1_year: 'Within 1 year',
+  within_2_years: 'Within 2 years',
+  no_rush: 'No rush',
+}
+
+// Humanize a master-data slug (e.g. "never_married" → "Never married").
+function humanize(v: string | null | undefined): string | null {
+  if (!v) return null
+  const s = v.replace(/_/g, ' ')
+  return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
 function Row({ label, value }: { label: string; value: string | null }) {
@@ -248,19 +289,70 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
             </div>
           )}
 
-          {/* Details */}
+          {/* Community & Personal */}
           <div className="card p-5 space-y-2.5">
             <h2 className="font-semibold text-ink text-sm mb-3">Details</h2>
             <Row label="Religion" value={data.religion} />
             <Row label="Caste" value={data.caste} />
+            <Row label="Sub-caste" value={data.sub_caste} />
             <Row label="Gotra" value={data.self_gotra} />
+            <Row label="Maternal Gotra" value={data.maternal_gotra} />
             <Row label="Mool" value={data.mool} />
             <Row label="Gram" value={data.gram} />
+            <Row label="Marital Status" value={humanize(data.marital_status)} />
+            <Row label="Mother Tongue" value={humanize(data.mother_tongue)} />
             <Row label="Diet" value={data.diet?.replace('_', '-') ?? null} />
             <Row label="Height" value={data.height_cm ? `${data.height_cm} cm` : null} />
+            <Row label="Looking to marry" value={data.marriage_timeline ? (TIMELINE_LABELS[data.marriage_timeline] ?? null) : null} />
             <Row label="Currently in" value={data.current_loc_name} />
             <Row label="Native place" value={data.native_place_name} />
+            <Row label="Job location" value={data.job_loc_name} />
           </div>
+
+          {/* Education */}
+          {(data.education_detail || data.degree || data.specialization || data.institution || data.passing_year) && (
+            <div className="card p-5 space-y-2.5">
+              <h2 className="font-semibold text-ink text-sm mb-3">Education</h2>
+              <Row label="Education" value={data.education_detail} />
+              <Row label="Degree" value={data.degree} />
+              <Row label="Specialization" value={data.specialization} />
+              <Row label="Institution" value={data.institution} />
+              <Row label="Passing Year" value={data.passing_year ? String(data.passing_year) : null} />
+            </div>
+          )}
+
+          {/* Career */}
+          {(data.job_title || data.profession_detail || data.employer || data.employment_type || data.industry || data.work_type || data.experience_years != null) && (
+            <div className="card p-5 space-y-2.5">
+              <h2 className="font-semibold text-ink text-sm mb-3">Career</h2>
+              <Row label="Job Title" value={data.job_title} />
+              <Row label="Profession" value={data.profession_detail} />
+              <Row label="Company" value={data.employer} />
+              <Row label="Employment" value={humanize(data.employment_type)} />
+              <Row label="Industry" value={humanize(data.industry)} />
+              <Row label="Work Type" value={humanize(data.work_type)} />
+              <Row label="Experience" value={data.experience_years != null ? `${data.experience_years} yrs` : null} />
+            </div>
+          )}
+
+          {/* Family */}
+          {(data.managed_by || data.family_type || data.family_values || data.parents_info || data.siblings_info || data.family_expectations || data.family_introduction || data.family_about) && (
+            <div className="card p-5 space-y-2.5">
+              <h2 className="font-semibold text-ink text-sm mb-3">Family</h2>
+              <Row label="Managed By" value={humanize(data.managed_by)} />
+              <Row label="Family Type" value={humanize(data.family_type)} />
+              <Row label="Family Values" value={humanize(data.family_values)} />
+              <Row label="Parents" value={data.parents_info} />
+              <Row label="Siblings" value={data.siblings_info} />
+              <Row label="Expectations" value={data.family_expectations} />
+              {data.family_introduction && (
+                <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap pt-1">{data.family_introduction}</p>
+              )}
+              {data.family_about && (
+                <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap pt-1">{data.family_about}</p>
+              )}
+            </div>
+          )}
 
           {/* Actions */}
           {data.myProfileId && !data.blocked && (

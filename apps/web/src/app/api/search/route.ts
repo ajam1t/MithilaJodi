@@ -138,6 +138,34 @@ export async function GET(request: NextRequest) {
 
   const admin = await createAdminClient()
 
+  // ─── Step 0: Resolve caller's own profiles + block list ───────────────────
+  //
+  // Security/UX: profiles the caller has blocked, or that have blocked the
+  // caller, must not appear in search results (in either direction).
+  const { data: myProfileRows } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('account_id', session.id)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const myProfileIds: string[] = (myProfileRows ?? []).map((r: any) => r.id as string)
+
+  const blockedProfileIds = new Set<string>()
+  if (myProfileIds.length > 0) {
+    const { data: blockRows } = await admin
+      .from('blocks')
+      .select('blocker_id, blocked_id')
+      .or(
+        `blocker_id.in.(${myProfileIds.join(',')}),blocked_id.in.(${myProfileIds.join(',')})`,
+      )
+    for (const b of (blockRows ?? [])) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const row = b as any
+      // Add whichever side is NOT one of my own profiles.
+      if (!myProfileIds.includes(row.blocker_id as string)) blockedProfileIds.add(row.blocker_id as string)
+      if (!myProfileIds.includes(row.blocked_id as string)) blockedProfileIds.add(row.blocked_id as string)
+    }
+  }
+
   // ─── Step 1: Query profiles ───────────────────────────────────────────────
   //
   // Security notes:
@@ -312,6 +340,11 @@ export async function GET(request: NextRequest) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let validProfiles: any[] = pageSlice.filter((p) => validAccountIds.has(p.account_id as string))
+
+  // Exclude profiles involved in a block with the caller (either direction).
+  if (blockedProfileIds.size > 0) {
+    validProfiles = validProfiles.filter((p) => !blockedProfileIds.has(p.id as string))
+  }
 
   // ─── Age filter (JS-side) ──────────────────────────────────────────────────
   //

@@ -18,7 +18,8 @@ const LABELS: Record<string, Record<string, string>> = {
     contact: 'Contact',
     sub_caste: 'Sub-caste', self_gotra: 'Gotra', maternal_gotra: 'Maternal Gotra',
     mool: 'Mool', gram: 'Gram', height: 'Height', diet: 'Diet',
-    smoking: 'Smoking', drinking: 'Drinking', education: 'Education',
+    smoking: 'Smoking', drinking: 'Drinking', marital_status: 'Marital Status',
+    mother_tongue: 'Mother Tongue', education: 'Education',
     profession: 'Profession', employer: 'Employer',
     current_location: 'Currently in', native_place: 'Native place',
     mobile: 'Mobile', email: 'Email',
@@ -28,6 +29,7 @@ const LABELS: Record<string, Record<string, string>> = {
     title: 'विवाह बायोडाटा',
     community: 'समुदाय विवरण', personal: 'व्यक्तिगत विवरण',
     career: 'शिक्षा एवं करियर', location: 'स्थान',
+    marital_status: 'वैवाहिक स्थिति', mother_tongue: 'मातृभाषा',
     about: 'अपने बारे में', family: 'परिवार परिचय', contact: 'संपर्क',
     sub_caste: 'उपजाति', self_gotra: 'गोत्र', maternal_gotra: 'मातृ गोत्र',
     mool: 'मूल', gram: 'ग्राम', height: 'ऊँचाई', diet: 'आहार',
@@ -41,6 +43,7 @@ const LABELS: Record<string, Record<string, string>> = {
     title: 'विवाह बायोडाटा',
     community: 'सामाजिक विवरण', personal: 'व्यक्तिगत विवरण',
     career: 'शिक्षा एवं व्यवसाय', location: 'स्थान',
+    marital_status: 'वैवाहिक स्थिति', mother_tongue: 'मातृभाषा',
     about: 'परिचय', family: 'पारिवारिक परिचय', contact: 'संपर्क',
     sub_caste: 'उपजाति', self_gotra: 'गोत्र', maternal_gotra: 'ननिहाल गोत्र',
     mool: 'मूल', gram: 'ग्राम', height: 'ऊँचाई', diet: 'आहार',
@@ -54,6 +57,7 @@ const LABELS: Record<string, Record<string, string>> = {
     title: 'विवाहार्थं परिचयपत्रम्',
     community: 'समाजविवरणम्', personal: 'वैयक्तिकविवरणम्',
     career: 'शिक्षा वृत्तिश्च', location: 'स्थानम्',
+    marital_status: 'वैवाहिकस्थितिः', mother_tongue: 'मातृभाषा',
     about: 'आत्मपरिचयः', family: 'कुटुम्बपरिचयः', contact: 'सम्पर्कः',
     sub_caste: 'उपजातिः', self_gotra: 'गोत्रम्', maternal_gotra: 'मातृगोत्रम्',
     mool: 'मूलम्', gram: 'ग्रामः', height: 'औन्नत्यम्', diet: 'आहारः',
@@ -63,6 +67,13 @@ const LABELS: Record<string, Record<string, string>> = {
     mobile: 'चलभाषः', email: 'विपत्रम्',
     age: 'वयः', gender: 'लिङ्गम्', religion: 'धर्मः', caste: 'जातिः', years: 'वर्षाणि',
   },
+}
+
+// Humanize a master-data slug (e.g. "never_married" → "Never married").
+function humanize(v: string | null | undefined): string | null {
+  if (!v) return null
+  const s = String(v).replace(/_/g, ' ')
+  return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
 function computeAge(dob: string): number {
@@ -162,7 +173,7 @@ export default async function BiodataPreviewPage({
   const { data: rawProfile } = await admin
     .from('profiles')
     .select(
-      'first_name, last_name, gender, dob, religion, caste, sub_caste, self_gotra, maternal_gotra, mool, gram, height_cm, diet, smoking, drinking, about_me, family_about, native_place_id, current_loc_id, education_level_id, education_detail, profession_id, profession_detail, employer'
+      'first_name, last_name, gender, dob, religion, caste, sub_caste, self_gotra, maternal_gotra, mool, gram, height_cm, diet, smoking, drinking, marital_status, mother_tongue, about_me, family_about, native_place_id, current_loc_id, education_level_id, education_detail, profession_id, profession_detail, employer'
     )
     .eq('id', g.profile_id)
     .maybeSingle()
@@ -314,8 +325,10 @@ export default async function BiodataPreviewPage({
         )}
 
         {/* Personal */}
-        {(has('height') || has('diet') || has('smoking') || has('drinking')) && (
+        {(has('marital_status') || has('mother_tongue') || has('height') || has('diet') || has('smoking') || has('drinking')) && (
           <Section title={L.personal}>
+            {has('marital_status') && <Row label={L.marital_status} value={humanize(p.marital_status)} />}
+            {has('mother_tongue') && <Row label={L.mother_tongue} value={humanize(p.mother_tongue)} />}
             {has('height') && <Row label={L.height} value={p.height_cm ? `${p.height_cm} cm` : null} />}
             {has('diet') && <Row label={L.diet} value={p.diet?.replace('_', '-') ?? null} />}
             {has('smoking') && <Row label={L.smoking} value={p.smoking} />}

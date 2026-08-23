@@ -319,11 +319,11 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {pct < 85 && profile && (
+          {pct < 100 && profile && (
             <p className="mt-3 text-xs text-ink-soft bg-paper/60 rounded-mj-sm px-3 py-2">
               {pct < 40
                 ? 'Your profile is just getting started. Add more details to get better matches.'
-                : 'Almost there! Add a photo to reach 85% and be discoverable.'}
+                : 'Almost there! Complete the remaining details to strengthen your profile.'}
             </p>
           )}
 
@@ -543,7 +543,7 @@ export default function ProfilePage() {
 
               {photos.length === 0 ? (
                 <div className="text-center py-6">
-                  <p className="text-sm text-ink-soft mb-3">No photos yet. Add a photo to reach 85% completion.</p>
+                  <p className="text-sm text-ink-soft mb-3">No photos yet. Add a photo so families can recognise you.</p>
                   <Link href="/profile/edit"
                     className="text-sm text-maroon font-medium border border-maroon/30 rounded-mj px-4 py-2 hover:bg-maroon/5 transition-colors">
                     Add Photo

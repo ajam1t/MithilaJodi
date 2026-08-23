@@ -153,17 +153,24 @@ export default function InterestsContent() {
   }, [])
 
   async function handleAction(interestId: string, action: string) {
-    const res = await fetch(`/api/interests/${interestId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action }),
-    })
-    const json = await res.json()
-    if (json.ok) {
-      // Refresh
-      const refreshRes = await fetch('/api/interests')
-      const refreshJson = await refreshRes.json()
-      if (refreshJson.ok) setData(refreshJson)
+    setError('')
+    try {
+      const res = await fetch(`/api/interests/${interestId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      })
+      const json = await res.json()
+      if (json.ok) {
+        // Refresh
+        const refreshRes = await fetch('/api/interests')
+        const refreshJson = await refreshRes.json()
+        if (refreshJson.ok) setData(refreshJson)
+      } else {
+        setError(json.message ?? 'Could not complete that action. Please try again.')
+      }
+    } catch {
+      setError('Could not complete that action. Please try again.')
     }
   }
 

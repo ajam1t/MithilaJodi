@@ -25,13 +25,15 @@ const FIELD_GROUPS = [
   {
     label: 'Personal',
     fields: [
-      { key: 'name',     label: 'Full name' },
-      { key: 'age',      label: 'Age' },
-      { key: 'gender',   label: 'Gender' },
-      { key: 'height',   label: 'Height' },
-      { key: 'diet',     label: 'Diet' },
-      { key: 'smoking',  label: 'Smoking habits' },
-      { key: 'drinking', label: 'Drinking habits' },
+      { key: 'name',           label: 'Full name' },
+      { key: 'age',            label: 'Age' },
+      { key: 'gender',         label: 'Gender' },
+      { key: 'marital_status', label: 'Marital status' },
+      { key: 'mother_tongue',  label: 'Mother tongue' },
+      { key: 'height',         label: 'Height' },
+      { key: 'diet',           label: 'Diet' },
+      { key: 'smoking',        label: 'Smoking habits' },
+      { key: 'drinking',       label: 'Drinking habits' },
     ],
   },
   {
@@ -77,9 +79,9 @@ const FIELD_GROUPS = [
 ]
 
 const DEFAULT_FIELDS = [
-  'name', 'age', 'gender', 'religion', 'caste', 'self_gotra', 'mool', 'gram',
-  'height', 'diet', 'education', 'profession', 'native_place', 'current_location',
-  'about_me', 'family_about', 'photo',
+  'name', 'age', 'gender', 'marital_status', 'mother_tongue', 'religion', 'caste',
+  'self_gotra', 'mool', 'gram', 'height', 'diet', 'education', 'profession',
+  'native_place', 'current_location', 'about_me', 'family_about', 'photo',
 ]
 
 const LANG_OPTIONS = [

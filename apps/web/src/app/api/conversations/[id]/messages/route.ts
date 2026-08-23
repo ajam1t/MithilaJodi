@@ -59,6 +59,26 @@ export async function POST(
     return NextResponse.json({ ok: false, message: 'Conversation is closed' }, { status: 403 })
   }
 
+  // Step 5b: defence-in-depth — refuse if either party has blocked the other,
+  // even if the conversation status was somehow left 'open'.
+  const partnerId =
+    (conv.profile_a as string) === myProfileId
+      ? (conv.profile_b as string)
+      : (conv.profile_a as string)
+
+  const { data: blockRow } = await admin
+    .from('blocks')
+    .select('blocker_id')
+    .or(
+      `and(blocker_id.eq.${myProfileId},blocked_id.eq.${partnerId}),and(blocker_id.eq.${partnerId},blocked_id.eq.${myProfileId})`,
+    )
+    .limit(1)
+    .maybeSingle()
+
+  if (blockRow) {
+    return NextResponse.json({ ok: false, message: 'Conversation is closed' }, { status: 403 })
+  }
+
   // Step 6: parse and validate body
   let rawBody: unknown
   try {
@@ -109,15 +129,10 @@ export async function POST(
     .eq('id', id)
 
   // Step 9: notify the partner
-  const partnerProfileId =
-    (conv.profile_a as string) === myProfileId
-      ? (conv.profile_b as string)
-      : (conv.profile_a as string)
-
   const { data: partnerRow } = await admin
     .from('profiles')
     .select('account_id')
-    .eq('id', partnerProfileId)
+    .eq('id', partnerId)
     .maybeSingle()
 
   if (partnerRow) {

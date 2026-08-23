@@ -7,7 +7,7 @@ import { hasFeatureAccess } from '@/lib/membership'
 const VALID_FIELDS = [
   'name', 'age', 'gender', 'religion', 'caste', 'sub_caste',
   'self_gotra', 'maternal_gotra', 'mool', 'gram',
-  'height', 'diet', 'smoking', 'drinking',
+  'height', 'diet', 'smoking', 'drinking', 'marital_status', 'mother_tongue',
   'education', 'profession',
   'current_location', 'native_place',
   'about_me', 'family_about',

@@ -28,7 +28,7 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
   const { data: profile } = await admin
     .from('profiles')
     .select(
-      'id, first_name, last_name, gender, dob, religion, caste, self_gotra, mool, gram, height_cm, diet, about_me, profile_complete, profile_status, discoverable, native_place_id, current_loc_id, employer, profession_detail, education_detail, smoking, drinking, maternal_gotra, job_loc_id, marriage_timeline'
+      'id, first_name, last_name, gender, dob, religion, caste, sub_caste, self_gotra, mool, gram, height_cm, diet, about_me, family_about, profile_complete, profile_status, discoverable, native_place_id, current_loc_id, employer, profession_detail, education_detail, smoking, drinking, maternal_gotra, job_loc_id, marriage_timeline, marital_status, mother_tongue, degree, specialization, institution, passing_year, job_title, employment_type, industry, work_type, experience_years, family_type, managed_by, family_values, parents_info, siblings_info, family_expectations, family_introduction'
     )
     .eq('id', profileId)
     .eq('discoverable', true)
@@ -141,14 +141,43 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
     height_cm: p.height_cm,
     religion: p.religion,
     caste: p.caste,
+    sub_caste: p.sub_caste ?? null,
     self_gotra: p.self_gotra,
+    maternal_gotra: p.maternal_gotra ?? null,
     mool: p.mool,
     gram: p.gram,
     diet: p.diet,
+    marital_status: p.marital_status ?? null,
+    mother_tongue: p.mother_tongue ?? null,
     about_me: p.about_me,
+    family_about: p.family_about ?? null,
     profile_complete: p.profile_complete,
     native_place_name: nativeName,
     current_loc_name: currentName,
+    job_loc_name: jobLocName,
+    marriage_timeline: p.marriage_timeline ?? null,
+    // Education
+    education_detail: p.education_detail ?? null,
+    degree: p.degree ?? null,
+    specialization: p.specialization ?? null,
+    institution: p.institution ?? null,
+    passing_year: p.passing_year ?? null,
+    // Career
+    job_title: p.job_title ?? null,
+    profession_detail: p.profession_detail ?? null,
+    employer: p.employer ?? null,
+    employment_type: p.employment_type ?? null,
+    industry: p.industry ?? null,
+    work_type: p.work_type ?? null,
+    experience_years: p.experience_years ?? null,
+    // Family
+    family_type: p.family_type ?? null,
+    managed_by: p.managed_by ?? null,
+    family_values: p.family_values ?? null,
+    parents_info: p.parents_info ?? null,
+    siblings_info: p.siblings_info ?? null,
+    family_expectations: p.family_expectations ?? null,
+    family_introduction: p.family_introduction ?? null,
     photo_url: photoUrl,
     myProfileId,
     interestSent,

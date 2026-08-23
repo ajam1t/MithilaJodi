@@ -17,7 +17,11 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const reason = (body as any)?.reason ?? null
+  const rawReason = (body as any)?.reason
+  const reason =
+    typeof rawReason === 'string' && rawReason.trim().length > 0
+      ? rawReason.trim().slice(0, 500)
+      : null
 
   const admin = await createAdminClient()
 
@@ -65,6 +69,14 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       .eq('from_profile', profileId)
       .eq('to_profile', myId)
       .eq('status', 'sent'),
+    // Close any shared conversation so neither party can keep messaging.
+    // Message POST refuses non-'open' conversations, so this hard-stops the thread.
+    admin
+      .from('conversations')
+      .update({ status: 'blocked', updated_at: new Date().toISOString() })
+      .or(
+        `and(profile_a.eq.${myId},profile_b.eq.${profileId}),and(profile_a.eq.${profileId},profile_b.eq.${myId})`,
+      ),
   ])
 
   return NextResponse.json({ ok: true })
@@ -101,6 +113,26 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
   if (error) {
     console.error('[blocks DELETE] error:', error.message)
     return NextResponse.json({ ok: false, message: 'Failed to unblock profile' }, { status: 500 })
+  }
+
+  // Reopen a previously-blocked shared conversation, but only if the OTHER party
+  // has not also blocked us (otherwise it must stay closed).
+  const { data: reverseBlock } = await admin
+    .from('blocks')
+    .select('blocker_id')
+    .eq('blocker_id', profileId)
+    .eq('blocked_id', myId)
+    .limit(1)
+    .maybeSingle()
+
+  if (!reverseBlock) {
+    await admin
+      .from('conversations')
+      .update({ status: 'open', updated_at: new Date().toISOString() })
+      .eq('status', 'blocked')
+      .or(
+        `and(profile_a.eq.${myId},profile_b.eq.${profileId}),and(profile_a.eq.${profileId},profile_b.eq.${myId})`,
+      )
   }
 
   return NextResponse.json({ ok: true })

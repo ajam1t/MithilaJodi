@@ -134,7 +134,10 @@
   .prose-mj a  { @apply text-maroon underline underline-offset-2 hover:text-terra; }
   .prose-mj strong { @apply font-semibold text-ink; }
   .prose-mj blockquote { @apply border-l-4 border-gold pl-4 italic text-ink-soft my-4; }
-  .prose-mj table { @apply w-full border-collapse mb-4 text-[14px]; }
+  /* Keep wide media inside the column — body is overflow-x-clip, so without
+     this a wide image/table would be silently cut off on mobile. */
+  .prose-mj img { @apply max-w-full h-auto rounded-mj-sm my-4; }
+  .prose-mj table { @apply w-full border-collapse mb-4 text-[14px] block overflow-x-auto; }
   .prose-mj th { @apply bg-paper text-maroon font-semibold px-3 py-2 border border-paper-3 text-left; }
   .prose-mj td { @apply px-3 py-2 border border-paper-3; }
 }

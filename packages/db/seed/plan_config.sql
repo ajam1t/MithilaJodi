@@ -1,12 +1,12 @@
 -- ═══════════════════════════════════════════════════════════════════════════
 -- Seed: Plan Configuration
--- ₹111 / 1 year — stored here, NOT hardcoded in application code
+-- ₹151 / 1 year — stored here, NOT hardcoded in application code
 -- ═══════════════════════════════════════════════════════════════════════════
 
 INSERT INTO plan_config (plan, price_paise, duration_days, grace_days, expiring_soon_days, label_en, label_hi, label_mai, active)
 VALUES (
   'standard',
-  11100,                       -- ₹111.00
+  15100,                       -- ₹151.00
   365,                         -- 1 year
   7,                           -- 7-day grace period after expiry
   30,                          -- show "expiring soon" 30 days before

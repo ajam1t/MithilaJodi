@@ -257,19 +257,63 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, message: 'Unable to send interest' }, { status: 422 })
   }
 
+  // Cap free-text message length to prevent oversized/garbage storage.
+  const cleanMessage =
+    typeof message === 'string' && message.trim().length > 0
+      ? message.trim().slice(0, 500)
+      : null
+
   const { data: newInterest, error: insertError } = await admin
     .from('interests')
     .insert({
       from_profile: me.id,
       to_profile: to_profile_id,
       status: 'sent',
-      message: message ?? null,
+      message: cleanMessage,
     })
     .select('id')
     .single()
 
   if (insertError) {
     if (insertError.code === '23505') {
+      // A row already exists (UNIQUE from_profile+to_profile). If the prior
+      // interest was declined or withdrawn, allow the sender to re-send by
+      // resetting it to 'sent'. If it is still pending or accepted, block.
+      const { data: existing } = await admin
+        .from('interests')
+        .select('id, status')
+        .eq('from_profile', me.id)
+        .eq('to_profile', to_profile_id)
+        .maybeSingle()
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const ex = existing as any
+      if (ex && (ex.status === 'declined' || ex.status === 'withdrawn')) {
+        const { data: revived, error: reviveError } = await admin
+          .from('interests')
+          .update({ status: 'sent', message: cleanMessage, responded_at: null, sent_at: new Date().toISOString() })
+          .eq('id', ex.id)
+          .select('id')
+          .single()
+
+        if (reviveError || !revived) {
+          console.error('[interests POST] revive error:', reviveError?.message)
+          return NextResponse.json({ ok: false, message: 'Failed to send interest' }, { status: 500 })
+        }
+
+        await admin.from('notifications').insert({
+          account_id: target.account_id,
+          type: 'interest_received',
+          payload: {
+            from_profile_id: me.id,
+            from_name: toDisplayName(me.first_name, me.last_name ?? null),
+          },
+        })
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return NextResponse.json({ ok: true, interest_id: (revived as any).id }, { status: 201 })
+      }
+
       return NextResponse.json({ ok: false, message: 'Interest already sent' }, { status: 409 })
     }
     console.error('[interests POST] insert error:', insertError.message)

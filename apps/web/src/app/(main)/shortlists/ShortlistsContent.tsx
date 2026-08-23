@@ -35,12 +35,20 @@ export default function ShortlistsContent() {
 
   async function remove(profileId: string) {
     setRemoving(profileId)
-    const res = await fetch(`/api/shortlists/${profileId}`, { method: 'DELETE' })
-    const json = await res.json()
-    if (json.ok) {
-      setItems(prev => prev.filter(i => i.profile.id !== profileId))
+    setError('')
+    try {
+      const res = await fetch(`/api/shortlists/${profileId}`, { method: 'DELETE' })
+      const json = await res.json()
+      if (json.ok) {
+        setItems(prev => prev.filter(i => i.profile.id !== profileId))
+      } else {
+        setError(json.message ?? 'Could not remove from shortlist. Please try again.')
+      }
+    } catch {
+      setError('Could not remove from shortlist. Please try again.')
+    } finally {
+      setRemoving(null)
     }
-    setRemoving(null)
   }
 
   return (
@@ -84,7 +92,7 @@ export default function ShortlistsContent() {
                       onClick={() => remove(p.id)}
                       disabled={removing === p.id}
                       title="Remove from shortlist"
-                      className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white/80 text-red-500 text-xs leading-none flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50 z-10"
+                      className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 shadow-mj-xs text-red-500 text-sm leading-none flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity disabled:opacity-50 z-10"
                     >
                       ✕
                     </button>

@@ -154,13 +154,6 @@ export function MithilaHeader() {
                   {label}
                 </Link>
               ))}
-              <div className="h-4 w-px bg-gold opacity-40" />
-              <button className="flex items-center gap-1 text-[13px] text-ink hover:text-terra transition-colors" aria-label="Choose language">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
-                  <circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" />
-                </svg>
-                EN
-              </button>
               {/* Only show Login/Register once we know the user is not logged in */}
               {authLoaded && (
                 <>

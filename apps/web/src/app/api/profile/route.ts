@@ -56,20 +56,25 @@ const ProfileSchema = z.object({
 })
 
 function computeCompletion(data: z.infer<typeof ProfileSchema>): number {
+  // Field-based completeness. Discoverability is NOT gated on this value
+  // (it is driven by membership/free-access), so this is purely a quality
+  // signal shown on the profile ring and used to sort search results.
   const checks = [
     !!data.first_name,
     !!data.gender,
     !!data.dob,
     !!data.caste,
     !!data.self_gotra,
+    !!data.mother_tongue,
+    !!data.marital_status,
     !!data.native_place_id,
     !!data.current_loc_id,
-    !!data.about_me,
     !!data.height_cm,
     !!data.diet,
+    !!data.about_me,
   ]
   const done = checks.filter(Boolean).length
-  return Math.round((done / checks.length) * 85)  // max 85% without approved photo
+  return Math.round((done / checks.length) * 100)
 }
 
 export async function GET() {
