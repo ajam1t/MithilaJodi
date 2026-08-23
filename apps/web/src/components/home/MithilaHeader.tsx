@@ -6,8 +6,7 @@ import { MithilaBorder } from '@/components/home/MithilaBorder'
 
 const NAV_LINKS = [
   { href: '/', label: 'Home' },
-  { href: '/#how', label: 'About' },
-  { href: '/#stories', label: 'Family & Values' },
+  { href: '/about', label: 'About' },
   { href: '/#biodata', label: 'Marriage Biodata' },
   { href: '/blogs', label: 'Blogs' },
   { href: '/help', label: 'Help' },

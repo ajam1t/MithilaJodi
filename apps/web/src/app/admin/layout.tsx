@@ -14,6 +14,7 @@ const NAV = [
   { href: '/admin/showcase',  label: 'Search Showcase' },
   { href: '/admin/blog',      label: 'Blog Posts' },
   { href: '/admin/blog/categories', label: 'Blog Categories' },
+  { href: '/admin/team',      label: 'Team Members' },
   { href: '/admin/config',    label: 'Plan Config' },
   { href: '/admin/audit',     label: 'Audit Log' },
 ]
