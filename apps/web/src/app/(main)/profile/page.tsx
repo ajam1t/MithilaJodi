@@ -36,6 +36,25 @@ type Profile = {
   discoverable: boolean
   profile_complete: number | null
   profile_status: string | null
+  // ── V10 additive fields ──
+  marital_status: string | null
+  mother_tongue: string | null
+  degree: string | null
+  specialization: string | null
+  institution: string | null
+  passing_year: number | null
+  employment_type: string | null
+  industry: string | null
+  job_title: string | null
+  experience_years: number | null
+  work_type: string | null
+  family_type: string | null
+  managed_by: string | null
+  family_values: string | null
+  parents_info: string | null
+  siblings_info: string | null
+  family_expectations: string | null
+  family_introduction: string | null
 }
 
 type Photo = {
@@ -64,6 +83,13 @@ function age(dob: string) {
 function formatHeight(cm: number) {
   const totalIn = Math.round(cm / 2.54)
   return `${Math.floor(totalIn / 12)}′${totalIn % 12}″ (${cm} cm)`
+}
+
+// Humanize a master-data value (e.g. "never_married" → "Never married") for display.
+function humanize(v: string | null | undefined): string | null {
+  if (!v) return null
+  const s = v.replace(/_/g, ' ')
+  return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
 const TIMELINE_LABELS: Record<string, string> = {
@@ -325,13 +351,30 @@ export default function ProfilePage() {
                 </section>
               )}
 
-              {(profile.education_detail || profile.profession_detail || profile.employer) && (
+              {(profile.education_detail || profile.degree || profile.specialization || profile.institution || profile.passing_year) && (
                 <section className="card p-4">
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft mb-3">Education & Career</h3>
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft mb-3">Education</h3>
                   <dl>
                     <InfoRow label="Education" value={profile.education_detail} />
+                    <InfoRow label="Degree" value={profile.degree} />
+                    <InfoRow label="Specialization" value={profile.specialization} />
+                    <InfoRow label="Institution" value={profile.institution} />
+                    <InfoRow label="Passing Year" value={profile.passing_year ? String(profile.passing_year) : null} />
+                  </dl>
+                </section>
+              )}
+
+              {(profile.profession_detail || profile.employer || profile.job_title || profile.employment_type || profile.industry || profile.work_type || profile.experience_years != null) && (
+                <section className="card p-4">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft mb-3">Career</h3>
+                  <dl>
+                    <InfoRow label="Job Title" value={profile.job_title} />
                     <InfoRow label="Profession" value={profile.profession_detail} />
-                    <InfoRow label="Employer" value={profile.employer} />
+                    <InfoRow label="Company" value={profile.employer} />
+                    <InfoRow label="Employment" value={humanize(profile.employment_type)} />
+                    <InfoRow label="Industry" value={humanize(profile.industry)} />
+                    <InfoRow label="Work Type" value={humanize(profile.work_type)} />
+                    <InfoRow label="Experience" value={profile.experience_years != null ? `${profile.experience_years} yrs` : null} />
                   </dl>
                 </section>
               )}
@@ -340,6 +383,8 @@ export default function ProfilePage() {
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft mb-3">Personal Details</h3>
                 <dl>
                   <InfoRow label="Height" value={profile.height_cm ? formatHeight(profile.height_cm) : null} />
+                  <InfoRow label="Marital Status" value={humanize(profile.marital_status)} />
+                  <InfoRow label="Mother Tongue" value={humanize(profile.mother_tongue)} />
                   <InfoRow label="Diet" value={profile.diet ? profile.diet.replace(/_/g, ' ') : null} />
                   <InfoRow label="Smoking" value={profile.smoking} />
                   <InfoRow label="Drinking" value={profile.drinking} />
@@ -353,10 +398,23 @@ export default function ProfilePage() {
                 )}
               </section>
 
-              {profile.family_about && (
+              {(profile.managed_by || profile.family_type || profile.family_values || profile.parents_info || profile.siblings_info || profile.family_expectations || profile.family_introduction || profile.family_about) && (
                 <section className="card p-4">
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft mb-2">About Family</h3>
-                  <p className="text-sm text-ink leading-relaxed">{profile.family_about}</p>
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft mb-3">Family</h3>
+                  <dl>
+                    <InfoRow label="Managed By" value={humanize(profile.managed_by)} />
+                    <InfoRow label="Family Type" value={humanize(profile.family_type)} />
+                    <InfoRow label="Family Values" value={humanize(profile.family_values)} />
+                    <InfoRow label="Parents" value={profile.parents_info} />
+                    <InfoRow label="Siblings" value={profile.siblings_info} />
+                    <InfoRow label="Expectations" value={profile.family_expectations} />
+                  </dl>
+                  {profile.family_introduction && (
+                    <p className="text-sm text-ink leading-relaxed mt-3">{profile.family_introduction}</p>
+                  )}
+                  {profile.family_about && (
+                    <p className="text-sm text-ink leading-relaxed mt-3">{profile.family_about}</p>
+                  )}
                 </section>
               )}
             </>

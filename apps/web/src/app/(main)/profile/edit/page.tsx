@@ -48,6 +48,25 @@ type FormData = {
   about_me: string
   family_about: string
   discoverable: boolean
+  // ── V10 additive fields ──
+  marital_status: string
+  mother_tongue: string
+  degree: string
+  specialization: string
+  institution: string
+  passing_year: string
+  employment_type: string
+  industry: string
+  job_title: string
+  experience_years: string
+  work_type: string
+  family_type: string
+  managed_by: string
+  family_values: string
+  parents_info: string
+  siblings_info: string
+  family_expectations: string
+  family_introduction: string
 }
 
 const EMPTY_FORM: FormData = {
@@ -76,6 +95,24 @@ const EMPTY_FORM: FormData = {
   about_me: '',
   family_about: '',
   discoverable: false,
+  marital_status: '',
+  mother_tongue: '',
+  degree: '',
+  specialization: '',
+  institution: '',
+  passing_year: '',
+  employment_type: '',
+  industry: '',
+  job_title: '',
+  experience_years: '',
+  work_type: '',
+  family_type: '',
+  managed_by: '',
+  family_values: '',
+  parents_info: '',
+  siblings_info: '',
+  family_expectations: '',
+  family_introduction: '',
 }
 
 function LocationSearch({
@@ -203,6 +240,42 @@ function CommunitySearch({
   )
 }
 
+type Option = { value: string; label: string }
+type OptionsMap = Record<string, Option[]>
+
+// A <select> driven by master-data options. If the profile's stored value is
+// not present in the (active) options list, it is appended so the user never
+// silently loses a value an admin later deactivated.
+function MasterSelect({
+  label, value, onChange, opts, placeholder = 'Select…',
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  opts: Option[]
+  placeholder?: string
+}) {
+  const list = [...opts]
+  if (value && !list.some(o => o.value === value)) {
+    list.unshift({ value, label: value })
+  }
+  return (
+    <div>
+      <label className="block text-sm font-medium text-ink mb-1">{label}</label>
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon bg-white"
+      >
+        <option value="">{placeholder}</option>
+        {list.map(o => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
 type SaveState = 'idle' | 'saving' | 'success' | 'error'
 
 export default function ProfileEditPage() {
@@ -219,7 +292,15 @@ export default function ProfileEditPage() {
   })
   const uploadingRef = useRef(false)
   const [locationNames, setLocationNames] = useState<{ native: string; current: string }>({ native: '', current: '' })
+  const [options, setOptions] = useState<OptionsMap>({})
   const fileRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    fetch('/api/options?types=religion,mother_tongue,marital_status,gotra,mool,caste,sub_caste,industry,employment_type,work_type,diet,family_type,family_values,managed_by')
+      .then(r => r.json())
+      .then(j => { if (j.ok && j.options) setOptions(j.options as OptionsMap) })
+      .catch(() => { /* non-fatal: selects fall back to stored value only */ })
+  }, [])
 
   useEffect(() => {
     fetch('/api/profile')
@@ -254,6 +335,24 @@ export default function ProfileEditPage() {
             about_me: p.about_me ?? '',
             family_about: p.family_about ?? '',
             discoverable: p.discoverable ?? false,
+            marital_status: p.marital_status ?? '',
+            mother_tongue: p.mother_tongue ?? '',
+            degree: p.degree ?? '',
+            specialization: p.specialization ?? '',
+            institution: p.institution ?? '',
+            passing_year: p.passing_year?.toString() ?? '',
+            employment_type: p.employment_type ?? '',
+            industry: p.industry ?? '',
+            job_title: p.job_title ?? '',
+            experience_years: p.experience_years?.toString() ?? '',
+            work_type: p.work_type ?? '',
+            family_type: p.family_type ?? '',
+            managed_by: p.managed_by ?? '',
+            family_values: p.family_values ?? '',
+            parents_info: p.parents_info ?? '',
+            siblings_info: p.siblings_info ?? '',
+            family_expectations: p.family_expectations ?? '',
+            family_introduction: p.family_introduction ?? '',
           })
         }
         setPhotos(j.photos ?? [])
@@ -277,6 +376,8 @@ export default function ProfileEditPage() {
       height_cm: form.height_cm ? parseInt(form.height_cm) : null,
       native_place_id: form.native_place_id,
       current_loc_id: form.current_loc_id,
+      passing_year: form.passing_year ? parseInt(form.passing_year) : null,
+      experience_years: form.experience_years ? parseInt(form.experience_years) : null,
     }
 
     try {
@@ -507,13 +608,20 @@ export default function ProfileEditPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-ink mb-1">Height (cm)</label>
-                <input type="number" min={100} max={250} value={form.height_cm}
-                  onChange={e => set('height_cm', e.target.value)}
-                  placeholder="e.g. 165"
-                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1">Height (cm)</label>
+                  <input type="number" min={100} max={250} value={form.height_cm}
+                    onChange={e => set('height_cm', e.target.value)}
+                    placeholder="e.g. 165"
+                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
+                </div>
+                <MasterSelect label="Marital Status" value={form.marital_status}
+                  opts={options.marital_status ?? []} onChange={v => set('marital_status', v)} />
               </div>
+
+              <MasterSelect label="Mother Tongue" value={form.mother_tongue}
+                opts={options.mother_tongue ?? []} onChange={v => set('mother_tongue', v)} />
             </div>
           </section>
 
@@ -522,12 +630,8 @@ export default function ProfileEditPage() {
             <h2 className="font-semibold text-ink mb-4">Community</h2>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-ink mb-1">Religion</label>
-                  <input type="text" maxLength={100} value={form.religion}
-                    onChange={e => set('religion', e.target.value)}
-                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
-                </div>
+                <MasterSelect label="Religion" value={form.religion}
+                  opts={options.religion ?? []} onChange={v => set('religion', v)} />
                 <div>
                   <CommunitySearch label="Caste" type="caste" value={form.caste}
                     onChange={v => set('caste', v)} />
@@ -633,12 +737,12 @@ export default function ProfileEditPage() {
             </div>
           </section>
 
-          {/* ── Section: Education & Career ── */}
+          {/* ── Section: Education ── */}
           <section className="card p-6">
-            <h2 className="font-semibold text-ink mb-4">Education & Career</h2>
+            <h2 className="font-semibold text-ink mb-4">Education</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-ink mb-1">Education</label>
+                <label className="block text-sm font-medium text-ink mb-1">Education Level / Summary</label>
                 <input type="text" maxLength={500} value={form.education_detail}
                   onChange={e => set('education_detail', e.target.value)}
                   placeholder="e.g. B.Tech Computer Science, IIT Delhi"
@@ -646,19 +750,82 @@ export default function ProfileEditPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-ink mb-1">Profession / Job Title</label>
-                  <input type="text" maxLength={500} value={form.profession_detail}
-                    onChange={e => set('profession_detail', e.target.value)}
-                    placeholder="e.g. Software Engineer"
+                  <label className="block text-sm font-medium text-ink mb-1">Degree</label>
+                  <input type="text" maxLength={200} value={form.degree}
+                    onChange={e => set('degree', e.target.value)}
+                    placeholder="e.g. B.Tech, MBA"
                     className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-ink mb-1">Employer / Company</label>
+                  <label className="block text-sm font-medium text-ink mb-1">Specialization</label>
+                  <input type="text" maxLength={200} value={form.specialization}
+                    onChange={e => set('specialization', e.target.value)}
+                    placeholder="e.g. Computer Science"
+                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1">Institution</label>
+                  <input type="text" maxLength={200} value={form.institution}
+                    onChange={e => set('institution', e.target.value)}
+                    placeholder="e.g. IIT Delhi"
+                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1">Passing Year</label>
+                  <input type="number" min={1950} max={new Date().getFullYear() + 1} value={form.passing_year}
+                    onChange={e => set('passing_year', e.target.value)}
+                    placeholder="e.g. 2018"
+                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ── Section: Career ── */}
+          <section className="card p-6">
+            <h2 className="font-semibold text-ink mb-4">Career</h2>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <MasterSelect label="Employment Type" value={form.employment_type}
+                  opts={options.employment_type ?? []} onChange={v => set('employment_type', v)} />
+                <MasterSelect label="Industry" value={form.industry}
+                  opts={options.industry ?? []} onChange={v => set('industry', v)} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1">Job Title</label>
+                  <input type="text" maxLength={200} value={form.job_title}
+                    onChange={e => set('job_title', e.target.value)}
+                    placeholder="e.g. Senior Software Engineer"
+                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1">Company / Employer</label>
                   <input type="text" maxLength={500} value={form.employer}
                     onChange={e => set('employer', e.target.value)}
                     placeholder="e.g. Infosys, Self-employed"
                     className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
                 </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">Profession Summary</label>
+                <input type="text" maxLength={500} value={form.profession_detail}
+                  onChange={e => set('profession_detail', e.target.value)}
+                  placeholder="e.g. Software Engineer"
+                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1">Experience (years)</label>
+                  <input type="number" min={0} max={70} value={form.experience_years}
+                    onChange={e => set('experience_years', e.target.value)}
+                    placeholder="e.g. 5"
+                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
+                </div>
+                <MasterSelect label="Work Type" value={form.work_type}
+                  opts={options.work_type ?? []} onChange={v => set('work_type', v)} />
               </div>
             </div>
           </section>
@@ -676,13 +843,58 @@ export default function ProfileEditPage() {
                   placeholder="A short introduction about yourself…"
                   className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon resize-none" />
               </div>
+            </div>
+          </section>
+
+          {/* ── Section: Family ── */}
+          <section className="card p-6">
+            <h2 className="font-semibold text-ink mb-4">Family</h2>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <MasterSelect label="Profile Managed By" value={form.managed_by}
+                  opts={options.managed_by ?? []} onChange={v => set('managed_by', v)} />
+                <MasterSelect label="Family Type" value={form.family_type}
+                  opts={options.family_type ?? []} onChange={v => set('family_type', v)} />
+              </div>
+              <MasterSelect label="Family Values" value={form.family_values}
+                opts={options.family_values ?? []} onChange={v => set('family_values', v)} />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1">Parents</label>
+                  <textarea rows={2} maxLength={200} value={form.parents_info}
+                    onChange={e => set('parents_info', e.target.value)}
+                    placeholder="e.g. Father — retired teacher; Mother — homemaker"
+                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon resize-none" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1">Siblings</label>
+                  <textarea rows={2} maxLength={200} value={form.siblings_info}
+                    onChange={e => set('siblings_info', e.target.value)}
+                    placeholder="e.g. One elder sister, married"
+                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon resize-none" />
+                </div>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-ink mb-1">
-                  About Family <span className="text-ink-soft font-normal">({form.family_about.length}/1000)</span>
+                  About Our Family <span className="text-ink-soft font-normal">({form.family_about.length}/1000)</span>
                 </label>
                 <textarea rows={3} maxLength={1000} value={form.family_about}
                   onChange={e => set('family_about', e.target.value)}
                   placeholder="About your family background…"
+                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon resize-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">Family Introduction</label>
+                <textarea rows={2} maxLength={200} value={form.family_introduction}
+                  onChange={e => set('family_introduction', e.target.value)}
+                  placeholder="A short introduction to your family…"
+                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon resize-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">Family Expectations</label>
+                <textarea rows={2} maxLength={200} value={form.family_expectations}
+                  onChange={e => set('family_expectations', e.target.value)}
+                  placeholder="What your family is looking for…"
                   className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon resize-none" />
               </div>
             </div>
