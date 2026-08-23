@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "mithila-web",
+      "runtimeExecutable": "C:\\Users\\amit.manoj.jha\\AppData\\Local\\nodejs-portable\\node-v22.23.2-win-x64\\npm.cmd",
+      "runtimeArgs": ["run", "dev", "--workspace", "@mithila-jodi/web"],
+      "port": 3000
+    }
+  ]
+}

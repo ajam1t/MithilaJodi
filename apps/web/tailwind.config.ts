@@ -30,11 +30,11 @@ const config: Config = {
       colors: {
         // ── Mithila Jodi brand palette ──────────────────────────────────
         paper: {
-          DEFAULT: '#FBF1DD',
-          2: '#F6E7C9',
-          3: '#EFD9B4',
+          DEFAULT: '#FCF5E7',
+          2: '#F7EBD3',
+          3: '#ECDCC0',
         },
-        cream: '#FFF8EA',
+        cream: '#FFFAF0',
         maroon: {
           DEFAULT: '#7A1220',
           2: '#9B2233',
@@ -76,6 +76,7 @@ const config: Config = {
         mj: '0 26px 55px -26px rgba(58,20,12,0.5)',
         'mj-sm': '0 14px 30px -18px rgba(58,20,12,0.4)',
         'mj-xs': '0 4px 12px -4px rgba(58,20,12,0.25)',
+        'mj-soft': '0 10px 28px -14px rgba(90,40,20,0.28), 0 2px 6px -3px rgba(90,40,20,0.14)',
       },
       backgroundImage: {
         'paper-texture': `

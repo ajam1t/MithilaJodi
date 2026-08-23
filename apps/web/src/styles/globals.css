@@ -6,10 +6,10 @@
 
 @layer base {
   :root {
-    --paper: #FBF1DD;
-    --paper-2: #F6E7C9;
-    --paper-3: #EFD9B4;
-    --cream: #FFF8EA;
+    --paper: #FCF5E7;
+    --paper-2: #F7EBD3;
+    --paper-3: #ECDCC0;
+    --cream: #FFFAF0;
     --maroon: #7A1220;
     --maroon-2: #9B2233;
     --maroon-deep: #5A0E19;
@@ -23,8 +23,12 @@
     --ink: #2B211C;
     --ink-soft: #6A5A4E;
     --line: rgba(122, 18, 32, 0.18);
+    --gold-line: rgba(185, 138, 46, 0.55);
     --shadow: 0 26px 55px -26px rgba(58, 20, 12, 0.5);
     --shadow-s: 0 14px 30px -18px rgba(58, 20, 12, 0.4);
+    /* Warmer, softer premium shadow for cards */
+    --shadow-soft: 0 10px 28px -14px rgba(90, 40, 20, 0.28), 0 2px 6px -3px rgba(90, 40, 20, 0.14);
+    --sheen: inset 0 1px 0 rgba(255, 255, 255, 0.28);
   }
 
   html { scroll-behavior: smooth; }
@@ -33,6 +37,21 @@
     background-color: var(--paper);
     color: var(--ink);
     @apply font-sans antialiased overflow-x-clip;
+    position: relative;
+  }
+
+  /* Understated premium lighting — fixed, extremely subtle warm glow.
+     Stays put on scroll so sections gain natural depth without looking "glowing". */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(120% 80% at 50% -10%, rgba(228, 197, 114, 0.16), transparent 60%),
+      radial-gradient(90% 60% at 8% 4%, rgba(232, 145, 42, 0.06), transparent 55%),
+      radial-gradient(90% 70% at 96% 100%, rgba(122, 18, 32, 0.05), transparent 55%);
   }
 
   h1, h2, h3, h4 {
@@ -50,18 +69,28 @@
   .btn-primary {
     @apply btn bg-maroon-gradient text-cream shadow-mj-sm
            hover:-translate-y-0.5 hover:shadow-mj;
+    /* Subtle top sheen + fine gold rim for a premium, minted feel */
+    box-shadow: var(--shadow-s), var(--sheen);
+    border-color: rgba(228, 197, 114, 0.35);
+  }
+  .btn-primary:hover {
+    box-shadow: var(--shadow), var(--sheen);
   }
   .btn-ghost {
     @apply btn bg-cream text-maroon border-gold hover:bg-white;
+    box-shadow: var(--sheen);
   }
   .btn-gold {
     @apply btn bg-gold-gradient text-amber-900 shadow-mj-sm
            hover:-translate-y-0.5 hover:shadow-mj;
+    box-shadow: var(--shadow-s), var(--sheen);
   }
 
   /* ── Cards ───────────────────────────────────────────────── */
   .card {
-    @apply bg-cream border border-paper-3 rounded-mj shadow-mj-sm;
+    @apply bg-cream rounded-mj;
+    border: 1px solid var(--gold-line);
+    box-shadow: var(--shadow-soft), var(--sheen);
   }
 
   /* ── Section container ───────────────────────────────────── */
@@ -82,7 +111,9 @@
 
   /* ── Decorative line ─────────────────────────────────────── */
   .ornament-line {
-    @apply h-[2px] bg-gradient-to-r from-maroon-deep via-gold to-maroon-deep opacity-60;
+    @apply h-[2px] bg-gradient-to-r from-maroon-deep via-gold to-maroon-deep opacity-70;
+    /* Faint champagne glow so gold rules read as polished metal, not paint */
+    box-shadow: 0 0 6px rgba(228, 197, 114, 0.45);
   }
 
   /* ── Section heading ─────────────────────────────────────── */
