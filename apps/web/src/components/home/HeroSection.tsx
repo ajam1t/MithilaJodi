@@ -1,51 +1,26 @@
 import Link from 'next/link'
 
-/* Small corner bracket for the premium artwork frame */
-function CornerAccent({ position }: { position: 'tl' | 'tr' | 'bl' | 'br' }) {
-  const base = 'absolute w-4 h-4 border-gold pointer-events-none'
-  const map = {
-    tl: '-top-1 -left-1 border-t-2 border-l-2 rounded-tl-sm',
-    tr: '-top-1 -right-1 border-t-2 border-r-2 rounded-tr-sm',
-    bl: '-bottom-1 -left-1 border-b-2 border-l-2 rounded-bl-sm',
-    br: '-bottom-1 -right-1 border-b-2 border-r-2 rounded-br-sm',
-  }
-  return <span aria-hidden="true" className={`${base} ${map[position]}`} />
-}
-
 export function HeroSection() {
   return (
     <section className="relative overflow-hidden bg-paper" aria-label="Hero — Mithila matrimonial platform">
-      {/* Textured background */}
-      <div className="absolute inset-0 bg-paper-texture opacity-60 pointer-events-none" aria-hidden="true" />
+      {/* ── Full-bleed hero artwork ── (edge-to-edge, flows straight from the header separator) */}
+      <div className="hero-art-enter w-full">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/hero-couple.jpg"
+          alt="A Mithila bride and groom exchanging wedding garlands, surrounded by family"
+          className="block w-full h-auto md:h-[420px] lg:h-[500px] md:object-cover md:object-[50%_25%]"
+        />
+      </div>
 
-      <div className="wrap relative z-10 py-6 md:py-12 grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-10 items-center">
-        {/* ── Artwork ── (top on mobile, right on desktop) */}
-        <div className="hero-art-enter order-1 md:order-2 w-full max-w-[320px] sm:max-w-[380px] md:max-w-[560px] mx-auto md:mx-0">
-          <div className="relative">
-            <div className="relative rounded-mj overflow-hidden border-2 border-gold shadow-mj ring-1 ring-maroon/10">
-              <div className="h-1.5 bg-gradient-to-r from-maroon via-gold to-maroon" aria-hidden="true" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/hero-couple.jpg"
-                alt="A Mithila bride and groom exchanging wedding garlands, surrounded by family"
-                className="w-full h-auto block"
-              />
-              <div className="h-1.5 bg-gradient-to-r from-maroon via-gold to-maroon" aria-hidden="true" />
-            </div>
-            <CornerAccent position="tl" />
-            <CornerAccent position="tr" />
-            <CornerAccent position="bl" />
-            <CornerAccent position="br" />
-          </div>
-        </div>
-
-        {/* ── Text ── */}
-        <div className="hero-text-enter order-2 md:order-1 flex flex-col gap-3.5 md:gap-5 text-center md:text-left items-center md:items-start">
+      {/* ── Hero text (kept below the artwork) ── */}
+      <div className="wrap relative z-10 py-6 md:py-10">
+        <div className="hero-text-enter flex flex-col gap-3.5 md:gap-5 text-center items-center max-w-2xl mx-auto">
           {/* Eyebrow */}
           <div className="flex items-center gap-2.5">
             <div className="h-px w-8 bg-gold" />
             <span className="eyebrow">Matrimony • Family • Mithila</span>
-            <div className="h-px w-8 bg-gold md:hidden" />
+            <div className="h-px w-8 bg-gold" />
           </div>
 
           {/* Headline — "Find Your Life Partner" is the dominant line */}
@@ -84,9 +59,6 @@ export function HeroSection() {
           </div>
         </div>
       </div>
-
-      {/* Bottom fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-paper to-transparent pointer-events-none" aria-hidden="true" />
     </section>
   )
 }
