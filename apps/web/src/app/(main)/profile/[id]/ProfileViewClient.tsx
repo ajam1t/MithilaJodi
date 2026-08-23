@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import ProfileCard3D from '@/components/ProfileCard3D'
 import type { SearchCard } from '@/components/ProfileCard'
@@ -44,6 +44,19 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
   const [data, setData] = useState(initial)
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+  const [stickyVisible, setStickyVisible] = useState(false)
+  const headerRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const el = headerRef.current
+    if (!el) return
+    const io = new IntersectionObserver(
+      ([entry]) => setStickyVisible(!entry.isIntersecting),
+      { rootMargin: '-56px 0px 0px 0px', threshold: 0 },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
 
   const isMutual =
     data.interestSent?.status === 'accepted' &&
@@ -116,6 +129,47 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
 
   return (
     <main className="min-h-screen bg-paper">
+
+      {/* ── Compact sticky identity bar (appears when main header scrolls out) ── */}
+      <div
+        className={[
+          'fixed left-0 right-0 z-30 bg-cream border-b border-paper-3 shadow-mj-xs transition-all duration-200',
+          'top-12 lg:top-14',
+          stickyVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none',
+        ].join(' ')}
+        aria-hidden={!stickyVisible}
+      >
+        <div className="max-w-2xl mx-auto px-4 py-2 flex items-center gap-3">
+          <div className="shrink-0 w-10 h-10 rounded-full overflow-hidden border border-ink/10 bg-paper flex items-center justify-center">
+            {data.photo_url ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={data.photo_url} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-base font-serif text-ink-soft">
+                {data.display_name[0]?.toUpperCase() ?? '?'}
+              </span>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-serif text-sm text-ink leading-tight truncate">
+              {data.display_name}
+            </p>
+            <p className="text-[11px] text-ink-soft leading-tight truncate">
+              {[
+                data.age ? `${data.age} yrs` : null,
+                data.gender,
+                data.height_cm ? `${data.height_cm} cm` : null,
+              ].filter(Boolean).join(' · ')}
+            </p>
+          </div>
+          {isMutual && (
+            <span className="shrink-0 text-[10px] font-semibold text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
+              Match
+            </span>
+          )}
+        </div>
+      </div>
+
       <div className="wrap py-8">
         <div className="max-w-2xl mx-auto space-y-5">
 
@@ -136,7 +190,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
           </div>
 
           {/* Profile header */}
-          <div className="card p-5 flex gap-5">
+          <div ref={headerRef} className="card p-5 flex gap-5">
             {/* Avatar */}
             <div className="shrink-0 w-28 h-36 rounded-mj-sm overflow-hidden bg-cream border border-paper-3 flex items-center justify-center">
               {data.photo_url ? (

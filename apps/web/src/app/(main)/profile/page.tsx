@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ProfileCard3D from '@/components/ProfileCard3D'
@@ -140,6 +140,19 @@ export default function ProfilePage() {
   const [logoutLoading, setLogoutLoading] = useState(false)
   const [cardMode, setCardMode] = useState<'own' | 'preview'>('own')
   const [locationNames, setLocationNames] = useState<{ native_place_name: string | null; current_loc_name: string | null }>({ native_place_name: null, current_loc_name: null })
+  const [stickyVisible, setStickyVisible] = useState(false)
+  const headerRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const el = headerRef.current
+    if (!el) return
+    const io = new IntersectionObserver(
+      ([entry]) => setStickyVisible(!entry.isIntersecting),
+      { rootMargin: '-56px 0px 0px 0px', threshold: 0 },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [loading])
 
   useEffect(() => {
     Promise.all([
@@ -216,8 +229,47 @@ export default function ProfilePage() {
   return (
     <main className="min-h-screen bg-paper">
 
+      {/* ── Compact sticky identity bar (appears when main header scrolls out) ── */}
+      <div
+        className={[
+          'fixed left-0 right-0 z-30 bg-cream border-b border-paper-3 shadow-mj-xs transition-all duration-200',
+          'top-12 lg:top-14',
+          stickyVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none',
+        ].join(' ')}
+        aria-hidden={!stickyVisible}
+      >
+        <div className="max-w-2xl mx-auto px-4 py-2 flex items-center gap-3">
+          <div className="shrink-0 w-10 h-10 rounded-full overflow-hidden border border-ink/10 bg-paper flex items-center justify-center">
+            {primaryPhoto?.signed_url ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={primaryPhoto.signed_url} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-base font-serif text-ink-soft">
+                {profile?.first_name?.[0]?.toUpperCase() ?? '?'}
+              </span>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-serif text-sm text-ink leading-tight truncate">
+              {displayName ?? 'Complete Your Profile'}
+            </p>
+            {profile?.dob && (
+              <p className="text-[11px] text-ink-soft leading-tight truncate">
+                {age(profile.dob)} yrs
+                {profile.gender ? ` · ${profile.gender === 'male' ? 'Male' : 'Female'}` : ''}
+              </p>
+            )}
+          </div>
+          {profile && (
+            <span className="shrink-0 text-[10px] font-semibold text-maroon bg-paper border border-gold border-opacity-40 rounded-full px-2 py-0.5">
+              {pct}%
+            </span>
+          )}
+        </div>
+      </div>
+
       {/* ── Profile header ── */}
-      <div className="bg-cream border-b border-ink/10">
+      <div ref={headerRef} className="bg-cream border-b border-ink/10">
         <div className="max-w-2xl mx-auto px-4 py-5">
           <div className="flex items-start gap-4">
 
