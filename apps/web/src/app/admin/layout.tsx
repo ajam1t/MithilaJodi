@@ -10,6 +10,7 @@ const NAV = [
   { href: '/admin/reports',   label: 'Reports' },
   { href: '/admin/flags',     label: 'Flags' },
   { href: '/admin/accounts',  label: 'Accounts' },
+  { href: '/admin/master-data', label: 'Master Data' },
   { href: '/admin/config',    label: 'Plan Config' },
   { href: '/admin/audit',     label: 'Audit Log' },
 ]
