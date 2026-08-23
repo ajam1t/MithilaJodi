@@ -2,7 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
-import { hasFeatureAccess } from '@/lib/membership'
+import { getInterestAllowance } from '@/lib/membership'
 
 function toDisplayName(firstName: string, lastName: string | null): string {
   if (lastName) return `${firstName} ${lastName}`
@@ -200,10 +200,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, message: 'to_profile_id is required' }, { status: 400 })
   }
 
-  // feature access gate (bypassed when FREE_ACCESS_MODE=true)
-  if (!(await hasFeatureAccess(session.id))) {
+  // Interest allowance gate — enforced server-side
+  const allowance = await getInterestAllowance(session.id)
+  if (!allowance.allowed) {
+    if (allowance.reason === 'limit_reached') {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: `You have used all ${allowance.limit} interests for this membership year. Upgrade to Mithila Premium for unlimited interests.`,
+          code: 'INTEREST_LIMIT_REACHED',
+          remaining: 0,
+        },
+        { status: 429 },
+      )
+    }
     return NextResponse.json(
-      { ok: false, message: 'An active membership is required to send interests' },
+      { ok: false, message: 'A paid membership is required to send interests', code: 'NO_MEMBERSHIP' },
       { status: 403 },
     )
   }
@@ -301,6 +313,14 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ ok: false, message: 'Failed to send interest' }, { status: 500 })
         }
 
+        // Increment interests_sent counter when plan has a limit
+        if (allowance.membershipId && allowance.limit !== null) {
+          await admin
+            .from('memberships')
+            .update({ interests_sent: (allowance.remaining !== null ? allowance.limit - allowance.remaining : 0) + 1 })
+            .eq('id', allowance.membershipId)
+        }
+
         await admin.from('notifications').insert({
           account_id: target.account_id,
           type: 'interest_received',
@@ -320,6 +340,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, message: 'Failed to send interest' }, { status: 500 })
   }
 
+  // Increment interests_sent counter when plan has a limit
+  if (allowance.membershipId && allowance.limit !== null) {
+    await admin
+      .from('memberships')
+      .update({ interests_sent: (allowance.remaining !== null ? allowance.limit - allowance.remaining : 0) + 1 })
+      .eq('id', allowance.membershipId)
+  }
+
   await admin.from('notifications').insert({
     account_id: target.account_id,
     type: 'interest_received',
@@ -329,5 +357,9 @@ export async function POST(request: NextRequest) {
     },
   })
 
-  return NextResponse.json({ ok: true, interest_id: newInterest.id }, { status: 201 })
+  return NextResponse.json({
+    ok: true,
+    interest_id: newInterest.id,
+    remaining: allowance.remaining !== null ? allowance.remaining - 1 : null,
+  }, { status: 201 })
 }

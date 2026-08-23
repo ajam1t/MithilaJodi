@@ -1,12 +1,13 @@
 import 'server-only'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { getSessionAccount } from '@/lib/auth'
 import { getActiveMembership, getActivePlan } from '@/lib/membership'
+import type { PlanConfig } from '@/lib/membership'
 import { getPaymentGateway } from '@/lib/services/payment/gateway'
 import { createAdminClient } from '@/lib/supabase/server'
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   const session = await getSessionAccount()
   if (!session) return NextResponse.json({ ok: false, message: 'Unauthorized' }, { status: 401 })
 
@@ -19,8 +20,30 @@ export async function POST() {
     )
   }
 
-  // Price comes from DB — never hardcoded
-  const plan = await getActivePlan()
+  // Accept optional plan slug in body — fall back to cheapest active plan
+  let body: Record<string, unknown> = {}
+  try { body = await request.json() } catch { /* no body is fine */ }
+
+  const planSlug = typeof body.plan === 'string' ? body.plan.trim() : null
+
+  let plan: PlanConfig | null = null
+  if (planSlug) {
+    const admin = await createAdminClient()
+    const { data } = await admin
+      .from('plan_config')
+      .select('*')
+      .eq('plan', planSlug)
+      .eq('active', true)
+      .maybeSingle()
+    plan = data as PlanConfig | null
+    if (!plan) {
+      return NextResponse.json({ ok: false, message: 'Plan not found or not available' }, { status: 404 })
+    }
+  } else {
+    // Fallback: cheapest active plan (backward compatibility)
+    plan = await getActivePlan()
+  }
+
   if (!plan) {
     return NextResponse.json({ ok: false, message: 'No plan available' }, { status: 503 })
   }
@@ -43,7 +66,6 @@ export async function POST() {
 
   const admin = await createAdminClient()
 
-  // Create payment record
   const { data: payment, error: paymentError } = await admin
     .from('payments')
     .insert({
@@ -64,7 +86,6 @@ export async function POST() {
     return NextResponse.json({ ok: false, message: 'Failed to create payment record' }, { status: 500 })
   }
 
-  // Create pending membership record
   const { error: membershipError } = await admin
     .from('memberships')
     .insert({

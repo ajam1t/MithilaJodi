@@ -1,4 +1,10 @@
-export const metadata = { title: 'Terms of Service — Mithila Jodi' }
+import type { Metadata } from 'next'
+import { SITE_URL } from '@/lib/constants'
+
+export const metadata: Metadata = {
+  title: 'Terms of Service — Mithila Jodi',
+  alternates: { canonical: `${SITE_URL}/legal/terms` },
+}
 
 export default function TermsPage() {
   return (

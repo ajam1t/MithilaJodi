@@ -1,9 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import type { ActiveMembership, MembershipStatus, PlanConfig } from '@/lib/membership'
+import type { ActiveMembership, MembershipStatus, PlanConfig, InterestAllowance } from '@/lib/membership'
 
-// Razorpay checkout.js types
 declare global {
   interface Window {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -13,7 +12,8 @@ declare global {
 
 type ApiData = {
   membership: ActiveMembership | null
-  plan: PlanConfig | null
+  plans: PlanConfig[]
+  allowance: InterestAllowance
 }
 
 function formatDate(iso: string | null): string {
@@ -56,46 +56,52 @@ function loadRazorpayScript(): Promise<boolean> {
   })
 }
 
+function interestLabel(plan: PlanConfig): string {
+  if (!plan.can_send_interest) return 'No interest sending'
+  if (plan.interest_limit === null) return 'Unlimited interests'
+  return `${plan.interest_limit} interests / year`
+}
+
 export default function MembershipContent() {
-  const [data, setData] = useState<ApiData | null>(null)
+  const [data, setData]     = useState<ApiData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [buying, setBuying] = useState(false)
-  const [success, setSuccess] = useState<{ expires_at: string } | null>(null)
+  const [error, setError]   = useState('')
+  const [buying, setBuying] = useState<string | null>(null)  // plan slug being purchased
+  const [success, setSuccess] = useState<{ expires_at: string; plan: string } | null>(null)
 
   useEffect(() => {
     fetch('/api/membership')
       .then(r => r.json())
       .then(j => {
-        if (j.ok) setData({ membership: j.membership, plan: j.plan })
+        if (j.ok) setData({ membership: j.membership, plans: j.plans ?? [], allowance: j.allowance })
         else setError(j.message ?? 'Failed to load membership details')
       })
       .catch(() => setError('Could not load membership details'))
       .finally(() => setLoading(false))
   }, [])
 
-  async function handleBuy() {
-    if (!data?.plan) return
-    setBuying(true)
+  async function handleBuy(planSlug: string) {
+    setBuying(planSlug)
     setError('')
 
     try {
-      // Create Razorpay order server-side
-      const orderRes = await fetch('/api/membership/orders', { method: 'POST' })
+      const orderRes = await fetch('/api/membership/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: planSlug }),
+      })
       const orderJson = await orderRes.json()
       if (!orderRes.ok || !orderJson.ok) {
         setError(orderJson.message ?? 'Could not create order. Try again.')
         return
       }
 
-      // Load Razorpay checkout script
       const loaded = await loadRazorpayScript()
       if (!loaded) {
         setError('Could not load payment gateway. Check your connection and try again.')
         return
       }
 
-      // Open Razorpay modal
       await new Promise<void>((resolve) => {
         const rzp = new window.Razorpay({
           key: orderJson.key,
@@ -104,10 +110,8 @@ export default function MembershipContent() {
           order_id: orderJson.orderId,
           name: 'Mithila Jodi',
           description: `${orderJson.plan.label} — ${orderJson.plan.duration_days} days`,
-          theme: { color: '#6B2737' },
-          modal: {
-            ondismiss() { resolve() },
-          },
+          theme: { color: '#7A1220' },
+          modal: { ondismiss() { resolve() } },
           handler: async (response: {
             razorpay_order_id: string
             razorpay_payment_id: string
@@ -125,11 +129,10 @@ export default function MembershipContent() {
               })
               const verifyJson = await verifyRes.json()
               if (verifyJson.ok) {
-                setSuccess({ expires_at: verifyJson.expires_at })
-                // Refresh membership data
+                setSuccess({ expires_at: verifyJson.expires_at, plan: planSlug })
                 const refreshRes = await fetch('/api/membership')
                 const refreshJson = await refreshRes.json()
-                if (refreshJson.ok) setData({ membership: refreshJson.membership, plan: refreshJson.plan })
+                if (refreshJson.ok) setData({ membership: refreshJson.membership, plans: refreshJson.plans ?? [], allowance: refreshJson.allowance })
               } else {
                 setError(verifyJson.message ?? 'Payment verification failed. Contact support.')
               }
@@ -147,7 +150,7 @@ export default function MembershipContent() {
         rzp.open()
       })
     } finally {
-      setBuying(false)
+      setBuying(null)
     }
   }
 
@@ -155,12 +158,11 @@ export default function MembershipContent() {
     return (
       <main className="min-h-screen bg-paper">
         <div className="wrap py-10">
-          <div className="max-w-lg mx-auto space-y-4 animate-pulse">
+          <div className="max-w-2xl mx-auto space-y-4 animate-pulse">
             <div className="h-8 bg-paper-3 rounded w-1/3" />
-            <div className="card p-6 space-y-3">
-              <div className="h-5 bg-paper-3 rounded w-1/2" />
-              <div className="h-4 bg-paper-3 rounded w-2/3" />
-              <div className="h-10 bg-paper-3 rounded" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="card p-6 space-y-3 h-40" />
+              <div className="card p-6 space-y-3 h-40" />
             </div>
           </div>
         </div>
@@ -168,21 +170,22 @@ export default function MembershipContent() {
     )
   }
 
-  const { membership, plan } = data ?? {}
+  const membership = data?.membership ?? null
+  const plans = data?.plans ?? []
+  const allowance = data?.allowance
   const isLive = membership && ['active', 'expiring_soon', 'grace'].includes(membership.status)
-  const canBuy = !isLive && plan
 
   return (
     <main className="min-h-screen bg-paper">
       <div className="wrap py-10">
-        <div className="max-w-lg mx-auto space-y-6">
+        <div className="max-w-2xl mx-auto space-y-6">
           <h1 className="font-serif text-3xl text-ink">Membership</h1>
 
           {/* Success banner */}
           {success && (
             <div className="rounded-mj-sm bg-green-50 border border-green-200 px-4 py-3 text-green-800 text-sm">
               Payment successful! Your membership is active until{' '}
-              <strong>{formatDate(success.expires_at)}</strong>. Your profile is now discoverable in search.
+              <strong>{formatDate(success.expires_at)}</strong>. You can now send interests and message matches.
             </div>
           )}
 
@@ -201,6 +204,10 @@ export default function MembershipContent() {
                 <StatusBadge status={membership.status} />
               </div>
               <dl className="text-sm space-y-1.5">
+                <div className="flex justify-between">
+                  <dt className="text-ink-soft">Plan</dt>
+                  <dd className="text-ink font-medium capitalize">{membership.plan}</dd>
+                </div>
                 {membership.started_at && (
                   <div className="flex justify-between">
                     <dt className="text-ink-soft">Started</dt>
@@ -209,9 +216,7 @@ export default function MembershipContent() {
                 )}
                 {membership.expires_at && (
                   <div className="flex justify-between">
-                    <dt className="text-ink-soft">
-                      {membership.status === 'grace' ? 'Expired' : 'Expires'}
-                    </dt>
+                    <dt className="text-ink-soft">{membership.status === 'grace' ? 'Expired' : 'Expires'}</dt>
                     <dd className="text-ink font-medium">{formatDate(membership.expires_at)}</dd>
                   </div>
                 )}
@@ -222,83 +227,130 @@ export default function MembershipContent() {
                   </div>
                 )}
               </dl>
+
+              {/* Interest counter */}
+              {allowance && allowance.limit !== null && isLive && (
+                <div className="border-t border-paper-3 pt-3">
+                  <div className="flex items-center justify-between text-sm mb-1.5">
+                    <span className="text-ink-soft">Interests remaining</span>
+                    <span className={`font-semibold ${(allowance.remaining ?? 0) === 0 ? 'text-red-600' : 'text-maroon'}`}>
+                      {allowance.remaining} / {allowance.limit}
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-paper-3 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-maroon rounded-full transition-all"
+                      style={{ width: `${Math.round(((allowance.remaining ?? 0) / allowance.limit) * 100)}%` }}
+                    />
+                  </div>
+                  {(allowance.remaining ?? 0) === 0 && (
+                    <p className="text-xs text-ink-soft mt-1.5">
+                      Upgrade to Mithila Premium for unlimited interests.
+                    </p>
+                  )}
+                </div>
+              )}
+              {allowance && allowance.limit === null && isLive && (
+                <p className="text-xs text-green-700 border-t border-paper-3 pt-2">
+                  Unlimited interests — Mithila Premium
+                </p>
+              )}
+
               {membership.status === 'expiring_soon' && (
                 <p className="text-xs text-amber-700 bg-amber-50 rounded-mj-sm px-3 py-2">
-                  Your membership expires soon. Renew to stay discoverable in search.
+                  Your membership expires soon. Renew to keep sending interests and messaging.
                 </p>
               )}
               {membership.status === 'grace' && (
                 <p className="text-xs text-orange-700 bg-orange-50 rounded-mj-sm px-3 py-2">
-                  Your membership has expired but you are in the grace period. Renew now to avoid losing visibility.
+                  Your membership has expired but you are in the grace period. Renew now to avoid losing access.
                 </p>
               )}
             </div>
           )}
 
-          {/* Plan card */}
-          {plan && (
-            <div className="card p-5 space-y-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="font-serif text-xl text-ink">{plan.label_en}</h2>
-                  {plan.label_mai && (
-                    <p className="text-sm text-ink-soft mt-0.5">{plan.label_mai}</p>
-                  )}
-                </div>
-                <div className="text-right">
-                  <p className="font-serif text-2xl text-maroon">{formatPrice(plan.price_paise)}</p>
-                  <p className="text-xs text-ink-soft">{plan.duration_days} days</p>
-                </div>
+          {/* Plan cards */}
+          {plans.length > 0 && (
+            <div>
+              <h2 className="font-serif text-xl text-ink mb-4">
+                {isLive ? 'Change or renew plan' : 'Choose a plan'}
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {plans.map(plan => {
+                  const isCurrent = membership?.plan === plan.plan && isLive
+                  const isPremium = plan.interest_limit === null
+                  return (
+                    <div
+                      key={plan.plan}
+                      className={[
+                        'card p-5 space-y-4 relative overflow-hidden',
+                        isPremium ? 'border-2 border-gold' : '',
+                      ].join(' ')}
+                    >
+                      {isPremium && (
+                        <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-maroon-deep/20 via-gold to-maroon-deep/20" />
+                      )}
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-[10px] uppercase tracking-widest text-terra font-semibold mb-1">
+                            {isPremium ? 'Best value' : 'Popular'}
+                          </p>
+                          <h3 className="font-serif text-lg text-maroon">{plan.label_en}</h3>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-serif text-2xl text-maroon">{formatPrice(plan.price_paise)}</p>
+                          <p className="text-xs text-ink-soft">{plan.duration_days} days</p>
+                        </div>
+                      </div>
+
+                      <ul className="text-sm text-ink space-y-1.5">
+                        {[
+                          'Profile search & discovery',
+                          plan.can_message ? 'Messaging' : null,
+                          interestLabel(plan),
+                          'Shortlist profiles',
+                          'Privacy controls',
+                        ].filter(Boolean).map(feature => (
+                          <li key={feature} className="flex items-start gap-2">
+                            <span className="text-gold mt-0.5 shrink-0">✓</span>
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+
+                      <p className="text-xs text-ink-soft border-t border-paper-3 pt-3">
+                        No automatic renewals. Your profile and data are retained after expiry.
+                      </p>
+
+                      {isCurrent ? (
+                        <div className="text-center py-2 text-sm text-green-700 font-medium">
+                          ✓ Your current plan
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleBuy(plan.plan)}
+                          disabled={buying !== null}
+                          className={[
+                            'w-full justify-center py-3 text-base disabled:opacity-60 disabled:cursor-not-allowed',
+                            isPremium ? 'btn-primary' : 'btn-ghost',
+                          ].join(' ')}
+                        >
+                          {buying === plan.plan
+                            ? 'Opening payment…'
+                            : isLive
+                            ? `Switch to ${plan.label_en} — ${formatPrice(plan.price_paise)}`
+                            : `Activate — ${formatPrice(plan.price_paise)}`}
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
-
-              <ul className="text-sm text-ink space-y-1.5">
-                {[
-                  'Discoverable in search by other members',
-                  'Send and receive interest requests',
-                  'View contact details of mutual interests',
-                  'Upload and manage profile photos',
-                  'Download biodata PDF',
-                ].map(feature => (
-                  <li key={feature} className="flex items-start gap-2">
-                    <span className="text-green-600 mt-0.5 shrink-0">✓</span>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-
-              <p className="text-xs text-ink-soft border-t border-paper-3 pt-3">
-                Manual renewal only — no automatic charges. Your profile and data are retained after expiry.
-              </p>
-
-              {canBuy && (
-                <button
-                  type="button"
-                  onClick={handleBuy}
-                  disabled={buying}
-                  className="btn-primary w-full justify-center py-3 text-base disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {buying
-                    ? 'Opening payment…'
-                    : isLive
-                    ? `Renew for ${formatPrice(plan.price_paise)}`
-                    : `Activate membership — ${formatPrice(plan.price_paise)}`}
-                </button>
-              )}
-
-              {isLive && !success && (
-                <button
-                  type="button"
-                  onClick={handleBuy}
-                  disabled={buying}
-                  className="btn-ghost w-full justify-center py-2.5 text-sm disabled:opacity-60"
-                >
-                  {buying ? 'Opening payment…' : `Renew for ${formatPrice(plan.price_paise)}`}
-                </button>
-              )}
             </div>
           )}
 
-          {!plan && !loading && (
+          {plans.length === 0 && !loading && (
             <div className="card p-5 text-center text-ink-soft text-sm">
               No membership plans are currently available. Please check back later.
             </div>

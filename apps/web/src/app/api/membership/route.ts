@@ -1,16 +1,17 @@
 import 'server-only'
 import { NextResponse } from 'next/server'
 import { getSessionAccount } from '@/lib/auth'
-import { getActiveMembership, getActivePlan } from '@/lib/membership'
+import { getActiveMembership, getAllPlans, getInterestAllowance } from '@/lib/membership'
 
 export async function GET() {
   const session = await getSessionAccount()
   if (!session) return NextResponse.json({ ok: false, message: 'Unauthorized' }, { status: 401 })
 
-  const [membership, plan] = await Promise.all([
+  const [membership, plans, allowance] = await Promise.all([
     getActiveMembership(session.id),
-    getActivePlan(),
+    getAllPlans(),
+    getInterestAllowance(session.id),
   ])
 
-  return NextResponse.json({ ok: true, membership, plan })
+  return NextResponse.json({ ok: true, membership, plans, allowance })
 }

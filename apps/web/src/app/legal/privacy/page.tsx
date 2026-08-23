@@ -1,4 +1,10 @@
-export const metadata = { title: 'Privacy Policy — Mithila Jodi' }
+import type { Metadata } from 'next'
+import { SITE_URL } from '@/lib/constants'
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy — Mithila Jodi',
+  alternates: { canonical: `${SITE_URL}/legal/privacy` },
+}
 
 export default function PrivacyPage() {
   return (

@@ -11,7 +11,9 @@ export const SESSION_DAYS = 30
  * safely append paths. Keep every SEO surface pointed at this one value to
  * avoid duplicate-canonical issues.
  */
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mithilajodi.com').replace(/\/+$/, '')
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mithilajodi.com')
+  .replace(/\/+$/, '')
+  .replace(/^https:\/\/www\./, 'https://')
 
 /** Indian mobile: 10 digits starting with 6–9 */
 export const INDIA_MOBILE_RE = /^[6-9]\d{9}$/

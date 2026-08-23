@@ -12,7 +12,7 @@ const SITE = SITE_URL
 export const metadata: Metadata = {
   title: 'Pricing — Mithila Jodi Matrimonial Plans',
   description:
-    'Simple, transparent pricing for Mithila Jodi — a matrimonial platform for the Mithila community. Free plan at ₹0/year. Premium at ₹151/year with messaging, advanced search, and unlimited interests.',
+    'Simple, transparent pricing for Mithila Jodi. Free at ₹0/year. Mithila Member at ₹151/year (151 interests). Mithila Premium at ₹499/year (unlimited interests + messaging).',
   alternates: { canonical: `${SITE}/pricing` },
   openGraph: {
     type: 'website',
@@ -20,33 +20,32 @@ export const metadata: Metadata = {
     siteName: 'Mithila Jodi',
     title: 'Pricing — Mithila Jodi Matrimonial Plans',
     description:
-      'Free and Premium plans for Mithila matrimony. Start free at ₹0/year, upgrade to Premium at ₹151/year for messaging, advanced search, and the full experience.',
+      'Three simple plans for Mithila matrimony. Free ₹0, Member ₹151/year (151 interests), Premium ₹499/year (unlimited interests & messaging).',
     images: ['/hero-couple.jpg'],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Pricing — Mithila Jodi',
-    description: 'Free plan at ₹0/year. Premium at ₹151/year. Transparent pricing for Mithila matrimonial membership.',
+    description: 'Free ₹0/year. Member ₹151/year. Premium ₹499/year. Transparent pricing for Mithila matrimonial membership.',
     images: ['/hero-couple.jpg'],
   },
 }
 
-// ── Feature comparison data ─────────────────────────────────────────────────
+// ── Feature comparison ──────────────────────────────────────────────────────
 
 type CellValue = 'tick' | 'cross' | string
 
-const COMPARISON: { feature: string; free: CellValue; premium: CellValue }[] = [
-  { feature: 'Create matrimonial profile', free: 'tick',      premium: 'tick' },
-  { feature: 'Create marriage biodata',   free: 'tick',      premium: 'tick' },
-  { feature: 'Profile search',            free: 'Limited',   premium: 'Full' },
-  { feature: 'Advanced search',           free: 'cross',     premium: 'tick' },
-  { feature: 'Send Interest',             free: '1 per day', premium: 'Unlimited' },
-  { feature: 'Receive Interest',          free: 'tick',      premium: 'tick' },
-  { feature: 'Accept Interest',           free: 'tick',      premium: 'tick' },
-  { feature: 'Messaging',                 free: 'cross',     premium: 'tick' },
-  { feature: 'Enhanced visibility',       free: 'cross',     premium: 'tick' },
-  { feature: 'Shortlist profiles',        free: 'tick',      premium: 'tick' },
-  { feature: 'Privacy controls',          free: 'tick',      premium: 'tick' },
+const COMPARISON: { feature: string; free: CellValue; member: CellValue; premium: CellValue }[] = [
+  { feature: 'Create matrimonial profile', free: 'tick',    member: 'tick',               premium: 'tick' },
+  { feature: 'Create marriage biodata',   free: 'tick',    member: 'tick',               premium: 'tick' },
+  { feature: 'Profile search',            free: 'Limited', member: 'Full',               premium: 'Full' },
+  { feature: 'Advanced search filters',   free: 'cross',   member: 'tick',               premium: 'tick' },
+  { feature: 'Send Interest',             free: 'cross',   member: '151 / year',         premium: 'Unlimited' },
+  { feature: 'Receive Interest',          free: 'tick',    member: 'tick',               premium: 'tick' },
+  { feature: 'Accept Interest',           free: 'tick',    member: 'tick',               premium: 'tick' },
+  { feature: 'Messaging',                 free: 'cross',   member: 'tick',               premium: 'tick' },
+  { feature: 'Shortlist profiles',        free: 'tick',    member: 'tick',               premium: 'tick' },
+  { feature: 'Privacy controls',          free: 'tick',    member: 'tick',               premium: 'tick' },
 ]
 
 const FREE_FEATURES = [
@@ -58,46 +57,53 @@ const FREE_FEATURES = [
   'Privacy controls',
 ]
 
-const PREMIUM_FEATURES = [
+const MEMBER_FEATURES = [
   'Everything in Free',
   'Full & advanced search',
-  'Unlimited interests',
+  '151 interests per year',
   'Messaging after interest accepted',
-  'Enhanced profile visibility',
-  'Better profile discovery',
+]
+
+const PREMIUM_FEATURES = [
+  'Everything in Member',
+  'Unlimited interests',
   'Full matrimonial experience',
 ]
 
 const FAQS = [
   {
     q: 'Is Free membership really ₹0?',
-    a: 'Yes. You can create a matrimonial profile and use all listed Free features without paying anything.',
+    a: 'Yes. You can create a matrimonial profile, build a biodata PDF, receive interests, and use all listed Free features without paying anything.',
   },
   {
-    q: 'How much is Premium?',
-    a: 'Premium is ₹151 per year. There are no monthly plans.',
+    q: 'What is the difference between Mithila Member and Mithila Premium?',
+    a: 'Mithila Member (₹151/year) lets you send up to 151 interests per year and message accepted matches. Mithila Premium (₹499/year) gives you unlimited interests per year along with all Member features.',
   },
   {
-    q: 'Can Free members send Interest?',
-    a: 'Yes, but Free members are limited to sending 1 Interest per day. Premium members can send unlimited interests.',
+    q: 'Can Free members send interests?',
+    a: 'No. Sending interests requires a paid membership — either Mithila Member (151/year) or Mithila Premium (unlimited). Free members can receive and accept interests from others.',
   },
   {
     q: 'Can Free members send messages?',
-    a: 'No. Messaging is a Premium feature. Free members can receive and accept interests, but messaging is not available until you upgrade.',
+    a: 'No. Messaging is available to Mithila Member and Mithila Premium members only, after an interest is accepted by both sides.',
   },
   {
-    q: 'What happens when someone accepts my Interest?',
-    a: 'Free members can see the accepted Interest in their activity. To begin messaging that person, you will need to upgrade to Premium.',
+    q: 'What happens when someone accepts my interest?',
+    a: 'If you hold a Mithila Member or Premium membership, you can start messaging that person directly. Free members can see the accepted interest but need to upgrade to begin messaging.',
   },
   {
-    q: 'Can I search profiles for free?',
-    a: 'Yes, but Free members have limited search and discovery access. Premium unlocks full search filters and advanced search.',
+    q: 'Do interests reset every year?',
+    a: 'Yes. The interest counter resets with each new membership period. Mithila Member gets 151 fresh interests when they renew; Mithila Premium has no limit.',
+  },
+  {
+    q: 'Are there monthly plans?',
+    a: 'No. Both paid plans are annual (365 days). There are no monthly options.',
   },
 ]
 
 // ── JSON-LD ─────────────────────────────────────────────────────────────────
 
-function buildJsonLd(premiumRupees: number) {
+function buildJsonLd(memberRupees: number, premiumRupees: number) {
   return {
     '@context': 'https://schema.org',
     '@graph': [
@@ -127,8 +133,17 @@ function buildJsonLd(premiumRupees: number) {
       },
       {
         '@type': 'Offer',
-        name: 'Mithila Jodi Premium',
-        description: 'Full matrimonial membership with messaging, advanced search, and unlimited interests.',
+        name: 'Mithila Jodi — Mithila Member',
+        description: '151 interests per year plus messaging for the Mithila community.',
+        price: memberRupees.toString(),
+        priceCurrency: 'INR',
+        availability: 'https://schema.org/InStock',
+        seller: { '@type': 'Organization', name: 'Mithila Jodi', url: SITE },
+      },
+      {
+        '@type': 'Offer',
+        name: 'Mithila Jodi — Mithila Premium',
+        description: 'Unlimited interests and messaging — the full matrimonial experience.',
         price: premiumRupees.toString(),
         priceCurrency: 'INR',
         availability: 'https://schema.org/InStock',
@@ -169,23 +184,27 @@ function Cell({ value }: { value: CellValue }) {
 // ── Page ────────────────────────────────────────────────────────────────────
 
 export default async function PricingPage() {
-  // Fetch live price from DB; fall back to ₹151 if DB unavailable.
-  let premiumPaiseFallback = 15100
+  // Fetch live prices from DB; fall back to known values if DB unavailable.
+  let memberPaise = 15100
+  let premiumPaise = 49900
   try {
     const admin = await createAdminClient()
-    const { data } = await admin
+    const { data: plans } = await admin
       .from('plan_config')
-      .select('price_paise')
+      .select('plan, price_paise')
+      .in('plan', ['member', 'premium'])
       .eq('active', true)
-      .order('price_paise', { ascending: true })
-      .limit(1)
-      .maybeSingle()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((data as any)?.price_paise) premiumPaiseFallback = (data as any).price_paise
-  } catch { /* use fallback */ }
+    for (const p of (plans ?? [])) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const row = p as any
+      if (row.plan === 'member')  memberPaise  = row.price_paise
+      if (row.plan === 'premium') premiumPaise = row.price_paise
+    }
+  } catch { /* use fallback prices */ }
 
-  const premiumRupees = Math.round(premiumPaiseFallback / 100)
-  const jsonLd = buildJsonLd(premiumRupees)
+  const memberRupees  = Math.round(memberPaise  / 100)
+  const premiumRupees = Math.round(premiumPaise / 100)
+  const jsonLd = buildJsonLd(memberRupees, premiumRupees)
 
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
@@ -217,86 +236,113 @@ export default async function PricingPage() {
 
         {/* ── Pricing cards ─────────────────────────────────────── */}
         <section className="bg-paper py-12 sm:py-16" aria-label="Pricing plans">
-          <div className="wrap max-w-3xl">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
+          <div className="wrap max-w-4xl">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-start">
 
               {/* FREE card */}
-              <div className="rounded-mj border border-gold/30 bg-cream shadow-mj-xs p-7 flex flex-col gap-5">
+              <div className="rounded-mj border border-gold/30 bg-cream shadow-mj-xs p-6 flex flex-col gap-4">
                 <div>
-                  <p className="eyebrow mb-2">Free</p>
-                  <div className="flex items-baseline gap-1 mb-1">
-                    <span className="font-serif text-maroon text-[42px] leading-none font-semibold">₹0</span>
+                  <p className="eyebrow mb-1.5 text-[10px]">Free</p>
+                  <div className="flex items-baseline gap-1 mb-0.5">
+                    <span className="font-serif text-maroon text-[38px] leading-none font-semibold">₹0</span>
                   </div>
-                  <p className="text-ink-soft text-[13px]">per year</p>
+                  <p className="text-ink-soft text-[12px]">per year</p>
                 </div>
 
-                <ul className="space-y-2.5 flex-1">
+                <ul className="space-y-2 flex-1">
                   {FREE_FEATURES.map(f => (
-                    <li key={f} className="flex items-start gap-2.5 text-[14px] text-ink">
+                    <li key={f} className="flex items-start gap-2 text-[13px] text-ink">
                       <Tick />
                       <span>{f}</span>
                     </li>
                   ))}
-                  <li className="flex items-start gap-2.5 text-[14px] text-ink-soft pt-1 border-t border-gold/20">
-                    <span className="text-gold shrink-0 mt-0.5">·</span>
-                    <span>1 Interest per day</span>
+                  <li className="flex items-start gap-2 text-[13px] text-ink-soft pt-1 border-t border-gold/20">
+                    <Cross />
+                    <span>No interest sending</span>
                   </li>
-                  <li className="flex items-start gap-2.5 text-[14px] text-ink-soft">
-                    <span className="text-ink-soft/50 shrink-0 mt-0.5">·</span>
+                  <li className="flex items-start gap-2 text-[13px] text-ink-soft">
+                    <Cross />
                     <span>No messaging</span>
                   </li>
                 </ul>
 
                 <Link
                   href="/register"
-                  className="btn-ghost w-full text-center text-[15px] py-3 rounded-mj-sm"
+                  className="btn-ghost w-full text-center text-[14px] py-2.5 rounded-mj-sm"
                 >
                   Create Free Profile
                 </Link>
               </div>
 
-              {/* PREMIUM card */}
+              {/* MITHILA MEMBER card */}
+              <div className="rounded-mj border border-gold/50 bg-cream shadow-mj-xs p-6 flex flex-col gap-4">
+                <div>
+                  <p className="eyebrow mb-1.5 text-[10px] text-terra">Mithila Member</p>
+                  <div className="flex items-baseline gap-1 mb-0.5">
+                    <span className="font-serif text-maroon text-[38px] leading-none font-semibold">₹{memberRupees}</span>
+                  </div>
+                  <p className="text-ink-soft text-[12px]">per year</p>
+                </div>
+
+                <ul className="space-y-2 flex-1">
+                  {MEMBER_FEATURES.map(f => (
+                    <li key={f} className="flex items-start gap-2 text-[13px] text-ink">
+                      <Tick />
+                      <span>{f === 'Everything in Free' ? <strong className="font-semibold">{f}</strong> : f}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Link
+                  href="/membership"
+                  className="btn-ghost w-full text-center text-[14px] py-2.5 rounded-mj-sm"
+                >
+                  Get Mithila Member
+                </Link>
+              </div>
+
+              {/* MITHILA PREMIUM card */}
               <div className="relative rounded-mj border-2 border-gold bg-cream shadow-mj overflow-hidden flex flex-col">
                 {/* Gold top accent */}
                 <div className="h-[4px] bg-gradient-to-r from-maroon-deep/30 via-gold to-maroon-deep/30" />
 
                 {/* Badge */}
-                <div className="absolute top-4 right-4">
-                  <span className="bg-maroon text-gold-lt text-[9px] uppercase tracking-[0.2em] font-semibold px-3 py-1 rounded-full">
-                    Recommended
+                <div className="absolute top-3 right-3">
+                  <span className="bg-maroon text-gold-lt text-[9px] uppercase tracking-[0.2em] font-semibold px-2.5 py-1 rounded-full">
+                    Best value
                   </span>
                 </div>
 
-                <div className="p-7 flex flex-col gap-5 flex-1">
+                <div className="p-6 flex flex-col gap-4 flex-1">
                   <div>
-                    <p className="eyebrow mb-2 text-maroon">Premium</p>
-                    <div className="flex items-baseline gap-1 mb-1">
-                      <span className="font-serif text-maroon text-[42px] leading-none font-semibold">₹{premiumRupees}</span>
+                    <p className="eyebrow mb-1.5 text-[10px] text-maroon">Mithila Premium</p>
+                    <div className="flex items-baseline gap-1 mb-0.5">
+                      <span className="font-serif text-maroon text-[38px] leading-none font-semibold">₹{premiumRupees}</span>
                     </div>
-                    <p className="text-ink-soft text-[13px]">per year</p>
+                    <p className="text-ink-soft text-[12px]">per year</p>
                   </div>
 
-                  <ul className="space-y-2.5 flex-1">
+                  <ul className="space-y-2 flex-1">
                     {PREMIUM_FEATURES.map(f => (
-                      <li key={f} className="flex items-start gap-2.5 text-[14px] text-ink">
+                      <li key={f} className="flex items-start gap-2 text-[13px] text-ink">
                         <Tick />
-                        <span>{f === 'Everything in Free' ? <strong className="font-semibold">{f}</strong> : f}</span>
+                        <span>{f === 'Everything in Member' ? <strong className="font-semibold">{f}</strong> : f}</span>
                       </li>
                     ))}
                   </ul>
 
                   <Link
                     href="/membership"
-                    className="btn-primary w-full text-center text-[15px] py-3 rounded-mj-sm"
+                    className="btn-primary w-full text-center text-[14px] py-2.5 rounded-mj-sm"
                   >
-                    Upgrade to Premium
+                    Get Mithila Premium
                   </Link>
                 </div>
               </div>
 
             </div>
 
-            {/* Messaging notice */}
+            {/* Notice */}
             <div className="mt-6 flex gap-3 items-start bg-cream border border-gold/40 rounded-mj-sm px-5 py-4 shadow-mj-xs">
               <svg viewBox="0 0 20 20" width="18" height="18" fill="none" className="shrink-0 mt-0.5 text-gold" aria-hidden="true">
                 <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="1.5"/>
@@ -304,9 +350,10 @@ export default async function PricingPage() {
                 <circle cx="10" cy="13.5" r="0.9" fill="currentColor"/>
               </svg>
               <p className="text-[14px] text-ink-soft leading-relaxed">
-                <strong className="text-ink">Important:</strong> Free members can receive and accept interests,
-                but <strong className="text-maroon">messaging is only available to Premium members.</strong>{' '}
-                If someone accepts your interest, you will need to upgrade to Premium to begin messaging.
+                <strong className="text-ink">Note:</strong> Free members cannot send interests or messages.
+                {' '}<strong className="text-maroon">Mithila Member and Mithila Premium</strong>{' '}
+                are required to send interests and message matches after acceptance.
+                Your profile and biodata are always retained, even after a plan expires.
               </p>
             </div>
           </div>
@@ -314,7 +361,7 @@ export default async function PricingPage() {
 
         {/* ── Feature comparison ────────────────────────────────── */}
         <section className="bg-cream py-12 sm:py-16" aria-label="Feature comparison">
-          <div className="wrap max-w-3xl">
+          <div className="wrap max-w-4xl">
             <div className="text-center mb-8">
               <p className="eyebrow mb-2">What is included</p>
               <h2 className="section-heading text-2xl">Plan Comparison</h2>
@@ -322,17 +369,24 @@ export default async function PricingPage() {
             </div>
 
             <div className="rounded-mj border border-gold/30 overflow-hidden shadow-mj-xs">
-              <table className="w-full table-fixed text-[13px] sm:text-[14px]">
+              <table className="w-full table-fixed text-[12px] sm:text-[13px]">
                 <colgroup>
-                  <col className="w-[55%]" />
-                  <col className="w-[22.5%]" />
-                  <col className="w-[22.5%]" />
+                  <col className="w-[40%]" />
+                  <col className="w-[20%]" />
+                  <col className="w-[20%]" />
+                  <col className="w-[20%]" />
                 </colgroup>
                 <thead>
                   <tr className="bg-maroon">
-                    <th className="px-4 py-3 text-left font-serif font-normal text-gold-lt text-[13px]">Feature</th>
-                    <th className="px-3 py-3 text-center font-serif font-normal text-gold-lt text-[13px]">Free</th>
-                    <th className="px-3 py-3 text-center font-serif font-normal text-gold-lt text-[13px]">
+                    <th className="px-4 py-3 text-left font-serif font-normal text-gold-lt text-[12px]">Feature</th>
+                    <th className="px-2 py-3 text-center font-serif font-normal text-gold-lt text-[12px]">Free</th>
+                    <th className="px-2 py-3 text-center font-serif font-normal text-gold-lt text-[12px]">
+                      <span className="flex flex-col items-center gap-0.5 leading-tight">
+                        <span>Member</span>
+                        <span className="text-[9px] uppercase tracking-wider text-gold">₹{memberRupees}/yr</span>
+                      </span>
+                    </th>
+                    <th className="px-2 py-3 text-center font-serif font-normal text-gold-lt text-[12px]">
                       <span className="flex flex-col items-center gap-0.5 leading-tight">
                         <span>Premium</span>
                         <span className="text-[9px] uppercase tracking-wider text-gold">₹{premiumRupees}/yr</span>
@@ -350,10 +404,13 @@ export default async function PricingPage() {
                       ].join(' ')}
                     >
                       <td className="px-4 py-3 text-ink leading-snug">{row.feature}</td>
-                      <td className="px-3 py-3 text-center align-middle">
+                      <td className="px-2 py-3 text-center align-middle">
                         <span className="flex justify-center"><Cell value={row.free} /></span>
                       </td>
-                      <td className="px-3 py-3 text-center align-middle bg-gold/[0.04]">
+                      <td className="px-2 py-3 text-center align-middle bg-gold/[0.03]">
+                        <span className="flex justify-center"><Cell value={row.member} /></span>
+                      </td>
+                      <td className="px-2 py-3 text-center align-middle bg-gold/[0.06]">
                         <span className="flex justify-center"><Cell value={row.premium} /></span>
                       </td>
                     </tr>
@@ -363,9 +420,9 @@ export default async function PricingPage() {
             </div>
 
             <p className="text-center mt-5 text-[13px] text-ink-soft">
-              Prices are annual and billed once per year.{' '}
+              All plans are annual and billed once per year.{' '}
               <Link href="/membership" className="text-maroon hover:underline underline-offset-2">
-                Upgrade to Premium →
+                Upgrade now →
               </Link>
             </p>
           </div>
@@ -378,10 +435,10 @@ export default async function PricingPage() {
             <h2 className="section-heading text-xl sm:text-2xl mb-6">Transparent Pricing, Always</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
               {[
-                { label: 'Plans are annual', body: 'Both Free and Premium are billed on a yearly basis. There are no monthly plans.' },
+                { label: 'Plans are annual', body: 'All paid plans are billed on a yearly basis. There are no monthly options.' },
                 { label: 'Free is ₹0/year', body: 'Free membership costs nothing. You will never be charged for Free features.' },
-                { label: `Premium is ₹${premiumRupees}/year`, body: 'The full Premium plan is billed at ₹' + premiumRupees + ' per year, payable in one transaction.' },
-                { label: 'No surprises at checkout', body: 'You will see the applicable charges clearly before completing any payment.' },
+                { label: `Member is ₹${memberRupees}/year`, body: `Mithila Member is billed at ₹${memberRupees} per year for 151 interests and messaging.` },
+                { label: `Premium is ₹${premiumRupees}/year`, body: `Mithila Premium is billed at ₹${premiumRupees} per year for unlimited interests and messaging.` },
               ].map(({ label, body }) => (
                 <div key={label} className="card p-5">
                   <h3 className="font-serif text-maroon text-[15px] mb-1.5">{label}</h3>
@@ -414,7 +471,7 @@ export default async function PricingPage() {
 
             <div className="mt-10 text-center flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/register" className="btn-ghost">Create Free Profile</Link>
-              <Link href="/membership" className="btn-primary">Upgrade to Premium</Link>
+              <Link href="/membership" className="btn-primary">Upgrade Now</Link>
             </div>
           </div>
         </section>
