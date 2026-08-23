@@ -119,7 +119,7 @@ const FAMILY_TIPS = [
   'Verify information such as education, employment, and family background through your own networks.',
   'Take time before making decisions — there is no pressure to respond quickly.',
   'Arrange initial interactions or meetings in familiar, safe environments with family present.',
-  'Use the platform's privacy controls to manage how much information is visible and to whom.',
+  "Use the platform's privacy controls to manage how much information is visible and to whom.",
 ]
 
 const FAQS = [
