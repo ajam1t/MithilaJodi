@@ -116,7 +116,7 @@ export function MobileBottomNav() {
           </Link>
         </div>
       ) : (
-        /* Public / not-yet-loaded bottom nav */
+        /* Public / not-yet-loaded bottom nav — Home · Create Biodata · Join / Login · Search Profiles · Blog */
         <div className="flex items-stretch">
           {/* Home */}
           <Link href="/" className={navCls('/')}>
@@ -130,63 +130,49 @@ export function MobileBottomNav() {
                 <polyline points="9 22 9 12 15 12 15 22" />
               </svg>
             )}
-            <span className={`text-[10px] font-medium tracking-wide leading-none ${isActive('/') ? 'font-semibold' : ''}`}>Home</span>
+            <span className={`text-[10px] font-medium tracking-wide leading-tight text-center ${isActive('/') ? 'font-semibold' : ''}`}>Home</span>
           </Link>
 
-          {/* Biodata */}
-          <Link href="/#biodata" className={navCls('/#biodata')}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+          {/* Create Biodata */}
+          <Link href="/biodata" className={navCls('/biodata')}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
               <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
+              <line x1="9" y1="13" x2="15" y2="13" />
+              <line x1="9" y1="17" x2="13" y2="17" />
             </svg>
-            <span className="text-[10px] font-medium tracking-wide leading-none">Biodata</span>
+            <span className={`text-[10px] font-medium tracking-wide leading-tight text-center ${isActive('/biodata') ? 'font-semibold' : ''}`}>Create Biodata</span>
           </Link>
 
-          {/* Join — primary CTA centre */}
+          {/* Join / Login — primary CTA centre */}
           <Link href="/register" className={navCls('/register', true)}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="16" />
-              <line x1="8" y1="12" x2="16" y2="12" />
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="9" cy="8" r="4" />
+              <path d="M3 20c0-3.6 2.7-6 6-6" />
+              <line x1="18" y1="11" x2="18" y2="17" />
+              <line x1="15" y1="14" x2="21" y2="14" />
             </svg>
-            <span className="text-[10px] font-semibold tracking-wide leading-none">Join Free</span>
+            <span className="text-[10px] font-semibold tracking-wide leading-tight text-center">Join / Login</span>
           </Link>
 
-          {/* Login — only shown once we know user is logged out */}
-          {authLoaded && (
-            <Link href="/login" className={navCls('/login')}>
-              {isActive('/login') ? (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M12 12c2.7 0 4-1.3 4-4s-1.3-4-4-4-4 1.3-4 4 1.3 4 4 4zm0 2c-4 0-8 2-8 4v2h16v-2c0-2-4-4-8-4z" />
-                </svg>
-              ) : (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-              )}
-              <span className={`text-[10px] font-medium tracking-wide leading-none ${isActive('/login') ? 'font-semibold' : ''}`}>Login</span>
-            </Link>
-          )}
+          {/* Search Profiles */}
+          <Link href="/search" className={navCls('/search')}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <span className={`text-[10px] font-medium tracking-wide leading-tight text-center ${isActive('/search') ? 'font-semibold' : ''}`}>Search Profiles</span>
+          </Link>
 
-          {/* Help */}
-          <Link href="/help" className={navCls('/help')}>
-            {isActive('/help') ? (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
-              </svg>
-            ) : (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
-              </svg>
-            )}
-            <span className={`text-[10px] font-medium tracking-wide leading-none ${isActive('/help') ? 'font-semibold' : ''}`}>Help</span>
+          {/* Blog */}
+          <Link href="/blogs" className={navCls('/blogs')}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M5 4h9a2 2 0 0 1 2 2v13H7a2 2 0 0 1-2-2z" />
+              <path d="M16 8h2a1 1 0 0 1 1 1v8a2 2 0 0 1-2 2" />
+              <line x1="8" y1="8" x2="12" y2="8" />
+              <line x1="8" y1="12" x2="12" y2="12" />
+            </svg>
+            <span className={`text-[10px] font-medium tracking-wide leading-tight text-center ${isActive('/blogs') ? 'font-semibold' : ''}`}>Blog</span>
           </Link>
         </div>
       )}
