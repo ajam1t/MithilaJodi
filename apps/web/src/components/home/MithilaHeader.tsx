@@ -9,6 +9,7 @@ const NAV_LINKS = [
   { href: '/about', label: 'About' },
   { href: '/#biodata', label: 'Marriage Biodata' },
   { href: '/blogs', label: 'Blogs' },
+  { href: '/pricing', label: 'Pricing' },
   { href: '/help', label: 'Help' },
 ]
 
