@@ -22,6 +22,10 @@ const kalam = Kalam({
   subsets: ['latin', 'devanagari'],
   variable: '--font-kalam',
   display: 'swap',
+  // Decorative accent font — not used above the fold, so don't preload it
+  // (removes ~4 unnecessary <link rel=preload> tags; the font still loads
+  // on demand via @font-face when a .font-hand element renders).
+  preload: false,
 })
 
 export const metadata: Metadata = {

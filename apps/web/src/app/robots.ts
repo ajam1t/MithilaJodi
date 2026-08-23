@@ -9,14 +9,16 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        // Keep private / authenticated / functional areas out of the index.
-        // Public content lives at /, /explore, /blogs and /help.
+        // Keep private / authenticated areas out of the index. Public content
+        // lives at /, /explore, /blogs and /help.
+        //
+        // NOTE: /login, /register and /forgot-password are intentionally NOT
+        // disallowed here — they carry a `noindex, follow` meta (see (auth)
+        // layout) so crawlers may read them, follow their links, but never
+        // index them. Disallowing in robots.txt would hide that meta tag.
         disallow: [
           '/api/',
           '/admin',
-          '/login',
-          '/register',
-          '/forgot-password',
           '/settings',
           '/profile',        // own profile + /profile/[id] (auth-gated, private)
           '/messages',

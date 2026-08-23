@@ -3,8 +3,15 @@ import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { ExploreGrid } from './ExploreGrid'
+import { getPublicShowcaseProfiles } from '@/lib/publicProfiles'
+import type { SearchCard } from '@/components/ProfileCard'
+import { SITE_URL } from '@/lib/constants'
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mithilajodi.com'
+const SITE = SITE_URL
+
+// Server-render the curated showcase on each request so the first meaningful
+// profile content is present in the initial HTML (crawlable, no JS required).
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Browse Profiles — Discover Mithila Matches | Mithila Jodi',
@@ -13,7 +20,15 @@ export const metadata: Metadata = {
   alternates: { canonical: `${SITE}/explore` },
 }
 
-export default function ExplorePage() {
+export default async function ExplorePage() {
+  let initialProfiles: SearchCard[] = []
+  let loadError = false
+  try {
+    initialProfiles = await getPublicShowcaseProfiles()
+  } catch {
+    loadError = true
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
       <MithilaHeader />
@@ -26,7 +41,7 @@ export default function ExplorePage() {
             </p>
           </header>
 
-          <ExploreGrid />
+          <ExploreGrid initialProfiles={initialProfiles} initialError={loadError} />
         </section>
       </main>
       <MithilaFooter />

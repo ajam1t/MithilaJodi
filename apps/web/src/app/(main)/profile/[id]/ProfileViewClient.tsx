@@ -86,6 +86,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [stickyVisible, setStickyVisible] = useState(false)
+  const [showReport, setShowReport] = useState(false)
   const headerRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -161,6 +162,27 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
       setMsg({ type: 'ok', text: 'Profile blocked.' })
     } else {
       setMsg({ type: 'err', text: json.message ?? 'Could not block.' })
+    }
+    setBusy(false)
+  }
+
+  async function submitReport(reason: string) {
+    setBusy(true); setMsg(null)
+    try {
+      const res = await fetch('/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reported_profile_id: data.id, reason }),
+      })
+      const json = await res.json()
+      if (json.ok) {
+        setShowReport(false)
+        setMsg({ type: 'ok', text: 'Thank you. Our team will review this profile.' })
+      } else {
+        setMsg({ type: 'err', text: json.message ?? 'Could not submit report.' })
+      }
+    } catch {
+      setMsg({ type: 'err', text: 'Could not submit report. Please try again.' })
     }
     setBusy(false)
   }
@@ -412,16 +434,53 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
                   {data.shortlisted ? 'Remove from shortlist' : 'Shortlist'}
                 </button>
 
-                {/* Block */}
-                <button
-                  type="button"
-                  onClick={blockProfile}
-                  disabled={busy}
-                  className="text-xs text-red-600 hover:underline self-center ml-auto disabled:opacity-60"
-                >
-                  Block
-                </button>
+                {/* Report + Block */}
+                <div className="flex items-center gap-3 self-center ml-auto">
+                  <button
+                    type="button"
+                    onClick={() => setShowReport(v => !v)}
+                    disabled={busy}
+                    className="text-xs text-ink-soft hover:text-maroon hover:underline disabled:opacity-60"
+                  >
+                    Report
+                  </button>
+                  <button
+                    type="button"
+                    onClick={blockProfile}
+                    disabled={busy}
+                    className="text-xs text-red-600 hover:underline disabled:opacity-60"
+                  >
+                    Block
+                  </button>
+                </div>
               </div>
+
+              {/* Report reason picker */}
+              {showReport && (
+                <div className="border-t border-ink/10 pt-3">
+                  <p className="text-xs text-ink-soft mb-2">Report this profile for:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {([
+                      ['fake_profile', 'Fake profile'],
+                      ['harassment', 'Harassment'],
+                      ['inappropriate_photo', 'Inappropriate photo'],
+                      ['spam', 'Spam'],
+                      ['fraud', 'Fraud'],
+                      ['other', 'Other'],
+                    ] as const).map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => submitReport(value)}
+                        disabled={busy}
+                        className="text-xs border border-ink/20 text-ink-soft hover:border-maroon hover:text-maroon rounded-full px-3 py-1 transition-colors disabled:opacity-60"
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

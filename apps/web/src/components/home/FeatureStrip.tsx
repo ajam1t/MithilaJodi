@@ -13,13 +13,13 @@ type Feature = {
 const FEATURES: Feature[] = [
   {
     id: 'verified',
-    title: 'Verified Profiles',
+    title: 'Mobile-Verified Profiles',
     tagline: 'Real People. Greater Trust.',
     bullets: [
-      'Human reviewed before activation',
-      'Authenticity checks on every member',
+      'Every account is mobile-number verified',
+      'Photos reviewed by our team before they appear',
+      'Report tools on every profile',
       'Suspicious profiles removed promptly',
-      'Privacy protected at every step',
     ],
     icon: (
       <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 sm:w-8 sm:h-8" aria-hidden="true">

@@ -5,12 +5,25 @@ import Link from 'next/link'
 import { ProfileCard3D } from '@/components/ProfileCard3D'
 import type { SearchCard } from '@/components/ProfileCard'
 
-export function ExploreGrid() {
-  const [results, setResults] = useState<SearchCard[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
+type ExploreGridProps = {
+  /** Profiles rendered server-side into the initial HTML (SSR). */
+  initialProfiles?: SearchCard[]
+  /** True when the server-side fetch failed. */
+  initialError?: boolean
+}
+
+export function ExploreGrid({ initialProfiles, initialError = false }: ExploreGridProps) {
+  const hasInitial = Array.isArray(initialProfiles)
+  const [results, setResults] = useState<SearchCard[]>(initialProfiles ?? [])
+  // When the server already provided data (or an error), skip the loading state
+  // entirely — the first paint shows real content, not a spinner.
+  const [loading, setLoading] = useState(!hasInitial && !initialError)
+  const [error, setError] = useState(initialError)
 
   useEffect(() => {
+    // Server-rendered data is authoritative; only fetch client-side when the
+    // page was rendered without it (defensive fallback).
+    if (hasInitial || initialError) return
     let cancelled = false
     fetch('/api/public/profiles')
       .then((r) => r.json())
@@ -22,7 +35,7 @@ export function ExploreGrid() {
       .catch(() => { if (!cancelled) setError(true) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [])
+  }, [hasInitial, initialError])
 
   return (
     <div>
