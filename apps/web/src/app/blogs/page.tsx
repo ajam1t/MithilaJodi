@@ -19,6 +19,7 @@ export const metadata: Metadata = {
     title: 'Blog — Mithila & Maithili Marriage Guides',
     description:
       'Thoughtful articles on Maithili marriage traditions, Mithila culture, and practical guidance for creating a marriage biodata.',
+    images: ['/hero-couple.jpg'],
   },
 }
 

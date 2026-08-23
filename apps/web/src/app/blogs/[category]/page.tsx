@@ -53,6 +53,7 @@ export async function generateMetadata(
       url: canonical,
       title,
       description,
+      images: ['/hero-couple.jpg'],
     },
   }
 }
