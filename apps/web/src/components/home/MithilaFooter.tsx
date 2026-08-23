@@ -16,6 +16,7 @@ const GROUPS = [
       { href: '/#biodata', label: 'Marriage Biodata' },
       { href: '/blogs', label: 'Blogs' },
       { href: '/help', label: 'Help & Support' },
+      { href: '/contact', label: 'Contact Us' },
     ],
   },
   {
