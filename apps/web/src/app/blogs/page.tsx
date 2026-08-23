@@ -4,6 +4,7 @@ import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { createAdminClient } from '@/lib/supabase/server'
+import { SITE_URL } from '@/lib/constants'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,14 +12,23 @@ export const metadata: Metadata = {
   title: 'Blog — Mithila & Maithili Marriage Guides',
   description:
     'Thoughtful articles on Maithili marriage traditions, Mithila culture, Madhubani heritage, and practical guidance for creating a marriage biodata. Explore the Mithila Jodi Journal.',
-  alternates: { canonical: 'https://www.mithilajodi.com/blogs' },
+  alternates: { canonical: `${SITE_URL}/blogs` },
   openGraph: {
     type: 'website',
-    url: 'https://www.mithilajodi.com/blogs',
+    url: `${SITE_URL}/blogs`,
     title: 'Blog — Mithila & Maithili Marriage Guides',
     description:
       'Thoughtful articles on Maithili marriage traditions, Mithila culture, and practical guidance for creating a marriage biodata.',
   },
+}
+
+const breadcrumbJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+    { '@type': 'ListItem', position: 2, name: 'Blog', item: `${SITE_URL}/blogs` },
+  ],
 }
 
 function formatDate(iso: string) {
@@ -59,6 +69,11 @@ export default async function BlogIndexPage() {
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
       <MithilaHeader />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
 
       <main className="flex-1 pb-16 lg:pb-0">
         {/* ── Hero header ──────────────────────────────────────── */}

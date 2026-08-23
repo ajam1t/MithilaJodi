@@ -2,11 +2,13 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
+import { SITE_URL } from '@/lib/constants'
 
 export const metadata: Metadata = {
   title: 'Help & Support',
   description:
     'How Mithila Jodi works — creating an account, building a marriage biodata in your language, privacy controls, and getting help.',
+  alternates: { canonical: `${SITE_URL}/help` },
 }
 
 const FAQS = [

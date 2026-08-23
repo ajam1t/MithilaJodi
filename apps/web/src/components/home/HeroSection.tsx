@@ -9,6 +9,10 @@ export function HeroSection() {
         <img
           src="/hero-couple.jpg"
           alt="A Mithila bride and groom exchanging wedding garlands, surrounded by family"
+          width={1536}
+          height={1024}
+          fetchPriority="high"
+          decoding="async"
           className="block w-full h-auto md:h-[420px] lg:h-[500px] md:object-cover md:object-[50%_25%]"
         />
       </div>

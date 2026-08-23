@@ -1,5 +1,13 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { AuthBottomNav } from '@/components/AuthBottomNav'
+
+// Everything under (main) is authenticated, private member area — never index it.
+// Individual pages may still set their own title; this robots default applies
+// unless a child page overrides it.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (

@@ -5,10 +5,11 @@ import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { createAdminClient } from '@/lib/supabase/server'
+import { SITE_URL } from '@/lib/constants'
 
 export const dynamic = 'force-dynamic'
 
-const BASE = 'https://www.mithilajodi.com'
+const BASE = SITE_URL
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-IN', {

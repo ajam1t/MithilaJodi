@@ -7,10 +7,11 @@ import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { createAdminClient } from '@/lib/supabase/server'
+import { SITE_URL } from '@/lib/constants'
 
 export const dynamic = 'force-dynamic'
 
-const BASE = 'https://www.mithilajodi.com'
+const BASE = SITE_URL
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-IN', {
@@ -31,7 +32,7 @@ export async function generateMetadata(
   const { data } = await supabase
     .from('blog_posts')
     .select(
-      `title, slug, excerpt, seo_title, seo_description, keywords,
+      `title, slug, excerpt, seo_title, seo_description, keywords, cover_url,
        published_at, updated_at, author_name,
        blog_categories(slug)`
     )
@@ -61,11 +62,13 @@ export async function generateMetadata(
       description,
       publishedTime: p.published_at ?? undefined,
       modifiedTime: p.updated_at ?? undefined,
+      images: [p.cover_url ?? '/hero-couple.jpg'],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
+      images: [p.cover_url ?? '/hero-couple.jpg'],
     },
   }
 }
@@ -132,6 +135,10 @@ export default async function ArticlePage(
       '@type': 'Organization',
       name: 'Mithila Jodi',
       url: BASE,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${BASE}/logo.png`,
+      },
     },
     datePublished: post.published_at ?? post.created_at,
     dateModified: post.updated_at ?? post.published_at ?? post.created_at,
@@ -139,8 +146,10 @@ export default async function ArticlePage(
       '@type': 'WebPage',
       '@id': canonical,
     },
+    inLanguage: 'en',
+    ...(cat && { articleSection: cat.name }),
     ...(keywords.length > 0 && { keywords: keywords.join(', ') }),
-    ...(post.cover_url && { image: post.cover_url }),
+    image: post.cover_url ?? `${BASE}/hero-couple.jpg`,
   }
 
   const breadcrumbJsonLd = {

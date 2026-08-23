@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Marcellus, Mukta, Kalam } from 'next/font/google'
+import { SITE_URL } from '@/lib/constants'
 import '@/styles/globals.css'
 
 const marcellus = Marcellus({
@@ -24,9 +25,7 @@ const kalam = Kalam({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mithilajodi.com'
-  ),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: 'Mithila Jodi — जहाँ परम्परा मिले, प्रेम से',
     template: '%s | Mithila Jodi',
@@ -34,13 +33,16 @@ export const metadata: Metadata = {
   description:
     'Mithila Jodi — जहाँ परम्परा मिले, प्रेम से | Where tradition meets love. A trusted matrimonial platform for the Mithila community. Create a marriage biodata in English, Hindi, Maithili & Sanskrit, connect families, and discover matches rooted in Mithila heritage.',
   keywords: [
+    'Mithila matrimonial',
     'Mithila matrimony',
     'Maithil matrimonial',
-    'Bihar matrimony',
+    'Maithili marriage',
     'Mithila marriage',
-    'marriage biodata',
+    'Mithila biodata',
     'Maithili biodata',
+    'Bihar matrimony',
   ],
+  applicationName: 'Mithila Jodi',
   icons: {
     icon: '/favicon.png',
     shortcut: '/favicon.png',
@@ -49,11 +51,22 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     siteName: 'Mithila Jodi',
+    locale: 'en_IN',
+    url: SITE_URL,
     title: 'Mithila Jodi — जहाँ परम्परा मिले, प्रेम से',
     description: 'Where tradition meets love. A trusted matrimonial platform for the Mithila community of India.',
+    images: [
+      {
+        url: '/hero-couple.jpg',
+        width: 1536,
+        height: 1024,
+        alt: 'A Mithila bride and groom exchanging wedding garlands, surrounded by family',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
+    images: ['/hero-couple.jpg'],
   },
   robots: {
     index: true,
