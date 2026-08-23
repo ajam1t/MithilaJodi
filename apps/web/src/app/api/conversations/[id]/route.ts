@@ -59,7 +59,7 @@ export async function GET(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pr = partnerRow as any
   const partnerName = pr
-    ? (pr.last_name ? `${pr.first_name} ${(pr.last_name as string)[0]}.` : (pr.first_name as string))
+    ? (pr.last_name ? `${pr.first_name} ${pr.last_name as string}` : (pr.first_name as string))
     : 'Member'
 
   let partnerPhotoUrl: string | null = null

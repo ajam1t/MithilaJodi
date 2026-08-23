@@ -5,7 +5,7 @@ import { getSessionAccount } from '@/lib/auth'
 import { hasFeatureAccess } from '@/lib/membership'
 
 function toDisplayName(firstName: string, lastName: string | null): string {
-  if (lastName) return `${firstName} ${lastName[0]}.`
+  if (lastName) return `${firstName} ${lastName}`
   return firstName
 }
 

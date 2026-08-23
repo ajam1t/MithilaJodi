@@ -436,7 +436,7 @@ export async function GET(request: NextRequest) {
 
     // Display name: "FirstName L." if last name exists, otherwise just first name.
     const displayName = lastName && lastName.length > 0
-      ? `${firstName} ${lastName[0]}.`
+      ? `${firstName} ${lastName}`
       : firstName
 
     // Age is derived from dob; dob is not forwarded.

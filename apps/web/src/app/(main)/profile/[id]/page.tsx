@@ -126,7 +126,7 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
   }
 
   const lastName = p.last_name as string | null
-  const displayName = lastName ? `${p.first_name} ${lastName[0]}.` : p.first_name
+  const displayName = lastName ? `${p.first_name} ${lastName}` : p.first_name
 
   const nativeName = p.native_place_id ? locMap[p.native_place_id] ?? null : null
   const currentName = p.current_loc_id ? locMap[p.current_loc_id] ?? null : null

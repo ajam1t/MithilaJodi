@@ -70,7 +70,7 @@ export function MithilaHeader() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/logo.png" alt="" className="h-10 sm:h-11 w-auto object-contain shrink-0" />
       <span className="flex flex-col leading-none min-w-0">
-        <span className="font-serif text-[17px] sm:text-[19px] text-maroon leading-tight">Mithila Jodi</span>
+        <span className="font-serif font-bold text-[19px] sm:text-[21px] text-maroon leading-tight">Mithila Jodi</span>
         <span className="font-deva text-[10px] sm:text-[11px] text-maroon opacity-80 leading-tight mt-0.5" lang="hi">
           जहाँ परम्परा मिले, प्रेम से
         </span>
@@ -110,7 +110,7 @@ export function MithilaHeader() {
         </button>
 
         <Link href="/" className="flex flex-col items-center text-center" aria-label="Mithila Jodi — home">
-          <span className="font-serif text-[24px] sm:text-[30px] text-maroon leading-none tracking-tight">
+          <span className="font-serif font-bold text-[28px] sm:text-[34px] text-maroon leading-none tracking-tight">
             Mithila Jodi
           </span>
           <span className="font-deva text-[11px] sm:text-[12px] text-maroon opacity-80 mt-1.5" lang="hi">

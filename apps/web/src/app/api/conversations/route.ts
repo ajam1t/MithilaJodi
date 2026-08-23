@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
 
 function toDisplayName(firstName: string, lastName: string | null): string {
-  if (lastName) return `${firstName} ${lastName[0]}.`
+  if (lastName) return `${firstName} ${lastName}`
   return firstName
 }
 
