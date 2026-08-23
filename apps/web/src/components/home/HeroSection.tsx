@@ -35,8 +35,8 @@ export function HeroSection() {
 
           {/* Tagline — Hindi + English visually connected */}
           <div className="space-y-0.5">
-            <p className="font-deva text-base md:text-lg text-maroon opacity-90" lang="hi">
-              जहाँ परम्परा मिले, प्रेम से
+            <p className="font-deva text-[3vw] sm:text-base md:text-lg text-maroon opacity-90 whitespace-nowrap" lang="hi">
+              मिथिला जोड़ी — जहाँ परम्परा मिले, प्रेम से
             </p>
             <p className="font-serif text-[14px] text-ink-soft italic">
               Where tradition meets love.
