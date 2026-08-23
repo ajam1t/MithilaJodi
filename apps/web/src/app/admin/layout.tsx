@@ -12,6 +12,8 @@ const NAV = [
   { href: '/admin/accounts',  label: 'Accounts' },
   { href: '/admin/master-data', label: 'Master Data' },
   { href: '/admin/showcase',  label: 'Search Showcase' },
+  { href: '/admin/blog',      label: 'Blog Posts' },
+  { href: '/admin/blog/categories', label: 'Blog Categories' },
   { href: '/admin/config',    label: 'Plan Config' },
   { href: '/admin/audit',     label: 'Audit Log' },
 ]

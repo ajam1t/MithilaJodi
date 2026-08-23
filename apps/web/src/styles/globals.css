@@ -120,6 +120,23 @@
   .section-heading {
     @apply font-serif text-display-md text-maroon leading-tight;
   }
+
+  /* ── Blog article prose ──────────────────────────────────── */
+  .prose-mj {
+    @apply text-ink leading-relaxed;
+  }
+  .prose-mj h2 { @apply font-serif text-[22px] sm:text-[26px] text-maroon mt-8 mb-3 leading-snug; }
+  .prose-mj h3 { @apply font-serif text-[18px] sm:text-[20px] text-maroon mt-6 mb-2; }
+  .prose-mj p  { @apply mb-4 text-[15px] sm:text-[16px]; }
+  .prose-mj ul { @apply mb-4 pl-5 list-disc space-y-1 text-[15px] sm:text-[16px]; }
+  .prose-mj ol { @apply mb-4 pl-5 list-decimal space-y-1 text-[15px] sm:text-[16px]; }
+  .prose-mj li { @apply leading-relaxed; }
+  .prose-mj a  { @apply text-maroon underline underline-offset-2 hover:text-terra; }
+  .prose-mj strong { @apply font-semibold text-ink; }
+  .prose-mj blockquote { @apply border-l-4 border-gold pl-4 italic text-ink-soft my-4; }
+  .prose-mj table { @apply w-full border-collapse mb-4 text-[14px]; }
+  .prose-mj th { @apply bg-paper text-maroon font-semibold px-3 py-2 border border-paper-3 text-left; }
+  .prose-mj td { @apply px-3 py-2 border border-paper-3; }
 }
 
 @layer utilities {
