@@ -9,9 +9,17 @@
 // Only PUBLIC widget values are used here (widgetId + tokenAuth). The secret
 // MSG91_AUTHKEY is server-only and is never imported or referenced client-side.
 
-const WIDGET_ID = process.env.NEXT_PUBLIC_MSG91_WIDGET_ID
-const TOKEN_AUTH = process.env.NEXT_PUBLIC_MSG91_TOKEN_AUTH
-const SCRIPT_SRC = 'https://verify.msg91.com/otp-provider.js'
+// widgetId + tokenAuth are PUBLIC MSG91 values (delivered to every browser), so
+// they are safe to ship in the client bundle. Env vars override them if MSG91
+// ever regenerates the widget. The secret Authkey is NOT here — it is server-only.
+const WIDGET_ID = process.env.NEXT_PUBLIC_MSG91_WIDGET_ID ?? '36687863534d333434393430'
+const TOKEN_AUTH = process.env.NEXT_PUBLIC_MSG91_TOKEN_AUTH ?? '563745TlGWMkasSdL6a8bbf01P1'
+
+// Primary + fallback CDN (mirrors MSG91's own generated loader).
+const SCRIPT_SRCS = [
+  'https://verify.msg91.com/otp-provider.js',
+  'https://verify.phone91.com/otp-provider.js',
+]
 
 type OtpCallback = (data: unknown) => void
 
@@ -30,9 +38,13 @@ declare global {
   }
 }
 
-/** Whether MSG91 is configured (both public widget values present). */
+/**
+ * Whether the MSG91 widget path is active. Explicitly opt-in via
+ * NEXT_PUBLIC_MSG91_ENABLED=true so local dev keeps using the server-generated
+ * OTP + DEV_OTP flow, while production (with the flag set) uses MSG91.
+ */
 export function isMsg91Enabled(): boolean {
-  return Boolean(WIDGET_ID && TOKEN_AUTH)
+  return process.env.NEXT_PUBLIC_MSG91_ENABLED === 'true' && Boolean(WIDGET_ID && TOKEN_AUTH)
 }
 
 let initPromise: Promise<void> | null = null
@@ -47,20 +59,27 @@ function loadScript(): Promise<void> {
       resolve()
       return
     }
-    const existing = document.querySelector<HTMLScriptElement>(`script[src="${SCRIPT_SRC}"]`)
-    if (existing) {
-      existing.addEventListener('load', () => resolve(), { once: true })
-      existing.addEventListener('error', () => reject(new Error('MSG91 script failed to load')), { once: true })
-      // If it already finished loading before we attached listeners:
-      if (typeof window.initSendOTP === 'function') resolve()
-      return
+
+    // Try each CDN in turn; only reject once every URL has failed.
+    let i = 0
+    const attempt = () => {
+      if (typeof window.initSendOTP === 'function') {
+        resolve()
+        return
+      }
+      if (i >= SCRIPT_SRCS.length) {
+        reject(new Error('MSG91 script failed to load'))
+        return
+      }
+      const src = SCRIPT_SRCS[i++]
+      const script = document.createElement('script')
+      script.src = src
+      script.async = true
+      script.onload = () => resolve()
+      script.onerror = () => attempt()
+      document.head.appendChild(script)
     }
-    const script = document.createElement('script')
-    script.src = SCRIPT_SRC
-    script.async = true
-    script.onload = () => resolve()
-    script.onerror = () => reject(new Error('MSG91 script failed to load'))
-    document.body.appendChild(script)
+    attempt()
   })
 }
 
