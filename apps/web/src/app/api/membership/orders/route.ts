@@ -60,8 +60,11 @@ export async function POST(request: NextRequest) {
       { account_id: session.id, plan: plan.plan }
     )
   } catch (err) {
-    console.error('[orders POST] gateway.createOrder failed:', err)
-    return NextResponse.json({ ok: false, message: 'Payment gateway error. Try again.' }, { status: 502 })
+    // TEMP DIAGNOSTIC: surface the real Razorpay reason on-screen to debug the
+    // live "Payment gateway error". Revert to a generic message once resolved.
+    const detail = err instanceof Error ? err.message : String(err)
+    console.error('[orders POST] gateway.createOrder failed:', detail)
+    return NextResponse.json({ ok: false, message: 'Gateway error: ' + detail }, { status: 502 })
   }
 
   const admin = await createAdminClient()
