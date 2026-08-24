@@ -10,7 +10,7 @@ const OTP_TTL_MINUTES = 10
 const MAX_ATTEMPTS = 5
 
 // Fallback dev code if DEV_OTP env var is not set. Server-only — never sent to clients.
-const DEFAULT_DEV_OTP = '010794'
+const DEFAULT_DEV_OTP = '0794'
 
 /**
  * Resolves the fixed development OTP from configuration.
@@ -31,8 +31,10 @@ function isDevOtpEnabled(): boolean {
   return process.env.DEV_OTP_ENABLED === 'true' || process.env.DEV_AUTH_MODE === 'true'
 }
 
+// 4-digit OTP (matches OTP_LENGTH and the MSG91 widget config).
+// randomInt is [min, max); 1000–9999 is always 4 digits (no leading zero).
 function generateOtp(): string {
-  return String(randomInt(100000, 999999))
+  return String(randomInt(1000, 10000))
 }
 
 /**

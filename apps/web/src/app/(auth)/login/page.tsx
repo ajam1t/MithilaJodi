@@ -2,9 +2,12 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { OtpBoxInput } from '@/components/OtpBoxInput'
+import { OTP_LENGTH } from '@/lib/constants'
+import { isMsg91Enabled, ensureMsg91, msg91SendOtp, msg91VerifyOtp, msg91RetryOtp } from '@/lib/msg91'
 
 type Mode = 'password' | 'otp'
 type OtpStep = 'mobile' | 'sent' | 'otp'
+type OtpChannel = 'msg91' | 'server'
 
 export default function LoginPage() {
   const [mode, setMode]                     = useState<Mode>('password')
@@ -12,6 +15,7 @@ export default function LoginPage() {
   const [password, setPassword]             = useState('')
   const [showPassword, setShowPassword]     = useState(false)
   const [otpStep, setOtpStep]               = useState<OtpStep>('mobile')
+  const [otpChannel, setOtpChannel]         = useState<OtpChannel>('server')
   const [otp, setOtp]                       = useState('')
   const [loading, setLoading]               = useState(false)
   const [error, setError]                   = useState('')
@@ -72,6 +76,29 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
     try {
+      // MSG91 path (production): headless widget behind our own UI.
+      if (isMsg91Enabled()) {
+        try {
+          await ensureMsg91()
+        } catch {
+          setError('Could not start OTP verification. Please refresh and try again.')
+          return
+        }
+        try {
+          await msg91SendOtp('91' + mobile)
+        } catch {
+          setError('Could not send OTP. Please check the number and try again.')
+          return
+        }
+        setOtpChannel('msg91')
+        setOtp('')
+        setOtpStep('sent')
+        startResendCountdown()
+        setTimeout(() => setOtpStep('otp'), 1800)
+        return
+      }
+
+      // Server/dev path (local dev, or if MSG91 is not configured).
       const res  = await fetch('/api/auth/otp/challenge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -79,6 +106,7 @@ export default function LoginPage() {
       })
       const data: { ok: boolean; message?: string } = await res.json()
       if (!data.ok) { setError(data.message ?? 'Could not send OTP. Please try again.'); return }
+      setOtpChannel('server')
       setOtp('')
       setOtpStep('sent')
       startResendCountdown()
@@ -95,6 +123,10 @@ export default function LoginPage() {
     setError('')
     startResendCountdown()
     try {
+      if (otpChannel === 'msg91') {
+        await msg91RetryOtp()
+        return
+      }
       const res = await fetch('/api/auth/otp/challenge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -103,17 +135,36 @@ export default function LoginPage() {
       const data: { ok: boolean; message?: string } = await res.json()
       if (!data.ok) setError(data.message ?? 'Could not resend OTP.')
     } catch {
-      setError('Network error. Please try again.')
+      setError('Could not resend OTP. Please try again.')
     }
   }
 
   /* ── OTP: verify ── */
   async function handleOtpVerify(e: React.FormEvent) {
     e.preventDefault()
-    if (otp.length < 6) { setError('Enter the OTP'); return }
+    if (otp.length < OTP_LENGTH) { setError('Enter the OTP'); return }
     setError('')
     setLoading(true)
     try {
+      if (otpChannel === 'msg91') {
+        let accessToken: string
+        try {
+          accessToken = await msg91VerifyOtp(otp)
+        } catch {
+          setError('Incorrect or expired OTP. Please try again.')
+          return
+        }
+        const res  = await fetch('/api/auth/otp/msg91', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile, accessToken, intent: 'login' }),
+        })
+        const data: { ok: boolean; message?: string } = await res.json()
+        if (!data.ok) { setError(data.message ?? 'Verification failed. Please try again.'); return }
+        window.location.href = '/profile'
+        return
+      }
+
       const res  = await fetch('/api/auth/otp/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -271,7 +322,7 @@ export default function LoginPage() {
             {error && <p className="mt-3 text-sm text-terra text-center">{error}</p>}
 
             <form onSubmit={handleOtpVerify} noValidate>
-              <button type="submit" disabled={loading || otp.length < 6} className="btn btn-primary w-full mt-5">
+              <button type="submit" disabled={loading || otp.length < OTP_LENGTH} className="btn btn-primary w-full mt-5">
                 {loading ? 'Verifying…' : 'Log In'}
               </button>
             </form>

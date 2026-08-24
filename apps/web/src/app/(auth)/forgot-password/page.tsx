@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { checkPassword, PASSWORD_RULES } from '@/lib/password'
+import { OTP_LENGTH } from '@/lib/constants'
 
 type Step = 'mobile' | 'human' | 'sent' | 'otp' | 'new_password'
 
@@ -101,7 +102,7 @@ export default function ForgotPasswordPage() {
   /* ── Step 4: verify OTP → get reset token ── */
   async function handleOtpVerify(e: React.FormEvent) {
     e.preventDefault()
-    if (otp.length < 6) { setError('Enter the OTP'); return }
+    if (otp.length < OTP_LENGTH) { setError('Enter the OTP'); return }
     setError('')
     setLoading(true)
     try {
@@ -233,14 +234,14 @@ export default function ForgotPasswordPage() {
               <label className="block mb-1.5">
                 <span className="text-sm font-medium text-ink">OTP</span>
                 <input
-                  type="text" inputMode="numeric" maxLength={8} placeholder="— — — — — —"
+                  type="text" inputMode="numeric" maxLength={OTP_LENGTH} placeholder="— — — —"
                   value={otp} autoFocus autoComplete="one-time-code"
-                  onChange={e => { setError(''); setOtp(e.target.value.replace(/\D/g, '').slice(0, 8)) }}
+                  onChange={e => { setError(''); setOtp(e.target.value.replace(/\D/g, '').slice(0, OTP_LENGTH)) }}
                   className="mt-1.5 block w-full px-4 py-3 text-center text-2xl font-mono tracking-[0.5em] border border-ink/20 rounded-mj focus:ring-2 focus:ring-maroon/30 focus:outline-none bg-white text-ink"
                 />
               </label>
               {error && <p className="mt-3 text-sm text-terra">{error}</p>}
-              <button type="submit" disabled={loading || otp.length < 6} className="btn btn-primary w-full mt-5">
+              <button type="submit" disabled={loading || otp.length < OTP_LENGTH} className="btn btn-primary w-full mt-5">
                 {loading ? 'Verifying…' : 'Verify OTP'}
               </button>
             </form>

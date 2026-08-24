@@ -3,15 +3,14 @@ import { createHash, randomBytes } from 'crypto'
 import { z } from 'zod'
 import { createAdminClient } from '@/lib/supabase/server'
 import { createOtpService } from '@/lib/services/otp/OtpService'
-import { generateSessionToken, hashSessionToken, sessionExpiresAt } from '@/lib/session'
+import { establishAccountSession } from '@/lib/authFlow'
 import { INDIA_MOBILE_RE, SESSION_COOKIE, SESSION_DAYS, toE164 } from '@/lib/constants'
-import type { ConsentType } from '@/types/database'
 
 const RESET_TOKEN_EXPIRY_MINUTES = 15
 
 const VerifySchema = z.object({
   mobile: z.string(),
-  code: z.string().regex(/^\d{6,8}$/, 'OTP must be 6 digits'),
+  code: z.string().regex(/^\d{4,8}$/, 'OTP must be 4 digits'),
   intent: z.enum(['login', 'register', 'forgot_password']),
   consent_terms: z.boolean().optional(),
   consent_privacy: z.boolean().optional(),
@@ -121,116 +120,22 @@ export async function POST(request: NextRequest) {
              null
   const ua = request.headers.get('user-agent') ?? null
 
-  let accountId: string
-  let isNew = false
-
-  if (intent === 'register') {
-    const { data: existing } = await admin
-      .from('accounts')
-      .select('id')
-      .eq('mobile', mobile)
-      .is('deleted_at', null)
-      .maybeSingle()
-
-    if (existing) {
-      return NextResponse.json(
-        { ok: false, message: 'This number is already registered. Please log in instead.' },
-        { status: 409 }
-      )
-    }
-
-    const { data: newAccount, error: createError } = await admin
-      .from('accounts')
-      .insert({
-        mobile,
-        mobile_verified: true,
-        account_status: 'active',
-        role: 'user',
-      })
-      .select('id')
-      .single()
-
-    if (createError || !newAccount) {
-      console.error('[otp/verify] account insert error:', createError?.message)
-      return NextResponse.json({ ok: false, message: 'Account creation failed. Please try again.' }, { status: 500 })
-    }
-
-    accountId = newAccount.id
-    isNew = true
-
-    const termsVer = process.env.TERMS_VERSION ?? '1.0'
-    const privacyVer = process.env.PRIVACY_POLICY_VERSION ?? '1.0'
-
-    const consents: Array<{
-      account_id: string
-      type: ConsentType
-      version: string
-      consented: boolean
-      ip_address: string | null
-      user_agent: string | null
-    }> = [
-      { account_id: accountId, type: 'terms', version: termsVer, consented: true, ip_address: ip, user_agent: ua },
-      { account_id: accountId, type: 'privacy', version: privacyVer, consented: true, ip_address: ip, user_agent: ua },
-      { account_id: accountId, type: 'data_processing', version: privacyVer, consented: true, ip_address: ip, user_agent: ua },
-    ]
-
-    const { error: consentError } = await admin.from('legal_consents').insert(consents)
-    if (consentError) {
-      console.error('[otp/verify] consent insert error:', consentError.message)
-    }
-
-  } else {
-    const { data: account } = await admin
-      .from('accounts')
-      .select('id, account_status')
-      .eq('mobile', mobile)
-      .is('deleted_at', null)
-      .maybeSingle()
-
-    if (!account) {
-      return NextResponse.json(
-        { ok: false, message: 'No account found with this number. Please register first.' },
-        { status: 404 }
-      )
-    }
-
-    if (account.account_status === 'banned') {
-      return NextResponse.json(
-        { ok: false, message: 'This account has been suspended. Contact support.' },
-        { status: 403 }
-      )
-    }
-
-    if (account.account_status === 'suspended') {
-      return NextResponse.json(
-        { ok: false, message: 'This account is temporarily suspended. Contact support.' },
-        { status: 403 }
-      )
-    }
-
-    accountId = account.id
-  }
-
-  // Create session
-  const token = generateSessionToken()
-  const tokenHash = hashSessionToken(token)
-  const expiresAt = sessionExpiresAt()
-
-  const { error: sessionError } = await admin.from('account_sessions').insert({
-    account_id: accountId,
-    token_hash: tokenHash,
-    expires_at: expiresAt.toISOString(),
-    user_agent: ua,
-    ip_address: ip,
+  const result = await establishAccountSession({
+    admin,
+    mobile,
+    intent,
+    consentTerms: consent_terms,
+    consentPrivacy: consent_privacy,
+    ip,
+    ua,
   })
 
-  if (sessionError) {
-    console.error('[otp/verify] session insert error:', sessionError.message)
-    return NextResponse.json({ ok: false, message: 'Could not create session. Please try again.' }, { status: 500 })
+  if (!result.ok) {
+    return NextResponse.json({ ok: false, message: result.message }, { status: result.status })
   }
 
-  const response = NextResponse.json({ ok: true, is_new: isNew })
-  response.cookies.set(SESSION_COOKIE, token, {
+  const response = NextResponse.json({ ok: true, is_new: result.isNew })
+  response.cookies.set(SESSION_COOKIE, result.sessionToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',

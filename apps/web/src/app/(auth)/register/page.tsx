@@ -3,8 +3,11 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { checkPassword, PASSWORD_RULES } from '@/lib/password'
 import { OtpBoxInput } from '@/components/OtpBoxInput'
+import { OTP_LENGTH } from '@/lib/constants'
+import { isMsg91Enabled, ensureMsg91, msg91SendOtp, msg91VerifyOtp, msg91RetryOtp } from '@/lib/msg91'
 
 type Step = 'mobile' | 'human' | 'sent' | 'otp' | 'password'
+type OtpChannel = 'msg91' | 'server'
 
 export default function RegisterPage() {
   const [step, setStep] = useState<Step>('mobile')
@@ -13,6 +16,7 @@ export default function RegisterPage() {
   const [challengeQ, setChallengeQ]             = useState('')
   const [humanAnswer, setHumanAnswer]           = useState('')
   const [otp, setOtp]                           = useState('')
+  const [otpChannel, setOtpChannel]             = useState<OtpChannel>('server')
   const [consentTerms, setConsentTerms]         = useState(false)
   const [consentPrivacy, setConsentPrivacy]     = useState(false)
   const [password, setPassword]                 = useState('')
@@ -66,13 +70,31 @@ export default function RegisterPage() {
       const verifyData: { ok: boolean; message?: string } = await verifyRes.json()
       if (!verifyData.ok) { setError(verifyData.message ?? 'Incorrect answer. Please try again.'); return }
 
-      const otpRes  = await fetch('/api/auth/otp/challenge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mobile }),
-      })
-      const otpData: { ok: boolean; message?: string } = await otpRes.json()
-      if (!otpData.ok) { setError(otpData.message ?? 'Could not send OTP. Please try again.'); return }
+      // MSG91 path (production): headless widget behind our own UI.
+      if (isMsg91Enabled()) {
+        try {
+          await ensureMsg91()
+        } catch {
+          setError('Could not start OTP verification. Please refresh and try again.')
+          return
+        }
+        try {
+          await msg91SendOtp('91' + mobile)
+        } catch {
+          setError('Could not send OTP. Please check the number and try again.')
+          return
+        }
+        setOtpChannel('msg91')
+      } else {
+        const otpRes  = await fetch('/api/auth/otp/challenge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile }),
+        })
+        const otpData: { ok: boolean; message?: string } = await otpRes.json()
+        if (!otpData.ok) { setError(otpData.message ?? 'Could not send OTP. Please try again.'); return }
+        setOtpChannel('server')
+      }
 
       setOtp('')
       setStep('sent')
@@ -106,6 +128,10 @@ export default function RegisterPage() {
     setError('')
     startResendCountdown()
     try {
+      if (otpChannel === 'msg91') {
+        await msg91RetryOtp()
+        return
+      }
       const res = await fetch('/api/auth/otp/challenge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -114,19 +140,40 @@ export default function RegisterPage() {
       const data: { ok: boolean; message?: string } = await res.json()
       if (!data.ok) setError(data.message ?? 'Could not resend OTP.')
     } catch {
-      setError('Network error. Please try again.')
+      setError('Could not resend OTP. Please try again.')
     }
   }
 
   /* ── Step 4: OTP + consents → create account & session ── */
   async function handleOtpVerify(e: React.FormEvent) {
     e.preventDefault()
-    if (otp.length < 6)   { setError('Enter the OTP'); return }
+    if (otp.length < OTP_LENGTH)   { setError('Enter the OTP'); return }
     if (!consentTerms)    { setError('Please accept the Terms of Service to continue'); return }
     if (!consentPrivacy)  { setError('Please accept the Privacy Policy to continue'); return }
     setError('')
     setLoading(true)
     try {
+      if (otpChannel === 'msg91') {
+        let accessToken: string
+        try {
+          accessToken = await msg91VerifyOtp(otp)
+        } catch {
+          setError('Incorrect or expired OTP. Please try again.')
+          return
+        }
+        const res  = await fetch('/api/auth/otp/msg91', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile, accessToken, intent: 'register', consent_terms: consentTerms, consent_privacy: consentPrivacy }),
+        })
+        const data: { ok: boolean; message?: string } = await res.json()
+        if (!data.ok) { setError(data.message ?? 'Verification failed. Please try again.'); return }
+        setPassword('')
+        setPasswordConfirm('')
+        setStep('password')
+        return
+      }
+
       const res  = await fetch('/api/auth/otp/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -297,7 +344,7 @@ export default function RegisterPage() {
                 </label>
               </div>
               {error && <p className="mt-3 text-sm text-terra text-center">{error}</p>}
-              <button type="submit" disabled={loading || otp.length < 6 || !consentTerms || !consentPrivacy} className="btn btn-primary w-full mt-5">
+              <button type="submit" disabled={loading || otp.length < OTP_LENGTH || !consentTerms || !consentPrivacy} className="btn btn-primary w-full mt-5">
                 {loading ? 'Verifying…' : 'Verify & Continue'}
               </button>
             </form>

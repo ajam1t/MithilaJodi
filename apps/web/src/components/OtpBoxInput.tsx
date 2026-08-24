@@ -1,5 +1,6 @@
 'use client'
 import { useRef } from 'react'
+import { OTP_LENGTH } from '@/lib/constants'
 
 interface OtpBoxInputProps {
   value: string
@@ -18,7 +19,7 @@ export function OtpBoxInput({
   disabled,
   hasError,
   autoFocus,
-  length = 6,
+  length = OTP_LENGTH,
 }: OtpBoxInputProps) {
   const refs = useRef<(HTMLInputElement | null)[]>([])
 
@@ -87,7 +88,7 @@ export function OtpBoxInput({
             type="text"
             inputMode="numeric"
             pattern="[0-9]*"
-            maxLength={6}
+            maxLength={length}
             value={digit}
             autoFocus={autoFocus && i === 0}
             autoComplete={i === 0 ? 'one-time-code' : 'off'}
