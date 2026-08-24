@@ -155,7 +155,14 @@ export async function msg91SendOtp(identifier: string): Promise<void> {
       reject(new Error('MSG91 sendOtp unavailable'))
       return
     }
-    window.sendOtp(identifier, () => resolve(), () => reject(new Error('send_failed')))
+    window.sendOtp(
+      identifier,
+      () => resolve(),
+      (err) => {
+        console.error('[MSG91] sendOtp failed:', err)
+        reject(new Error('send_failed'))
+      },
+    )
   })
 }
 
@@ -174,7 +181,10 @@ export async function msg91VerifyOtp(otp: string): Promise<string> {
         if (token) resolve(token)
         else reject(new Error('no_token'))
       },
-      () => reject(new Error('verify_failed')),
+      (err) => {
+        console.error('[MSG91] verifyOtp failed:', err)
+        reject(new Error('verify_failed'))
+      },
     )
   })
 }
@@ -187,6 +197,13 @@ export async function msg91RetryOtp(channel: string | null = null): Promise<void
       reject(new Error('MSG91 retryOtp unavailable'))
       return
     }
-    window.retryOtp(channel, () => resolve(), () => reject(new Error('retry_failed')))
+    window.retryOtp(
+      channel,
+      () => resolve(),
+      (err) => {
+        console.error('[MSG91] retryOtp failed:', err)
+        reject(new Error('retry_failed'))
+      },
+    )
   })
 }
