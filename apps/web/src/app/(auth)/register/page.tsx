@@ -109,7 +109,7 @@ export default function RegisterPage() {
 
   function startResendCountdown() {
     setResendCooldown(true)
-    setResendTimer(30)
+    setResendTimer(60)
     if (resendIntervalRef.current) clearInterval(resendIntervalRef.current)
     resendIntervalRef.current = setInterval(() => {
       setResendTimer(t => {
