@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
     orderId: gatewayOrder.orderId,
     amount: plan.price_paise,
     currency: 'INR',
-    key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? '',
+    key: process.env.RAZORPAY_KEY_ID ?? '',
     plan: { label: plan.label_en, duration_days: plan.duration_days },
   })
 }

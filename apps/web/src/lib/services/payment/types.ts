@@ -23,6 +23,14 @@ export interface GatewayRefund {
   status: string
 }
 
+export interface GatewayPayment {
+  paymentId: string
+  orderId: string
+  status: string        // 'created' | 'authorized' | 'captured' | 'refunded' | 'failed'
+  amount: number        // in paise
+  currency: string
+}
+
 export interface PaymentGateway {
   /** Create a payment order on the gateway (called server-side) */
   createOrder(
@@ -38,6 +46,11 @@ export interface PaymentGateway {
 
   /** Verify webhook event signature (from Razorpay webhook header) */
   verifyWebhookSignature(body: string, signature: string): boolean
+
+  /** Fetch the authoritative payment record from the gateway (server-side).
+   *  Used to confirm a payment was actually captured and that amount/currency
+   *  match before activating membership — never trust client callback data. */
+  fetchPayment(paymentId: string): Promise<GatewayPayment>
 
   /** Initiate refund */
   refund(paymentId: string, amountPaise: number): Promise<GatewayRefund>

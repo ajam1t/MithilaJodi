@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
   // Find payment — must belong to this session's account
   const { data: payment, error: fetchErr } = await admin
     .from('payments')
-    .select('id, account_id, plan, status')
+    .select('id, account_id, plan, status, amount_paise, currency')
     .eq('gateway_order_id', razorpay_order_id)
     .eq('account_id', session.id)
     .maybeSingle()
@@ -62,9 +62,40 @@ export async function POST(request: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const p = payment as any
 
-  // Idempotency: already captured by webhook
+  // Idempotency: already captured by webhook (or a duplicate callback)
   if (p.status === 'captured') {
     return NextResponse.json({ ok: true, already_active: true })
+  }
+
+  // Confirm with Razorpay that the payment is genuinely captured and that the
+  // amount/currency/order match the order we created. A valid signature only
+  // proves the IDs are authentic — it does NOT prove money was captured, so we
+  // fetch the authoritative payment record before activating anything.
+  let gp
+  try {
+    gp = await getPaymentGateway().fetchPayment(razorpay_payment_id)
+  } catch (err) {
+    console.error('[verify POST] fetchPayment error:', err)
+    return NextResponse.json(
+      { ok: false, message: 'Could not confirm payment right now. If money was deducted it will reflect shortly.' },
+      { status: 502 },
+    )
+  }
+
+  if (gp.orderId !== razorpay_order_id) {
+    console.warn('[verify POST] order mismatch for', razorpay_order_id)
+    return NextResponse.json({ ok: false, message: 'Payment does not match the order' }, { status: 400 })
+  }
+  if (gp.status !== 'captured') {
+    console.warn('[verify POST] payment not captured, status:', gp.status)
+    return NextResponse.json(
+      { ok: false, message: 'Payment not captured yet. If money was deducted, it will reflect shortly.' },
+      { status: 402 },
+    )
+  }
+  if (gp.amount !== p.amount_paise || gp.currency !== p.currency) {
+    console.warn('[verify POST] amount/currency mismatch for', razorpay_order_id)
+    return NextResponse.json({ ok: false, message: 'Payment amount mismatch' }, { status: 400 })
   }
 
   // Mark payment captured

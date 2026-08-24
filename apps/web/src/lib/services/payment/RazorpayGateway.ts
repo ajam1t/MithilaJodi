@@ -1,6 +1,6 @@
 import 'server-only'
 import crypto from 'crypto'
-import type { PaymentGateway, GatewayOrder, GatewayCapture, GatewayRefund } from './types'
+import type { PaymentGateway, GatewayOrder, GatewayCapture, GatewayRefund, GatewayPayment } from './types'
 
 const BASE_URL = 'https://api.razorpay.com/v1'
 
@@ -37,6 +37,25 @@ export class RazorpayGateway implements PaymentGateway {
     }
     const d = await res.json()
     return { orderId: d.id, amount: d.amount, currency: d.currency, receipt: d.receipt }
+  }
+
+  async fetchPayment(paymentId: string): Promise<GatewayPayment> {
+    const { keyId, keySecret } = creds()
+    const res = await fetch(`${BASE_URL}/payments/${paymentId}`, {
+      headers: { Authorization: basicAuth(keyId, keySecret) },
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(`Razorpay fetchPayment ${res.status}: ${JSON.stringify(err)}`)
+    }
+    const d = await res.json()
+    return {
+      paymentId: d.id,
+      orderId: d.order_id,
+      status: d.status,
+      amount: d.amount,
+      currency: d.currency,
+    }
   }
 
   verifyPaymentSignature(capture: GatewayCapture): boolean {
