@@ -136,6 +136,18 @@ export async function ensureMsg91(): Promise<void> {
   }
 }
 
+/** Best-effort human-readable reason from a MSG91 error payload. */
+export function describeMsg91Error(err: unknown): string {
+  if (typeof err === 'string') return err
+  if (err && typeof err === 'object') {
+    const e = err as Record<string, unknown>
+    if (typeof e.message === 'string' && e.message) return e.message
+    if (typeof e.type === 'string' && e.type) return e.type
+    try { return JSON.stringify(e) } catch { /* fall through */ }
+  }
+  return 'unknown error'
+}
+
 function extractAccessToken(data: unknown): string | null {
   if (typeof data === 'string') return data
   if (data && typeof data === 'object') {
@@ -160,7 +172,7 @@ export async function msg91SendOtp(identifier: string): Promise<void> {
       () => resolve(),
       (err) => {
         console.error('[MSG91] sendOtp failed:', err)
-        reject(new Error('send_failed'))
+        reject(new Error(describeMsg91Error(err)))
       },
     )
   })

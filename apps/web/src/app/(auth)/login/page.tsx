@@ -86,8 +86,8 @@ export default function LoginPage() {
         }
         try {
           await msg91SendOtp('91' + mobile)
-        } catch {
-          setError('Could not send OTP. Please check the number and try again.')
+        } catch (err) {
+          setError('OTP error: ' + (err instanceof Error ? err.message : 'Could not send OTP.'))
           return
         }
         setOtpChannel('msg91')
