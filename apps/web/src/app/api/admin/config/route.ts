@@ -14,7 +14,7 @@ export async function GET() {
   const { data: plans, error } = await admin
     .from('plan_config')
     .select('*')
-    .eq('is_active', true)
+    .eq('active', true)
     .order('plan')
     .limit(10)
 
@@ -77,7 +77,7 @@ export async function PATCH(request: NextRequest) {
   const updateObj: Record<string, any> = {}
   if (price_paise !== undefined) updateObj.price_paise = price_paise
   if (duration_days !== undefined) updateObj.duration_days = duration_days
-  if (grace_period_days !== undefined) updateObj.grace_period_days = grace_period_days
+  if (grace_period_days !== undefined) updateObj.grace_days = grace_period_days
   if (label_en !== undefined) updateObj.label_en = label_en
   if (label_mai !== undefined) updateObj.label_mai = label_mai
 

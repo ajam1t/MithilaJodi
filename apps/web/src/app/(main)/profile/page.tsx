@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ProfileCard3D from '@/components/ProfileCard3D'
 import type { SearchCard } from '@/components/ProfileCard'
+import CurrentPlanCard from './CurrentPlanCard'
 
 type AccountInfo = { id: string; mobile: string; role: string }
 
@@ -356,6 +357,9 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+
+      {/* ── Current Plan / Subscription ── */}
+      <CurrentPlanCard />
 
       {/* ── 3D Profile Card ── */}
       {profile && cardProfile && (
