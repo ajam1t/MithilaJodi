@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { checkPassword, PASSWORD_RULES } from '@/lib/password'
 import { OtpBoxInput } from '@/components/OtpBoxInput'
 import { OtpSentAnimation } from '@/components/OtpSentAnimation'
+import { AuthProgress } from '@/components/AuthProgress'
 import { OTP_LENGTH } from '@/lib/constants'
 import { isMsg91Enabled, ensureMsg91, msg91SendOtp, msg91VerifyOtp, msg91RetryOtp } from '@/lib/msg91'
 
@@ -34,6 +35,7 @@ export default function RegisterPage() {
     : mobile
 
   const strength = checkPassword(password)
+  const progressStep = step === 'mobile' ? 1 : step === 'human' ? 2 : step === 'password' ? 4 : 3
 
   /* ── Step 1: mobile → fetch human challenge ── */
   async function handleMobileSubmit(e: React.FormEvent) {
@@ -219,37 +221,45 @@ export default function RegisterPage() {
 
   return (
     <div className="w-full max-w-sm">
-      <div className="text-center mb-8">
+      <div className="mb-6 text-center sm:mb-8">
         <Link href="/" className="inline-block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="Mithila Jodi" className="h-24 w-auto object-contain mx-auto" />
+          <img src="/logo.png" alt="Mithila Jodi" className="mx-auto h-20 w-auto object-contain sm:h-24" />
         </Link>
       </div>
 
       <div className="card p-6 sm:p-8">
 
+        {step !== 'sent' && <AuthProgress steps={['Mobile', 'Quick check', 'Verify', 'Password']} current={progressStep} />}
+
         {/* ── Step: sent ── */}
-        {step === 'sent' && <OtpSentAnimation mobile={maskedMobile} />}
+        {step === 'sent' && (
+          <>
+            <AuthProgress steps={['Mobile', 'Quick check', 'Verify', 'Password']} current={3} />
+            <OtpSentAnimation mobile={maskedMobile} />
+          </>
+        )}
 
         {/* ── Step 1: mobile ── */}
         {step === 'mobile' && (
           <>
             <p className="eyebrow mb-2">Register</p>
             <h2 className="text-xl font-display text-ink mb-6">Create your account</h2>
+            <p className="-mt-3 mb-5 text-sm leading-relaxed text-ink-soft">It takes about two minutes. Your mobile number stays private and is only used to secure your account.</p>
             <form onSubmit={handleMobileSubmit} noValidate>
               <label className="block mb-1.5">
                 <span className="text-sm font-medium text-ink">Mobile number</span>
                 <div className="mt-1.5 flex items-center border border-ink/20 rounded-mj bg-white overflow-hidden focus-within:ring-2 focus-within:ring-maroon/30">
                   <span className="px-3 py-3 text-ink-soft text-sm bg-paper border-r border-ink/20 font-mono select-none">+91</span>
                   <input
-                    type="tel" inputMode="numeric" maxLength={10} placeholder="Enter 10-digit number"
+                    type="tel" inputMode="numeric" maxLength={10} autoComplete="tel" aria-label="10-digit mobile number" placeholder="Enter 10-digit number"
                     value={mobile} autoFocus
                     onChange={e => { setError(''); setMobile(e.target.value.replace(/\D/g, '').slice(0, 10)) }}
                     className="flex-1 px-4 py-3 text-ink bg-transparent focus:outline-none text-base font-mono"
                   />
                 </div>
               </label>
-              {error && <p className="mt-3 text-sm text-terra">{error}</p>}
+              {error && <p role="alert" className="mt-3 text-sm text-terra">{error}</p>}
               <button type="submit" disabled={loading || mobile.length !== 10} className="btn btn-primary w-full mt-5">
                 {loading ? 'Loading…' : 'Continue'}
               </button>
@@ -280,7 +290,7 @@ export default function RegisterPage() {
                   className="mt-1.5 block w-full px-4 py-3 text-center text-xl font-mono border border-ink/20 rounded-mj focus:ring-2 focus:ring-maroon/30 focus:outline-none bg-white text-ink"
                 />
               </label>
-              {error && <p className="mt-3 text-sm text-terra">{error}</p>}
+              {error && <p role="alert" className="mt-3 text-sm text-terra">{error}</p>}
               <button type="submit" disabled={loading || !humanAnswer.trim()} className="btn btn-primary w-full mt-5">
                 {loading ? 'Verifying…' : 'Send OTP'}
               </button>
@@ -344,7 +354,7 @@ export default function RegisterPage() {
                   </span>
                 </label>
               </div>
-              {error && <p className="mt-3 text-sm text-terra text-center">{error}</p>}
+              {error && <p role="alert" className="mt-3 text-sm text-terra text-center">{error}</p>}
               <button type="submit" disabled={loading || otp.length < OTP_LENGTH || !consentTerms || !consentPrivacy} className="btn btn-primary w-full mt-5">
                 {loading ? 'Verifying…' : 'Verify & Continue'}
               </button>
@@ -411,7 +421,7 @@ export default function RegisterPage() {
                 <p className="mt-1 text-xs text-terra">Passwords do not match</p>
               )}
 
-              {error && <p className="mt-3 text-sm text-terra">{error}</p>}
+              {error && <p role="alert" className="mt-3 text-sm text-terra">{error}</p>}
 
               <button
                 type="submit"

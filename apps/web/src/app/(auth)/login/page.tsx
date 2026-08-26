@@ -3,6 +3,7 @@ import { useState, useRef } from 'react'
 import Link from 'next/link'
 import { OtpBoxInput } from '@/components/OtpBoxInput'
 import { OtpSentAnimation } from '@/components/OtpSentAnimation'
+import { AuthProgress } from '@/components/AuthProgress'
 import { OTP_LENGTH } from '@/lib/constants'
 import { isMsg91Enabled, ensureMsg91, msg91SendOtp, msg91VerifyOtp, msg91RetryOtp } from '@/lib/msg91'
 
@@ -194,32 +195,42 @@ export default function LoginPage() {
 
   return (
     <div className="w-full max-w-sm">
-      <div className="text-center mb-8">
+      <div className="mb-6 text-center sm:mb-8">
         <Link href="/" className="inline-block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="Mithila Jodi" className="h-24 w-auto object-contain mx-auto" />
+          <img src="/logo.png" alt="Mithila Jodi" className="mx-auto h-20 w-auto object-contain sm:h-24" />
         </Link>
       </div>
 
       <div className="card p-6 sm:p-8">
 
+        <div className="mb-5">
+          <p className="text-sm font-medium text-maroon">Member access</p>
+          <p className="mt-1 text-sm leading-relaxed text-ink-soft">Sign in securely with your mobile number.</p>
+        </div>
+
         {/* Mode tabs */}
         {(mode === 'password' || (mode === 'otp' && otpStep === 'mobile')) && (
-          <div className="flex rounded-mj border border-ink/20 overflow-hidden mb-6">
-            <button
-              type="button"
-              onClick={() => switchMode('password')}
-              className={`flex-1 py-2 text-sm font-medium transition-colors ${mode === 'password' ? 'bg-maroon text-gold-lt' : 'bg-paper text-ink-soft hover:bg-cream hover:text-ink'}`}
-            >
-              Password
-            </button>
-            <button
-              type="button"
-              onClick={() => switchMode('otp')}
-              className={`flex-1 py-2 text-sm font-medium transition-colors ${mode === 'otp' ? 'bg-maroon text-gold-lt' : 'bg-paper text-ink-soft hover:bg-cream hover:text-ink'}`}
-            >
-              OTP
-            </button>
+          <div className="mb-6">
+            <div className="flex overflow-hidden rounded-mj border border-ink/20">
+              <button
+                type="button"
+                onClick={() => switchMode('password')}
+                aria-pressed={mode === 'password'}
+                className={`flex-1 py-2.5 text-sm font-medium transition-colors ${mode === 'password' ? 'bg-maroon text-gold-lt' : 'bg-paper text-ink-soft hover:bg-cream hover:text-ink'}`}
+              >
+                Password <span className="hidden sm:inline">· usual login</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => switchMode('otp')}
+                aria-pressed={mode === 'otp'}
+                className={`flex-1 py-2.5 text-sm font-medium transition-colors ${mode === 'otp' ? 'bg-maroon text-gold-lt' : 'bg-paper text-ink-soft hover:bg-cream hover:text-ink'}`}
+              >
+                OTP <span className="hidden sm:inline">· no password</span>
+              </button>
+            </div>
+            <p className="mt-2 text-center text-xs text-ink-soft">Choose the quickest way to sign in.</p>
           </div>
         )}
 
@@ -234,7 +245,7 @@ export default function LoginPage() {
                 <div className="mt-1.5 flex items-center border border-ink/20 rounded-mj bg-white overflow-hidden focus-within:ring-2 focus-within:ring-maroon/30">
                   <span className="px-3 py-3 text-ink-soft text-sm bg-paper border-r border-ink/20 font-mono select-none">+91</span>
                   <input
-                    type="tel" inputMode="numeric" maxLength={10} placeholder="Enter 10-digit number"
+                    type="tel" inputMode="numeric" maxLength={10} autoComplete="tel" aria-label="10-digit mobile number" placeholder="Enter 10-digit number"
                     value={mobile} autoFocus
                     onChange={e => { setError(''); setMobile(e.target.value.replace(/\D/g, '').slice(0, 10)) }}
                     className="flex-1 px-4 py-3 text-ink bg-transparent focus:outline-none text-base font-mono"
@@ -258,7 +269,7 @@ export default function LoginPage() {
               <div className="mt-1 text-right">
                 <Link href="/forgot-password" className="text-xs text-maroon hover:underline">Forgot password?</Link>
               </div>
-              {error && <p className="mt-3 text-sm text-terra">{error}</p>}
+              {error && <p role="alert" className="mt-3 text-sm text-terra">{error}</p>}
               <button type="submit" disabled={loading || mobile.length !== 10 || !password} className="btn btn-primary w-full mt-5">
                 {loading ? 'Logging in…' : 'Log In'}
               </button>
@@ -271,10 +282,16 @@ export default function LoginPage() {
         )}
 
         {/* ── OTP mode ── */}
-        {mode === 'otp' && otpStep === 'sent' && <OtpSentAnimation mobile={maskedMobile} />}
+        {mode === 'otp' && otpStep === 'sent' && (
+          <>
+            <AuthProgress steps={['Mobile', 'Code sent', 'Verify']} current={2} />
+            <OtpSentAnimation mobile={maskedMobile} />
+          </>
+        )}
 
         {mode === 'otp' && otpStep === 'mobile' && (
           <>
+            <AuthProgress steps={['Mobile', 'Code sent', 'Verify']} current={1} />
             <p className="eyebrow mb-2">Log In with OTP</p>
             <h2 className="text-xl font-display text-ink mb-6">Welcome back</h2>
             <form onSubmit={handleSendOtp} noValidate>
@@ -283,14 +300,14 @@ export default function LoginPage() {
                 <div className="mt-1.5 flex items-center border border-ink/20 rounded-mj bg-white overflow-hidden focus-within:ring-2 focus-within:ring-maroon/30">
                   <span className="px-3 py-3 text-ink-soft text-sm bg-paper border-r border-ink/20 font-mono select-none">+91</span>
                   <input
-                    type="tel" inputMode="numeric" maxLength={10} placeholder="Enter 10-digit number"
+                    type="tel" inputMode="numeric" maxLength={10} autoComplete="tel" aria-label="10-digit mobile number" placeholder="Enter 10-digit number"
                     value={mobile} autoFocus
                     onChange={e => { setError(''); setMobile(e.target.value.replace(/\D/g, '').slice(0, 10)) }}
                     className="flex-1 px-4 py-3 text-ink bg-transparent focus:outline-none text-base font-mono"
                   />
                 </div>
               </label>
-              {error && <p className="mt-3 text-sm text-terra">{error}</p>}
+              {error && <p role="alert" className="mt-3 text-sm text-terra">{error}</p>}
               <button type="submit" disabled={loading || mobile.length !== 10} className="btn btn-primary w-full mt-5">
                 {loading ? 'Sending…' : 'Get OTP'}
               </button>
@@ -304,6 +321,7 @@ export default function LoginPage() {
 
         {mode === 'otp' && otpStep === 'otp' && (
           <>
+            <AuthProgress steps={['Mobile', 'Code sent', 'Verify']} current={3} />
             <p className="eyebrow mb-2">Verify OTP</p>
             <h2 className="text-xl font-display text-ink mb-1">Enter the code</h2>
             <p className="text-sm text-ink-soft mb-6">
@@ -331,7 +349,7 @@ export default function LoginPage() {
               </div>
             )}
 
-            {error && <p className="mt-3 text-sm text-terra text-center">{error}</p>}
+            {error && <p role="alert" className="mt-3 text-sm text-terra text-center">{error}</p>}
 
             <form onSubmit={handleOtpVerify} noValidate>
               <button type="submit" disabled={loading || otp.length < OTP_LENGTH} className="btn btn-primary w-full mt-5">
