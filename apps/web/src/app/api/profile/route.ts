@@ -54,6 +54,39 @@ const ProfileSchema = z.object({
   // Numeric fields
   passing_year:     z.number().int().min(1950).max(new Date().getFullYear() + 1).optional().nullable(),
   experience_years: z.number().int().min(0).max(70).optional().nullable(),
+
+  // Private details
+  income_min_lpa: z.coerce.number().int().min(0).max(100000).optional().nullable(),
+  income_max_lpa: z.coerce.number().int().min(0).max(100000).optional().nullable(),
+  rashi: z.string().max(100).optional().nullable(),
+  nakshatra: z.string().max(100).optional().nullable(),
+  mangalik: z.string().max(100).optional().nullable(),
+  birth_time: z.string().max(50).optional().nullable(),
+  birth_place: z.string().max(200).optional().nullable(),
+  contact_mobile: z.string().max(30).optional().nullable(),
+  contact_email: z.string().email().max(255).optional().nullable().or(z.literal('')),
+  address: z.string().max(500).optional().nullable(),
+  kundli_url: z.string().max(500).optional().nullable(),
+  contact_visibility: z.string().max(50).optional().nullable(),
+  photo_visibility: z.string().max(50).optional().nullable(),
+
+  // Partner preferences
+  pref_age_min: z.coerce.number().int().min(18).max(100).optional().nullable(),
+  pref_age_max: z.coerce.number().int().min(18).max(100).optional().nullable(),
+  pref_gender: z.enum(['male', 'female', 'any', '']).optional().nullable(),
+  pref_caste: z.array(z.string().max(100)).optional().nullable(),
+  pref_gotra_safe: z.boolean().optional().nullable(),
+  pref_education: z.array(z.coerce.number().int().positive()).optional().nullable(),
+  pref_location: z.array(z.coerce.number().int().positive()).optional().nullable(),
+  pref_diet: z.array(z.string().max(100)).optional().nullable(),
+  pref_notes: z.string().max(1000).optional().nullable(),
+  pref_profession: z.array(z.string().max(100)).optional().nullable(),
+  pref_marital_status: z.array(z.string().max(100)).optional().nullable(),
+  pref_children: z.string().max(100).optional().nullable(),
+  pref_living_arrangement: z.string().max(100).optional().nullable(),
+  pref_career: z.string().max(500).optional().nullable(),
+  pref_marriage_timeline: z.string().max(100).optional().nullable(),
+  pref_manglik: z.string().max(100).optional().nullable(),
 })
 
 function computeCompletion(data: z.infer<typeof ProfileSchema>): number {
@@ -119,6 +152,13 @@ export async function GET() {
     }
   }
 
+  const privateDetails = profile
+    ? (await admin.from('profile_private').select('*').eq('profile_id', profile.id).maybeSingle()).data
+    : null
+  const preferences = profile
+    ? (await admin.from('profile_preferences').select('*').eq('profile_id', profile.id).maybeSingle()).data
+    : null
+
   // Resolve location display names for the 3D profile card
   let native_place_name: string | null = null
   let current_loc_name: string | null = null
@@ -138,7 +178,7 @@ export async function GET() {
     }
   }
 
-  return NextResponse.json({ ok: true, profile, photos, native_place_name, current_loc_name, job_loc_name })
+  return NextResponse.json({ ok: true, profile, private: privateDetails, preferences, photos, native_place_name, current_loc_name, job_loc_name })
 }
 
 export async function PUT(request: NextRequest) {
@@ -160,6 +200,14 @@ export async function PUT(request: NextRequest) {
 
   const data = parsed.data
   const admin = await createAdminClient()
+
+  const locationIds = [data.native_place_id, data.current_loc_id, data.job_loc_id].filter((value): value is number => typeof value === 'number')
+  if (locationIds.length > 0) {
+    const { data: validLocations, error: locationError } = await admin.from('india_locations').select('id').in('id', locationIds)
+    if (locationError || (validLocations ?? []).length !== new Set(locationIds).size) {
+      return NextResponse.json({ ok: false, message: 'Please select each location from the suggestions list.' }, { status: 400 })
+    }
+  }
 
   // Validate DOB: must be at least 18 years old
   const dob = new Date(data.dob)
@@ -250,6 +298,12 @@ export async function PUT(request: NextRequest) {
       console.error('[profile PUT] update error:', error.message)
       return NextResponse.json({ ok: false, message: 'Failed to save profile.' }, { status: 500 })
     }
+    try {
+      await savePrivateAndPreferences(admin, existing.id, data)
+    } catch (privateError) {
+      console.error('[profile PUT] private/preferences update error:', privateError)
+      return NextResponse.json({ ok: false, message: 'Profile saved, but private details could not be saved.' }, { status: 500 })
+    }
     return NextResponse.json({ ok: true, profile_id: existing.id })
   }
 
@@ -314,5 +368,52 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ ok: false, message: 'Failed to create profile.' }, { status: 500 })
   }
 
+  try {
+    await savePrivateAndPreferences(admin, newProfile.id, data)
+  } catch (privateError) {
+    console.error('[profile PUT] private/preferences create error:', privateError)
+    return NextResponse.json({ ok: false, message: 'Profile created, but private details could not be saved.' }, { status: 500 })
+  }
   return NextResponse.json({ ok: true, profile_id: newProfile.id }, { status: 201 })
+}
+
+async function savePrivateAndPreferences(admin: Awaited<ReturnType<typeof createAdminClient>>, profileId: string, data: z.infer<typeof ProfileSchema>) {
+  const { error: privateError } = await admin.from('profile_private').upsert({
+    profile_id: profileId,
+    income_min_lpa: data.income_min_lpa ?? null,
+    income_max_lpa: data.income_max_lpa ?? null,
+    rashi: data.rashi || null,
+    nakshatra: data.nakshatra || null,
+    mangalik: data.mangalik || null,
+    birth_time: data.birth_time || null,
+    birth_place: data.birth_place || null,
+    contact_mobile: data.contact_mobile || null,
+    contact_email: data.contact_email || null,
+    address: data.address || null,
+    kundli_url: data.kundli_url || null,
+    contact_visibility: data.contact_visibility || null,
+    photo_visibility: data.photo_visibility || null,
+  })
+  if (privateError) throw new Error(privateError.message)
+
+  const { error: preferenceError } = await admin.from('profile_preferences').upsert({
+    profile_id: profileId,
+    pref_age_min: data.pref_age_min ?? null,
+    pref_age_max: data.pref_age_max ?? null,
+    pref_gender: data.pref_gender || null,
+    pref_caste: data.pref_caste ?? null,
+    pref_gotra_safe: data.pref_gotra_safe ?? true,
+    pref_education: data.pref_education ?? null,
+    pref_location: data.pref_location ?? null,
+    pref_diet: data.pref_diet ?? null,
+    pref_notes: data.pref_notes || null,
+    pref_profession: data.pref_profession ?? null,
+    pref_marital_status: data.pref_marital_status ?? null,
+    pref_children: data.pref_children || null,
+    pref_living_arrangement: data.pref_living_arrangement || null,
+    pref_career: data.pref_career || null,
+    pref_marriage_timeline: data.pref_marriage_timeline || null,
+    pref_manglik: data.pref_manglik || null,
+  })
+  if (preferenceError) throw new Error(preferenceError.message)
 }

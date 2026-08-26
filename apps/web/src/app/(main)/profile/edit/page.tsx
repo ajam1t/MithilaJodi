@@ -49,6 +49,37 @@ type FormData = {
   about_me: string
   family_about: string
   discoverable: boolean
+  // Private details
+  income_min_lpa: string
+  income_max_lpa: string
+  rashi: string
+  nakshatra: string
+  mangalik: string
+  birth_time: string
+  birth_place: string
+  contact_mobile: string
+  contact_email: string
+  address: string
+  kundli_url: string
+  contact_visibility: string
+  photo_visibility: string
+  // Partner preferences
+  pref_age_min: string
+  pref_age_max: string
+  pref_gender: string
+  pref_caste: string
+  pref_gotra_safe: boolean
+  pref_education: string
+  pref_location: string
+  pref_diet: string
+  pref_profession: string
+  pref_marital_status: string
+  pref_children: string
+  pref_living_arrangement: string
+  pref_career: string
+  pref_marriage_timeline: string
+  pref_manglik: string
+  pref_notes: string
   // ── V10 additive fields ──
   marital_status: string
   mother_tongue: string
@@ -97,6 +128,35 @@ const EMPTY_FORM: FormData = {
   about_me: '',
   family_about: '',
   discoverable: false,
+  income_min_lpa: '',
+  income_max_lpa: '',
+  rashi: '',
+  nakshatra: '',
+  mangalik: '',
+  birth_time: '',
+  birth_place: '',
+  contact_mobile: '',
+  contact_email: '',
+  address: '',
+  kundli_url: '',
+  contact_visibility: '',
+  photo_visibility: '',
+  pref_age_min: '',
+  pref_age_max: '',
+  pref_gender: '',
+  pref_caste: '',
+  pref_gotra_safe: true,
+  pref_education: '',
+  pref_location: '',
+  pref_diet: '',
+  pref_profession: '',
+  pref_marital_status: '',
+  pref_children: '',
+  pref_living_arrangement: '',
+  pref_career: '',
+  pref_marriage_timeline: '',
+  pref_manglik: '',
+  pref_notes: '',
   marital_status: '',
   mother_tongue: '',
   degree: '',
@@ -356,6 +416,35 @@ export default function ProfileEditPage() {
             siblings_info: p.siblings_info ?? '',
             family_expectations: p.family_expectations ?? '',
             family_introduction: p.family_introduction ?? '',
+            income_min_lpa: j.private?.income_min_lpa?.toString() ?? '',
+            income_max_lpa: j.private?.income_max_lpa?.toString() ?? '',
+            rashi: j.private?.rashi ?? '',
+            nakshatra: j.private?.nakshatra ?? '',
+            mangalik: j.private?.mangalik ?? '',
+            birth_time: j.private?.birth_time ?? '',
+            birth_place: j.private?.birth_place ?? '',
+            contact_mobile: j.private?.contact_mobile ?? '',
+            contact_email: j.private?.contact_email ?? '',
+            address: j.private?.address ?? '',
+            kundli_url: j.private?.kundli_url ?? '',
+            contact_visibility: j.private?.contact_visibility ?? '',
+            photo_visibility: j.private?.photo_visibility ?? '',
+            pref_age_min: j.preferences?.pref_age_min?.toString() ?? '',
+            pref_age_max: j.preferences?.pref_age_max?.toString() ?? '',
+            pref_gender: j.preferences?.pref_gender ?? '',
+            pref_caste: Array.isArray(j.preferences?.pref_caste) ? j.preferences.pref_caste.join(', ') : '',
+            pref_gotra_safe: j.preferences?.pref_gotra_safe ?? true,
+            pref_education: Array.isArray(j.preferences?.pref_education) ? j.preferences.pref_education.join(', ') : '',
+            pref_location: Array.isArray(j.preferences?.pref_location) ? j.preferences.pref_location.join(', ') : '',
+            pref_diet: Array.isArray(j.preferences?.pref_diet) ? j.preferences.pref_diet.join(', ') : '',
+            pref_profession: Array.isArray(j.preferences?.pref_profession) ? j.preferences.pref_profession.join(', ') : '',
+            pref_marital_status: Array.isArray(j.preferences?.pref_marital_status) ? j.preferences.pref_marital_status.join(', ') : '',
+            pref_children: j.preferences?.pref_children ?? '',
+            pref_living_arrangement: j.preferences?.pref_living_arrangement ?? '',
+            pref_career: j.preferences?.pref_career ?? '',
+            pref_marriage_timeline: j.preferences?.pref_marriage_timeline ?? '',
+            pref_manglik: j.preferences?.pref_manglik ?? '',
+            pref_notes: j.preferences?.pref_notes ?? '',
           })
           setLocationNames({ native: j.native_place_name ?? '', current: j.current_loc_name ?? '', job: j.job_loc_name ?? '' })
         }
@@ -383,6 +472,16 @@ export default function ProfileEditPage() {
       job_loc_id: form.job_loc_id,
       passing_year: form.passing_year ? parseInt(form.passing_year) : null,
       experience_years: form.experience_years ? parseInt(form.experience_years) : null,
+      income_min_lpa: form.income_min_lpa ? parseInt(form.income_min_lpa) : null,
+      income_max_lpa: form.income_max_lpa ? parseInt(form.income_max_lpa) : null,
+      pref_age_min: form.pref_age_min ? parseInt(form.pref_age_min) : null,
+      pref_age_max: form.pref_age_max ? parseInt(form.pref_age_max) : null,
+      pref_caste: form.pref_caste.split(',').map(v => v.trim()).filter(Boolean),
+      pref_education: form.pref_education.split(',').map(v => parseInt(v.trim(), 10)).filter(Number.isFinite),
+      pref_location: form.pref_location.split(',').map(v => parseInt(v.trim(), 10)).filter(Number.isFinite),
+      pref_diet: form.pref_diet.split(',').map(v => v.trim()).filter(Boolean),
+      pref_profession: form.pref_profession.split(',').map(v => v.trim()).filter(Boolean),
+      pref_marital_status: form.pref_marital_status.split(',').map(v => v.trim()).filter(Boolean),
     }
 
     try {
@@ -699,6 +798,48 @@ export default function ProfileEditPage() {
                 {locationNames.job && <p>Job: {locationNames.job}</p>}
               </div>
             )}
+          </section>
+
+          {/* ── Section: Private details ── */}
+          <section className="card p-6">
+            <h2 className="font-semibold text-ink mb-1">Private details</h2>
+            <p className="text-xs text-ink-soft mb-4">These details are stored securely and are only shared according to your privacy settings.</p>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                ['income_min_lpa', 'Income min (LPA)', 'number'], ['income_max_lpa', 'Income max (LPA)', 'number'],
+                ['rashi', 'Rashi', 'text'], ['nakshatra', 'Nakshatra', 'text'], ['mangalik', 'Mangalik', 'text'],
+                ['birth_time', 'Birth time', 'text'], ['birth_place', 'Birth place', 'text'],
+                ['contact_mobile', 'Contact mobile', 'tel'], ['contact_email', 'Contact email', 'email'],
+                ['kundli_url', 'Kundli URL', 'url'],
+              ].map(([key, label, type]) => (
+                <div key={key}>
+                  <label className="block text-sm font-medium text-ink mb-1">{label}</label>
+                  <input type={type} value={form[key as keyof FormData] as string} onChange={e => set(key as keyof FormData, e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm focus:outline-none focus:border-maroon" />
+                </div>
+              ))}
+              <div className="col-span-2"><label className="block text-sm font-medium text-ink mb-1">Address</label><textarea value={form.address} onChange={e => set('address', e.target.value)} rows={3} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm focus:outline-none focus:border-maroon" /></div>
+              <div><label className="block text-sm font-medium text-ink mb-1">Contact visibility</label><select value={form.contact_visibility} onChange={e => set('contact_visibility', e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm bg-white"><option value="">Select…</option><option value="mutual">Mutual interest</option><option value="connected">Connected only</option><option value="none">Hidden</option></select></div>
+              <div><label className="block text-sm font-medium text-ink mb-1">Photo visibility</label><select value={form.photo_visibility} onChange={e => set('photo_visibility', e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm bg-white"><option value="">Select…</option><option value="all">All approved members</option><option value="connected">Connected only</option><option value="on_request">On request</option></select></div>
+            </div>
+          </section>
+
+          {/* ── Section: Partner preferences ── */}
+          <section className="card p-6">
+            <h2 className="font-semibold text-ink mb-1">Partner preferences</h2>
+            <p className="text-xs text-ink-soft mb-4">Use commas to add multiple values where applicable.</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="block text-sm font-medium text-ink mb-1">Age min</label><input type="number" value={form.pref_age_min} onChange={e => set('pref_age_min', e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm" /></div>
+              <div><label className="block text-sm font-medium text-ink mb-1">Age max</label><input type="number" value={form.pref_age_max} onChange={e => set('pref_age_max', e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm" /></div>
+              <div><label className="block text-sm font-medium text-ink mb-1">Preferred gender</label><select value={form.pref_gender} onChange={e => set('pref_gender', e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm bg-white"><option value="">Any</option><option value="male">Male</option><option value="female">Female</option></select></div>
+              {[
+                ['pref_caste', 'Preferred caste(s)'], ['pref_education', 'Preferred education IDs'], ['pref_location', 'Preferred location IDs'],
+                ['pref_diet', 'Preferred diet(s)'], ['pref_profession', 'Preferred profession(s)'], ['pref_marital_status', 'Preferred marital status'],
+                ['pref_children', 'Children preference'], ['pref_living_arrangement', 'Living arrangement'], ['pref_career', 'Career preference'],
+                ['pref_marriage_timeline', 'Marriage timeline'], ['pref_manglik', 'Manglik preference'],
+              ].map(([key, label]) => <div key={key}><label className="block text-sm font-medium text-ink mb-1">{label}</label><input value={form[key as keyof FormData] as string} onChange={e => set(key as keyof FormData, e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm" /></div>)}
+              <div className="col-span-2"><label className="block text-sm font-medium text-ink mb-1">Preference notes</label><textarea value={form.pref_notes} onChange={e => set('pref_notes', e.target.value)} rows={3} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm" /></div>
+              <label className="col-span-2 flex items-center gap-2 text-sm"><input type="checkbox" checked={form.pref_gotra_safe} onChange={e => set('pref_gotra_safe', e.target.checked)} /> Keep gotra safety rules enabled</label>
+            </div>
           </section>
 
           {/* ── Section: Lifestyle ── */}
