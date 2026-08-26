@@ -28,7 +28,7 @@ export function FeaturedCarousel({ profiles }: { profiles: SearchCard[] }) {
       >
         {profiles.map((p) => (
           <div key={p.id} data-card className="snap-start shrink-0 w-[280px] sm:w-[300px]">
-            <ProfileCard3D profile={p} hideActions />
+            <ProfileCard3D profile={p} hideActions compact />
           </div>
         ))}
       </div>

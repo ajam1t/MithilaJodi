@@ -32,7 +32,7 @@ export function FeaturedProfiles() {
   if (profiles !== null && profiles.length === 0) return null
 
   return (
-    <section className="py-14 sm:py-20 bg-paper-2/40" aria-label="Featured profiles">
+    <section className="pt-10 pb-8 sm:pt-14 sm:pb-10 bg-paper-2/40" aria-label="Featured profiles">
       <div className="wrap">
         <SectionHeading
           eyebrow="From Our Community"
@@ -43,14 +43,14 @@ export function FeaturedProfiles() {
           <div className="flex gap-5 overflow-hidden pb-4" aria-hidden="true">
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="shrink-0 w-[280px] sm:w-[300px]">
-                <Skeleton className="h-[452px] w-full rounded-mj-lg" />
+                <Skeleton className="h-[360px] w-full rounded-mj-lg" />
               </div>
             ))}
           </div>
         ) : (
           <FeaturedCarousel profiles={profiles} />
         )}
-        <div className="text-center mt-8">
+        <div className="text-center mt-5">
           <Link
             href="/explore"
             className="inline-flex items-center gap-1.5 text-maroon font-semibold hover:text-terra transition-colors"

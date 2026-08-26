@@ -17,6 +17,8 @@ interface ProfileCardProps {
   hideActions?: boolean
   /** Accepted for backwards compatibility; the flip card does not auto-rotate. */
   autoRotate?: boolean
+  /** Compact presentation for the homepage featured carousel. */
+  compact?: boolean
   className?: string
 }
 
@@ -126,6 +128,7 @@ export function ProfileCard3D({
   onShortlist,
   onSendInterest,
   hideActions,
+  compact = false,
   className,
 }: ProfileCardProps) {
   const [flipped, setFlipped] = useState(false)
@@ -175,9 +178,9 @@ export function ProfileCard3D({
   const showActions = !hideActions && (onShortlist || onSendInterest)
 
   return (
-    <div className={cn('w-full max-w-[320px] mx-auto', className)} style={{ perspective: 1200 }}>
+    <div className={cn('w-full mx-auto', compact ? 'max-w-[280px]' : 'max-w-[320px]', className)} style={{ perspective: 1200 }}>
       <div
-        className="relative w-full h-[452px] transition-transform duration-500 ease-mj-out"
+        className={cn('relative w-full transition-transform duration-500 ease-mj-out', compact ? 'h-[360px]' : 'h-[452px]')}
         style={{
           transformStyle: 'preserve-3d',
           transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
@@ -199,7 +202,7 @@ export function ProfileCard3D({
                 src={profile.primary_photo_url}
                 alt={profile.display_name}
                 fill
-                sizes="(max-width: 640px) 90vw, 320px"
+                sizes={compact ? '(max-width: 640px) 80vw, 280px' : '(max-width: 640px) 90vw, 320px'}
                 className="object-cover"
               />
             ) : (
@@ -220,25 +223,25 @@ export function ProfileCard3D({
           </div>
 
           {/* Body */}
-          <div className="flex-1 min-h-0 flex flex-col px-4 pt-3 pb-3.5">
+          <div className={cn('flex-1 min-h-0 flex flex-col', compact ? 'px-3 pt-2 pb-2.5' : 'px-4 pt-3 pb-3.5')}>
             <Link href={`/profile/${profile.id}`} className="group">
-              <h3 className="font-serif text-[19px] text-maroon leading-tight group-hover:text-terra transition-colors truncate">
+              <h3 className={cn('font-serif text-maroon leading-tight group-hover:text-terra transition-colors truncate', compact ? 'text-[17px]' : 'text-[19px]')}>
                 {profile.display_name}
               </h3>
             </Link>
-            {metaLine && <p className="text-[12.5px] text-ink-soft mt-0.5">{metaLine}</p>}
+            {metaLine && <p className={cn('text-ink-soft mt-0.5', compact ? 'text-[11.5px]' : 'text-[12.5px]')}>{metaLine}</p>}
             {locationLine && (
-              <p className="text-[12px] text-terra mt-1 flex items-center gap-1 truncate">
+              <p className={cn('text-terra flex items-center gap-1 truncate', compact ? 'text-[11px] mt-0.5' : 'text-[12px] mt-1')}>
                 <PinIcon className="flex-shrink-0" /> <span className="truncate">{locationLine}</span>
               </p>
             )}
 
             {communityTags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-2.5">
+              <div className={cn('flex flex-wrap', compact ? 'gap-1 mt-1.5' : 'gap-1.5 mt-2.5')}>
                 {communityTags.map((t) => (
                   <span
                     key={t}
-                    className="text-[10px] px-2 py-0.5 rounded-pill border border-green/15 bg-green/[0.06] text-green"
+                    className={cn('rounded-pill border border-green/15 bg-green/[0.06] text-green', compact ? 'text-[9px] px-1.5 py-0.5' : 'text-[10px] px-2 py-0.5')}
                   >
                     {t}
                   </span>
@@ -246,7 +249,7 @@ export function ProfileCard3D({
               </div>
             )}
 
-            <div className="mt-auto pt-3 flex flex-col gap-2">
+            <div className={cn('mt-auto flex flex-col', compact ? 'gap-1.5 pt-2' : 'gap-2 pt-3')}>
               {showActions && (
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -254,7 +257,7 @@ export function ProfileCard3D({
                     disabled={shortlisted || busy === 'shortlist'}
                     onClick={handleShortlist}
                     className={cn(
-                      'flex items-center justify-center gap-1.5 py-2 rounded-mj-sm text-[13px] font-semibold border transition-all disabled:opacity-70',
+                      cn('flex items-center justify-center gap-1.5 rounded-mj-sm font-semibold border transition-all disabled:opacity-70', compact ? 'py-1.5 text-[12px]' : 'py-2 text-[13px]'),
                       shortlisted ? 'bg-gold border-gold text-maroon' : 'bg-cream border-gold/50 text-maroon hover:bg-gold/10'
                     )}
                   >
@@ -266,7 +269,7 @@ export function ProfileCard3D({
                     disabled={interestSent || busy === 'interest'}
                     onClick={handleInterest}
                     className={cn(
-                      'flex items-center justify-center gap-1.5 py-2 rounded-mj-sm text-[13px] font-semibold border transition-all disabled:opacity-70',
+                      cn('flex items-center justify-center gap-1.5 rounded-mj-sm font-semibold border transition-all disabled:opacity-70', compact ? 'py-1.5 text-[12px]' : 'py-2 text-[13px]'),
                       'bg-maroon-gradient border-maroon text-cream hover:shadow-mj-sm'
                     )}
                   >
@@ -278,7 +281,7 @@ export function ProfileCard3D({
               <div className="flex items-center gap-2">
                 <Link
                   href={`/profile/${profile.id}`}
-                  className="flex-1 text-center py-2 rounded-mj-sm text-[13px] font-semibold border border-maroon/30 text-maroon hover:bg-maroon hover:text-cream transition-colors"
+                  className={cn('flex-1 text-center rounded-mj-sm font-semibold border border-maroon/30 text-maroon hover:bg-maroon hover:text-cream transition-colors', compact ? 'py-1.5 text-[12px]' : 'py-2 text-[13px]')}
                 >
                   View profile
                 </Link>
@@ -287,7 +290,7 @@ export function ProfileCard3D({
                     type="button"
                     onClick={() => setFlipped(true)}
                     aria-expanded={flipped}
-                    className="px-3 py-2 rounded-mj-sm text-[13px] font-semibold border border-gold/40 text-ink-soft hover:text-maroon hover:border-gold transition-colors"
+                    className={cn('rounded-mj-sm font-semibold border border-gold/40 text-ink-soft hover:text-maroon hover:border-gold transition-colors', compact ? 'px-2 py-1.5 text-[12px]' : 'px-3 py-2 text-[13px]')}
                   >
                     Details
                   </button>
