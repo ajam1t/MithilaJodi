@@ -18,16 +18,11 @@ function computeAge(dob: string): number {
   return age
 }
 
-/**
- * Public display name for logged-out discovery: first name + last initial only
- * (e.g. "Rahul K."). Full surnames are never exposed on the public, indexable
- * Explore surface — logged-in members see full names via the authenticated
- * search endpoint. Reduces public identifiability of real marriage-seekers.
- */
+/** Public display name used consistently across the home/explore showcase. */
 function toPublicName(firstName: string, lastName: string | null): string {
   const first = (firstName ?? '').trim()
   const last = (lastName ?? '').trim()
-  if (last.length > 0) return `${first} ${last.charAt(0).toUpperCase()}.`
+  if (last.length > 0) return `${first} ${last}`
   return first
 }
 
@@ -40,8 +35,8 @@ function toPublicName(firstName: string, lastName: string | null): string {
  *
  * Private fields (dob, account_id, mobile/phone, email, family_about, exact
  * address, horoscope, storage_path, …) are NEVER selected or returned. The
- * surname is masked to an initial and free-text about_me is intentionally
- * dropped from the public projection.
+ * Full names are returned for display; private contact and free-text fields
+ * remain excluded from the public projection.
  *
  * Used by both /api/public/profiles (client fallback/refresh) and the /explore
  * server component (SSR — first meaningful content in the initial HTML).
