@@ -78,7 +78,7 @@ export async function PATCH(
 
   const { id } = await params
   const body = await request.json()
-  const { action, reason } = body as { action: 'approve' | 'reject' | 'suspend' | 'update'; reason?: string; profile?: Record<string, unknown>; private?: Record<string, unknown>; preferences?: Record<string, unknown>; showcase?: boolean }
+  const { action, reason, showcase } = body as { action: 'approve' | 'reject' | 'suspend' | 'update'; reason?: string; profile?: Record<string, unknown>; private?: Record<string, unknown>; preferences?: Record<string, unknown>; showcase?: boolean }
 
   if (action === 'update') {
     if (session.role !== 'admin') return NextResponse.json({ ok: false }, { status: 403 })
