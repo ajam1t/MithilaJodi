@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ProfileCard3D from '@/components/ProfileCard3D'
+import { Spinner } from '@/components/ui'
 import type { SearchCard } from '@/types/profile'
 import CurrentPlanCard from './CurrentPlanCard'
 
@@ -181,8 +182,9 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-paper flex items-center justify-center">
-        <p className="text-ink-soft">Loading…</p>
+      <main className="min-h-screen bg-paper flex flex-col items-center justify-center gap-3 text-ink-soft">
+        <Spinner className="w-8 h-8 text-maroon" />
+        <p className="text-sm">Loading your profile…</p>
       </main>
     )
   }

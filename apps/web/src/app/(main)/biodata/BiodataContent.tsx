@@ -178,49 +178,64 @@ export default function BiodataContent() {
           </div>
 
           {error && (
-            <div className="rounded-mj-sm bg-red-50 border border-red-200 px-4 py-3 text-red-700 text-sm">
+            <div className="rounded-mj-sm bg-error-soft border border-error/30 px-4 py-3 text-error-fg text-sm">
               {error}
             </div>
           )}
 
           {/* Template selection */}
           <div className="card p-5 space-y-3">
-            <h2 className="font-semibold text-ink text-sm">Template</h2>
+            <h2 className="font-serif text-maroon text-[16px]">Template</h2>
             <div className="grid grid-cols-2 gap-3">
-              {templates.map(t => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setSelectedTemplate(t.id)}
-                  className={`border-2 rounded-mj-sm p-4 text-left transition-colors ${
-                    selectedTemplate === t.id
-                      ? 'border-maroon bg-maroon/5'
-                      : 'border-paper-3 hover:border-ink/20'
-                  }`}
-                >
-                  <p className="font-semibold text-ink text-sm">{t.label_en}</p>
-                  {t.label_mai && (
-                    <p className="text-xs text-ink-soft mt-0.5">{t.label_mai}</p>
-                  )}
-                </button>
-              ))}
+              {templates.map(t => {
+                const active = selectedTemplate === t.id
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setSelectedTemplate(t.id)}
+                    aria-pressed={active}
+                    className={`relative flex gap-3 items-start border-2 rounded-mj-sm p-4 text-left transition-all ${
+                      active
+                        ? 'border-gold bg-gold/[0.06] shadow-mj-xs'
+                        : 'border-paper-3 hover:border-gold/50'
+                    }`}
+                  >
+                    {/* Mini document thumbnail */}
+                    <span className="shrink-0 w-9 h-11 rounded-[3px] bg-cream border border-gold/40 flex flex-col items-center justify-start pt-1 gap-0.5 overflow-hidden" aria-hidden="true">
+                      <span className="block w-5 h-[3px] rounded-full bg-maroon/70" />
+                      <span className="block w-6 h-px bg-gold/50" />
+                      <span className="block w-6 h-px bg-gold/50" />
+                      <span className="block w-4 h-px bg-gold/50" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block font-serif text-maroon text-[14px] leading-tight">{t.label_en}</span>
+                      {t.label_mai && (
+                        <span className="block text-xs text-ink-soft mt-0.5">{t.label_mai}</span>
+                      )}
+                    </span>
+                    {active && (
+                      <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-gold flex items-center justify-center" aria-hidden="true">
+                        <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.5l2.2 2.2L9.5 3.8" stroke="#5A0E19" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
             </div>
           </div>
 
           {/* Language */}
           <div className="card p-5 space-y-3">
-            <h2 className="font-semibold text-ink text-sm">Language</h2>
-            <div className="flex gap-3">
+            <h2 className="font-serif text-maroon text-[16px]">Language</h2>
+            <div className="flex flex-wrap gap-2">
               {LANG_OPTIONS.map(l => (
                 <button
                   key={l.value}
                   type="button"
                   onClick={() => setLanguage(l.value)}
-                  className={`px-4 py-2 rounded-mj-sm text-sm border transition-colors ${
-                    language === l.value
-                      ? 'border-maroon bg-maroon text-white'
-                      : 'border-paper-3 text-ink hover:border-ink/20'
-                  }`}
+                  aria-pressed={language === l.value}
+                  className={`chip ${language === l.value ? 'chip-on' : ''}`}
                 >
                   {l.label}
                 </button>
@@ -236,7 +251,7 @@ export default function BiodataContent() {
           {/* Field selection */}
           <div className="card p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="font-semibold text-ink text-sm">Fields to include</h2>
+              <h2 className="font-serif text-maroon text-[16px]">Fields to include</h2>
               <div className="flex gap-3 text-xs">
                 <button
                   type="button"
@@ -291,7 +306,7 @@ export default function BiodataContent() {
           {/* History */}
           {history.length > 0 && (
             <div className="card p-5 space-y-3">
-              <h2 className="font-semibold text-ink text-sm">Recent downloads</h2>
+              <h2 className="font-serif text-maroon text-[16px]">Recent downloads</h2>
               <div className="space-y-2">
                 {history.map(gen => (
                   <div key={gen.id} className="flex items-center justify-between text-sm">

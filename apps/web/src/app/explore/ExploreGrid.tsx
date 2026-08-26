@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ProfileCard3D } from '@/components/ProfileCard3D'
+import { Skeleton } from '@/components/ui'
 import type { SearchCard } from '@/types/profile'
 
 type ExploreGridProps = {
@@ -47,9 +48,22 @@ export function ExploreGrid({ initialProfiles, initialError = false }: ExploreGr
       </p>
 
       {loading ? (
-        <p className="text-center text-ink-soft text-sm animate-pulse py-16">
-          Loading profiles…
-        </p>
+        <div className="grid gap-8 sm:gap-10 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="w-full max-w-[320px] mx-auto rounded-mj-lg overflow-hidden border border-paper-3 bg-cream shadow-mj-sm">
+              <div className="gold-strip" />
+              <div className="aspect-[4/3] skeleton rounded-none" />
+              <div className="p-4 space-y-2.5">
+                <Skeleton className="h-5 w-2/3" />
+                <Skeleton className="h-3 w-1/2" />
+                <div className="flex gap-1.5 pt-1">
+                  <Skeleton className="h-5 w-16 rounded-pill" />
+                  <Skeleton className="h-5 w-20 rounded-pill" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       ) : error ? (
         <div className="card p-8 text-center text-ink-soft text-sm max-w-md mx-auto">
           Could not load profiles right now. Please try again later.

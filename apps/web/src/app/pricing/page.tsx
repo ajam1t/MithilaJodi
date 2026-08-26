@@ -240,7 +240,7 @@ export default async function PricingPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-start">
 
               {/* FREE card */}
-              <div className="rounded-mj border border-gold/30 bg-cream shadow-mj-xs p-6 flex flex-col gap-4">
+              <div className="card card-hover p-6 flex flex-col gap-4">
                 <div>
                   <p className="eyebrow mb-1.5 text-[10px]">Free</p>
                   <div className="flex items-baseline gap-1 mb-0.5">
@@ -275,7 +275,7 @@ export default async function PricingPage() {
               </div>
 
               {/* MITHILA MEMBER card */}
-              <div className="rounded-mj border border-gold/50 bg-cream shadow-mj-xs p-6 flex flex-col gap-4">
+              <div className="card card-hover p-6 flex flex-col gap-4">
                 <div>
                   <p className="eyebrow mb-1.5 text-[10px] text-terra">Mithila Member</p>
                   <div className="flex items-baseline gap-1 mb-0.5">
@@ -302,7 +302,7 @@ export default async function PricingPage() {
               </div>
 
               {/* MITHILA PREMIUM card */}
-              <div className="relative rounded-mj border-2 border-gold bg-cream shadow-mj overflow-hidden flex flex-col">
+              <div className="relative card-hover rounded-mj border-2 border-gold bg-cream shadow-mj overflow-hidden flex flex-col sm:-translate-y-1">
                 {/* Gold top accent */}
                 <div className="h-[4px] bg-gradient-to-r from-maroon-deep/30 via-gold to-maroon-deep/30" />
 
