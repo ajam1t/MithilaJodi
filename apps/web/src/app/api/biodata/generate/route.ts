@@ -2,7 +2,6 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionAccount } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/server'
-import { hasFeatureAccess } from '@/lib/membership'
 
 const VALID_FIELDS = [
   'name', 'age', 'gender', 'religion', 'caste', 'sub_caste',
@@ -10,8 +9,8 @@ const VALID_FIELDS = [
   'height', 'diet', 'smoking', 'drinking', 'marital_status', 'mother_tongue',
   'education', 'profession',
   'current_location', 'native_place',
-  'about_me', 'family_about',
-  'contact', 'photo',
+  'about_me', 'family_about', 'family',
+  'contact', 'photo', 'income', 'astrology', 'kundli', 'address',
 ]
 
 const VALID_LANGUAGES = ['en', 'hi', 'mai', 'sa']
@@ -19,14 +18,6 @@ const VALID_LANGUAGES = ['en', 'hi', 'mai', 'sa']
 export async function POST(request: NextRequest) {
   const session = await getSessionAccount()
   if (!session) return NextResponse.json({ ok: false, message: 'Unauthorized' }, { status: 401 })
-
-  // feature access gate (bypassed when FREE_ACCESS_MODE=true)
-  if (!(await hasFeatureAccess(session.id))) {
-    return NextResponse.json(
-      { ok: false, message: 'An active membership is required to generate biodata' },
-      { status: 403 }
-    )
-  }
 
   let body: Record<string, unknown>
   try {

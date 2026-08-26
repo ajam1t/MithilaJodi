@@ -23,6 +23,9 @@ const LABELS: Record<string, Record<string, string>> = {
     profession: 'Profession', employer: 'Employer',
     current_location: 'Currently in', native_place: 'Native place',
     mobile: 'Mobile', email: 'Email',
+    family_type: 'Family Type', managed_by: 'Profile Managed By', family_values: 'Family Values',
+    parents: 'Parents', siblings: 'Siblings', expectations: 'Family Expectations', family_introduction: 'Family Introduction',
+    income: 'Income', rashi: 'Rashi', nakshatra: 'Nakshatra', mangalik: 'Mangalik', birth_time: 'Birth time', birth_place: 'Birth place', kundli: 'Kundli', address: 'Address',
     age: 'Age', gender: 'Gender', religion: 'Religion', caste: 'Caste', years: 'years',
   },
   mai: {
@@ -37,6 +40,9 @@ const LABELS: Record<string, Record<string, string>> = {
     profession: 'पेशा', employer: 'नियोक्ता',
     current_location: 'वर्तमान स्थान', native_place: 'मूल स्थान',
     mobile: 'मोबाइल', email: 'ईमेल',
+    family_type: 'परिवार का प्रकार', managed_by: 'प्रोफ़ाइल प्रबंधक', family_values: 'पारिवारिक मूल्य',
+    parents: 'माता-पिता', siblings: 'भाई-बहन', expectations: 'परिवार की अपेक्षाएँ', family_introduction: 'परिवार परिचय',
+    income: 'आय', rashi: 'राशि', nakshatra: 'नक्षत्र', mangalik: 'मांगलिक', birth_time: 'जन्म समय', birth_place: 'जन्म स्थान', kundli: 'कुंडली', address: 'पता',
     age: 'आयु', gender: 'लिंग', religion: 'धर्म', caste: 'जाति', years: 'वर्ष',
   },
   hi: {
@@ -51,6 +57,9 @@ const LABELS: Record<string, Record<string, string>> = {
     profession: 'पेशा', employer: 'नियोक्ता',
     current_location: 'वर्तमान शहर', native_place: 'मूल स्थान',
     mobile: 'मोबाइल', email: 'ईमेल',
+    family_type: 'परिवार का प्रकार', managed_by: 'प्रोफ़ाइल प्रबंधक', family_values: 'पारिवारिक मूल्य',
+    parents: 'माता-पिता', siblings: 'भाई-बहन', expectations: 'परिवार की अपेक्षाएँ', family_introduction: 'परिवार परिचय',
+    income: 'आय', rashi: 'राशि', nakshatra: 'नक्षत्र', mangalik: 'मांगलिक', birth_time: 'जन्म समय', birth_place: 'जन्म स्थान', kundli: 'कुंडली', address: 'पता',
     age: 'आयु', gender: 'लिंग', religion: 'धर्म', caste: 'जाति', years: 'वर्ष',
   },
   sa: {
@@ -65,6 +74,9 @@ const LABELS: Record<string, Record<string, string>> = {
     profession: 'वृत्तिः', employer: 'नियोक्ता',
     current_location: 'वर्तमानस्थानम्', native_place: 'मूलस्थानम्',
     mobile: 'चलभाषः', email: 'विपत्रम्',
+    family_type: 'कुटुम्बप्रकारः', managed_by: 'परिचयपत्रप्रबन्धकः', family_values: 'कुटुम्बमूल्यानि',
+    parents: 'मातापितरौ', siblings: 'भ्रातरः', expectations: 'कुटुम्बापेक्षाः', family_introduction: 'कुटुम्बपरिचयः',
+    income: 'आयः', rashi: 'राशिः', nakshatra: 'नक्षत्रम्', mangalik: 'माङ्गलिकम्', birth_time: 'जन्मसमयः', birth_place: 'जन्मस्थानम्', kundli: 'कुण्डली', address: 'पता',
     age: 'वयः', gender: 'लिङ्गम्', religion: 'धर्मः', caste: 'जातिः', years: 'वर्षाणि',
   },
 }
@@ -83,6 +95,20 @@ function computeAge(dob: string): number {
   const m = now.getMonth() - birth.getMonth()
   if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--
   return age
+}
+
+type PrivateDetails = {
+  contact_mobile?: string | null
+  contact_email?: string | null
+  address?: string | null
+  income_min_lpa?: number | null
+  income_max_lpa?: number | null
+  rashi?: string | null
+  nakshatra?: string | null
+  mangalik?: string | null
+  birth_time?: string | null
+  birth_place?: string | null
+  kundli_url?: string | null
 }
 
 function Row({ label, value }: { label: string; value: string | null | undefined }) {
@@ -152,6 +178,13 @@ export default async function BiodataPreviewPage({
   const lang = (g.language as string) in LABELS ? (g.language as string) : 'en'
   const L = LABELS[lang]
 
+  const { data: template } = await admin
+    .from('biodata_templates')
+    .select('slug')
+    .eq('id', g.template_id)
+    .maybeSingle()
+  const templateSlug = (template as any)?.slug ?? 'classic'
+
   // Verify this generation belongs to the current user
   const { data: profileCheck } = await admin
     .from('profiles')
@@ -173,7 +206,7 @@ export default async function BiodataPreviewPage({
   const { data: rawProfile } = await admin
     .from('profiles')
     .select(
-      'first_name, last_name, gender, dob, religion, caste, sub_caste, self_gotra, maternal_gotra, mool, gram, height_cm, diet, smoking, drinking, marital_status, mother_tongue, about_me, family_about, native_place_id, current_loc_id, education_level_id, education_detail, profession_id, profession_detail, employer'
+      'first_name, last_name, gender, dob, religion, caste, sub_caste, self_gotra, maternal_gotra, mool, gram, height_cm, diet, smoking, drinking, marital_status, mother_tongue, about_me, family_about, family_type, managed_by, family_values, parents_info, siblings_info, family_expectations, family_introduction, native_place_id, current_loc_id, education_level_id, education_detail, profession_id, profession_detail, employer'
     )
     .eq('id', g.profile_id)
     .maybeSingle()
@@ -229,19 +262,19 @@ export default async function BiodataPreviewPage({
   }
 
   // Contact
-  let contactMobile: string | null = null
-  let contactEmail: string | null = null
-  if (fields.includes('contact')) {
+  let privateDetails: PrivateDetails = {}
+  if (fields.some(field => ['contact', 'income', 'astrology', 'kundli', 'address'].includes(field))) {
     const { data: priv } = await admin
       .from('profile_private')
-      .select('contact_mobile, contact_email')
+      .select('contact_mobile, contact_email, address, income_min_lpa, income_max_lpa, rashi, nakshatra, mangalik, birth_time, birth_place, kundli_url')
       .eq('profile_id', g.profile_id)
       .maybeSingle()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    contactMobile = (priv as any)?.contact_mobile ?? null
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    contactEmail = (priv as any)?.contact_email ?? null
+    privateDetails = (priv as PrivateDetails) ?? {}
   }
+
+  const contactMobile = privateDetails.contact_mobile
+  const contactEmail = privateDetails.contact_email
 
   const has = (f: string) => fields.includes(f)
   const fullName = p.last_name ? `${p.first_name} ${p.last_name}` : p.first_name
@@ -255,7 +288,7 @@ export default async function BiodataPreviewPage({
         @media print {
           .no-print { display: none !important; }
           body { background: white !important; }
-          .biodata-page { box-shadow: none !important; margin: 0 !important; padding: 15mm 18mm !important; max-width: 100% !important; }
+          .biodata-page { box-shadow: none !important; margin: 0 !important; padding: 18mm 20mm !important; max-width: 100% !important; }
           @page { size: A4; margin: 0; }
         }
         body { background: #f0ece4; }
@@ -265,34 +298,47 @@ export default async function BiodataPreviewPage({
 
       <div
         className="biodata-page"
+        data-template={templateSlug}
         style={{
           fontFamily: "'Times New Roman', Georgia, serif",
           maxWidth: '210mm',
           minHeight: '297mm',
+          boxSizing: 'border-box',
           margin: '20px auto',
           background: 'white',
-          boxShadow: '0 2px 20px rgba(0,0,0,0.12)',
-          padding: '22mm 22mm',
+          boxShadow: 'inset 0 0 0 2px #D8B45A, inset 0 0 0 7px #fff8e8, 0 2px 20px rgba(0,0,0,0.12)',
+          border: '10px solid #7A1220',
+          padding: '20mm 20mm',
           color: '#222',
+          position: 'relative',
         }}
       >
+        {/* Mithila-inspired geometric frame and corner motifs */}
+        <div aria-hidden="true" style={{ position: 'absolute', inset: '7px', border: '2px dashed #D8B45A', pointerEvents: 'none' }} />
+        {(['top:12px;left:14px', 'top:12px;right:14px', 'bottom:12px;left:14px', 'bottom:12px;right:14px'] as const).map((position, index) => (
+          <div key={position} aria-hidden="true" style={{ position: 'absolute', ...Object.fromEntries(position.split(';').map(part => part.split(':'))) as React.CSSProperties, color: '#D8B45A', fontSize: '22px', lineHeight: 1, zIndex: 1 }}>
+            {index % 2 === 0 ? '❋' : '✤'}
+          </div>
+        ))}
+
         {/* Header */}
-        <div style={{ textAlign: 'center', borderBottom: '2px solid #7A1220', paddingBottom: '14px', marginBottom: '20px' }}>
-          <div style={{ fontSize: '16px', color: '#7A1220', marginBottom: '4px' }}>ॐ</div>
+        <div style={{ textAlign: 'center', borderBottom: '2px solid #7A1220', paddingBottom: '14px', marginBottom: '20px', position: 'relative', zIndex: 2 }}>
+          <img src="/logo.png" alt="Mithila Jodi" style={{ width: '58px', height: '58px', objectFit: 'contain', margin: '0 auto 5px', display: 'block' }} />
+          <div style={{ fontSize: '12px', color: '#A27A2A', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: '5px' }}>Mithila Jodi</div>
           <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: '#7A1220', fontWeight: 'normal', letterSpacing: '0.04em' }}>
             {L.title}
           </h1>
         </div>
 
         {/* Photo + name row */}
-        <div style={{ display: 'flex', gap: '20px', marginBottom: '22px', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', gap: '20px', marginBottom: '22px', alignItems: 'flex-start', position: 'relative', zIndex: 2 }}>
           {photoUrl && (
-            <div style={{ flexShrink: 0 }}>
+            <div style={{ flexShrink: 0, padding: '5px', border: '2px solid #D8B45A', background: '#fff8e8', boxShadow: '0 2px 0 #7A1220' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={photoUrl}
                 alt={fullName}
-                style={{ width: '100px', height: '130px', objectFit: 'cover', border: '1px solid #ccc', display: 'block' }}
+                style={{ width: '112px', height: '145px', objectFit: 'cover', border: '1px solid #7A1220', display: 'block' }}
               />
             </div>
           )}
@@ -364,13 +410,17 @@ export default async function BiodataPreviewPage({
         )}
 
         {/* Family */}
-        {has('family_about') && p.family_about && (
-          <div style={{ marginBottom: '18px' }}>
-            <div style={{ backgroundColor: '#7A1220', color: 'white', padding: '4px 10px', fontSize: '12px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '8px', borderRadius: '2px' }}>
-              {L.family}
-            </div>
-            <p style={{ fontSize: '13px', lineHeight: '1.8', color: '#333', whiteSpace: 'pre-wrap' }}>{p.family_about}</p>
-          </div>
+        {(has('family') || has('family_about')) && (p.family_about || p.family_type || p.managed_by || p.family_values || p.parents_info || p.siblings_info || p.family_expectations || p.family_introduction) && (
+          <Section title={L.family}>
+            {p.family_type && <Row label={L.family_type} value={humanize(p.family_type)} />}
+            {p.managed_by && <Row label={L.managed_by} value={humanize(p.managed_by)} />}
+            {p.family_values && <Row label={L.family_values} value={humanize(p.family_values)} />}
+            {p.parents_info && <Row label={L.parents} value={p.parents_info} />}
+            {p.siblings_info && <Row label={L.siblings} value={p.siblings_info} />}
+            {p.family_expectations && <Row label={L.expectations} value={p.family_expectations} />}
+            {p.family_about && <Row label={L.family} value={p.family_about} />}
+            {p.family_introduction && <Row label={L.family_introduction} value={p.family_introduction} />}
+          </Section>
         )}
 
         {/* Contact */}
@@ -381,9 +431,38 @@ export default async function BiodataPreviewPage({
           </Section>
         )}
 
+        {/* Income and astrology */}
+        {has('income') && (privateDetails.income_min_lpa != null || privateDetails.income_max_lpa != null) && (
+          <Section title={L.income}>
+            <Row label={L.income} value={`${privateDetails.income_min_lpa != null ? `₹${privateDetails.income_min_lpa} LPA` : ''}${privateDetails.income_min_lpa != null && privateDetails.income_max_lpa != null ? ' – ' : ''}${privateDetails.income_max_lpa != null ? `₹${privateDetails.income_max_lpa} LPA` : ''}`} />
+          </Section>
+        )}
+
+        {has('astrology') && (privateDetails.rashi || privateDetails.nakshatra || privateDetails.mangalik || privateDetails.birth_time || privateDetails.birth_place) && (
+          <Section title="Astrology & Birth Details">
+            <Row label={L.rashi} value={humanize(privateDetails.rashi as string)} />
+            <Row label={L.nakshatra} value={humanize(privateDetails.nakshatra as string)} />
+            <Row label={L.mangalik} value={humanize(privateDetails.mangalik as string)} />
+            <Row label={L.birth_time} value={privateDetails.birth_time as string} />
+            <Row label={L.birth_place} value={privateDetails.birth_place as string} />
+          </Section>
+        )}
+
+        {has('kundli') && privateDetails.kundli_url && (
+          <Section title={L.kundli}>
+            <Row label={L.kundli} value={privateDetails.kundli_url as string} />
+          </Section>
+        )}
+
+        {has('address') && privateDetails.address && (
+          <Section title={L.address}>
+            <Row label={L.address} value={privateDetails.address as string} />
+          </Section>
+        )}
+
         {/* Footer */}
-        <div style={{ borderTop: '1px solid #ddd', marginTop: '32px', paddingTop: '8px', textAlign: 'center', fontSize: '11px', color: '#aaa' }}>
-          Generated via Mithila Jodi
+        <div style={{ borderTop: '1px solid #D8B45A', marginTop: '32px', paddingTop: '9px', textAlign: 'center', fontSize: '11px', color: '#7A1220', letterSpacing: '0.04em' }}>
+          <strong>Mithila Jodi</strong> · mithilajodi.com · A thoughtful beginning to forever
         </div>
       </div>
     </>

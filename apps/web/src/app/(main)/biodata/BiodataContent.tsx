@@ -67,6 +67,7 @@ const FIELD_GROUPS = [
     fields: [
       { key: 'about_me',     label: 'Personal description' },
       { key: 'family_about', label: 'Family background' },
+      { key: 'family',       label: 'Family details' },
     ],
   },
   {
@@ -74,6 +75,10 @@ const FIELD_GROUPS = [
     fields: [
       { key: 'photo',    label: 'Profile photo' },
       { key: 'contact',  label: 'Contact details' },
+      { key: 'income',   label: 'Income range' },
+      { key: 'astrology', label: 'Birth & astrology details' },
+      { key: 'kundli',   label: 'Kundli link' },
+      { key: 'address',  label: 'Address' },
     ],
   },
 ]
@@ -82,6 +87,7 @@ const DEFAULT_FIELDS = [
   'name', 'age', 'gender', 'marital_status', 'mother_tongue', 'religion', 'caste',
   'self_gotra', 'mool', 'gram', 'height', 'diet', 'education', 'profession',
   'native_place', 'current_location', 'about_me', 'family_about', 'photo',
+  'family',
 ]
 
 const LANG_OPTIONS = [
@@ -173,7 +179,7 @@ export default function BiodataContent() {
           <div>
             <h1 className="font-serif text-3xl text-ink">Biodata</h1>
             <p className="text-sm text-ink-soft mt-1">
-              Choose a template and fields, then save as PDF from your browser.
+              Create a beautiful, branded marriage biodata that is ready to print or share on WhatsApp — free for every member.
             </p>
           </div>
 
@@ -202,7 +208,7 @@ export default function BiodataContent() {
                     }`}
                   >
                     {/* Mini document thumbnail */}
-                    <span className="shrink-0 w-9 h-11 rounded-[3px] bg-cream border border-gold/40 flex flex-col items-center justify-start pt-1 gap-0.5 overflow-hidden" aria-hidden="true">
+                    <span className="shrink-0 w-9 h-11 rounded-[3px] bg-cream border-2 border-maroon/70 flex flex-col items-center justify-start pt-1 gap-0.5 overflow-hidden" aria-hidden="true">
                       <span className="block w-5 h-[3px] rounded-full bg-maroon/70" />
                       <span className="block w-6 h-px bg-gold/50" />
                       <span className="block w-6 h-px bg-gold/50" />
@@ -300,7 +306,7 @@ export default function BiodataContent() {
             disabled={generating || !selectedTemplate || selectedFields.size === 0}
             className="btn-primary w-full justify-center py-3 text-base disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {generating ? 'Opening preview…' : 'Preview & Download as PDF'}
+            {generating ? 'Opening preview…' : 'Preview & Share Biodata'}
           </button>
 
           {/* History */}
