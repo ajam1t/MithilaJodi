@@ -85,6 +85,98 @@
            hover:-translate-y-0.5 hover:shadow-mj;
     box-shadow: var(--shadow-s), var(--sheen);
   }
+  .btn-terra {
+    @apply btn bg-terra text-cream hover:-translate-y-0.5 hover:shadow-mj-sm;
+  }
+  .btn-danger {
+    @apply btn bg-transparent text-terra border-terra hover:bg-terra hover:text-cream;
+  }
+  /* Compact button size — pair with any variant */
+  .btn-sm {
+    @apply px-4 py-2 text-[13px] gap-1.5;
+  }
+  /* Disabled/loading state for any button */
+  .btn:disabled,
+  .btn[aria-disabled='true'] {
+    @apply opacity-60 cursor-not-allowed;
+    transform: none !important;
+  }
+
+  /* ── Form fields ─────────────────────────────────────────── */
+  .field-label {
+    @apply block text-[11px] tracking-[0.18em] uppercase text-terra font-semibold mb-1.5;
+  }
+  .input,
+  .select,
+  .textarea {
+    @apply w-full rounded-mj-sm border bg-white text-ink px-3.5 py-2.5 text-[15px]
+           transition-colors duration-200 placeholder:text-ink-soft/60;
+    border-color: var(--line);
+  }
+  .input:focus,
+  .select:focus,
+  .textarea:focus {
+    @apply outline-none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(185, 138, 46, 0.16);
+  }
+  .textarea { @apply min-h-[90px] resize-y; }
+  .input-error,
+  .input-error:focus {
+    border-color: var(--terra);
+    box-shadow: 0 0 0 3px rgba(196, 86, 47, 0.16);
+  }
+  .field-hint  { @apply text-[12px] text-ink-soft mt-1; }
+  .field-error { @apply text-[12px] text-terra mt-1; }
+
+  /* ── Chips ───────────────────────────────────────────────── */
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-pill border bg-cream px-3 py-1.5
+           text-[13px] cursor-pointer transition-colors duration-150;
+    border-color: var(--line);
+  }
+  .chip:hover:not(.chip-on) { border-color: var(--gold); }
+  .chip-on {
+    @apply bg-maroon text-cream;
+    border-color: var(--maroon);
+  }
+
+  /* ── Badges ──────────────────────────────────────────────── */
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-pill px-2.5 py-0.5
+           text-[11px] font-bold tracking-wide;
+  }
+  .badge-verified { @apply bg-green text-white; }
+  .badge-new      { @apply bg-turmeric text-ink; }
+  .badge-gold     { @apply bg-gold-gradient text-maroon-deep; }
+  .badge-premium  { @apply bg-maroon-gradient text-cream; }
+  .badge-success  { @apply bg-success-soft text-success-fg; }
+  .badge-warning  { @apply bg-warning-soft text-warning-fg; }
+  .badge-error    { @apply bg-error-soft text-error-fg; }
+  .badge-info     { @apply bg-info-soft text-info-fg; }
+
+  /* ── Skeleton ────────────────────────────────────────────── */
+  .skeleton {
+    @apply rounded-mj-sm;
+    background: linear-gradient(100deg, var(--paper-2) 30%, var(--paper-3) 50%, var(--paper-2) 70%);
+    background-size: 200% 100%;
+    animation: mjShimmer 1.4s ease-in-out infinite;
+  }
+
+  /* ── Gold ornament strip ─────────────────────────────────── */
+  .gold-strip {
+    height: 4px;
+    background: linear-gradient(90deg, var(--maroon-deep), var(--gold), var(--marigold), var(--turmeric), var(--gold), var(--maroon-deep));
+  }
+
+  /* ── Card hover lift (opt-in) ────────────────────────────── */
+  .card-hover {
+    @apply transition-all duration-300;
+  }
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow), var(--sheen);
+  }
 
   /* ── Cards ───────────────────────────────────────────────── */
   .card {
@@ -201,6 +293,11 @@
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes mjShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 /* ── Petal elements ────────────────────────────────────── */

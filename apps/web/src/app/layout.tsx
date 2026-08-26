@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Marcellus, Mukta, Kalam } from 'next/font/google'
 import { SITE_URL } from '@/lib/constants'
+import { ToastProvider } from '@/components/ui'
 import '@/styles/globals.css'
 
 const marcellus = Marcellus({
@@ -94,7 +95,9 @@ export default function RootLayout({
       lang="en"
       className={`${marcellus.variable} ${mukta.variable} ${kalam.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <ToastProvider>{children}</ToastProvider>
+      </body>
     </html>
   )
 }

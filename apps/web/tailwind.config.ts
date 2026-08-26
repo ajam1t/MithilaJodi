@@ -16,14 +16,14 @@ const config: Config = {
   ],
   // Safelist: guarantee custom classes always generated (for @apply in globals.css)
   safelist: [
-    { pattern: /^bg-(paper|cream|maroon|terra|marigold|turmeric|gold|green|indigo|ink)/ },
-    { pattern: /^text-(paper|cream|maroon|terra|marigold|turmeric|gold|green|indigo|ink)/ },
-    { pattern: /^border-(paper|cream|maroon|terra|gold|ink)/ },
+    { pattern: /^bg-(paper|cream|maroon|terra|marigold|turmeric|gold|green|indigo|ink|success|warning|error|info)/ },
+    { pattern: /^text-(paper|cream|maroon|terra|marigold|turmeric|gold|green|indigo|ink|success|warning|error|info)/ },
+    { pattern: /^border-(paper|cream|maroon|terra|gold|ink|success|warning|error|info)/ },
     { pattern: /^from-(maroon|gold|terra|green)/ },
     { pattern: /^via-(maroon|gold|terra|green)/ },
     { pattern: /^to-(maroon|gold|terra|green)/ },
     { pattern: /^shadow-mj/ },
-    { pattern: /^rounded-mj/ },
+    { pattern: /^rounded-(mj|pill)/ },
   ],
   theme: {
     extend: {
@@ -59,6 +59,27 @@ const config: Config = {
           DEFAULT: '#2B211C',
           soft: '#6A5A4E',
         },
+        // ── Semantic state colours (harmonised with the warm palette) ──
+        success: {
+          DEFAULT: '#1F5133',
+          soft: '#E7F0E9',
+          fg: '#1B4A2E',
+        },
+        warning: {
+          DEFAULT: '#B98A2E',
+          soft: '#F7ECCF',
+          fg: '#6B4E12',
+        },
+        error: {
+          DEFAULT: '#C4562F',
+          soft: '#F8E6DE',
+          fg: '#8A2F14',
+        },
+        info: {
+          DEFAULT: '#2E3A6E',
+          soft: '#E6E8F2',
+          fg: '#20294F',
+        },
       },
       fontFamily: {
         sans: ['Mukta', 'system-ui', 'sans-serif'],
@@ -91,6 +112,18 @@ const config: Config = {
       borderRadius: {
         'mj': '18px',
         'mj-sm': '12px',
+        'mj-lg': '22px',
+        'pill': '999px',
+      },
+      transitionTimingFunction: {
+        'mj-out': 'cubic-bezier(0.2, 0.8, 0.3, 1)',
+        'mj-in': 'cubic-bezier(0.4, 0, 1, 1)',
+        'mj-bounce': 'cubic-bezier(0.2, 1.3, 0.4, 1)',
+      },
+      transitionDuration: {
+        'mj-fast': '180ms',
+        'mj-mid': '280ms',
+        'mj-slow': '550ms',
       },
       animation: {
         'fade-in': 'fadeIn 0.6s ease forwards',
