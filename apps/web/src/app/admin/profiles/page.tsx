@@ -14,6 +14,8 @@ type Profile = {
   created_at: string
   account_id: string
   accounts: { mobile: string } | null
+  discoverable: boolean
+  primary_photo_url: string | null
 }
 
 const STATUS_TABS = [
@@ -95,7 +97,7 @@ export default function AdminProfilesPage() {
 
   return (
     <div className="p-4 sm:p-8 max-w-5xl">
-      <h1 className="font-serif text-2xl text-ink mb-5">Profiles</h1>
+      <div className="mb-5 flex items-center justify-between gap-3"><h1 className="font-serif text-2xl text-ink">Profiles</h1><Link href="/admin/profiles/new" className="btn-primary text-sm px-4 py-2">Create profile</Link></div>
 
       <div className="flex gap-1 mb-6 border-b border-paper-3">
         {STATUS_TABS.map(tab => (
@@ -124,7 +126,9 @@ export default function AdminProfilesPage() {
             const age = calcAge(p.dob)
             return (
               <div key={p.id} className="card p-4 space-y-3">
-                <div className="space-y-1">
+                <div className="flex gap-3 space-y-1">
+                  {p.primary_photo_url && <img src={p.primary_photo_url} alt="" className="h-16 w-14 rounded-mj-sm object-cover" />}
+                  <div>
                   <div className="flex items-center gap-3 flex-wrap">
                     <Link href={`/profile/${p.id}`} target="_blank"
                       className="font-semibold text-ink hover:text-maroon">
@@ -142,6 +146,8 @@ export default function AdminProfilesPage() {
                   <p className="text-xs text-ink-soft">
                     Joined {new Date(p.created_at).toLocaleDateString('en-IN')}
                   </p>
+                  <p className="text-xs text-ink-soft">{p.discoverable ? 'Discoverable in Search' : 'Hidden from Search'}</p>
+                  </div>
                 </div>
 
                 <div className="flex gap-3 flex-wrap items-center">
@@ -152,6 +158,8 @@ export default function AdminProfilesPage() {
                       Approve
                     </button>
                   )}
+
+                  <Link href={`/admin/profiles/${p.id}`} className="btn-primary text-xs py-1.5 px-3">Edit all details</Link>
 
                   {isActive && (
                     <>

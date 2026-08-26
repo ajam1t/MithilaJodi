@@ -17,8 +17,9 @@ const ProfileSchema = z.object({
   maternal_gotra: z.string().max(100).optional().nullable(),
   mool: z.string().max(100).optional().nullable(),
   gram: z.string().max(100).optional().nullable(),
-  native_place_id: z.number().int().positive().optional().nullable(),
-  current_loc_id: z.number().int().positive().optional().nullable(),
+  native_place_id: z.coerce.number().int().positive().optional().nullable(),
+  current_loc_id: z.coerce.number().int().positive().optional().nullable(),
+  job_loc_id: z.coerce.number().int().positive().optional().nullable(),
   height_cm: z.number().int().min(100).max(250).optional().nullable(),
   diet: z.enum(['vegetarian', 'non_vegetarian', 'eggetarian', 'vegan', '']).optional().nullable(),
   smoking: z.enum(['no', 'occasionally', 'yes', '']).optional().nullable(),
@@ -121,10 +122,11 @@ export async function GET() {
   // Resolve location display names for the 3D profile card
   let native_place_name: string | null = null
   let current_loc_name: string | null = null
+  let job_loc_name: string | null = null
   if (profile) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const p = profile as any
-    const locIds = [p.native_place_id, p.current_loc_id].filter(Boolean)
+    const locIds = [p.native_place_id, p.current_loc_id, p.job_loc_id].filter(Boolean)
     if (locIds.length > 0) {
       const { data: locs } = await admin.from('india_locations').select('id, name_en').in('id', locIds)
       const locMap: Record<number, string> = {}
@@ -132,10 +134,11 @@ export async function GET() {
       for (const l of (locs ?? [])) { locMap[(l as any).id] = (l as any).name_en }
       native_place_name = p.native_place_id ? locMap[p.native_place_id] ?? null : null
       current_loc_name = p.current_loc_id ? locMap[p.current_loc_id] ?? null : null
+      job_loc_name = p.job_loc_id ? locMap[p.job_loc_id] ?? null : null
     }
   }
 
-  return NextResponse.json({ ok: true, profile, photos, native_place_name, current_loc_name })
+  return NextResponse.json({ ok: true, profile, photos, native_place_name, current_loc_name, job_loc_name })
 }
 
 export async function PUT(request: NextRequest) {
@@ -206,6 +209,7 @@ export async function PUT(request: NextRequest) {
         gram: data.gram ?? null,
         native_place_id: data.native_place_id ?? null,
         current_loc_id: data.current_loc_id ?? null,
+        job_loc_id: data.job_loc_id ?? null,
         height_cm: data.height_cm ?? null,
         diet: data.diet || null,
         smoking: data.smoking || null,
@@ -268,6 +272,7 @@ export async function PUT(request: NextRequest) {
       gram: data.gram ?? null,
       native_place_id: data.native_place_id ?? null,
       current_loc_id: data.current_loc_id ?? null,
+      job_loc_id: data.job_loc_id ?? null,
       height_cm: data.height_cm ?? null,
       diet: data.diet || null,
       smoking: data.smoking || null,

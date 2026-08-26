@@ -37,6 +37,7 @@ type FormData = {
   gram: string
   native_place_id: number | null
   current_loc_id: number | null
+  job_loc_id: number | null
   height_cm: string
   diet: string
   smoking: string
@@ -84,6 +85,7 @@ const EMPTY_FORM: FormData = {
   gram: '',
   native_place_id: null,
   current_loc_id: null,
+  job_loc_id: null,
   height_cm: '',
   diet: '',
   smoking: '',
@@ -291,7 +293,7 @@ export default function ProfileEditPage() {
     progress: 0, failed: false, message: '', file: null
   })
   const uploadingRef = useRef(false)
-  const [locationNames, setLocationNames] = useState<{ native: string; current: string }>({ native: '', current: '' })
+  const [locationNames, setLocationNames] = useState<{ native: string; current: string; job: string }>({ native: '', current: '', job: '' })
   const [options, setOptions] = useState<OptionsMap>({})
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -324,6 +326,7 @@ export default function ProfileEditPage() {
             gram: p.gram ?? '',
             native_place_id: p.native_place_id ?? null,
             current_loc_id: p.current_loc_id ?? null,
+            job_loc_id: p.job_loc_id ?? null,
             height_cm: p.height_cm?.toString() ?? '',
             diet: p.diet ?? '',
             smoking: p.smoking ?? '',
@@ -354,6 +357,7 @@ export default function ProfileEditPage() {
             family_expectations: p.family_expectations ?? '',
             family_introduction: p.family_introduction ?? '',
           })
+          setLocationNames({ native: j.native_place_name ?? '', current: j.current_loc_name ?? '', job: j.job_loc_name ?? '' })
         }
         setPhotos(j.photos ?? [])
         setLoading(false)
@@ -376,6 +380,7 @@ export default function ProfileEditPage() {
       height_cm: form.height_cm ? parseInt(form.height_cm) : null,
       native_place_id: form.native_place_id,
       current_loc_id: form.current_loc_id,
+      job_loc_id: form.job_loc_id,
       passing_year: form.passing_year ? parseInt(form.passing_year) : null,
       experience_years: form.experience_years ? parseInt(form.experience_years) : null,
     }
@@ -678,11 +683,20 @@ export default function ProfileEditPage() {
                   setLocationNames(n => ({ ...n, current: name }))
                 }}
               />
+              <LocationSearch
+                label="Job Location"
+                value={form.job_loc_id}
+                onChange={(id, name) => {
+                  set('job_loc_id', id)
+                  setLocationNames(n => ({ ...n, job: name }))
+                }}
+              />
             </div>
-            {(locationNames.native || locationNames.current) && (
+            {(locationNames.native || locationNames.current || locationNames.job) && (
               <div className="mt-3 text-xs text-ink-soft space-y-1">
                 {locationNames.native && <p>Native: {locationNames.native}</p>}
                 {locationNames.current && <p>Current: {locationNames.current}</p>}
+                {locationNames.job && <p>Job: {locationNames.job}</p>}
               </div>
             )}
           </section>
