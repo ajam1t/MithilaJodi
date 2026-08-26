@@ -183,7 +183,7 @@ export default async function BiodataPreviewPage({
     .select('slug')
     .eq('id', g.template_id)
     .maybeSingle()
-  const templateSlug = (template as any)?.slug ?? 'classic'
+  const templateSlug = template?.slug ?? 'classic'
 
   // Verify this generation belongs to the current user
   const { data: profileCheck } = await admin
@@ -269,7 +269,6 @@ export default async function BiodataPreviewPage({
       .select('contact_mobile, contact_email, address, income_min_lpa, income_max_lpa, rashi, nakshatra, mangalik, birth_time, birth_place, kundli_url')
       .eq('profile_id', g.profile_id)
       .maybeSingle()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     privateDetails = (priv as PrivateDetails) ?? {}
   }
 
