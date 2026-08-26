@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import ProfileCard3D from '@/components/ProfileCard3D'
+import ProfileCardGallery3D from '@/components/ProfileCardGallery3D'
 import { Spinner } from '@/components/ui'
 import type { SearchCard } from '@/types/profile'
 import CurrentPlanCard from './CurrentPlanCard'
@@ -363,11 +363,12 @@ export default function ProfilePage() {
       {/* ── Current Plan / Subscription ── */}
       <CurrentPlanCard />
 
-      {/* ── 3D Profile Card ── */}
+      {/* ── 3D Profile Gallery ── */}
       {profile && cardProfile && (
         <div className="border-b border-ink/10">
           <div className="max-w-2xl mx-auto px-4 py-5">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft mb-2">Your Profile Card</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft mb-1">Your Profile Gallery</h3>
+            <p className="mb-3 text-xs text-ink-soft">Five rotating views of the details families see first.</p>
             <div className="flex flex-wrap gap-1.5 mb-3">
               <button type="button" onClick={() => setCardMode('own')}
                 className={`text-xs px-3 py-1.5 rounded-mj-sm transition-colors ${cardMode === 'own' ? 'bg-maroon text-cream' : 'text-ink-soft border border-ink/20 hover:text-ink'}`}>
@@ -378,9 +379,7 @@ export default function ProfilePage() {
                 Preview as Other Members
               </button>
             </div>
-            <div className="flex justify-center">
-              <ProfileCard3D profile={cardProfile} hideActions />
-            </div>
+            <ProfileCardGallery3D profile={cardProfile} />
             {cardMode === 'preview' && (
               <p className="text-xs text-ink-soft text-center mt-3">
                 This is how your card appears to other members.

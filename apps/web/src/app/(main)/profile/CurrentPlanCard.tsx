@@ -78,11 +78,11 @@ export default function CurrentPlanCard() {
   if (loading) {
     return (
       <div className="border-b border-ink/10">
-        <div className="max-w-2xl mx-auto px-4 py-5">
-          <div className="rounded-mj border border-gold/30 bg-cream p-5 animate-pulse">
+        <div className="max-w-2xl mx-auto px-4 py-3">
+          <div className="rounded-mj border border-gold/30 bg-cream p-3 sm:p-4 animate-pulse">
             <div className="h-3 w-24 bg-paper-3 rounded mb-3" />
             <div className="h-6 w-40 bg-paper-3 rounded mb-2" />
-            <div className="h-9 w-full bg-paper-3 rounded mt-4" />
+            <div className="h-8 w-32 bg-paper-3 rounded mt-3" />
           </div>
         </div>
       </div>
@@ -97,22 +97,21 @@ export default function CurrentPlanCard() {
   if (!membership) {
     return (
       <div className="border-b border-ink/10">
-        <div className="max-w-2xl mx-auto px-4 py-5">
+        <div className="max-w-2xl mx-auto px-4 py-3">
           <PlanShell
             eyebrow="Current Plan"
             name="Free Plan"
             price="₹0"
             statusKey="free"
           >
-            <p className="text-[13px] text-ink-soft leading-relaxed">
-              You can create your profile and receive interests. Upgrade to send interests and message matches.
-            </p>
-            <Link
-              href="/membership"
-              className="btn-primary w-full text-center justify-center py-2.5 mt-1"
-            >
-              Upgrade Plan
-            </Link>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs leading-relaxed text-ink-soft sm:max-w-[72%]">
+                Create your profile and receive interests. Upgrade to send interests and message matches.
+              </p>
+              <Link href="/membership" className="btn-primary shrink-0 justify-center px-4 py-2 text-xs">
+                Upgrade Plan
+              </Link>
+            </div>
           </PlanShell>
         </div>
       </div>
@@ -142,7 +141,7 @@ export default function CurrentPlanCard() {
 
   return (
     <div className="border-b border-ink/10">
-      <div className="max-w-2xl mx-auto px-4 py-5">
+        <div className="max-w-2xl mx-auto px-4 py-3">
         <PlanShell
           eyebrow="Current Plan"
           name={planName}
@@ -151,7 +150,7 @@ export default function CurrentPlanCard() {
           statusKey={statusKey}
         >
           {/* Dates */}
-          <dl className="text-[13px] space-y-1.5">
+          <dl className="flex flex-wrap gap-x-6 gap-y-1 text-xs">
             {membership.started_at && (
               <div className="flex justify-between gap-3">
                 <dt className="text-ink-soft">Started</dt>
@@ -213,7 +212,7 @@ export default function CurrentPlanCard() {
           <Link
             href="/membership"
             className={[
-              'w-full text-center justify-center py-2.5 mt-1',
+              'ml-auto justify-center px-4 py-2 text-xs',
               ctaPrimary ? 'btn-primary' : 'btn-ghost',
             ].join(' ')}
           >
@@ -239,14 +238,14 @@ function PlanShell({
   return (
     <div className="relative rounded-mj border border-gold/40 bg-cream shadow-mj-xs overflow-hidden">
       <div className="h-[3px] bg-gradient-to-r from-maroon-deep/20 via-gold to-maroon-deep/20" />
-      <div className="p-5 space-y-4">
+      <div className="p-3.5 sm:p-4 space-y-2.5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-[10px] uppercase tracking-widest text-terra font-semibold mb-1">{eyebrow}</p>
-            <h3 className="font-serif text-lg text-maroon leading-tight truncate">{name}</h3>
+            <h3 className="font-serif text-base sm:text-lg text-maroon leading-tight truncate">{name}</h3>
             {price && (
               <p className="text-ink mt-0.5">
-                <span className="font-serif text-xl text-maroon">{price}</span>
+                <span className="font-serif text-lg text-maroon">{price}</span>
                 {per && <span className="text-[12px] text-ink-soft ml-1">{per}</span>}
               </p>
             )}
