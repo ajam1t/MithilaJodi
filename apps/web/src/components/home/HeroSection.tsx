@@ -1,18 +1,18 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 export function HeroSection() {
   return (
     <section className="relative overflow-hidden bg-paper" aria-label="Hero — Mithila matrimonial platform">
       {/* ── Full-bleed hero artwork ── (edge-to-edge, flows straight from the header separator) */}
       <div className="hero-art-enter w-full">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src="/hero-couple.jpg"
           alt="A Mithila bride and groom exchanging wedding garlands, surrounded by family"
           width={1536}
           height={1024}
-          fetchPriority="high"
-          decoding="async"
+          priority
+          sizes="100vw"
           className="block w-full h-auto md:h-[420px] lg:h-[500px] md:object-cover md:object-[50%_25%]"
         />
       </div>

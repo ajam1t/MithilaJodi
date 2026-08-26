@@ -17,9 +17,19 @@ import { SITE_URL } from '@/lib/constants'
 const SITE = SITE_URL
 
 export const metadata: Metadata = {
-  title: 'Mithila Jodi — Maithili Matrimonial & Marriage Biodata',
+  title: 'Mithila Jodi — Mithila & Maithili Matrimonial | Bride & Groom Profiles',
   description:
-    'Mithila Jodi is a matrimonial platform for the Mithila community of India. Create a marriage biodata in English, Hindi, Maithili & Sanskrit, involve your family, and find matches rooted in Maithili heritage.',
+    'Mithila Jodi is a trusted Mithila & Maithili matrimonial platform for the Maithil community of India. Find verified Mithila bride and groom profiles, create a marriage biodata in Maithili, Hindi, English & Sanskrit, and connect families rooted in Mithila heritage.',
+  keywords: [
+    'Mithila matrimonial', 'Maithili matrimonial', 'Maithil matrimonial',
+    'Mithila marriage', 'Maithili marriage', 'Maithil marriage',
+    'Mithila matrimony', 'Maithili matrimony',
+    'Mithila bride', 'Mithila groom', 'Maithili bride', 'Maithili groom',
+    'Maithil bride', 'Maithil groom',
+    'Mithila wedding', 'Maithili wedding',
+    'Mithila marriage biodata', 'Maithili marriage biodata',
+    'Mithila matrimonial profiles', 'Bihar matrimonial',
+  ],
   alternates: { canonical: SITE },
   openGraph: {
     type: 'website',

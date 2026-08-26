@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import type { SearchCard } from '@/types/profile'
 import { cn } from '@/lib/utils/cn'
 import { VerifiedBadge } from '@/components/ui'
@@ -194,12 +195,12 @@ export function ProfileCard3D({
           {/* Photo */}
           <div className="relative flex-shrink-0" style={{ aspectRatio: '4 / 3' }}>
             {profile.primary_photo_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 src={profile.primary_photo_url}
                 alt={profile.display_name}
-                loading="lazy"
-                className="w-full h-full object-cover"
+                fill
+                sizes="(max-width: 640px) 90vw, 320px"
+                className="object-cover"
               />
             ) : (
               <LotusPlaceholder initial={profile.display_name.charAt(0).toUpperCase()} />
