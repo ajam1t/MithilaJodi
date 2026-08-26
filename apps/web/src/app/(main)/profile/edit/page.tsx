@@ -608,6 +608,21 @@ export default function ProfileEditPage() {
     else setError('Failed to delete photo.')
   }
 
+  async function handleSetPrimaryPhoto(photoId: string) {
+    setError('')
+    try {
+      const r = await fetch(`/api/profile/photos/${photoId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      const j = await r.json()
+      if (j.ok) setPhotos(current => current.map(photo => ({ ...photo, is_primary: photo.id === photoId })))
+      else setError(j.message ?? 'Only approved photos can be set as primary.')
+    } catch {
+      setError('Network error. Could not update the primary photo.')
+    }
+  }
+
   if (loading) {
     return (
       <main className="min-h-screen bg-paper flex items-center justify-center">
@@ -1081,8 +1096,16 @@ export default function ProfileEditPage() {
                       {photo.status === 'pending_moderation' ? 'Under review' :
                        photo.status === 'approved' ? 'Approved' : 'Rejected'}
                     </span>
-                    <button type="button" onClick={() => handleDeletePhoto(photo.id)}
-                      className="text-white text-[10px] hover:text-red-300 transition-colors">Remove</button>
+                    <div className="flex items-center gap-2">
+                      {!photo.is_primary && (
+                        <button type="button" onClick={() => void handleSetPrimaryPhoto(photo.id)} disabled={photo.status !== 'approved'}
+                          className="text-white text-[10px] hover:text-gold-lt transition-colors disabled:cursor-not-allowed disabled:opacity-50">
+                          {photo.status === 'approved' ? 'Set primary' : 'Awaiting review'}
+                        </button>
+                      )}
+                      <button type="button" onClick={() => handleDeletePhoto(photo.id)}
+                        className="text-white text-[10px] hover:text-red-300 transition-colors">Remove</button>
+                    </div>
                   </div>
                 </div>
               ))}

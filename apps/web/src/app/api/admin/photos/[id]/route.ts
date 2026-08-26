@@ -14,9 +14,9 @@ export async function PATCH(
 
   const { id } = await params
   const body = await request.json()
-  const { action, reason } = body as { action: 'approve' | 'reject'; reason?: string }
+  const { action, reason } = body as { action: 'approve' | 'reject' | 'set_primary'; reason?: string }
 
-  if (action !== 'approve' && action !== 'reject') {
+  if (action !== 'approve' && action !== 'reject' && action !== 'set_primary') {
     return NextResponse.json({ ok: false, message: 'Invalid action.' }, { status: 400 })
   }
 
@@ -30,6 +30,42 @@ export async function PATCH(
 
   if (!photo) {
     return NextResponse.json({ ok: false, message: 'Photo not found.' }, { status: 404 })
+  }
+
+  if (action === 'set_primary') {
+    if (photo.status !== 'approved') {
+      return NextResponse.json({ ok: false, message: 'Only approved photos can be set as primary.' }, { status: 400 })
+    }
+
+    const { error: clearError } = await admin
+      .from('profile_photos')
+      .update({ is_primary: false })
+      .eq('profile_id', photo.profile_id)
+
+    if (clearError) {
+      console.error('[admin/photos/[id] PATCH] clear primary error:', clearError.message)
+      return NextResponse.json({ ok: false, message: 'Could not update the primary photo.' }, { status: 500 })
+    }
+
+    const { error: setError } = await admin
+      .from('profile_photos')
+      .update({ is_primary: true })
+      .eq('id', id)
+
+    if (setError) {
+      console.error('[admin/photos/[id] PATCH] set primary error:', setError.message)
+      return NextResponse.json({ ok: false, message: 'Could not update the primary photo.' }, { status: 500 })
+    }
+
+    await admin.from('admin_audit_logs').insert({
+      actor_id: session.id,
+      action: 'set_primary_photo',
+      target_type: 'photo',
+      target_id: id,
+      payload: { profile_id: photo.profile_id },
+    })
+
+    return NextResponse.json({ ok: true })
   }
 
   const now = new Date().toISOString()
