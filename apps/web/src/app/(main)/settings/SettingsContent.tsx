@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useToast } from '@/components/ui'
 
 type Consent = {
   type: string
@@ -32,6 +33,7 @@ function latestByType(consents: Consent[]): Map<string, Consent> {
 
 export default function SettingsContent() {
   const router = useRouter()
+  const toast = useToast()
   const [consents, setConsents] = useState<Consent[]>([])
   const [loadingConsents, setLoadingConsents] = useState(true)
   const [withdrawing, setWithdrawing] = useState<string | null>(null)
@@ -106,7 +108,7 @@ export default function SettingsContent() {
     setExporting(true)
     try {
       const res = await fetch('/api/account/export', { method: 'POST' })
-      if (!res.ok) { alert('Export failed. Please try again.'); return }
+      if (!res.ok) { toast('Export failed. Please try again.', { type: 'error' }); return }
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -115,7 +117,7 @@ export default function SettingsContent() {
       a.click()
       URL.revokeObjectURL(url)
     } catch {
-      alert('Export failed. Please check your connection and try again.')
+      toast('Export failed. Please check your connection and try again.', { type: 'error' })
     } finally {
       setExporting(false)
     }
@@ -174,7 +176,7 @@ export default function SettingsContent() {
                     {withdrawMsg[type] && <p className="text-xs text-maroon mt-0.5">{withdrawMsg[type]}</p>}
                   </div>
                   <div className="shrink-0 flex items-center gap-2">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${active ? 'bg-green-100 text-green-700' : 'bg-paper-3 text-ink-soft'}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${active ? 'bg-success-soft text-success-fg' : 'bg-paper-3 text-ink-soft'}`}>
                       {active ? 'Active' : c?.withdrawn_at ? 'Withdrawn' : 'None'}
                     </span>
                     {!required && active && (
@@ -253,7 +255,7 @@ export default function SettingsContent() {
             />
           </label>
           {pwError   && <p className="text-sm text-terra">{pwError}</p>}
-          {pwSuccess && <p className="text-sm text-green-700">Password changed successfully.</p>}
+          {pwSuccess && <p className="text-sm text-success-fg">Password changed successfully.</p>}
           <button type="submit" disabled={pwLoading} className="btn btn-primary text-sm py-2 px-5 disabled:opacity-60">
             {pwLoading ? 'Saving…' : 'Update Password'}
           </button>
@@ -277,8 +279,8 @@ export default function SettingsContent() {
       </section>
 
       {/* Account Deactivation */}
-      <section className="card p-6 border-2 border-red-200">
-        <h2 className="font-serif text-lg text-red-700 mb-1">Deactivate Account</h2>
+      <section className="card p-6 border-2 border-error/30">
+        <h2 className="font-serif text-lg text-error-fg mb-1">Deactivate Account</h2>
         <p className="text-sm text-ink-soft mb-4 leading-relaxed">
           Deactivating your account will hide your profile and prevent you from logging in. Your data is retained per our{' '}
           <Link href="/legal/privacy" target="_blank" className="text-maroon hover:underline">Privacy Policy</Link>{' '}
@@ -289,13 +291,13 @@ export default function SettingsContent() {
           <button
             type="button"
             onClick={() => setDeleteConfirm(true)}
-            className="text-sm text-red-600 border border-red-300 rounded-mj-sm px-4 py-2 hover:bg-red-50 transition-colors"
+            className="text-sm text-error border border-error/40 rounded-mj-sm px-4 py-2 hover:bg-error-soft transition-colors"
           >
             Deactivate my account
           </button>
         ) : (
           <div className="space-y-3">
-            <p className="text-sm font-medium text-red-700">
+            <p className="text-sm font-medium text-error-fg">
               Are you sure? Type <strong>DELETE</strong> to confirm.
             </p>
             <input
@@ -303,15 +305,15 @@ export default function SettingsContent() {
               value={deleteText}
               onChange={e => { setDeleteError(''); setDeleteText(e.target.value) }}
               placeholder="Type DELETE"
-              className="border border-red-300 rounded-mj-sm px-3 py-2 text-sm focus:outline-none focus:border-red-500 w-full max-w-xs"
+              className="input w-full max-w-xs"
             />
-            {deleteError && <p className="text-xs text-red-600">{deleteError}</p>}
+            {deleteError && <p className="text-xs text-error">{deleteError}</p>}
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={deleteAccount}
                 disabled={deleting}
-                className="text-sm bg-red-600 text-white rounded-mj-sm px-4 py-2 hover:bg-red-700 disabled:opacity-60 transition-colors"
+                className="text-sm bg-terra text-cream rounded-mj-sm px-4 py-2 hover:bg-maroon disabled:opacity-60 transition-colors"
               >
                 {deleting ? 'Deactivating…' : 'Confirm deactivation'}
               </button>

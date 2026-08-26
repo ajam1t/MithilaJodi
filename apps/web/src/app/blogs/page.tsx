@@ -92,20 +92,11 @@ export default async function BlogIndexPage() {
         {categories.length > 0 && (
           <section className="wrap pb-8">
             <div className="flex flex-wrap gap-2 justify-center">
-              <Link
-                href="/blogs"
-                className="inline-flex items-center px-4 py-1.5 rounded-full text-[13px] font-semibold
-                           bg-maroon text-cream border border-maroon transition-colors"
-              >
+              <Link href="/blogs" className="chip chip-on">
                 All
               </Link>
               {categories.map((cat) => (
-                <Link
-                  key={cat.slug}
-                  href={`/blogs/${cat.slug}`}
-                  className="inline-flex items-center px-4 py-1.5 rounded-full text-[13px] font-semibold
-                             bg-cream text-maroon border border-gold hover:bg-paper-2 transition-colors"
-                >
+                <Link key={cat.slug} href={`/blogs/${cat.slug}`} className="chip">
                   {cat.name}
                 </Link>
               ))}
@@ -124,11 +115,14 @@ export default async function BlogIndexPage() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {posts.map((post) => (
-                <ArticleCard key={post.id} post={post} />
-              ))}
-            </div>
+            <>
+              {posts[0]?.featured && <FeaturedArticle post={posts[0]} />}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {(posts[0]?.featured ? posts.slice(1) : posts).map((post) => (
+                  <ArticleCard key={post.id} post={post} />
+                ))}
+              </div>
+            </>
           )}
         </section>
       </main>
@@ -140,12 +134,56 @@ export default async function BlogIndexPage() {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+function FeaturedArticle({ post }: { post: any }) {
+  const category = post.blog_categories
+  const href = category ? `/blogs/${category.slug}/${post.slug}` : `/blogs`
+
+  return (
+    <article className="card card-hover overflow-hidden mb-8 grid md:grid-cols-2">
+      <div className="relative aspect-[16/10] md:aspect-auto md:min-h-[280px] bg-paper-2">
+        {post.cover_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={post.cover_url} alt={post.title} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="font-deva text-6xl text-gold/40" aria-hidden="true">✦</span>
+          </div>
+        )}
+        <span className="badge badge-gold absolute top-3 left-3">Featured</span>
+      </div>
+      <div className="p-6 sm:p-8 flex flex-col justify-center">
+        {category && (
+          <Link href={`/blogs/${category.slug}`} className="eyebrow mb-2 hover:text-maroon transition-colors">
+            {category.name}
+          </Link>
+        )}
+        <h2 className="font-serif text-maroon text-[24px] sm:text-[28px] leading-tight mb-3">
+          <Link href={href} className="hover:underline underline-offset-2">
+            {post.title}
+          </Link>
+        </h2>
+        {post.excerpt && (
+          <p className="text-ink-soft text-[15px] leading-relaxed mb-5 line-clamp-3">{post.excerpt}</p>
+        )}
+        <div className="flex items-center gap-3 mt-auto">
+          <Link href={href} className="btn-primary btn-sm">Read article →</Link>
+          <span className="text-[12px] text-ink-soft">
+            {post.author_name ?? 'Mithila Jodi Team'}
+            {post.published_at && <> &middot; {formatDate(post.published_at)}</>}
+          </span>
+        </div>
+      </div>
+    </article>
+  )
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ArticleCard({ post }: { post: any }) {
   const category = post.blog_categories
   const href = category ? `/blogs/${category.slug}/${post.slug}` : `/blogs`
 
   return (
-    <article className="card flex flex-col overflow-hidden">
+    <article className="card card-hover flex flex-col overflow-hidden">
       {post.cover_url && (
         <div className="aspect-[16/9] overflow-hidden bg-paper-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}

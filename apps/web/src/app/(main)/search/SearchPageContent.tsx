@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { type SearchCard } from '@/types/profile'
 import { ProfileCard3D } from '@/components/ProfileCard3D'
+import { Button, EmptyState, Skeleton, useToast } from '@/components/ui'
 
 type Filters = {
   gender: string
@@ -35,6 +36,25 @@ const EMPTY_FILTERS: Filters = {
   height_max: '',
   q: '',
   sort: 'newest',
+}
+
+const FILTER_LABELS: Partial<Record<keyof Filters, string>> = {
+  gender: 'Gender',
+  age_min: 'Age ≥',
+  age_max: 'Age ≤',
+  gotra: 'Gotra',
+  mool: 'Mool',
+  gram: 'Gram',
+  caste: 'Caste',
+  religion: 'Religion',
+  diet: 'Diet',
+  height_min: 'Ht ≥',
+  height_max: 'Ht ≤',
+  q: 'Search',
+}
+
+function prettyValue(v: string): string {
+  return v.replace(/_/g, '-')
 }
 
 function buildParams(filters: Filters, page: number): URLSearchParams {
@@ -69,24 +89,24 @@ function FiltersPanel({
 }) {
   const field = (label: string, key: keyof Filters, type = 'text', placeholder = '') => (
     <div>
-      <label className="block text-xs font-medium text-ink-soft mb-1">{label}</label>
+      <label className="field-label">{label}</label>
       <input
         type={type}
         value={filters[key]}
         placeholder={placeholder}
         onChange={e => onChange(key, e.target.value)}
-        className="w-full border border-ink/20 rounded-mj-sm px-2.5 py-1.5 text-sm text-ink focus:outline-none focus:border-maroon"
+        className="input py-2 text-sm"
       />
     </div>
   )
 
   const select = (label: string, key: keyof Filters, options: { value: string; label: string }[]) => (
     <div>
-      <label className="block text-xs font-medium text-ink-soft mb-1">{label}</label>
+      <label className="field-label">{label}</label>
       <select
         value={filters[key]}
         onChange={e => onChange(key, e.target.value)}
-        className="w-full border border-ink/20 rounded-mj-sm px-2.5 py-1.5 text-sm text-ink focus:outline-none focus:border-maroon bg-white"
+        className="select py-2 text-sm"
       >
         {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
@@ -96,7 +116,7 @@ function FiltersPanel({
   return (
     <aside className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-ink text-sm">Filters</h2>
+        <h2 className="font-serif text-maroon text-[16px]">Filters</h2>
         <button type="button" onClick={onReset}
           className="text-xs text-maroon hover:underline">Reset</button>
       </div>
@@ -148,6 +168,7 @@ function FiltersPanel({
 export default function SearchPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const toast = useToast()
 
   const [filters, setFilters] = useState<Filters>(() => ({
     gender: searchParams.get('gender') ?? 'any',
@@ -229,6 +250,19 @@ export default function SearchPageContent() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  function removeFilter(key: keyof Filters) {
+    const next = { ...filters, [key]: EMPTY_FILTERS[key] }
+    setFilters(next)
+    setPage(1)
+    const params = buildParams(next, 1)
+    router.replace(params.toString() ? `/search?${params}` : '/search', { scroll: false })
+    runSearch(next, 1)
+  }
+
+  const activeChips = (Object.keys(filters) as (keyof Filters)[])
+    .filter(k => k !== 'sort' && filters[k] !== '' && filters[k] !== EMPTY_FILTERS[k])
+    .map(k => ({ key: k, label: `${FILTER_LABELS[k] ?? k}: ${prettyValue(filters[k])}` }))
+
   // Send interest directly from a search card. Throws on failure so the card
   // does not show a false "Sent!" state; the message is surfaced to the user.
   async function handleSendInterest(profileId: string) {
@@ -239,9 +273,10 @@ export default function SearchPageContent() {
     })
     const json = await res.json().catch(() => ({}))
     if (!res.ok || !json.ok) {
-      alert(json.message ?? 'Could not send interest. Please try again.')
+      toast(json.message ?? 'Could not send interest. Please try again.', { type: 'error' })
       throw new Error(json.message ?? 'send interest failed')
     }
+    toast('Interest sent', { type: 'success' })
   }
 
   // Shortlist directly from a search card.
@@ -249,9 +284,10 @@ export default function SearchPageContent() {
     const res = await fetch(`/api/shortlists/${profileId}`, { method: 'POST' })
     const json = await res.json().catch(() => ({}))
     if (!res.ok || !json.ok) {
-      alert(json.message ?? 'Could not shortlist. Please try again.')
+      toast(json.message ?? 'Could not shortlist. Please try again.', { type: 'error' })
       throw new Error(json.message ?? 'shortlist failed')
     }
+    toast('Added to shortlist', { type: 'success' })
   }
 
   return (
@@ -316,19 +352,44 @@ export default function SearchPageContent() {
               </div>
             )}
 
+            {/* Active filter chips */}
+            {activeChips.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                {activeChips.map(chip => (
+                  <button
+                    key={chip.key}
+                    type="button"
+                    onClick={() => removeFilter(chip.key)}
+                    className="chip chip-on gap-1.5 pr-2"
+                    aria-label={`Remove filter ${chip.label}`}
+                  >
+                    {chip.label}
+                    <span aria-hidden="true" className="text-cream/80">×</span>
+                  </button>
+                ))}
+                <button type="button" onClick={resetFilters} className="text-xs text-maroon hover:underline ml-1">
+                  Clear all
+                </button>
+              </div>
+            )}
+
             {loading && (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="flex justify-center">
-                    <div className="w-full max-w-[360px] rounded-mj overflow-hidden shadow-mj-sm animate-pulse">
-                      <div className="h-2 bg-gold/30" />
-                      <div className="bg-paper flex flex-col items-center gap-3 pt-8 pb-6 px-5" style={{ height: 420 }}>
-                        <div className="w-24 h-24 rounded-full bg-cream" />
-                        <div className="h-5 bg-cream rounded w-32" />
-                        <div className="h-3 bg-cream rounded w-24" />
+                  <div key={i} className="w-full max-w-[320px] mx-auto rounded-mj-lg overflow-hidden border border-paper-3 bg-cream shadow-mj-sm">
+                    <div className="gold-strip" />
+                    <div className="aspect-[4/3] skeleton rounded-none" />
+                    <div className="p-4 space-y-2.5">
+                      <Skeleton className="h-5 w-2/3" />
+                      <Skeleton className="h-3 w-1/2" />
+                      <div className="flex gap-1.5 pt-1">
+                        <Skeleton className="h-5 w-16 rounded-pill" />
+                        <Skeleton className="h-5 w-20 rounded-pill" />
                       </div>
-                      <div className="h-10 bg-maroon-deep" />
-                      <div className="h-1.5 bg-gold/30" />
+                      <div className="grid grid-cols-2 gap-2 pt-2">
+                        <Skeleton className="h-9" />
+                        <Skeleton className="h-9" />
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -336,27 +397,27 @@ export default function SearchPageContent() {
             )}
 
             {error && !loading && (
-              <div className="rounded-mj-sm bg-red-50 border border-red-200 px-4 py-3 text-red-700 text-sm">
+              <div className="rounded-mj-sm bg-error-soft border border-error/30 px-4 py-3 text-error-fg text-sm">
                 {error}
               </div>
             )}
 
             {!loading && searched && results.length === 0 && !error && (
-              <div className="text-center py-16">
-                <p className="font-serif text-2xl text-ink mb-2">No profiles found</p>
-                <p className="text-ink-soft text-sm max-w-xs mx-auto">
-                  Try broadening your filters — fewer criteria will surface more results.
-                </p>
-                <button type="button" onClick={resetFilters} className="mt-4 btn-ghost text-sm">
-                  Clear all filters
-                </button>
-              </div>
+              <EmptyState
+                title="No profiles match your filters"
+                description="Try broadening your search — fewer criteria will surface more matches."
+                action={<Button variant="ghost" size="sm" onClick={resetFilters}>Clear all filters</Button>}
+              />
             )}
 
             {!loading && results.length > 0 && (
               <>
-                <div className="text-xs text-ink-soft mb-3">
-                  Page {page}{hasMore ? ' — more results available' : ' — end of results'}
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm text-ink-soft">
+                    <span className="text-ink font-semibold">{results.length}</span>{' '}
+                    {results.length === 1 ? 'profile' : 'profiles'} on this page
+                  </p>
+                  <p className="text-xs text-ink-soft">Page {page}</p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                   {results.map(p => (
@@ -392,12 +453,10 @@ export default function SearchPageContent() {
             )}
 
             {!searched && !loading && (
-              <div className="text-center py-16">
-                <p className="font-serif text-2xl text-ink mb-2">Find your match</p>
-                <p className="text-ink-soft text-sm max-w-xs mx-auto">
-                  Use the filters to narrow your search by gotra, mool, gram, age, and more.
-                </p>
-              </div>
+              <EmptyState
+                title="Find your match"
+                description="Use the filters to narrow your search by gotra, mool, gram, age, and more."
+              />
             )}
           </div>
         </div>

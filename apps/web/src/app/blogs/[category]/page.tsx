@@ -94,6 +94,15 @@ export default async function CategoryPage(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const posts: any[] = postsData ?? []
 
+  // All active categories for the chip nav
+  const { data: catsData } = await supabase
+    .from('blog_categories')
+    .select('id, name, slug')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const categories: any[] = catsData ?? []
+
   const canonical = `${BASE}/blogs/${cat.slug}`
 
   const breadcrumbJsonLd = {
@@ -139,6 +148,25 @@ export default async function CategoryPage(
           )}
         </section>
 
+        {/* ── Category filter chips ──────────────────────────── */}
+        {categories.length > 0 && (
+          <section className="wrap pb-8">
+            <div className="flex flex-wrap gap-2 justify-center">
+              <Link href="/blogs" className="chip">All</Link>
+              {categories.map((c) => (
+                <Link
+                  key={c.slug}
+                  href={`/blogs/${c.slug}`}
+                  className={c.slug === cat.slug ? 'chip chip-on' : 'chip'}
+                  aria-current={c.slug === cat.slug ? 'page' : undefined}
+                >
+                  {c.name}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* ── Article grid ───────────────────────────────────── */}
         <section className="wrap pb-16">
           {posts.length === 0 ? (
@@ -154,7 +182,7 @@ export default async function CategoryPage(
                 const catInfo = post.blog_categories
                 const href = catInfo ? `/blogs/${catInfo.slug}/${post.slug}` : `/blogs`
                 return (
-                  <article key={post.id} className="card flex flex-col overflow-hidden">
+                  <article key={post.id} className="card card-hover flex flex-col overflow-hidden">
                     {post.cover_url && (
                       <div className="aspect-[16/9] overflow-hidden bg-paper-2">
                         {/* eslint-disable-next-line @next/next/no-img-element */}

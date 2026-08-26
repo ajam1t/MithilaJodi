@@ -27,12 +27,12 @@ function formatPrice(paise: number): string {
 
 function StatusBadge({ status }: { status: MembershipStatus }) {
   const cfg: Record<string, { label: string; cls: string }> = {
-    active:         { label: 'Active',          cls: 'bg-green-100 text-green-700' },
-    expiring_soon:  { label: 'Expiring soon',   cls: 'bg-amber-100 text-amber-700' },
-    grace:          { label: 'Grace period',    cls: 'bg-orange-100 text-orange-700' },
-    pending:        { label: 'Payment pending', cls: 'bg-blue-100 text-blue-700' },
-    expired:        { label: 'Expired',         cls: 'bg-red-100 text-red-700' },
-    payment_failed: { label: 'Payment failed',  cls: 'bg-red-100 text-red-700' },
+    active:         { label: 'Active',          cls: 'bg-success-soft text-success-fg' },
+    expiring_soon:  { label: 'Expiring soon',   cls: 'bg-warning-soft text-warning-fg' },
+    grace:          { label: 'Grace period',    cls: 'bg-warning-soft text-warning-fg' },
+    pending:        { label: 'Payment pending', cls: 'bg-info-soft text-info-fg' },
+    expired:        { label: 'Expired',         cls: 'bg-error-soft text-error-fg' },
+    payment_failed: { label: 'Payment failed',  cls: 'bg-error-soft text-error-fg' },
     cancelled:      { label: 'Cancelled',       cls: 'bg-ink/10 text-ink-soft' },
     refunded:       { label: 'Refunded',        cls: 'bg-ink/10 text-ink-soft' },
     none:           { label: 'No membership',   cls: 'bg-ink/10 text-ink-soft' },
@@ -191,7 +191,7 @@ export default function MembershipContent() {
 
           {/* Error banner */}
           {error && (
-            <div className="rounded-mj-sm bg-red-50 border border-red-200 px-4 py-3 text-red-700 text-sm">
+            <div className="rounded-mj-sm bg-error-soft border border-error/30 px-4 py-3 text-error-fg text-sm">
               {error}
             </div>
           )}
@@ -251,7 +251,7 @@ export default function MembershipContent() {
                 </div>
               )}
               {allowance && allowance.limit === null && isLive && (
-                <p className="text-xs text-green-700 border-t border-paper-3 pt-2">
+                <p className="text-xs text-success-fg border-t border-paper-3 pt-2">
                   Unlimited interests — Mithila Premium
                 </p>
               )}
@@ -323,7 +323,7 @@ export default function MembershipContent() {
                       </p>
 
                       {isCurrent ? (
-                        <div className="text-center py-2 text-sm text-green-700 font-medium">
+                        <div className="text-center py-2 text-sm text-success-fg font-medium">
                           ✓ Your current plan
                         </div>
                       ) : (
