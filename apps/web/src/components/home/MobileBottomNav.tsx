@@ -39,7 +39,7 @@ export function MobileBottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-cream border-t-2 border-gold border-opacity-40 shadow-[0_-4px_16px_-4px_rgba(58,20,12,0.18)]"
+      className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-cream border-t-2 border-gold border-opacity-40 shadow-[0_-4px_16px_-4px_rgba(58,20,12,0.18)] pb-[env(safe-area-inset-bottom)]"
       aria-label="Mobile quick navigation"
     >
       {/* Top Madhubani accent line */}

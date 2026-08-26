@@ -3,9 +3,11 @@ import Link from 'next/link'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaBorder } from '@/components/home/MithilaBorder'
 import { HeroSection } from '@/components/home/HeroSection'
+import { FeaturedProfiles } from '@/components/home/FeaturedProfiles'
 import { WhyMithilaJodi } from '@/components/home/FeatureStrip'
+import { FamilyRoots } from '@/components/home/SuccessStories'
 import { BiodataSection } from '@/components/home/BiodataSection'
-
+import { FinalCTA } from '@/components/home/FinalCTA'
 import { CulturalStatement } from '@/components/home/CulturalStatement'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
@@ -154,8 +156,10 @@ export default function HomePage() {
       <MithilaHeader />
       <main className="flex-1 pb-16 lg:pb-0">
         <HeroSection />
+        <FeaturedProfiles />
         <MithilaBorder variant="top" />
         <WhyMithilaJodi />
+        <FamilyRoots />
         <MithilaBorder variant="bottom" />
         <BiodataSection />
 
@@ -193,6 +197,7 @@ export default function HomePage() {
         </section>
 
         <CulturalStatement />
+        <FinalCTA />
       </main>
       <MithilaFooter />
       <MobileBottomNav />

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import ProfileCard3D from '@/components/ProfileCard3D'
-import type { SearchCard } from '@/components/ProfileCard'
+import type { SearchCard } from '@/types/profile'
 
 type ProfileData = {
   id: string

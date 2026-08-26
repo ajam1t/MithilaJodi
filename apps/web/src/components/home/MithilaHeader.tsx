@@ -1,7 +1,9 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
+import { cn } from '@/lib/utils/cn'
 import { MithilaBorder } from '@/components/home/MithilaBorder'
 
 const NAV_LINKS = [
@@ -49,6 +51,22 @@ export function MithilaHeader() {
   const [open, setOpen] = useState(false)
   const [auth, setAuth] = useState<AuthState>({ loggedIn: false })
   const [authLoaded, setAuthLoaded] = useState(false)
+  const pathname = usePathname()
+
+  const isActive = (href: string) => {
+    if (href.startsWith('/#')) return false
+    if (href === '/') return pathname === '/'
+    return pathname === href || pathname.startsWith(href + '/')
+  }
+  const deskLink = (href: string) =>
+    cn(
+      'text-[13px] tracking-wide whitespace-nowrap transition-colors pb-1 border-b-2',
+      isActive(href)
+        ? 'text-maroon font-semibold border-marigold'
+        : 'text-ink hover:text-terra border-transparent'
+    )
+  const mobileLink = (href: string) =>
+    cn('text-sm py-1 transition-colors', isActive(href) ? 'text-maroon font-semibold' : 'text-ink hover:text-terra')
 
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
@@ -137,7 +155,7 @@ export function MithilaHeader() {
           {auth.loggedIn ? (
             <>
               {AUTH_NAV_LINKS.map(({ href, label }) => (
-                <Link key={label} href={href} className="text-[13px] text-ink hover:text-terra transition-colors tracking-wide whitespace-nowrap">
+                <Link key={label} href={href} className={deskLink(href)} aria-current={isActive(href) ? 'page' : undefined}>
                   {label}
                 </Link>
               ))}
@@ -152,7 +170,7 @@ export function MithilaHeader() {
           ) : (
             <>
               {NAV_LINKS.map(({ href, label }) => (
-                <Link key={label} href={href} className="text-[13px] text-ink hover:text-terra transition-colors tracking-wide whitespace-nowrap">
+                <Link key={label} href={href} className={deskLink(href)} aria-current={isActive(href) ? 'page' : undefined}>
                   {label}
                 </Link>
               ))}
@@ -182,7 +200,7 @@ export function MithilaHeader() {
             {auth.loggedIn ? (
               <>
                 {AUTH_NAV_LINKS.map(({ href, label }) => (
-                  <Link key={label} href={href} onClick={() => setOpen(false)} className="text-ink text-sm py-1 hover:text-terra">{label}</Link>
+                  <Link key={label} href={href} onClick={() => setOpen(false)} className={mobileLink(href)} aria-current={isActive(href) ? 'page' : undefined}>{label}</Link>
                 ))}
                 <div className="h-px bg-gold opacity-20" />
                 <button
@@ -195,7 +213,7 @@ export function MithilaHeader() {
             ) : (
               <>
                 {NAV_LINKS.map(({ href, label }) => (
-                  <Link key={label} href={href} onClick={() => setOpen(false)} className="text-ink text-sm py-1 hover:text-terra">{label}</Link>
+                  <Link key={label} href={href} onClick={() => setOpen(false)} className={mobileLink(href)} aria-current={isActive(href) ? 'page' : undefined}>{label}</Link>
                 ))}
                 <div className="h-px bg-gold opacity-20" />
                 {authLoaded && (

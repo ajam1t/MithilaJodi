@@ -246,6 +246,10 @@
 
   .font-deva { font-family: 'Rozha One', 'Tiro Devanagari Hindi', serif; }
   .font-hand { font-family: 'Kalam', cursive; }
+
+  /* Hide scrollbar while keeping scroll (carousels, filter rails) */
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
 }
 
 /* ── Homepage animation keyframes ────────────────────────── */

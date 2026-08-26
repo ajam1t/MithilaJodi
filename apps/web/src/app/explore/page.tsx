@@ -4,7 +4,7 @@ import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { ExploreGrid } from './ExploreGrid'
 import { getPublicShowcaseProfiles } from '@/lib/publicProfiles'
-import type { SearchCard } from '@/components/ProfileCard'
+import type { SearchCard } from '@/types/profile'
 import { SITE_URL } from '@/lib/constants'
 
 const SITE = SITE_URL

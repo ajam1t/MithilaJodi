@@ -1,6 +1,6 @@
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/server'
-import type { SearchCard } from '@/components/ProfileCard'
+import type { SearchCard } from '@/types/profile'
 
 // Maximum number of curated profiles shown to logged-out visitors.
 export const PUBLIC_SHOWCASE_MAX = 20
@@ -183,6 +183,24 @@ export async function getPublicShowcaseProfiles(): Promise<SearchCard[]> {
     }
   }
 
+  // Step 6: verification status (trust badge) — a profile is "verified" when it
+  // has at least one approved verification. Read-only; verified status is not
+  // sensitive. Used only to render the Verified badge truthfully.
+  const verifiedSet = new Set<string>()
+  const { data: verifRows, error: verifError } = await admin
+    .from('verifications')
+    .select('profile_id')
+    .in('profile_id', profileIds)
+    .eq('status', 'verified')
+  if (verifError) {
+    console.error('[publicProfiles] verifications query error:', verifError.code, verifError.message)
+  } else {
+    for (const v of verifRows ?? []) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      verifiedSet.add((v as any).profile_id as string)
+    }
+  }
+
   // Build response cards (strict allowlist).
   return profiles.map((p) => {
     const hasPhoto = photoByProfile.has(p.id as string)
@@ -206,6 +224,7 @@ export async function getPublicShowcaseProfiles(): Promise<SearchCard[]> {
       current_loc_name: locationMap.get(p.current_loc_id as number) ?? null,
       has_photo: hasPhoto,
       primary_photo_url: signedUrlByProfile.get(p.id as string) ?? null,
+      verified: verifiedSet.has(p.id as string),
       employer: (p.employer as string | null) ?? null,
       profession_detail: (p.profession_detail as string | null) ?? null,
       education_detail: (p.education_detail as string | null) ?? null,

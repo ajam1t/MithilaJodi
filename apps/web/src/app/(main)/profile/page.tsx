@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ProfileCard3D from '@/components/ProfileCard3D'
-import type { SearchCard } from '@/components/ProfileCard'
+import type { SearchCard } from '@/types/profile'
 import CurrentPlanCard from './CurrentPlanCard'
 
 type AccountInfo = { id: string; mobile: string; role: string }

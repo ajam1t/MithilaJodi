@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { type SearchCard } from '@/components/ProfileCard'
+import { type SearchCard } from '@/types/profile'
 import { ProfileCard3D } from '@/components/ProfileCard3D'
 
 type Filters = {
