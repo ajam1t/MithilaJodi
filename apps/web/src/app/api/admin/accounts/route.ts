@@ -50,6 +50,18 @@ export async function GET(request: NextRequest) {
     .in('account_id', accountIds)
     .neq('profile_status', 'deleted')
 
+  const { data: membershipRows } = await admin
+    .from('memberships')
+    .select('account_id, plan, status, expires_at, created_at')
+    .in('account_id', accountIds)
+    .order('created_at', { ascending: false })
+
+  const { data: plans } = await admin
+    .from('plan_config')
+    .select('plan, label_en, duration_days')
+    .eq('active', true)
+    .order('price_paise', { ascending: true })
+
   const profileMap: Record<string, { id: string; name: string; profile_status: string }> = {}
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ;(profileRows as any[] ?? []).forEach((p) => {
@@ -63,6 +75,18 @@ export async function GET(request: NextRequest) {
     }
   })
 
+  const membershipMap: Record<string, { plan: string; status: string; expires_at: string | null }> = {}
+  // The newest membership is the one used by the member-facing access checks.
+  ;(membershipRows as any[] ?? []).forEach((m) => {
+    if (!membershipMap[m.account_id]) {
+      membershipMap[m.account_id] = {
+        plan: m.plan,
+        status: m.status,
+        expires_at: m.expires_at,
+      }
+    }
+  })
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result = (accounts as any[]).map((a) => ({
     id: a.id,
@@ -71,7 +95,8 @@ export async function GET(request: NextRequest) {
     account_status: a.account_status,
     created_at: a.created_at,
     profile: profileMap[a.id] ?? null,
+    membership: membershipMap[a.id] ?? null,
   }))
 
-  return NextResponse.json({ ok: true, accounts: result })
+  return NextResponse.json({ ok: true, accounts: result, plans: plans ?? [] })
 }

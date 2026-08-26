@@ -10,7 +10,10 @@ type Account = {
   account_status: string
   created_at: string
   profile: { id: string; name: string; profile_status: string } | null
+  membership: { plan: string; status: string; expires_at: string | null } | null
 }
+
+type Plan = { plan: string; label_en: string; duration_days: number }
 
 const STATUS_COLORS: Record<string, string> = {
   active: 'bg-green-100 text-green-700',
@@ -22,12 +25,15 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function AdminAccountsPage() {
   const [accounts, setAccounts] = useState<Account[]>([])
+  const [plans, setPlans] = useState<Plan[]>([])
   const [loading, setLoading] = useState(true)
   const [q, setQ] = useState('')
   const [status, setStatus] = useState('')
   const [busy, setBusy] = useState<string | null>(null)
   const [actionMap, setActionMap] = useState<Record<string, string>>({})
   const [reasonMap, setReasonMap] = useState<Record<string, string>>({})
+  const [planMap, setPlanMap] = useState<Record<string, string>>({})
+  const [membershipMessages, setMembershipMessages] = useState<Record<string, { ok: boolean; text: string }>>({})
 
   const load = useCallback(() => {
     setLoading(true)
@@ -36,7 +42,12 @@ export default function AdminAccountsPage() {
     if (status) params.set('status', status)
     fetch(`/api/admin/accounts?${params}`)
       .then(r => r.json())
-      .then(j => { if (j.ok) setAccounts(j.accounts) })
+      .then(j => {
+        if (j.ok) {
+          setAccounts(j.accounts)
+          setPlans(j.plans ?? [])
+        }
+      })
       .finally(() => setLoading(false))
   }, [q, status])
 
@@ -52,6 +63,24 @@ export default function AdminAccountsPage() {
       body: JSON.stringify({ account_status: newStatus, reason: reasonMap[accountId] }),
     })
     const json = await res.json()
+    if (json.ok) load()
+    setBusy(null)
+  }
+
+  async function grantPlan(accountId: string) {
+    const plan = planMap[accountId]
+    if (!plan) return
+    setBusy(accountId)
+    const res = await fetch(`/api/admin/accounts/${accountId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ grant_plan: plan }),
+    })
+    const json = await res.json()
+    setMembershipMessages(m => ({
+      ...m,
+      [accountId]: { ok: json.ok, text: json.ok ? 'Membership granted.' : (json.message ?? 'Could not grant membership.') },
+    }))
     if (json.ok) load()
     setBusy(null)
   }
@@ -101,6 +130,10 @@ export default function AdminAccountsPage() {
                     {a.profile.name} ({a.profile.profile_status})
                   </Link>
                 )}
+                <span className="text-xs text-ink-soft">
+                  Plan: <span className="font-medium text-ink">{a.membership?.plan ?? 'Free'}</span>
+                  {a.membership?.expires_at && ` · expires ${new Date(a.membership.expires_at).toLocaleDateString('en-IN')}`}
+                </span>
                 <span className="text-xs text-ink-soft ml-auto">
                   {new Date(a.created_at).toLocaleDateString('en-IN')}
                 </span>
@@ -133,6 +166,37 @@ export default function AdminAccountsPage() {
                   Apply
                 </button>
               </div>
+
+              {plans.length > 0 && (
+                <div className="flex gap-2 flex-wrap items-center border-t border-paper-3 pt-3">
+                  <span className="text-xs font-medium text-ink">Grant premium plan</span>
+                  <select
+                    value={planMap[a.id] ?? ''}
+                    onChange={e => setPlanMap(m => ({ ...m, [a.id]: e.target.value }))}
+                    className="text-xs border border-paper-3 rounded-mj-sm px-2 py-1.5 focus:outline-none"
+                  >
+                    <option value="">Choose plan…</option>
+                    {plans.map(plan => (
+                      <option key={plan.plan} value={plan.plan}>
+                        {plan.label_en} · {plan.duration_days} days
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => grantPlan(a.id)}
+                    disabled={busy === a.id || !planMap[a.id]}
+                    className="btn-primary text-xs py-1.5 px-3 disabled:opacity-60"
+                  >
+                    {busy === a.id ? 'Granting…' : 'Grant plan'}
+                  </button>
+                  {membershipMessages[a.id] && (
+                    <span className={`text-xs ${membershipMessages[a.id].ok ? 'text-green-600' : 'text-red-600'}`}>
+                      {membershipMessages[a.id].text}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>
