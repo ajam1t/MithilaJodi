@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     const { data: account } = await admin
       .from('accounts')
-      .select('id, account_status, password_hash, failed_login_attempts, locked_until')
+      .select('id, account_status, role, password_hash, failed_login_attempts, locked_until')
       .eq('mobile', mobile)
       .is('deleted_at', null)
       .maybeSingle()
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: false, message: 'Could not create session. Please try again.' }, { status: 500 })
     }
 
-    const response = NextResponse.json({ ok: true })
+    const response = NextResponse.json({ ok: true, role: account.role })
     response.cookies.set(SESSION_COOKIE, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

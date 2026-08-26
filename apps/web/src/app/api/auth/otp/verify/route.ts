@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, message: result.message }, { status: result.status })
   }
 
-  const response = NextResponse.json({ ok: true, is_new: result.isNew })
+  const response = NextResponse.json({ ok: true, is_new: result.isNew, role: result.role })
   response.cookies.set(SESSION_COOKIE, result.sessionToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

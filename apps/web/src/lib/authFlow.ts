@@ -4,7 +4,7 @@ import { generateSessionToken, hashSessionToken, sessionExpiresAt } from '@/lib/
 import type { ConsentType } from '@/types/database'
 
 export type EstablishResult =
-  | { ok: true; isNew: boolean; sessionToken: string }
+  | { ok: true; isNew: boolean; sessionToken: string; role: string }
   | { ok: false; status: number; message: string }
 
 /**
@@ -34,6 +34,7 @@ export async function establishAccountSession(params: {
   const { admin, mobile, intent, consentTerms, consentPrivacy, ip, ua } = params
 
   let accountId: string
+  let role = 'user'
   let isNew = false
 
   if (intent === 'register') {
@@ -94,7 +95,7 @@ export async function establishAccountSession(params: {
   } else {
     const { data: account } = await admin
       .from('accounts')
-      .select('id, account_status')
+      .select('id, account_status, role')
       .eq('mobile', mobile)
       .is('deleted_at', null)
       .maybeSingle()
@@ -110,6 +111,7 @@ export async function establishAccountSession(params: {
     }
 
     accountId = account.id
+    role = account.role
   }
 
   const token = generateSessionToken()
@@ -129,5 +131,5 @@ export async function establishAccountSession(params: {
     return { ok: false, status: 500, message: 'Could not create session. Please try again.' }
   }
 
-  return { ok: true, isNew, sessionToken: token }
+  return { ok: true, isNew, sessionToken: token, role }
 }

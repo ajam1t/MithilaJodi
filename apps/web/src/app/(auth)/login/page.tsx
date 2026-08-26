@@ -10,6 +10,17 @@ type Mode = 'password' | 'otp'
 type OtpStep = 'mobile' | 'sent' | 'otp'
 type OtpChannel = 'msg91' | 'server'
 
+function getSafeNextPath(): string | null {
+  if (typeof window === 'undefined') return null
+  const next = new URLSearchParams(window.location.search).get('next')
+  return next && next.startsWith('/') && !next.startsWith('//') ? next : null
+}
+
+function getPostLoginPath(role?: string): string {
+  const next = getSafeNextPath()
+  return next && (role === 'admin' || role === 'moderator') ? next : '/profile'
+}
+
 export default function LoginPage() {
   const [mode, setMode]                     = useState<Mode>('password')
   const [mobile, setMobile]                 = useState('')
@@ -60,9 +71,9 @@ export default function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mobile, password }),
       })
-      const data: { ok: boolean; message?: string } = await res.json()
+      const data: { ok: boolean; role?: string; message?: string } = await res.json()
       if (!data.ok) { setError(data.message ?? 'Login failed. Please try again.'); return }
-      window.location.href = '/profile'
+      window.location.href = getPostLoginPath(data.role)
     } catch {
       setError('Network error. Please check your connection and try again.')
     } finally {
@@ -160,9 +171,9 @@ export default function LoginPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ mobile, accessToken, intent: 'login' }),
         })
-        const data: { ok: boolean; message?: string } = await res.json()
+        const data: { ok: boolean; role?: string; message?: string } = await res.json()
         if (!data.ok) { setError(data.message ?? 'Verification failed. Please try again.'); return }
-        window.location.href = '/profile'
+        window.location.href = getPostLoginPath(data.role)
         return
       }
 
@@ -171,9 +182,9 @@ export default function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mobile, code: otp, intent: 'login' }),
       })
-      const data: { ok: boolean; message?: string } = await res.json()
+      const data: { ok: boolean; role?: string; message?: string } = await res.json()
       if (!data.ok) { setError(data.message ?? 'Verification failed. Please try again.'); return }
-      window.location.href = '/profile'
+      window.location.href = getPostLoginPath(data.role)
     } catch {
       setError('Network error. Please check your connection and try again.')
     } finally {
