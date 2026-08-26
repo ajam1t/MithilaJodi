@@ -29,7 +29,7 @@ SELECT
   'Complete Guide to Maithil Vivah: Rituals, Ceremonies and Traditions',
   'complete-guide-maithil-vivah',
   'A Maithil wedding unfolds across several days and is filled with rituals unique to the Mithila tradition. This complete guide walks you through every stage — from the first formal meeting to Dwiragaman.',
-  $artA$
+  $$
 ## What Is Maithil Vivah?
 
 A Maithil wedding is one of India's most distinctive marriage traditions. It unfolds over several days, involves the full participation of both families, and includes ceremonies that are often unique to the Mithila region — rituals a visitor familiar with other Hindu weddings might not recognise at all.
@@ -130,7 +130,7 @@ No. Customs vary between communities, regions and individual families. This guid
 
 **Where can I read more about individual rituals?**
 Each ceremony in this guide has its own dedicated article — use the links throughout this page to go deeper into any specific ritual that interests you.
-$artA$,
+$$,
   'Mithila Jodi Team',
   'Complete Guide to Maithil Vivah: Rituals, Ceremonies and Traditions | Mithila Jodi',
   'A complete guide to traditional Maithil vivah — from Siddhant and Tilak through the wedding ceremony, Kohbar Ghar, Sindoor Daan, Chaturthi and Dwiragaman. Understand every stage of the Maithil marriage journey.',
@@ -151,7 +151,7 @@ SELECT
   'What Is Kohbar in Mithila Marriage? The Tradition of the Kohbar Ghar',
   'kohbar-kohbar-ghar-mithila-marriage',
   'The Kohbar Ghar is the sacred room at the heart of a traditional Maithil wedding — decorated with Madhubani paintings full of symbolic meaning. Learn what Kohbar is, what its paintings mean, and how this tradition is observed today.',
-  $artB$
+  $$
 ## What Is Kohbar?
 
 In traditional Mithila weddings, one of the most beautiful and culturally distinctive moments involves a room — a specially prepared, painted, song-filled space set aside for the newly married couple. This room is called the **Kohbar Ghar**, and the ritual paintings created for it are called **Kohbar**.
@@ -231,7 +231,7 @@ Traditionally, the women of the bride's family — particularly senior women ski
 
 **Is the Kohbar Ghar observed in all Mithila weddings?**
 Kohbar is a distinctive part of traditional Maithil weddings and is observed by many families, though the specific form varies. Some maintain the full tradition with hand-painted walls; others adapt it for modern settings.
-$artB$,
+$$,
   'Mithila Jodi Team',
   'What Is Kohbar in Mithila Marriage? The Tradition of Kohbar Ghar | Mithila Jodi',
   'Discover what Kohbar means in Mithila marriage, the symbolism behind Kohbar Ghar paintings — fish, lotus, bamboo and more — and how this Madhubani art tradition is observed in Maithil weddings today.',
@@ -252,7 +252,7 @@ SELECT
   'Tilak Ceremony in Maithil Marriage: What Happens and Why It Matters',
   'tilak-ceremony-maithil-marriage',
   'The Tilak ceremony is the formal engagement in a Maithil wedding — when the bride''s family visits the groom''s home and publicly declares the match. Learn what happens, who participates and what it signifies.',
-  $artC$
+  $$
 ## What Is the Tilak Ceremony?
 
 In Maithil tradition, the Tilak ceremony is the formal engagement — the moment when a matrimonial match moves from private family agreement to public, social commitment. The bride's family visits the groom's home, an auspicious mark (tilak) is applied to the groom's forehead, gifts are exchanged, and both families celebrate together.
@@ -342,7 +342,7 @@ Siddhant is the earlier, more private family meeting where the match is formally
 
 **Does the bride attend the Tilak ceremony?**
 Practices vary. In more traditional settings, the ceremony is primarily between the male representatives of both families. In modern practice, both the bride and groom may be present.
-$artC$,
+$$,
   'Mithila Jodi Team',
   'Tilak Ceremony in Maithil Marriage: What Happens and Why It Matters | Mithila Jodi',
   'Learn about the Tilak ceremony in Maithil marriage — the formal engagement where the bride''s family visits the groom''s home, applies the tilak mark, exchanges gifts and publicly declares the match.',
@@ -363,7 +363,7 @@ SELECT
   'What Is the Siddhant Ceremony in Mithila Marriage?',
   'siddhant-ceremony-mithila-marriage',
   'Siddhant is the formal, priest-witnessed confirmation of a matrimonial match in Maithil tradition — the ceremony that turns a private family understanding into a sanctioned commitment. Learn what happens and why it matters.',
-  $artD$
+  $$
 ## What Is the Siddhant Ceremony?
 
 In a traditional Maithil marriage, the formal process of committing to a match does not happen with a simple handshake or a phone call. It happens through a ceremony — one witnessed by the family purohit (priest), conducted with ritual care, and understood by both families as a binding step.
@@ -459,7 +459,7 @@ The purohit acts as ritual witness, record-keeper and the source of religious sa
 
 **What happens if families want to withdraw after Siddhant?**
 Withdrawing from a match after Siddhant is considered a serious matter with social and moral implications. Families typically seek advice from elders and the purohit if they face such circumstances.
-$artD$,
+$$,
   'Mithila Jodi Team',
   'What Is the Siddhant Ceremony in Mithila Marriage? | Mithila Jodi',
   'Understand the Siddhant ceremony — the formal, priest-witnessed confirmation of a Maithil matrimonial match that verifies lineage and seals the agreement before Tilak and the wedding.',
@@ -480,7 +480,7 @@ SELECT
   'Chaturthi in Mithila Marriage: The Fourth-Day Post-Wedding Ceremony',
   'chaturthi-mithila-marriage',
   'Chaturthi is the important fourth-day ceremony after a Maithil wedding — a ritual that marks the couple''s formal beginning of their shared life. Learn what happens, why it matters and how different families observe it.',
-  $artE$
+  $$
 ## What Is Chaturthi?
 
 For many people outside the Mithila tradition, a wedding is complete when the main ceremony ends. In the Maithil understanding, it is not.
@@ -546,7 +546,7 @@ No. Griha pravesh (the bride's entry into the groom's home) typically happens on
 
 **Do all Mithila families observe Chaturthi?**
 Chaturthi is widely recognised as part of the Maithil tradition, but the form and elaborateness of the ceremony varies by family. Some observe it fully; others observe a simpler version. Your family's purohit and elders will guide you.
-$artE$,
+$$,
   'Mithila Jodi Team',
   'Chaturthi in Mithila Marriage: The Fourth-Day Post-Wedding Ceremony | Mithila Jodi',
   'Learn about Chaturthi — the fourth-day ceremony in a Maithil wedding that marks the couple''s formal beginning of shared life through puja, family gathering and Maithili songs.',
@@ -567,7 +567,7 @@ SELECT
   'Sindoor Daan in Maithil Marriage: Meaning, Ritual and Significance',
   'sindoor-daan-maithil-marriage',
   'Sindoor Daan — the groom applying vermilion to the bride''s maang — is one of the most sacred moments of a Maithil wedding. Learn when it happens, how it is performed and what it means in the Mithila tradition.',
-  $artF$
+  $$
 ## What Is Sindoor Daan?
 
 Of all the moments in a Hindu wedding ceremony, few carry the visible weight of Sindoor Daan.
@@ -629,7 +629,7 @@ The parting of the hair at the top of the head is considered a sacred point in H
 
 **Does every woman in Mithila continue wearing sindoor after marriage?**
 Practices vary between families and generations. Many women continue the tradition as a daily practice; others observe it selectively. It is a personal and cultural choice.
-$artF$,
+$$,
   'Mithila Jodi Team',
   'Sindoor Daan in Maithil Marriage: Meaning, Ritual and Significance | Mithila Jodi',
   'Learn about Sindoor Daan in Maithil marriage — when it happens in the ceremony, how the groom applies sindoor to the bride''s maang, and what this deeply significant ritual means in the Mithila tradition.',
@@ -650,7 +650,7 @@ SELECT
   'What Is Dwiragaman? The Ritual That Closes the Maithil Wedding Journey',
   'dwiragaman-mithila-marriage',
   'Dwiragaman — the "second departure" — is the final post-wedding ritual in a traditional Maithil marriage. The bride returns to her natal home for a ceremonial visit, then departs again to formally begin her life in the marital home.',
-  $artG$
+  $$
 ## What Is Dwiragaman?
 
 The word *Dwiragaman* comes from Sanskrit: *dwi* (two, or second) and *agaman* (arrival or departure). It means "second going" or "second departure," and in the Maithil marriage tradition it refers to a specific and meaningful post-wedding ceremony — the bride's second formal departure from her natal home.
@@ -724,7 +724,7 @@ Vidai is the bride's immediate departure from her natal home on the wedding day.
 
 **Is Dwiragaman observed by all Mithila families?**
 It is a recognised and widely observed part of the Maithil tradition, though specific forms and timing vary. It is more commonly observed in families with strong traditional practice.
-$artG$,
+$$,
   'Mithila Jodi Team',
   'What Is Dwiragaman? The Ritual That Closes the Maithil Wedding Journey | Mithila Jodi',
   'Learn about Dwiragaman — the post-wedding ritual in which the Maithil bride returns to her natal home and then departs for the last time, formally concluding the marriage process.',
@@ -745,7 +745,7 @@ SELECT
   'Maithili Wedding Songs: Sohar, Geet and the Voice of a Mithila Wedding',
   'maithili-wedding-songs-sohar-geet',
   'In a Maithil wedding, music is not decoration — it is ritual. Women sing Maithili songs at every stage of the marriage, from the tilak to the vidai. Learn about sohar, geet and the living musical tradition of the Mithila wedding.',
-  $artH$
+  $$
 ## Music as Ritual in a Maithil Wedding
 
 There is a moment in most Maithil weddings when the music stops you. Not the band, not the recorded songs played over speakers — but the voices of the women of the household, gathered together, singing in Maithili.
@@ -824,7 +824,7 @@ Vidyapati is the medieval poet-saint whose Maithili compositions remain deeply i
 
 **What happens if a family does not know the traditional songs?**
 Many families seek out recordings, community sources or professional singers to bring Maithili music into their wedding. The tradition is flexible enough to accommodate different levels of knowledge while still preserving its spirit.
-$artH$,
+$$,
   'Mithila Jodi Team',
   'Maithili Wedding Songs: Sohar, Geet and the Voice of a Mithila Wedding | Mithila Jodi',
   'Discover the role of Maithili wedding songs in a traditional Maithil wedding — sohar, Kohar geet, Vidai songs, Parichhan geet and more. Understand how these songs are passed down and why they matter.',
@@ -845,7 +845,7 @@ SELECT
   'What Is Parichhan in a Maithil Wedding? The Formal Welcome of the Groom',
   'parichhan-maithil-wedding',
   'When the groom''s wedding party arrives, they are welcomed through Parichhan — a ritual of arati, songs and offerings unique to the Maithil wedding. Learn what happens, who performs it and what it means.',
-  $artI$
+  $$
 ## What Is Parichhan?
 
 In a traditional Maithil wedding, the groom does not simply walk into the wedding venue. He is received.
@@ -921,7 +921,7 @@ When the groom's wedding party arrives at the venue, before the main wedding cer
 
 **Is the Parichhan tika the same as the Tilak engagement?**
 No — these are separate ceremonies. The Tilak engagement (performed by the bride's family at the groom's home, weeks before the wedding) is the formal engagement ceremony. The tika at Parichhan is a welcome mark applied on the wedding day when the groom arrives.
-$artI$,
+$$,
   'Mithila Jodi Team',
   'What Is Parichhan in a Maithil Wedding? The Formal Welcome of the Groom | Mithila Jodi',
   'Learn about Parichhan — the Maithil wedding ceremony where the women of the bride''s family formally welcome the groom''s baraat with arati, songs and offerings on the wedding day.',
@@ -942,7 +942,7 @@ SELECT
   'Naina Jogin in Maithil Wedding Tradition: A Pre-Wedding Protective Ritual',
   'naina-jogin-maithil-wedding',
   'Naina Jogin is a pre-wedding protective tradition observed in many Maithil families — prayers and offerings seeking divine blessing and protection for the couple before the wedding. Learn what it involves and why it varies between families.',
-  $artJ$
+  $$
 ## What Is Naina Jogin?
 
 Among the many pre-wedding customs that prepare a Maithil household for the ceremonies ahead, **Naina Jogin** stands apart. It is a protective ritual — an act of seeking divine blessing and protection for the couple as they step toward one of life's most significant thresholds.
@@ -1019,7 +1019,7 @@ No — practices vary significantly between families, regions and communities wi
 
 **Is Naina Jogin a Hindu ritual?**
 It exists at the intersection of Sanskritic Hindu tradition and Mithila's local folk religious practice. It reflects the layered religious world of the Mithila community, which has always woven together both.
-$artJ$,
+$$,
   'Mithila Jodi Team',
   'Naina Jogin in Maithil Wedding Tradition: A Pre-Wedding Protective Ritual | Mithila Jodi',
   'Learn about Naina Jogin — the pre-wedding protective ritual observed in many Maithil families, involving prayers and offerings to seek divine blessings for the couple before the wedding.',
