@@ -77,6 +77,7 @@ export async function GET(request: NextRequest) {
 
   const membershipMap: Record<string, { plan: string; status: string; expires_at: string | null }> = {}
   // The newest membership is the one used by the member-facing access checks.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ;(membershipRows as any[] ?? []).forEach((m) => {
     if (!membershipMap[m.account_id]) {
       membershipMap[m.account_id] = {
