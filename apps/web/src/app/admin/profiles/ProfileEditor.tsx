@@ -95,7 +95,23 @@ export default function ProfileEditor({ profileId }: { profileId?: string }) {
       const p = json.profile ?? {}
       const pr = json.private ?? {}
       const pref = json.preferences ?? {}
-      setForm(current => ({ ...current, ...Object.fromEntries(Object.keys(current).map(key => [key, key === 'mobile' ? asText(p.accounts?.mobile) : key === 'showcase' ? Boolean(json.showcase) : key.startsWith('pref_') ? (key === 'pref_gotra_safe' ? pref[key] ?? true : Array.isArray(pref[key]) ? pref[key].join(', ') : asText(pref[key])) : Object.prototype.hasOwnProperty.call(pr, key) ? asText(pr[key]) : key === 'discoverable' ? Boolean(p[key]) : asText(p[key])])) as FormState))
+      setForm(current => ({
+        ...current,
+        ...Object.fromEntries(Object.keys(current).map(key => [
+          key,
+          key === 'mobile'
+            ? asText(p.accounts?.mobile)
+            : key === 'showcase'
+              ? Boolean(json.showcase)
+              : key.startsWith('pref_')
+                ? (key === 'pref_gotra_safe' ? pref[key] ?? true : Array.isArray(pref[key]) ? pref[key].join(', ') : asText(pref[key]))
+                : Object.prototype.hasOwnProperty.call(pr, key)
+                  ? asText(pr[key])
+                  : key === 'discoverable'
+                    ? Boolean(p[key])
+                    : asText(p[key]),
+        ])),
+      }) as FormState)
       setNames({ native: asText(json.native_place_name), current: asText(json.current_loc_name), job: asText(json.job_loc_name) })
       setPhotos(json.photos ?? [])
       setLoading(false)
