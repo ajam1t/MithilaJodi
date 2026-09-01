@@ -18,18 +18,17 @@ ALTER TABLE accounts
 COMMENT ON COLUMN accounts.whatsapp_opt_in IS
   'Member consented to their registered mobile being shareable on WhatsApp after they approve a specific request. Never implies public exposure.';
 
-DO $$ BEGIN
-  CREATE TYPE whatsapp_request_status AS ENUM ('pending', 'approved', 'declined', 'revoked');
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
-
+-- `status` is text + CHECK rather than an enum, so this migration contains no
+-- dollar-quoted DO block (the Supabase SQL editor has mis-parsed those in this
+-- project). The API validates the same four values with zod.
 CREATE TABLE IF NOT EXISTS whatsapp_requests (
   id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   -- who is asking to see the number
   requester_profile_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   -- whose number is being requested (the approver)
   owner_profile_id     uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  status            whatsapp_request_status NOT NULL DEFAULT 'pending',
+  status            text NOT NULL DEFAULT 'pending'
+                      CHECK (status IN ('pending', 'approved', 'declined', 'revoked')),
   requested_at      timestamptz NOT NULL DEFAULT now(),
   responded_at      timestamptz,
   revoked_at        timestamptz,
