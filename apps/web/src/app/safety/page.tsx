@@ -158,7 +158,6 @@ const FAQS = [
 export default function SafetyPage() {
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
-      {/* eslint-disable-next-line react/no-danger */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <MithilaHeader />
 

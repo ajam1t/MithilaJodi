@@ -97,6 +97,8 @@ export default function MessagesContent() {
                           src={conv.partner.photo_url}
                           alt={conv.partner.display_name}
                           className="w-full h-full object-cover"
+                          loading="lazy"
+                          decoding="async"
                         />
                       ) : (
                         <span className="text-lg text-ink-soft">

@@ -101,6 +101,8 @@ export async function getPublicShowcaseProfiles(): Promise<SearchCard[]> {
     .eq('discoverable', true)
     .eq('profile_status', 'active')
     .is('deleted_at', null)
+    // Synthetic demo profiles must never appear on a public, indexable page.
+    .eq('is_demo', false)
 
   if (profilesError) {
     console.error('[publicProfiles] profiles query error:', profilesError.code, profilesError.message)
@@ -166,15 +168,29 @@ export async function getPublicShowcaseProfiles(): Promise<SearchCard[]> {
 
   // Step 5: generate signed URLs (best-effort, 1-hour expiry).
   const signedUrlByProfile = new Map<string, string | null>()
-  for (const [profileId, photo] of photoByProfile.entries()) {
+  // One batched call instead of a serialised loop. This runs during SSR of the
+  // public /explore page, where N sequential Storage round trips (~30ms each)
+  // went straight onto TTFB.
+  const signEntries = [...photoByProfile.entries()]
+  if (signEntries.length > 0) {
     try {
-      const { data: signed, error: signedError } = await admin.storage
+      const { data: signedList, error: signErr } = await admin.storage
         .from('profile-photos')
-        .createSignedUrl(photo.storage_path, 3600)
-      signedUrlByProfile.set(profileId, signedError ? null : (signed?.signedUrl ?? null))
+        .createSignedUrls(signEntries.map(([, photo]) => photo.storage_path), 3600)
+      if (signErr) {
+        console.error('[publicProfiles] batch signed URL error:', signErr.message)
+        for (const [profileId] of signEntries) signedUrlByProfile.set(profileId, null)
+      } else {
+        // createSignedUrls preserves input order.
+        signEntries.forEach(([profileId], i) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const entry = (signedList ?? [])[i] as any
+          signedUrlByProfile.set(profileId, entry?.signedUrl ?? null)
+        })
+      }
     } catch (err) {
-      console.error('[publicProfiles] signed URL exception for profile', profileId, err)
-      signedUrlByProfile.set(profileId, null)
+      console.error('[publicProfiles] batch signed URL exception:', err)
+      for (const [profileId] of signEntries) signedUrlByProfile.set(profileId, null)
     }
   }
 

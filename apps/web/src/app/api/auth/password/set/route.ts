@@ -29,8 +29,27 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const passwordHash = await bcrypt.hash(password, 12)
     const admin = await createAdminClient()
+
+    // SECURITY: this endpoint is for accounts that have NO password yet (OTP-only
+    // signups). If one already exists, replacing it here would let a stolen or
+    // borrowed session take permanent ownership without knowing the current
+    // password — /api/auth/password/change exists for that and verifies it.
+    const { data: existing } = await admin
+      .from('accounts')
+      .select('password_hash')
+      .eq('id', account.id)
+      .maybeSingle()
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((existing as any)?.password_hash) {
+      return NextResponse.json(
+        { ok: false, message: 'A password is already set. Use change password instead.' },
+        { status: 409 },
+      )
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12)
 
     const { error } = await admin
       .from('accounts')

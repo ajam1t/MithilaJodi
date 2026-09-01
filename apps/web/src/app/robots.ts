@@ -20,6 +20,7 @@ export default function robots(): MetadataRoute.Robots {
           '/api/',
           '/admin',
           '/settings',
+          '/search',         // auth-gated member search
           '/profile',        // own profile + /profile/[id] (auth-gated, private)
           '/messages',
           '/interests',

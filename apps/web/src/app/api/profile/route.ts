@@ -180,7 +180,17 @@ export async function GET() {
     }
   }
 
-  return NextResponse.json({ ok: true, profile, private: privateDetails, preferences, photos, native_place_name, current_loc_name, job_loc_name })
+  // Never ship internal bookkeeping columns to the browser. select('*') is kept
+  // because Supabase infers the row type from a literal select string, so the
+  // allowlist is applied here on the way out instead.
+  const INTERNAL_FIELDS = ['account_id', 'is_demo', 'search_needs_rebuild', 'status_reason', 'deleted_at', 'activated_at'] as const
+  const safeProfile = profile
+    ? Object.fromEntries(
+        Object.entries(profile as Record<string, unknown>).filter(([k]) => !INTERNAL_FIELDS.includes(k as never))
+      )
+    : profile
+
+  return NextResponse.json({ ok: true, profile: safeProfile, private: privateDetails, preferences, photos, native_place_name, current_loc_name, job_loc_name })
 }
 
 export async function PUT(request: NextRequest) {
@@ -217,6 +227,19 @@ export async function PUT(request: NextRequest) {
   minDob.setFullYear(minDob.getFullYear() - 18)
   if (dob > minDob) {
     return NextResponse.json({ ok: false, message: 'You must be at least 18 years old.' }, { status: 400 })
+  }
+
+  // Cross-field check zod cannot express per-field: an inverted preferred age
+  // range silently matches nobody, so reject it instead of storing it.
+  if (
+    data.pref_age_min != null &&
+    data.pref_age_max != null &&
+    data.pref_age_min > data.pref_age_max
+  ) {
+    return NextResponse.json(
+      { ok: false, message: 'Preferred minimum age cannot be greater than the maximum age.' },
+      { status: 400 },
+    )
   }
 
   const profileCompletion = computeCompletion(data)

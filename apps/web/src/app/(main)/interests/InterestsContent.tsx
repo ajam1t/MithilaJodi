@@ -51,7 +51,7 @@ function ProfileRow({ item, tab, onAction }: {
       <Link href={`/profile/${p.id}`} className="shrink-0">
         <div className="w-14 h-16 rounded-mj-sm overflow-hidden bg-cream border border-paper-3 flex items-center justify-center">
           {p.photo_url ? (
-            <img src={p.photo_url} alt={p.display_name} className="w-full h-full object-cover" />
+            <img src={p.photo_url} alt={p.display_name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
           ) : (
             <span className="text-xl text-ink-soft">{p.display_name[0]?.toUpperCase()}</span>
           )}

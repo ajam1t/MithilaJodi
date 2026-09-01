@@ -1,23 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+
 import { usePathname } from 'next/navigation'
+import { useAuthState } from '@/lib/hooks/useAuthState'
 
 export function MobileBottomNav() {
-  const [loggedIn, setLoggedIn] = useState(false)
-  const [authLoaded, setAuthLoaded] = useState(false)
+  const { auth, authLoaded } = useAuthState()
+  const loggedIn = auth.loggedIn
   const pathname = usePathname()
-
-  useEffect(() => {
-    fetch('/api/auth/me', { credentials: 'include' })
-      .then(r => r.ok ? r.json() : null)
-      .then((data: { ok: boolean } | null) => {
-        if (data?.ok) setLoggedIn(true)
-        setAuthLoaded(true)
-      })
-      .catch(() => setAuthLoaded(true))
-  }, [])
 
   function isActive(href: string) {
     if (href === '/') return pathname === '/'

@@ -81,28 +81,34 @@ export async function GET() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const photos: any[] = photosData ?? []
   const photoUrlMap = new Map<string, string>()
-  await Promise.all(
-    photos.map(async (photo) => {
+  if (photos.length > 0) {
+    // One batched sign call instead of one round trip per partner photo.
+    const paths = photos.map((photo) => (photo as { storage_path: string }).storage_path)
+    const { data: signedList } = await admin.storage
+      .from('profile-photos')
+      .createSignedUrls(paths, 3600)
+    signedList?.forEach((signed, i) => {
+      if (!signed.signedUrl) return
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const row = photo as any
-      const profileId = row.profile_id as string
-      const storagePath = row.storage_path as string
-      const { data: signedData } = await admin.storage
-        .from('profile-photos')
-        .createSignedUrl(storagePath, 3600)
-      if (signedData?.signedUrl) {
-        photoUrlMap.set(profileId, signedData.signedUrl)
-      }
-    }),
-  )
+      photoUrlMap.set((photos[i] as any).profile_id as string, signed.signedUrl)
+    })
+  }
 
-  // Step 8: batch-fetch last message per conversation
+  // Step 8: last message per conversation.
+  //
+  // This used to fetch EVERY message body across all 50 conversations just to
+  // read the newest one from each — an unbounded transfer that grows with chat
+  // history. Instead take a bounded newest-first window (enough to cover the
+  // common case in one round trip), then backfill only the conversations the
+  // window happened to miss because a single busy thread dominated it.
+  const MESSAGE_WINDOW = 300
   const { data: allMessagesData } = await admin
     .from('messages')
     .select('id, conversation_id, sender_id, body, sent_at')
     .is('deleted_at', null)
     .in('conversation_id', convIds)
     .order('sent_at', { ascending: false })
+    .limit(MESSAGE_WINDOW)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const allMessages: any[] = allMessagesData ?? []
@@ -121,7 +127,37 @@ export async function GET() {
     }
   }
 
-  // Step 9: batch-fetch unread counts
+  // Backfill any conversation the bounded window missed. Normally empty.
+  const missing = convIds.filter((id) => !lastMessageMap.has(id))
+  if (missing.length > 0) {
+    await Promise.all(
+      missing.map(async (cid) => {
+        const { data } = await admin
+          .from('messages')
+          .select('id, conversation_id, sender_id, body, sent_at')
+          .is('deleted_at', null)
+          .eq('conversation_id', cid)
+          .order('sent_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        if (!data) return
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const m = data as any
+        lastMessageMap.set(cid, {
+          id: m.id as string,
+          body: m.body as string,
+          sent_at: m.sent_at as string,
+          sender_id: m.sender_id as string,
+        })
+      }),
+    )
+  }
+
+  // Step 9: unread counts.
+  //
+  // Also bounded: a badge only needs to distinguish 0 / n / "lots", so cap the
+  // scan rather than streaming every unread row for an abandoned inbox.
+  const UNREAD_SCAN_CAP = 500
   const { data: unreadData } = await admin
     .from('messages')
     .select('conversation_id')
@@ -129,6 +165,7 @@ export async function GET() {
     .is('read_at', null)
     .neq('sender_id', myProfileId)
     .in('conversation_id', convIds)
+    .limit(UNREAD_SCAN_CAP)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const unreadRows: any[] = unreadData ?? []

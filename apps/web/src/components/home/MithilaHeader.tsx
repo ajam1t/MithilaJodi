@@ -1,10 +1,12 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { cn } from '@/lib/utils/cn'
 import { MithilaBorder } from '@/components/home/MithilaBorder'
+import { useAuthState, resetAuthState } from '@/lib/hooks/useAuthState'
 
 /** `mobileLabel` lets the hamburger show a fuller label than the tighter desktop row. */
 type NavLink = { href: string; label: string; mobileLabel?: string }
@@ -44,8 +46,6 @@ const AUTH_NAV_LINKS = [
   { href: '/profile', label: 'My Profile' },
 ]
 
-type AuthState = { loggedIn: false } | { loggedIn: true; mobile: string }
-
 /* Subtle Mithila-inspired floral line-art for the header edges (mobile). */
 function FloralEdge({ side }: { side: 'left' | 'right' }) {
   return (
@@ -67,8 +67,8 @@ function FloralEdge({ side }: { side: 'left' | 'right' }) {
 
 export function MithilaHeader() {
   const [open, setOpen] = useState(false)
-  const [auth, setAuth] = useState<AuthState>({ loggedIn: false })
-  const [authLoaded, setAuthLoaded] = useState(false)
+  // Shared across header + bottom nav: one /api/auth/me per page load.
+  const { auth, authLoaded } = useAuthState()
   const pathname = usePathname()
 
   const isActive = (href: string) => {
@@ -86,27 +86,22 @@ export function MithilaHeader() {
   const mobileLink = (href: string) =>
     cn('text-sm py-1 transition-colors', isActive(href) ? 'text-maroon font-semibold' : 'text-ink hover:text-terra')
 
-  useEffect(() => {
-    fetch('/api/auth/me', { credentials: 'include' })
-      .then(r => r.ok ? r.json() : null)
-      .then((data: { ok: boolean; account?: { mobile: string } } | null) => {
-        if (data?.ok && data?.account) {
-          setAuth({ loggedIn: true, mobile: data.account.mobile })
-        }
-        setAuthLoaded(true)
-      })
-      .catch(() => setAuthLoaded(true))
-  }, [])
-
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+    resetAuthState()
     window.location.href = '/'
   }
 
   const Brand = (
     <Link href="/" className="flex items-center gap-2.5 group shrink-0" aria-label="Mithila Jodi — home">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo.png" alt="" className="h-10 sm:h-11 w-auto object-contain shrink-0" />
+      <Image
+        src="/logo.png"
+        alt=""
+        width={44}
+        height={44}
+        priority
+        className="h-10 sm:h-11 w-auto object-contain shrink-0"
+      />
       <span className="flex flex-col leading-none min-w-0">
         <span className="font-serif font-bold text-[19px] sm:text-[21px] text-maroon leading-tight">Mithila Jodi</span>
         <span className="font-deva text-[10px] sm:text-[11px] text-maroon opacity-80 leading-tight mt-0.5" lang="hi">

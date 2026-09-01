@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 
 // Login / register / forgot-password are functional pages, not content.
 // Keep them out of the search index.
@@ -55,8 +56,14 @@ function BrandPanel() {
 
       <div className="relative">
         <Link href="/" className="inline-flex items-center gap-3" aria-label="Mithila Jodi — home">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="" className="h-12 w-auto object-contain" />
+          <Image
+            src="/logo.png"
+            alt=""
+            width={48}
+            height={48}
+            priority
+            className="h-12 w-auto object-contain"
+          />
           <span className="flex flex-col leading-none">
             <span className="font-serif text-2xl text-cream">Mithila Jodi</span>
             <span className="font-deva text-[12px] text-gold-lt mt-1" lang="hi">जहाँ परम्परा मिले, प्रेम से</span>

@@ -40,7 +40,8 @@ export async function generateMetadata(
     .eq('status', 'published')
     .single()
 
-  if (!data) return { title: 'Article Not Found' }
+  // noindex: a missing article still renders 200 (soft 404).
+  if (!data) return { title: 'Article Not Found', robots: { index: false, follow: true } }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const p = data as any

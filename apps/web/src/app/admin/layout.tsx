@@ -1,6 +1,14 @@
+import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { getSessionAccount } from '@/lib/auth'
+
+// Admin pages are all client components and cannot export metadata
+// themselves, so without this they inherited index:true from the root
+// layout — robots.txt was their only protection.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 const NAV = [
   { href: '/admin',           label: 'Dashboard' },

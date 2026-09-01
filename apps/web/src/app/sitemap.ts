@@ -5,6 +5,13 @@ import { SITE_URL } from '@/lib/constants'
 
 const SITE = SITE_URL
 
+// The blog section of this sitemap is generated from the database, so a build
+// artefact would go stale as soon as a new article is published. Regenerate
+// hourly. (Until createAdminClient stopped reading cookies this route could not
+// be statically rendered at all — it threw DYNAMIC_SERVER_USAGE mid-build and
+// silently emitted a sitemap containing no blog URLs.)
+export const revalidate = 3600
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
 

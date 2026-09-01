@@ -35,3 +35,6 @@ supabase/.temp/
 # Logs
 *.log
 npm-debug.log*
+
+# TypeScript incremental build cache — machine-local, must not be committed
+*.tsbuildinfo

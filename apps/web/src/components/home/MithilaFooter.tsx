@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 const GROUPS = [
   {
@@ -46,8 +47,14 @@ export function MithilaFooter() {
           {/* Brand — compact on mobile */}
           <div className="flex sm:flex-col items-center sm:items-start gap-3 sm:gap-0 flex-shrink-0">
             <Link href="/" className="inline-block sm:mb-1.5">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png" alt="Mithila Jodi" className="h-10 w-auto object-contain rounded" />
+              <Image
+                src="/logo.png"
+                alt="Mithila Jodi"
+                width={40}
+                height={40}
+                loading="lazy"
+                className="h-10 w-auto object-contain rounded"
+              />
             </Link>
             <div>
               <p className="font-deva text-paper-3 text-[12px] opacity-80 leading-snug">जहाँ परम्परा मिले, प्रेम से</p>

@@ -35,7 +35,9 @@ export async function generateMetadata(
     .single()
 
   if (!cat) {
-    return { title: 'Category Not Found' }
+    // noindex: a missing category still renders 200, which would otherwise be
+    // indexed as a soft 404.
+    return { title: 'Category Not Found', robots: { index: false, follow: true } }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

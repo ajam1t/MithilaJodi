@@ -49,6 +49,32 @@ type SearchCard = {
  * Mirrors DATE_PART('year', AGE(dob)) semantics: birthday hasn't passed yet
  * this calendar year → subtract one.
  */
+/**
+ * Age filters must run in SQL, not in JS after pagination.
+ *
+ * Someone is at least `age` years old iff they were born on or before
+ * (today - age years). Someone is at most `age` iff they were born strictly
+ * after (today - (age + 1) years).
+ */
+function dobOnOrBefore(age: number): string {
+  const d = new Date()
+  d.setFullYear(d.getFullYear() - age)
+  return d.toISOString().slice(0, 10)
+}
+
+/**
+ * Earliest date of birth that still yields exactly `age` today — i.e. the
+ * birthday of someone who turns `age + 1` tomorrow. Must be compared with
+ * `>=`, not `>`: this date is itself a valid `age` and `>` would silently drop
+ * that whole day's cohort from every search.
+ */
+function earliestDobForAge(age: number): string {
+  const d = new Date()
+  d.setFullYear(d.getFullYear() - (age + 1))
+  d.setDate(d.getDate() + 1)
+  return d.toISOString().slice(0, 10)
+}
+
 function computeAge(dob: string): number {
   const birth = new Date(dob)
   const now = new Date()
@@ -230,6 +256,17 @@ export async function GET(request: NextRequest) {
     // Security: exclude the authenticated user's own profiles
     .neq('account_id', session.id)
 
+  // Age → dob range, applied in SQL so it filters BEFORE pagination.
+  // Previously this ran in JS on the already-sliced page, which meant a narrow
+  // age range could return an empty page while matches remained, and made the
+  // filter behave as though it barely worked.
+  if (ageMinParam !== undefined) {
+    query = query.lte('dob', dobOnOrBefore(ageMinParam))
+  }
+  if (ageMaxParam !== undefined) {
+    query = query.gte('dob', earliestDobForAge(ageMaxParam))
+  }
+
   // Optional filters
   if (genderParam !== 'any') {
     query = query.eq('gender', genderParam)
@@ -301,7 +338,7 @@ export async function GET(request: NextRequest) {
   const pageSlice = dbHasMore ? allFetched.slice(0, PAGE_SIZE) : allFetched
 
   if (pageSlice.length === 0) {
-    return NextResponse.json({ ok: true, results: [], page, has_more: false })
+    return NextResponse.json({ ok: true, results: [], page, has_more: dbHasMore })
   }
 
   // ─── Step 2: Account status check (JS-side, two-step query) ───────────────
@@ -346,22 +383,12 @@ export async function GET(request: NextRequest) {
     validProfiles = validProfiles.filter((p) => !blockedProfileIds.has(p.id as string))
   }
 
-  // ─── Age filter (JS-side) ──────────────────────────────────────────────────
-  //
-  // dob is fetched from the DB purely to compute age here. It is not forwarded
-  // to the client at any point in this response path.
-  if (ageMinParam !== undefined || ageMaxParam !== undefined) {
-    validProfiles = validProfiles.filter((p) => {
-      if (!p.dob) return false
-      const age = computeAge(p.dob as string)
-      if (ageMinParam !== undefined && age < ageMinParam) return false
-      if (ageMaxParam !== undefined && age > ageMaxParam) return false
-      return true
-    })
-  }
+  // Age is now filtered in SQL via the dob range above, before pagination.
+  // dob is still fetched to compute the displayed age, and is never forwarded
+  // to the client in this response path.
 
   if (validProfiles.length === 0) {
-    return NextResponse.json({ ok: true, results: [], page, has_more: false })
+    return NextResponse.json({ ok: true, results: [], page, has_more: dbHasMore })
   }
 
   // ─── Step 3: Batch-fetch location names ───────────────────────────────────
@@ -435,22 +462,31 @@ export async function GET(request: NextRequest) {
 
   const signedUrlByProfile = new Map<string, string | null>()
 
-  for (const [profileId, photo] of photoByProfile.entries()) {
+  // One batched call rather than one round trip per photo. A 20-result page
+  // previously made up to 20 sequential Storage calls (~30ms each) before it
+  // could respond.
+  const signEntries = [...photoByProfile.entries()]
+  if (signEntries.length > 0) {
     try {
-      const { data: signed, error: signedError } = await admin.storage
+      const { data: signedList, error: signErr } = await admin.storage
         .from('profile-photos')
-        .createSignedUrl(photo.storage_path, 3600)
+        .createSignedUrls(signEntries.map(([, photo]) => photo.storage_path), 3600)
 
-      if (signedError) {
-        console.error('[search GET] signed URL error for profile', profileId, signedError.message)
-        signedUrlByProfile.set(profileId, null)
+      if (signErr) {
+        console.error('[search GET] batch signed URL error:', signErr.message)
+        for (const [profileId] of signEntries) signedUrlByProfile.set(profileId, null)
       } else {
-        signedUrlByProfile.set(profileId, signed?.signedUrl ?? null)
+        // createSignedUrls preserves input order.
+        signEntries.forEach(([profileId], i) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const entry = (signedList ?? [])[i] as any
+          signedUrlByProfile.set(profileId, entry?.signedUrl ?? null)
+        })
       }
     } catch (err) {
-      // Best-effort: if signing fails for one profile, continue with null.
-      console.error('[search GET] signed URL exception for profile', profileId, err)
-      signedUrlByProfile.set(profileId, null)
+      // Best-effort: if signing fails, cards render with the placeholder.
+      console.error('[search GET] batch signed URL exception:', err)
+      for (const [profileId] of signEntries) signedUrlByProfile.set(profileId, null)
     }
   }
 

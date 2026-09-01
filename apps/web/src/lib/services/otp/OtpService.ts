@@ -23,11 +23,16 @@ function resolveDevOtp(): string {
 }
 
 /**
- * Whether the fixed development/testing OTP is explicitly enabled.
- * Controlled ONLY by DEV_OTP_ENABLED (legacy alias: DEV_AUTH_MODE).
- * When false, the fixed code MUST NOT authenticate anyone.
+ * Whether the fixed development/testing OTP is enabled.
+ *
+ * SECURITY: hard-gated on NODE_ENV. In a production build the fixed code can
+ * NEVER authenticate anyone, regardless of how DEV_OTP_ENABLED / DEV_AUTH_MODE
+ * are set in the environment. Previously this was env-only, which meant one
+ * stray variable in production turned a hardcoded 4-digit code into a universal
+ * login for every account — including admins.
  */
 function isDevOtpEnabled(): boolean {
+  if (process.env.NODE_ENV === 'production') return false
   return process.env.DEV_OTP_ENABLED === 'true' || process.env.DEV_AUTH_MODE === 'true'
 }
 

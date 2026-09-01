@@ -1,6 +1,7 @@
 'use client'
 import { useState, useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { checkPassword, PASSWORD_RULES } from '@/lib/password'
 import { OtpBoxInput } from '@/components/OtpBoxInput'
 import { OtpSentAnimation } from '@/components/OtpSentAnimation'
@@ -223,8 +224,14 @@ export default function RegisterPage() {
     <div className="w-full max-w-sm">
       <div className="mb-6 text-center sm:mb-8">
         <Link href="/" className="inline-block">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="Mithila Jodi" className="mx-auto h-20 w-auto object-contain sm:h-24" />
+          <Image
+            src="/logo.png"
+            alt="Mithila Jodi"
+            width={96}
+            height={96}
+            priority
+            className="mx-auto h-20 w-auto object-contain sm:h-24"
+          />
         </Link>
       </div>
 

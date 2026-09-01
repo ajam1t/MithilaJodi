@@ -556,7 +556,7 @@ export default function ProfilePage() {
                       className="aspect-square rounded-mj-sm overflow-hidden border border-ink/10 bg-cream relative">
                       {photo.signed_url ? (
                         <img src={photo.signed_url} alt="Profile photo"
-                          className="w-full h-full object-cover" />
+                          className="w-full h-full object-cover" loading="lazy" decoding="async" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-ink-soft text-xs">
                           No preview

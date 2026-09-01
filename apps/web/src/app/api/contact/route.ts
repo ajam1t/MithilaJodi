@@ -55,9 +55,13 @@ export async function POST(req: NextRequest) {
     })
     if (error) throw error
     return NextResponse.json({ ok: true })
-  } catch {
+  } catch (err) {
+    // Previously a bare `catch {}` with no logging: every contact-form failure
+    // (DB down, schema drift, constraint violation) was silently invisible, so
+    // the support channel could be broken indefinitely with no signal.
+    console.error('[contact POST] submission failed:', err instanceof Error ? err.message : err)
     return NextResponse.json(
-      { error: 'Unable to submit your message right now. Please try again or email us directly.' },
+      { ok: false, error: 'Unable to submit your message right now. Please try again or email us directly.' },
       { status: 500 },
     )
   }

@@ -10,6 +10,13 @@ import { FamilyRoots } from '@/components/home/SuccessStories'
 import { BiodataSection } from '@/components/home/BiodataSection'
 import { FestivalStrip } from '@/components/home/FestivalStrip'
 import { FinalCTA } from '@/components/home/FinalCTA'
+
+// FeaturedProfiles is server-rendered and its photo URLs are signed with a
+// 1 hour TTL. Without this the homepage would be statically generated once and
+// serve expired image URLs an hour later; 15 minutes keeps them comfortably
+// fresh while still serving cached HTML to almost every visitor.
+export const revalidate = 900
+
 import { CulturalStatement } from '@/components/home/CulturalStatement'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'

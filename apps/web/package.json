@@ -10,12 +10,10 @@
         "type-check": "tsc --noEmit"
     },
     "dependencies": {
-        "@mithila-jodi/web": "file:",
         "@supabase/ssr": "^0.6.1",
         "@supabase/supabase-js": "^2.49.8",
         "bcryptjs": "^2.4.3",
         "clsx": "^2.1.1",
-        "framer-motion": "^12.23.6",
         "nanoid": "^5.0.9",
         "next": "^15.4.3",
         "react": "^19.1.0",

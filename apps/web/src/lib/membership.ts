@@ -108,12 +108,24 @@ export function isMembershipCurrentlyLive(m: ActiveMembership): boolean {
  * messaging, search and biodata. No payment or subscription is required, and
  * this does not depend on any environment variable being set.
  *
- * The membership/payment machinery below (plans, Razorpay gateway, webhook,
- * interest limits) is intentionally retained so paid memberships can be brought
- * back later. To re-enable paid gating:
- *   1. set PAID_MEMBERSHIPS_ENABLED=true, and
- *   2. restore the pricing / membership UI routes (see git history for
- *      app/pricing, app/(main)/membership and app/(main)/profile/CurrentPlanCard).
+ * What is intentionally RETAINED so paid memberships can be brought back:
+ *   - this module (plan lookup, active-membership lookup, interest allowance);
+ *   - GET /api/membership, the read-only status endpoint;
+ *   - lib/services/payment/ — the PaymentGateway interface and its Razorpay
+ *     implementation, i.e. the seam a future gateway plugs into.
+ *
+ * What was REMOVED, because a platform that takes no payments should not expose
+ * live payment-execution endpoints (all had zero callers):
+ *   - POST /api/membership/orders   (created real Razorpay orders)
+ *   - POST /api/membership/verify   (verified payment signatures)
+ *   - POST /api/webhooks/razorpay   (publicly reachable gateway webhook)
+ *
+ * To re-enable paid gating:
+ *   1. set PAID_MEMBERSHIPS_ENABLED=true;
+ *   2. restore the routes above and the pricing / membership UI from git history
+ *      (app/pricing, app/(main)/membership, app/(main)/profile/CurrentPlanCard,
+ *      app/api/membership/orders, app/api/membership/verify,
+ *      app/api/webhooks/razorpay).
  */
 export function isFreeAccessMode(): boolean {
   return process.env.PAID_MEMBERSHIPS_ENABLED !== 'true'
@@ -174,7 +186,6 @@ export async function getInterestAllowance(accountId: string): Promise<InterestA
     .eq('plan', membership.plan)
     .maybeSingle()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const p = planRow as { can_send_interest: boolean; interest_limit: number | null } | null
 
   if (!p?.can_send_interest) {

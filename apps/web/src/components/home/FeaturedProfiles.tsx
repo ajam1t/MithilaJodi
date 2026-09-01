@@ -1,35 +1,37 @@
-'use client'
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import type { SearchCard } from '@/types/profile'
-import { SectionHeading, Skeleton } from '@/components/ui'
+import { SectionHeading } from '@/components/ui'
+import { getPublicShowcaseProfiles } from '@/lib/publicProfiles'
 import { FeaturedCarousel } from './FeaturedCarousel'
 
 /**
- * Homepage "Featured Profiles" band. Loads the curated public showcase
- * client-side (after paint) so the homepage stays static and LCP-friendly.
+ * Homepage "Featured Profiles" band.
+ *
+ * Server-rendered. This used to be a client component that fetched
+ * /api/public/profiles from a useEffect, which meant:
+ *   - search crawlers saw four grey skeletons where the profile content should
+ *     be, so the homepage's most substantive content was invisible to indexing;
+ *   - every visitor paid an extra round trip after paint, and the section
+ *     visibly popped in.
+ *
+ * It now calls the same shared projection the API route uses, so the privacy
+ * allowlist (masked surname, no dob/contact/free-text) is identical.
+ *
+ * The photo URLs are signed with a 1 hour TTL, so the page embedding this must
+ * revalidate well inside that window — see `revalidate` in app/page.tsx.
  * Renders nothing if no profiles are curated.
  */
-export function FeaturedProfiles() {
-  const [profiles, setProfiles] = useState<SearchCard[] | null>(null)
-
-  useEffect(() => {
-    let alive = true
-    fetch('/api/public/profiles')
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('failed'))))
-      .then((d) => {
-        if (alive) setProfiles(Array.isArray(d?.results) ? d.results : [])
-      })
-      .catch(() => {
-        if (alive) setProfiles([])
-      })
-    return () => {
-      alive = false
-    }
-  }, [])
+export async function FeaturedProfiles() {
+  let profiles: Awaited<ReturnType<typeof getPublicShowcaseProfiles>> = []
+  try {
+    profiles = await getPublicShowcaseProfiles()
+  } catch (err) {
+    // A showcase failure must never take down the homepage.
+    console.error('[FeaturedProfiles] showcase load failed:', err)
+    return null
+  }
 
   // Nothing curated yet — don't render an empty section.
-  if (profiles !== null && profiles.length === 0) return null
+  if (profiles.length === 0) return null
 
   return (
     <section className="pt-10 pb-8 sm:pt-14 sm:pb-10 bg-paper-2/40" aria-label="Featured profiles">
@@ -39,17 +41,7 @@ export function FeaturedProfiles() {
           title="Featured Profiles"
           subtitle="A glimpse of Maithil individuals and families seeking a meaningful marriage on Mithila Jodi."
         />
-        {profiles === null ? (
-          <div className="flex gap-5 overflow-hidden pb-4" aria-hidden="true">
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="shrink-0 w-[280px] sm:w-[300px]">
-                <Skeleton className="h-[360px] w-full rounded-mj-lg" />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <FeaturedCarousel profiles={profiles} />
-        )}
+        <FeaturedCarousel profiles={profiles} />
         <div className="text-center mt-5">
           <Link
             href="/explore"

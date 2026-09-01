@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useId } from 'react'
 import { useRouter } from 'next/navigation'
 
 type LocationResult = { id: number; name_en: string; level: string; is_mithila_region: boolean }
@@ -178,17 +178,30 @@ const EMPTY_FORM: FormData = {
 }
 
 function LocationSearch({
-  label, value, onChange
+  label, value, onChange, initialName = ''
 }: {
   label: string
   value: number | null
   onChange: (id: number | null, name: string) => void
+  /**
+   * Human-readable name of the already-saved location. The parent loads it
+   * asynchronously, so without this the field rendered EMPTY for anyone who had
+   * previously set a location — it looked like the value had been lost.
+   */
+  initialName?: string
 }) {
+  const inputId = useId()
   const [q, setQ] = useState('')
   const [results, setResults] = useState<LocationResult[]>([])
   const [open, setOpen] = useState(false)
-  const [selectedName, setSelectedName] = useState('')
+  const [selectedName, setSelectedName] = useState(initialName)
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Seed once the parent's profile fetch resolves. Guarded on `q` so it never
+  // clobbers what the user is actively typing.
+  useEffect(() => {
+    if (initialName && !q) setSelectedName(initialName)
+  }, [initialName, q])
 
   const search = useCallback((query: string) => {
     if (debounce.current) clearTimeout(debounce.current)
@@ -203,8 +216,9 @@ function LocationSearch({
 
   return (
     <div className="relative">
-      <label className="block text-sm font-medium text-ink mb-1">{label}</label>
+      <label htmlFor={inputId} className="block text-sm font-medium text-ink mb-1">{label}</label>
       <input
+        id={inputId}
         type="text"
         value={q || selectedName}
         placeholder="Type to search…"
@@ -256,6 +270,7 @@ function CommunitySearch({
   value: string
   onChange: (v: string) => void
 }) {
+  const inputId = useId()
   const [results, setResults] = useState<CommunityResult[]>([])
   const [open, setOpen] = useState(false)
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -272,8 +287,9 @@ function CommunitySearch({
 
   return (
     <div className="relative">
-      <label className="block text-sm font-medium text-ink mb-1">{label}</label>
+      <label htmlFor={inputId} className="block text-sm font-medium text-ink mb-1">{label}</label>
       <input
+        id={inputId}
         type="text"
         value={value}
         placeholder="Type or select…"
@@ -317,14 +333,16 @@ function MasterSelect({
   opts: Option[]
   placeholder?: string
 }) {
+  const selectId = useId()
   const list = [...opts]
   if (value && !list.some(o => o.value === value)) {
     list.unshift({ value, label: value })
   }
   return (
     <div>
-      <label className="block text-sm font-medium text-ink mb-1">{label}</label>
+      <label htmlFor={selectId} className="block text-sm font-medium text-ink mb-1">{label}</label>
       <select
+        id={selectId}
         value={value}
         onChange={e => onChange(e.target.value)}
         className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon bg-white"
@@ -365,9 +383,18 @@ export default function ProfileEditPage() {
   }, [])
 
   useEffect(() => {
-    fetch('/api/profile')
-      .then(r => r.json())
+    const ac = new AbortController()
+    fetch('/api/profile', { signal: ac.signal })
+      .then(async r => {
+        // Only an actual auth failure should send someone to /login. Previously
+        // *any* rejection here did, so a transient network blip looked exactly
+        // like a logout and silently discarded whatever was on screen.
+        if (r.status === 401) { router.push('/login'); return null }
+        if (!r.ok) throw new Error(`profile load failed: ${r.status}`)
+        return r.json()
+      })
       .then(j => {
+        if (!j) return
         if (j.profile) {
           const p = j.profile
           setProfileComplete(p.profile_complete ?? 0)
@@ -451,7 +478,14 @@ export default function ProfileEditPage() {
         setPhotos(j.photos ?? [])
         setLoading(false)
       })
-      .catch(() => { router.push('/login'); })
+      .catch((err: unknown) => {
+        if (err instanceof DOMException && err.name === 'AbortError') return
+        console.error('[profile/edit] load failed:', err)
+        setLoading(false)
+        setError('Could not load your profile. Check your connection and reload the page.')
+      })
+
+    return () => ac.abort()
   }, [router])
 
   const set = (key: keyof FormData, val: unknown) =>
@@ -460,6 +494,17 @@ export default function ProfileEditPage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     if (saving) return
+
+    // Cheap client-side guard: the API rejects an inverted range, but catching
+    // it here avoids a round trip and points at the offending field.
+    const ageMin = form.pref_age_min ? parseInt(form.pref_age_min) : null
+    const ageMax = form.pref_age_max ? parseInt(form.pref_age_max) : null
+    if (ageMin != null && ageMax != null && ageMin > ageMax) {
+      setSaveState('error')
+      setError('Partner preferences: minimum age cannot be greater than maximum age.')
+      return
+    }
+
     setSaving(true)
     setSaveState('saving')
     setError('')
@@ -490,18 +535,32 @@ export default function ProfileEditPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
-      const j = await r.json()
+      // A 500 returning an HTML error page would make r.json() throw and get
+      // reported as a network error; check the status first.
+      const j = r.headers.get('content-type')?.includes('application/json')
+        ? await r.json()
+        : { ok: false, message: `Save failed (${r.status}). Please try again.` }
+
       if (j.ok) {
-        // Fetch updated completion %
-        const r2 = await fetch('/api/profile')
-        const j2 = await r2.json()
-        if (j2.profile?.profile_complete != null) setProfileComplete(j2.profile.profile_complete)
+        // The save already succeeded. The completion-percentage refresh below is
+        // cosmetic, so its failure must NOT be reported as a failed save — that
+        // previously told people their changes were lost when they were not.
         setSaveState('success')
+        try {
+          const r2 = await fetch('/api/profile')
+          if (r2.ok) {
+            const j2 = await r2.json()
+            if (j2.profile?.profile_complete != null) setProfileComplete(j2.profile.profile_complete)
+          }
+        } catch (err) {
+          console.error('[profile/edit] completion refresh failed (save itself succeeded):', err)
+        }
       } else {
         setSaveState('error')
         setError(j.message ?? 'Failed to save. Please try again.')
       }
-    } catch {
+    } catch (err) {
+      console.error('[profile/edit] save failed:', err)
       setSaveState('error')
       setError('Network error. Please try again.')
     } finally {
@@ -784,6 +843,7 @@ export default function ProfileEditPage() {
               <LocationSearch
                 label="Native Place"
                 value={form.native_place_id}
+                initialName={locationNames.native}
                 onChange={(id, name) => {
                   set('native_place_id', id)
                   setLocationNames(n => ({ ...n, native: name }))
@@ -792,6 +852,7 @@ export default function ProfileEditPage() {
               <LocationSearch
                 label="Current Location"
                 value={form.current_loc_id}
+                initialName={locationNames.current}
                 onChange={(id, name) => {
                   set('current_loc_id', id)
                   setLocationNames(n => ({ ...n, current: name }))
@@ -800,6 +861,7 @@ export default function ProfileEditPage() {
               <LocationSearch
                 label="Job Location"
                 value={form.job_loc_id}
+                initialName={locationNames.job}
                 onChange={(id, name) => {
                   set('job_loc_id', id)
                   setLocationNames(n => ({ ...n, job: name }))

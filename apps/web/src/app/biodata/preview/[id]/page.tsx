@@ -5,6 +5,14 @@ import PrintButton from './PrintButton'
 
 export const dynamic = 'force-dynamic'
 
+// This page renders one member's personal biodata — name, gotra, family and
+// contact details. It is session-gated and /biodata is disallowed in robots.txt,
+// but declare noindex explicitly too: robots.txt only asks crawlers not to
+// fetch, it does not stop a URL discovered elsewhere from being indexed.
+export const metadata = {
+  robots: { index: false, follow: false },
+}
+
 // Section heading labels per language
 const LABELS: Record<string, Record<string, string>> = {
   en: {
