@@ -12,84 +12,23 @@ export type TeamMemberData = {
   photo_storage_path: string | null
 }
 
-// Static fallback — visible immediately without the DB migration being applied.
-// Once migration is applied and photos uploaded via /admin/team, the server
-// component passes DB data which supersedes this.
-const STATIC_TEAM: TeamMemberData[] = [
-  {
-    id: 'babita-manoj',
-    display_name: 'Babita Jha & Manoj Jha',
-    role: 'Founders & CEOs',
-    bio: 'Babita and Manoj founded Mithila Jodi with a shared belief that matrimonial matchmaking for the Mithila community should honour family traditions, cultural values, and the specific context of Maithili marriage practice.',
-    responsibilities: [
-      'Overall vision and leadership',
-      'Business strategy',
-      'Mithila community relationships',
-      'Family focused product direction',
-      'Partnerships and long term growth',
-    ],
-    photo_storage_path: null,
-  },
-  {
-    id: 'amit',
-    display_name: 'Amit Jha',
-    role: 'Head of Technology',
-    bio: 'Amit leads the technology behind Mithila Jodi — from the platform architecture and security to the tools that help families create and share marriage biodatas.',
-    responsibilities: [
-      'Technology strategy',
-      'Website and platform development',
-      'Infrastructure',
-      'Security',
-      'Technical reliability',
-      'Product technology',
-    ],
-    photo_storage_path: null,
-  },
-  {
-    id: 'janaki',
-    display_name: 'Janaki Jha',
-    role: 'Head of Marketing & Community',
-    bio: 'Janaki shapes how Mithila Jodi communicates with the Maithili community — through brand storytelling, content, and engagement that feels authentic to Mithila culture.',
-    responsibilities: [
-      'Brand strategy',
-      'Marketing',
-      'Social media',
-      'Content',
-      'Community engagement',
-      'User awareness and communication',
-    ],
-    photo_storage_path: null,
-  },
-  {
-    id: 'sumit',
-    display_name: 'Sumit Jha',
-    role: 'Head of Operations & User Experience',
-    bio: 'Sumit ensures that the experience on Mithila Jodi is smooth, trustworthy, and well supported — from profile quality to day-to-day member operations.',
-    responsibilities: [
-      'User operations',
-      'Profile quality',
-      'Verification processes',
-      'User support',
-      'Operational workflows',
-      'Improving the overall member experience',
-    ],
-    photo_storage_path: null,
-  },
-  {
-    id: 'sandeep',
-    display_name: 'Sandeep Jha',
-    role: 'Head of Partnerships & Growth',
-    bio: 'Sandeep builds the community connections and relationships that help Mithila Jodi grow as a trusted platform for Mithila families across India.',
-    responsibilities: [
-      'Community partnerships',
-      'Strategic relationships',
-      'Outreach',
-      'Growth initiatives',
-      'Institutional/community collaboration',
-    ],
-    photo_storage_path: null,
-  },
-]
+// Mithila Jodi has a single founder. This is defined in code (not database)
+// so the founder shown on the About page is always exactly one person and
+// cannot be contradicted by admin-entered team data.
+const FOUNDER: TeamMemberData = {
+  id: 'sandeep-jha',
+  display_name: 'Sandeep Jha',
+  role: 'Founder',
+  bio: 'Sandeep Jha founded Mithila Jodi to give the Mithila and Maithili community a matrimony platform built around how these families actually arrange marriage — with gotra, mool and native place treated as first-class details, biodata in the family’s own language, and elders involved from the start rather than as an afterthought.',
+  responsibilities: [
+    'Overall vision and direction of the platform',
+    'Mithila and Maithili community relationships',
+    'Product decisions rooted in Maithil marriage practice',
+    'Trust, privacy and member safety standards',
+    'Partnerships and long-term growth',
+  ],
+  photo_storage_path: null,
+}
 
 function buildPhotoUrl(path: string | null): string | null {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -128,18 +67,26 @@ function LotusAccent() {
 }
 
 export function TeamSection({ dbMembers }: { dbMembers: TeamMemberData[] }) {
-  const members = dbMembers.length > 0 ? dbMembers : STATIC_TEAM
+  // The founder is always first and always code-owned. Any database entry that
+  // claims founder/CEO status is dropped, so the single-founder statement holds
+  // regardless of what has been entered via /admin/team.
+  const additional = dbMembers.filter(
+    (m) => !/founder|ceo/i.test(m.role) && m.display_name !== FOUNDER.display_name
+  )
+  const members = [FOUNDER, ...additional]
   const [activeId, setActiveId] = useState<string>(members[0]?.id ?? '')
   const active = members.find(m => m.id === activeId) ?? members[0] ?? null
 
   return (
-    <section className="bg-paper py-14 sm:py-20 overflow-x-clip" aria-label="Meet our team">
+    <section className="bg-paper py-14 sm:py-20 overflow-x-clip" aria-label="Founder of Mithila Jodi">
       <div className="wrap max-w-4xl">
 
         {/* ── Section header ── */}
         <div className="text-center mb-8">
-          <p className="eyebrow mb-1.5">The people behind the platform</p>
-          <h2 className="section-heading">Meet Our Team</h2>
+          <p className="eyebrow mb-1.5">The person behind the platform</p>
+          <h2 className="section-heading">
+            {additional.length > 0 ? 'Founder & Team' : 'Our Founder'}
+          </h2>
           <div className="ornament-line w-20 mx-auto mt-3" />
         </div>
 

@@ -14,7 +14,7 @@ const SITE = SITE_URL
 export const metadata: Metadata = {
   title: 'About Mithila Jodi — Maithili Matrimonial Platform',
   description:
-    'Learn about Mithila Jodi — a matrimonial platform built for the Mithila (Maithili) community of India. Discover our story, how the platform works, what makes it different, and the team behind it.',
+    'Learn about Mithila Jodi — a dedicated online matrimony platform helping individuals and families from the Mithila and Maithili community discover meaningful and compatible matrimonial matches. Our story, how the platform works, and our founder.',
   alternates: { canonical: `${SITE}/about` },
   openGraph: {
     type: 'website',
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'About Mithila Jodi — Maithili Matrimonial Platform',
-    description: 'Built for the Mithila community of India. Learn about our platform, our approach, and our team.',
+    description: 'A dedicated online matrimony platform for the Mithila and Maithili community of India. Learn about our platform, our approach, and our founder.',
     images: ['/hero-couple.jpg'],
   },
 }
@@ -98,7 +98,7 @@ const jsonLd = {
       url: `${SITE}/about`,
       name: 'About Mithila Jodi — Maithili Matrimonial Platform',
       description:
-        'Learn about Mithila Jodi, its mission, how the platform works, what makes it different for the Mithila community, and the team behind it.',
+        'Learn about Mithila Jodi, its mission as an online matrimony platform, how it works, what makes it different for the Mithila and Maithili community, and its founder.',
       breadcrumb: { '@id': `${SITE}/about#breadcrumb` },
       about: { '@id': `${SITE}/#organization` },
       inLanguage: 'en',

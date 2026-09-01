@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import type { ActiveMembership, MembershipStatus, PlanConfig, InterestAllowance } from '@/lib/membership'
 
 declare global {
@@ -23,6 +24,13 @@ function formatDate(iso: string | null): string {
 
 function formatPrice(paise: number): string {
   return '₹' + (paise / 100).toFixed(0)
+}
+
+/** Human-readable membership term, e.g. 365 days → "Annual · 365 days". */
+function durationLabel(days: number): string {
+  if (days >= 365) return `Annual · ${days} days`
+  if (days >= 28) return `${Math.round(days / 30)} months · ${days} days`
+  return `${days} days`
 }
 
 function StatusBadge({ status }: { status: MembershipStatus }) {
@@ -299,7 +307,8 @@ export default function MembershipContent() {
                         </div>
                         <div className="text-right">
                           <p className="font-serif text-2xl text-maroon">{formatPrice(plan.price_paise)}</p>
-                          <p className="text-xs text-ink-soft">{plan.duration_days} days</p>
+                          <p className="text-[11px] text-ink-soft">total payable</p>
+                          <p className="text-xs text-ink-soft mt-0.5">{durationLabel(plan.duration_days)}</p>
                         </div>
                       </div>
 
@@ -318,9 +327,25 @@ export default function MembershipContent() {
                         ))}
                       </ul>
 
-                      <p className="text-xs text-ink-soft border-t border-paper-3 pt-3">
-                        No automatic renewals. Your profile and data are retained after expiry.
-                      </p>
+                      {/* Pre-payment disclosure — shown before the pay button */}
+                      <div className="text-xs text-ink-soft border-t border-paper-3 pt-3 space-y-1.5">
+                        <p>
+                          <strong className="text-ink">No automatic renewal.</strong> Your membership
+                          will expire at the end of the {plan.duration_days >= 365 ? 'annual' : 'paid'}{' '}
+                          membership period unless you choose to purchase or renew another plan. Your
+                          card is not charged again and no recurring mandate is created.
+                        </p>
+                        <p>Your profile and data are retained after expiry.</p>
+                        <p>
+                          <Link href="/legal/refunds" className="text-maroon underline underline-offset-2">
+                            Refund &amp; Cancellation Policy
+                          </Link>
+                          {' · '}
+                          <Link href="/legal/terms" className="text-maroon underline underline-offset-2">
+                            Terms
+                          </Link>
+                        </p>
+                      </div>
 
                       {isCurrent ? (
                         <div className="text-center py-2 text-sm text-success-fg font-medium">

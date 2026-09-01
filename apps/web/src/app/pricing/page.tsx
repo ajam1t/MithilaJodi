@@ -420,7 +420,15 @@ export default async function PricingPage() {
             </div>
 
             <p className="text-center mt-5 text-[13px] text-ink-soft">
-              All plans are annual and billed once per year.{' '}
+              All plans are annual and billed once per year. There is no automatic renewal — your
+              membership expires at the end of the annual period unless you purchase or renew
+              another plan.
+            </p>
+            <p className="text-center mt-2 text-[13px] text-ink-soft">
+              <Link href="/legal/refunds" className="text-maroon hover:underline underline-offset-2">
+                Refund &amp; Cancellation Policy
+              </Link>
+              {' · '}
               <Link href="/membership" className="text-maroon hover:underline underline-offset-2">
                 Upgrade now →
               </Link>
