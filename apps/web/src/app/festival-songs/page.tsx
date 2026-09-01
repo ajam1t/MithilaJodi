@@ -141,7 +141,7 @@ export default function FestivalSongsHubPage() {
             <h2 className="section-heading text-[22px] sm:text-[28px]">
               Songs kept alive by the singers who record them
             </h2>
-            <div className="ornament-line w-16 mx-auto my-5" />
+            <div className="ornament-line mj-line w-16 mx-auto my-5" />
             <p className="text-ink-soft text-[14.5px] sm:text-[15.5px] leading-relaxed">
               Mithila Jodi does not host or distribute any music. Each song plays through an
               embedded player from the publishing channel, so the artists and channels keep

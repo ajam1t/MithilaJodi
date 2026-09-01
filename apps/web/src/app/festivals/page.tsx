@@ -150,7 +150,7 @@ export default function FestivalsIndexPage() {
             <h2 className="section-heading text-[24px] sm:text-[30px]">
               Festivals are how Mithila remembers itself
             </h2>
-            <div className="ornament-line w-16 mx-auto my-5" />
+            <div className="ornament-line mj-line w-16 mx-auto my-5" />
             <p className="text-ink-soft text-[15px] sm:text-[16px] leading-relaxed">
               Songs, rituals and floor drawings carry the Maithili language and the region’s
               memory from one generation to the next — often through the women of the household.

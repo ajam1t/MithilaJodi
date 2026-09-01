@@ -354,3 +354,59 @@
 .garland-anim    { animation: garlandSway 3s ease-in-out infinite; transform-origin: center top; }
 .flame-anim      { animation: flameDance 0.7s ease-in-out infinite; transform-origin: bottom center; }
 .gold-shimmer    { animation: shimmerGold 2s ease-in-out infinite; }
+
+/* ── Decorative gold line shimmer ──────────────────────────────────────────
+   A single slow highlight travelling along a gold rule. Used for the hairlines
+   that frame the Mithila Jodi branding in the sticky header, the festivals
+   strip, and the Festival section heading rules, so all of them read as one
+   design system.
+
+   Implemented as a transform-only pseudo-element sweep — no scroll listener, no
+   IntersectionObserver, no JavaScript. The parent keeps its own gradient
+   background, so if the animation never runs the line is still fully visible;
+   the shimmer is purely additive. That is what makes it safe under
+   prefers-reduced-motion, where the global rule collapses the duration.
+
+   `overflow: hidden` is scoped to the line itself (it is only 1-3px tall) and
+   deliberately does NOT clip anything else. */
+.mj-line {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.mj-line::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 34%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 250, 240, 0.85),
+    rgba(228, 197, 114, 0.9),
+    transparent
+  );
+  transform: translate3d(-120%, 0, 0);
+  animation: mjLineSweep 6.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform;
+  pointer-events: none;
+}
+/* Offset so the two framing lines do not sweep in lockstep. */
+.mj-line--delayed::after { animation-delay: 3.25s; }
+
+@keyframes mjLineSweep {
+  0%   { transform: translate3d(-120%, 0, 0); }
+  /* Long dwell off-screen keeps it subtle rather than a repeating flash. */
+  55%  { transform: translate3d(400%, 0, 0); }
+  100% { transform: translate3d(400%, 0, 0); }
+}
+
+/* Opt-in animated variant of .ornament-line. Applied to Festival headings only —
+   .ornament-line itself is used in 17 files and must not change globally. */
+.ornament-line.mj-line::after { opacity: 0.75; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Remove the sweep entirely; the underlying gold gradient stays. */
+  .mj-line::after { display: none; }
+}

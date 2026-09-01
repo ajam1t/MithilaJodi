@@ -1,72 +1,102 @@
 import Link from 'next/link'
 
+/**
+ * Closing call to action.
+ *
+ * Was a full-width maroon banner with py-20 sitting directly above the
+ * maroon-deep footer — two dark warm tones with almost no edge between them, so
+ * it read as one enormous block and the CTA lost its own presence. It is now a
+ * compact cream card on a paper-3 ground: light against the dark footer below,
+ * and a step warmer than the cream FAQ above, so it separates on both sides.
+ *
+ * Decoration is deliberately restrained — two corner motifs at very low opacity
+ * and the shared shimmering gold rules — because this section's job is
+ * readability and conversion, not ornament.
+ */
+
+/** Small Mithila line-art corner flourish. Purely decorative. */
+function CornerMotif({ position }: { position: 'tl' | 'br' }) {
+  return (
+    <svg
+      className={`pointer-events-none absolute w-[72px] h-[72px] opacity-[0.09] ${
+        position === 'tl' ? 'left-2 top-2' : 'right-2 bottom-2 rotate-180'
+      }`}
+      viewBox="0 0 100 100"
+      fill="none"
+      stroke="#7A1220"
+      strokeWidth="1.2"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {/* Quarter lotus fan */}
+      {[0, 22, 44, 66, 88].map((a) => (
+        <ellipse key={a} cx="14" cy="14" rx="5" ry="26" transform={`rotate(${a - 45} 14 14)`} />
+      ))}
+      <circle cx="14" cy="14" r="3" />
+      {/* Fine trailing vine */}
+      <path d="M 30 46 C 52 52, 60 66, 58 88" stroke="#B98A2E" />
+      <circle cx="58" cy="88" r="2.4" stroke="#B98A2E" />
+    </svg>
+  )
+}
+
 export function FinalCTA() {
   return (
-    <section className="relative bg-maroon overflow-hidden py-11 sm:py-14" aria-label="Create your profile — call to action">
-      {/* Madhubani lotus decoration */}
-      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        <svg viewBox="0 0 1200 300" xmlns="http://www.w3.org/2000/svg" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
-          {/* Large background lotuses */}
-          {[[100,150,60,'#9B2233'],[400,220,45,'#9B2233'],[700,100,55,'#9B2233'],[1050,180,50,'#9B2233'],[220,60,35,'#9B2233'],[880,240,40,'#9B2233']].map(([lx,ly,lr,lc],i) => (
-            <g key={i} opacity="0.25">
-              {[0,45,90,135,180,225,270,315].map((a,ai) => {
-                const rad=(a*Math.PI)/180
-                const r = lr as number
-                return <ellipse key={ai} cx={(lx as number)+(r*0.7)*Math.cos(rad)} cy={(ly as number)+(r*0.7)*Math.sin(rad)} rx={r*0.4} ry={r*0.65} fill={lc as string} stroke="#E4C572" strokeWidth="0.8" transform={`rotate(${a} ${(lx as number)+(r*0.7)*Math.cos(rad)} ${(ly as number)+(r*0.7)*Math.sin(rad)})`} />
-              })}
-              <circle cx={lx as number} cy={ly as number} r={(lr as number)*0.3} fill="#E4C572" opacity="0.4" />
-            </g>
-          ))}
-          {/* Gold fish motifs */}
-          {[[300,70],[600,230],[900,80],[150,210],[1050,50]].map(([fx,fy],i) => (
-            <g key={i} opacity="0.2">
-              <ellipse cx={fx as number} cy={fy as number} rx="28" ry="18" fill="#E4C572" />
-              <path d={`M ${(fx as number)+28} ${fy} L ${(fx as number)+40} ${(fy as number)-9} L ${(fx as number)+40} ${(fy as number)+9} Z`} fill="#E4C572" />
-              <circle cx={(fx as number)-8} cy={(fy as number)-4} r="4" fill="#7A1220" />
-            </g>
-          ))}
-        </svg>
-      </div>
+    <section
+      className="relative bg-paper-3 py-6 sm:py-7"
+      aria-label="Create your profile — call to action"
+    >
+      {/* Shimmering gold rules, matching the hairlines that frame the branding. */}
+      <span
+        className="mj-line absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-paper-3 via-gold to-paper-3"
+        aria-hidden="true"
+      />
 
-      {/* Gold top border */}
-      <div className="absolute top-0 left-0 right-0 h-[4px] bg-gradient-to-r from-maroon-deep via-gold-lt to-maroon-deep" aria-hidden="true" />
+      <div className="wrap">
+        <div className="card relative overflow-hidden mx-auto max-w-xl text-center px-5 py-5 sm:px-9 sm:py-6">
+          <CornerMotif position="tl" />
+          <CornerMotif position="br" />
 
-      <div className="wrap relative z-10 text-center max-w-3xl mx-auto">
-        {/* The "जहाँ परम्परा मिले, प्रेम से / Where tradition meets love" tagline
-            pair deliberately does NOT repeat here. It already appears in the
-            brand header, in the hero, and again in the footer immediately below
-            this section — a fourth copy in between was pure repetition and added
-            height right where the page should be closing out. */}
-        <h2 className="font-serif text-paper leading-snug mb-4 text-[26px] sm:text-[34px] lg:text-[40px]">
-          Begin Your Family&apos;s Next Chapter
-        </h2>
+          <div className="relative">
+            <p className="eyebrow mb-2">Your Next Chapter</p>
 
-        <p className="text-paper-2 text-[15.5px] sm:text-[16px] leading-relaxed mb-7 max-w-xl mx-auto">
-          Create a verified biodata, connect with Maithili families across India, and let
-          Mithila Jodi support your family through every step of the journey — with respect,
-          privacy, and deep cultural understanding.
-        </p>
+            <h2 className="font-serif text-maroon leading-snug text-[20px] sm:text-[23px] lg:text-[26px]">
+              Begin Your Family&apos;s Next Chapter
+            </h2>
 
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link href="/register" className="btn bg-gold-lt text-maroon-deep text-base px-9 py-3.5 font-semibold hover:-translate-y-0.5 hover:shadow-mj transition-all">
-            Create Your Biodata
-          </Link>
-          <Link href="/login" className="btn bg-transparent border-2 border-gold-lt text-gold-lt text-base px-9 py-3.5 hover:bg-gold-lt hover:text-maroon-deep transition-all">
-            Sign In
-          </Link>
+            <div className="ornament-line mj-line w-14 mx-auto my-2.5" />
+
+            {/* Controlled measure — ~46 characters per line reads comfortably. */}
+            <p className="font-sans text-ink-soft text-[14px] sm:text-[15px] leading-relaxed mx-auto max-w-[46ch]">
+              Create a verified biodata and connect with Maithili families across India — with
+              privacy and cultural care at every step.
+            </p>
+
+            <div className="mt-4">
+              <Link href="/register" className="btn-primary text-[15px] px-7 py-3">
+                Create Your Biodata
+              </Link>
+            </div>
+
+            <p className="mt-3.5 text-[11px] text-ink-soft opacity-80">
+              By registering you agree to our{' '}
+              <Link href="/legal/terms" className="underline underline-offset-2 hover:text-maroon transition-colors">
+                Terms of Service
+              </Link>{' '}
+              and{' '}
+              <Link href="/legal/privacy" className="underline underline-offset-2 hover:text-maroon transition-colors">
+                Privacy Policy
+              </Link>
+              .
+            </p>
+          </div>
         </div>
-
-        {/* Legal micro-links */}
-        <p className="mt-6 text-[12px] text-paper-3 opacity-60">
-          By registering you agree to our{' '}
-          <a href="/legal/terms" className="underline hover:text-gold-lt transition-colors">Terms of Service</a>
-          {' '}and{' '}
-          <a href="/legal/privacy" className="underline hover:text-gold-lt transition-colors">Privacy Policy</a>.
-        </p>
       </div>
 
-      {/* Gold bottom border */}
-      <div className="absolute bottom-0 left-0 right-0 h-[4px] bg-gradient-to-r from-maroon-deep via-gold-lt to-maroon-deep" aria-hidden="true" />
+      <span
+        className="mj-line mj-line--delayed absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-paper-3 via-gold to-paper-3"
+        aria-hidden="true"
+      />
     </section>
   )
 }

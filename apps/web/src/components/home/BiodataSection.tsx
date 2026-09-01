@@ -9,7 +9,7 @@ const LANGS = [
 
 export function BiodataSection() {
   return (
-    <section id="biodata" className="relative bg-cream py-9 sm:py-12" aria-label="Marriage biodata in your language">
+    <section id="biodata" className="relative bg-paper-2 py-9 sm:py-12" aria-label="Marriage biodata in your language">
       <div className="wrap">
         <div className="text-center mb-4">
           <p className="eyebrow mb-1.5">Your Language</p>
@@ -29,7 +29,7 @@ export function BiodataSection() {
             {LANGS.map(l => (
               <span
                 key={l.script}
-                className="px-4 py-1.5 rounded-full text-[13px] font-medium bg-paper text-maroon border border-gold border-opacity-40 font-deva shadow-mj-xs"
+                className="px-4 py-1.5 rounded-full text-[13px] font-medium bg-cream text-maroon border border-gold border-opacity-40 font-deva shadow-mj-xs"
               >
                 {l.label}
               </span>

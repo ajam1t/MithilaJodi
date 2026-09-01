@@ -114,9 +114,11 @@ export function MithilaHeader() {
   )
 
   return (
-    <header className="sticky top-0 z-50 bg-cream border-b border-gold border-opacity-30 shadow-mj-xs">
-      {/* Thin top accent */}
-      <div className="h-[3px] w-full bg-gradient-to-r from-cream via-gold to-cream" />
+    <header className="sticky top-0 z-50 bg-cream shadow-mj-xs">
+      {/* ── Decorative hairline ABOVE the branding ──
+          Lives inside the sticky <header>, so it stays pinned to the top of the
+          viewport for the whole page rather than scrolling away. */}
+      <div className="mj-line h-[3px] w-full bg-gradient-to-r from-cream via-gold to-cream" />
 
       {/* ── Mobile: centered brand ── */}
       <div className="lg:hidden relative px-12 py-2">
@@ -154,7 +156,7 @@ export function MithilaHeader() {
         </Link>
 
         {/* Thin gold divider */}
-        <div className="mx-auto mt-1.5 h-px w-24 bg-gradient-to-r from-transparent via-gold to-transparent" />
+        <div className="mj-line mx-auto mt-1.5 h-px w-24 bg-gradient-to-r from-transparent via-gold to-transparent" />
       </div>
 
       {/* ── Desktop: brand + nav row ── */}
@@ -210,6 +212,15 @@ export function MithilaHeader() {
           )}
         </nav>
       </div>
+
+      {/* ── Decorative hairline BELOW the branding ──
+          The frame under the brand used to be supplied by the announcement /
+          festivals strips that sit either side of this header. Those are
+          non-sticky siblings, so scrolling carried them off-screen and the
+          branding lost its lower rule. Rendering it here — inside the sticky
+          element, after the nav and before the mobile menu — keeps the frame
+          intact at every scroll position. */}
+      <div className="mj-line mj-line--delayed h-[2px] w-full bg-gradient-to-r from-cream via-gold to-cream" />
 
       {/* Mobile menu */}
       {open && (

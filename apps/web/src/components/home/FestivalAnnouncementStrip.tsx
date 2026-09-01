@@ -16,7 +16,7 @@ export function FestivalAnnouncementStrip() {
   return (
     <Link
       href="/festivals"
-      className="group block bg-maroon border-b border-gold/30 hover:bg-maroon-deep transition-colors
+      className="group relative block bg-maroon hover:bg-maroon-deep transition-colors
                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-lt focus-visible:ring-inset"
       aria-label="Mithila Festivals — explore rituals, stories and songs"
     >
@@ -46,6 +46,14 @@ export function FestivalAnnouncementStrip() {
           →
         </span>
       </div>
+
+      {/* Same shimmering gold rule as the hairlines framing the branding above,
+          so the strip reads as part of that group rather than a separate band. */}
+      <span
+        className="mj-line mj-line--delayed absolute bottom-0 left-0 right-0 h-[2px]
+                   bg-gradient-to-r from-maroon-deep via-gold to-maroon-deep"
+        aria-hidden="true"
+      />
     </Link>
   )
 }

@@ -7,7 +7,6 @@ import { HeroSection } from '@/components/home/HeroSection'
 import { FeaturedProfiles } from '@/components/home/FeaturedProfiles'
 import { WhyMithilaJodi } from '@/components/home/FeatureStrip'
 import { BiodataSection } from '@/components/home/BiodataSection'
-import { FestivalStrip } from '@/components/home/FestivalStrip'
 import { FinalCTA } from '@/components/home/FinalCTA'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
@@ -175,7 +174,6 @@ export default function HomePage() {
         <FeaturedProfiles />
         <WhyMithilaJodi />
         <BiodataSection />
-        <FestivalStrip />
 
         {/* ── Frequently asked questions (SEO + genuine help) ── */}
         <section id="faq" className="bg-cream py-9 sm:py-12" aria-label="Frequently asked questions">
