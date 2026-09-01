@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Homepage hero cinematic. Kept in its own file because it is a large,
+   self-contained animation layer; every selector is .mj-hero-* scoped.
+   Imported after the Tailwind layers so its plain rules win over
+   utilities of equal specificity. */
+@import './hero-cinematic.css';
+
 /* ── Mithila Jodi — Global CSS ─────────────────────────────────────────── */
 
 @layer base {

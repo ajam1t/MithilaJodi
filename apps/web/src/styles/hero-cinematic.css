@@ -1,0 +1,424 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   HERO CINEMATIC — "Separate journeys → Match → Connected"
+   Drives components/home/hero/*. Imported by globals.css.
+
+   Every rule is scoped to .mj-hero-* so nothing leaks into the rest of the
+   site. Stage is read from [data-stage] on .mj-hero-stage.
+
+   All keyframes END in the final resting state, so the global
+   prefers-reduced-motion rule in globals.css — which collapses
+   animation-duration to 0.01ms — lands users on the finished composition
+   rather than mid-flight. Transform / opacity / filter only, so everything
+   composites on the GPU and there is no per-frame JavaScript anywhere.
+
+   Colours are the existing brand tokens: paper #FCF5E7, cream #FFFAF0,
+   maroon #7A1220 / #9B2233, gold #B98A2E / #E4C572. No bright yellow, no neon.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.mj-hero-stage {
+  /* Travel distance for the glyphs and cards. Smaller on phones so mobile gets
+     the same choreography over a shorter path, not a shrunken desktop copy. */
+  --mj-fly: 26px;
+  background: #FCF5E7;
+}
+@media (min-width: 640px)  { .mj-hero-stage { --mj-fly: 42px; } }
+@media (min-width: 1024px) { .mj-hero-stage { --mj-fly: 64px; } }
+
+/* Warm paper ground assembled from the existing brand gradient recipe. */
+.mj-hero-ground {
+  background:
+    radial-gradient(circle at 50% 42%, rgba(228, 197, 114, 0.26), transparent 58%),
+    radial-gradient(circle at 12% 16%, rgba(232, 145, 42, 0.13), transparent 46%),
+    radial-gradient(circle at 88% 84%, rgba(122, 18, 32, 0.10), transparent 48%),
+    linear-gradient(180deg, #FFFAF0 0%, #FCF5E7 55%, #F7EBD3 100%);
+}
+
+/* ── Stage 1 → 2: glyph assembly and brand settle ──────────────────────── */
+
+.mj-hero-brand {
+  height: 100%;
+  transition:
+    transform 900ms cubic-bezier(0.2, 0.8, 0.3, 1),
+    opacity 700ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+/* Once matched, the assembled brand lifts and recedes so the cards own the
+   stage — the brief's "move upward and become part of the composition".
+   On phones it fades out entirely instead: the cards stack into that space, and
+   the brand is already spelled out in the sticky header directly above, so a
+   ghost of it behind the cards was just clutter. */
+.mj-hero-brand[data-settled="true"] {
+  transform: translate3d(0, -24%, 0) scale(0.4);
+  opacity: 0;
+}
+@media (min-width: 640px) {
+  .mj-hero-brand[data-settled="true"] {
+    transform: translate3d(0, -21%, 0) scale(0.44);
+    opacity: 0.2;
+  }
+}
+
+.mj-hero-word {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.02em;
+  font-size: clamp(30px, 8.2vw, 74px);
+  line-height: 1;
+  filter: drop-shadow(0 2px 10px rgba(185, 138, 46, 0.28));
+}
+
+.mj-hero-glyph {
+  display: inline-block;
+  opacity: 0;
+  will-change: transform, opacity, filter;
+  animation: mjGlyphIn 1500ms cubic-bezier(0.16, 0.9, 0.24, 1) var(--gd, 0ms) forwards;
+}
+.mj-hero-glyph--gap { margin-left: 0.34em; }
+
+@keyframes mjGlyphIn {
+  0% {
+    opacity: 0;
+    transform:
+      translate3d(calc(var(--gx) * var(--mj-fly)), calc(var(--gy) * var(--mj-fly)), 0)
+      rotate(var(--gr)) scale(var(--gz));
+    filter: blur(7px);
+  }
+  55% {
+    opacity: 1;
+    filter: blur(2px);
+  }
+  /* Rotation is nearly resolved by here, and the remaining travel is a short
+     precise glide — magnetic alignment rather than an impact. */
+  82% {
+    transform:
+      translate3d(
+        calc(var(--gx) * var(--mj-fly) * 0.06),
+        calc(var(--gy) * var(--mj-fly) * 0.06), 0)
+      rotate(calc(var(--gr) * 0.08)) scale(1.012);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Golden energy pulse + ripple, peaking as the glyphs converge. */
+.mj-hero-pulse,
+.mj-hero-ripple {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 999px;
+  transform: translate3d(-50%, -50%, 0) scale(0);
+  opacity: 0;
+  pointer-events: none;
+}
+.mj-hero-pulse {
+  width: 190px;
+  height: 190px;
+  background: radial-gradient(circle, rgba(228, 197, 114, 0.5), transparent 68%);
+  animation: mjPulse 1500ms cubic-bezier(0.2, 0.8, 0.3, 1) 1150ms forwards;
+}
+.mj-hero-ripple {
+  width: 128px;
+  height: 128px;
+  border: 1.5px solid rgba(185, 138, 46, 0.5);
+  animation: mjRipple 1600ms cubic-bezier(0.2, 0.8, 0.3, 1) 1400ms forwards;
+}
+@keyframes mjPulse {
+  0%   { opacity: 0;    transform: translate3d(-50%, -50%, 0) scale(0.2); }
+  42%  { opacity: 0.95; transform: translate3d(-50%, -50%, 0) scale(1); }
+  100% { opacity: 0;    transform: translate3d(-50%, -50%, 0) scale(1.5); }
+}
+@keyframes mjRipple {
+  0%   { opacity: 0;   transform: translate3d(-50%, -50%, 0) scale(0.3); }
+  30%  { opacity: 0.8; }
+  100% { opacity: 0;   transform: translate3d(-50%, -50%, 0) scale(2.6); }
+}
+
+/* Convergence sparks — eight small dots pushed radially outward. */
+.mj-hero-sparks {
+  position: absolute;
+  inset: 0;
+  z-index: 21;
+  pointer-events: none;
+}
+.mj-hero-spark-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: #E4C572;
+  opacity: 0;
+  transform: translate3d(-50%, -50%, 0);
+  animation: mjSparkOut 1250ms ease-out calc(1250ms + var(--i) * 55ms) forwards;
+}
+/* Halve the particle count on phones, per the performance brief. */
+@media (max-width: 639px) {
+  .mj-hero-spark-dot:nth-child(n + 5) { display: none; }
+}
+@keyframes mjSparkOut {
+  0%   { opacity: 0; transform: translate3d(-50%, -50%, 0) scale(0.4); }
+  25%  { opacity: 1; }
+  100% {
+    opacity: 0;
+    transform:
+      translate3d(
+        calc(-50% + cos(var(--i) * 45deg) * var(--mj-fly) * 1.7),
+        calc(-50% + sin(var(--i) * 45deg) * var(--mj-fly) * 1.7), 0)
+      scale(0.9);
+  }
+}
+
+/* ── Stage 2: profile cards and compatibility read-out ─────────────────── */
+
+/* Purely illustrative, so it must never swallow a click meant for the page. */
+.mj-hero-match { pointer-events: none; }
+
+/* Mobile: the cards STACK — A upper-left, B lower-right — because two 45%-wide
+   cards either side of a centred badge simply do not fit on a phone, and the
+   badge ended up covering both names. From sm up they flank the badge. */
+.mj-hero-card {
+  position: absolute;
+  width: 68%;
+  max-width: 232px;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.mj-hero-card--left  { top: 11%; left: 4%; }
+.mj-hero-card--right { bottom: 11%; right: 4%; }
+
+@media (min-width: 640px) {
+  .mj-hero-card {
+    top: 50%;
+    bottom: auto;
+    width: 45%;
+    transform: translate3d(0, -50%, 0);
+  }
+  .mj-hero-card--left  { left: 4%; }
+  .mj-hero-card--right { right: 4%; top: 50%; bottom: auto; }
+}
+
+[data-stage="match"] .mj-hero-card,
+[data-stage="thread"] .mj-hero-card,
+[data-stage="connected"] .mj-hero-card,
+[data-stage="final"] .mj-hero-card {
+  animation: mjCardInStacked 820ms cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+@media (min-width: 640px) {
+  [data-stage="match"] .mj-hero-card,
+  [data-stage="thread"] .mj-hero-card,
+  [data-stage="connected"] .mj-hero-card,
+  [data-stage="final"] .mj-hero-card {
+    animation-name: mjCardIn;
+  }
+}
+[data-stage="match"] .mj-hero-card--right,
+[data-stage="thread"] .mj-hero-card--right,
+[data-stage="connected"] .mj-hero-card--right,
+[data-stage="final"] .mj-hero-card--right {
+  animation-delay: 130ms;
+}
+/* Two keyframe sets: the wide layout centres each card with translateY(-50%),
+   which the animation must preserve; the stacked layout is anchored by top /
+   bottom instead and needs no offset. */
+@keyframes mjCardInStacked {
+  0%   { opacity: 0; transform: translate3d(0, 0, 0) scale(0.94); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes mjCardIn {
+  0%   { opacity: 0; transform: translate3d(0, -50%, 0) scale(0.94); }
+  100% { opacity: 1; transform: translate3d(0, -50%, 0) scale(1); }
+}
+
+/* The connection moment: both cards ease slightly toward the centre. Margin
+   rather than transform, so it does not fight the entry animation above. */
+.mj-hero-match[data-connected="true"] .mj-hero-card--left,
+.mj-hero-match[data-connected="true"] .mj-hero-card--right {
+  transition: margin 900ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+/* Stacked: the two cards close the vertical gap slightly. */
+.mj-hero-match[data-connected="true"] .mj-hero-card--left  { margin-top: 2.5%; }
+.mj-hero-match[data-connected="true"] .mj-hero-card--right { margin-bottom: 2.5%; }
+@media (min-width: 640px) {
+  .mj-hero-match[data-connected="true"] .mj-hero-card--left {
+    margin-top: 0; margin-left: 2.2%;
+  }
+  .mj-hero-match[data-connected="true"] .mj-hero-card--right {
+    margin-bottom: 0; margin-right: 2.2%;
+  }
+}
+
+.mj-hero-compat {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate3d(-50%, -50%, 0);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  opacity: 0;
+}
+[data-stage="match"] .mj-hero-compat,
+[data-stage="thread"] .mj-hero-compat,
+[data-stage="connected"] .mj-hero-compat,
+[data-stage="final"] .mj-hero-compat {
+  animation: mjFadeUpIn 700ms cubic-bezier(0.2, 0.8, 0.3, 1) 260ms forwards;
+}
+@keyframes mjFadeUpIn {
+  0%   { opacity: 0; transform: translate3d(-50%, calc(-50% + 10px), 0); }
+  100% { opacity: 1; transform: translate3d(-50%, -50%, 0); }
+}
+
+.mj-hero-compat-badge {
+  display: grid;
+  place-items: center;
+  min-width: 74px;
+  padding: 8px 14px;
+  border-radius: 18px; /* rounded-mj */
+  background: #FFFAF0;
+  border: 1px solid rgba(185, 138, 46, 0.42);
+  box-shadow:
+    0 10px 28px -14px rgba(90, 40, 20, 0.28),
+    0 2px 6px -3px rgba(90, 40, 20, 0.14); /* shadow-mj-soft */
+  color: #7A1220;
+  transition: background 600ms ease, color 600ms ease, box-shadow 600ms ease;
+}
+.mj-hero-match[data-connected="true"] .mj-hero-compat-badge {
+  background: linear-gradient(180deg, #9B2233, #7A1220); /* bg-maroon-gradient */
+  color: #E4C572;
+  box-shadow: 0 14px 30px -18px rgba(58, 20, 12, 0.4); /* shadow-mj-sm */
+}
+
+.mj-hero-signals {
+  position: absolute;
+  left: 50%;
+  bottom: 8%;
+  transform: translateX(-50%);
+  gap: 18px;
+  list-style: none;
+  white-space: nowrap;
+}
+.mj-hero-signal {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0;
+}
+[data-stage="match"] .mj-hero-signal,
+[data-stage="thread"] .mj-hero-signal,
+[data-stage="connected"] .mj-hero-signal,
+[data-stage="final"] .mj-hero-signal {
+  animation: mjSignalIn 560ms cubic-bezier(0.2, 0.8, 0.3, 1) calc(700ms + var(--sd)) forwards;
+}
+@keyframes mjSignalIn {
+  0%   { opacity: 0; transform: translateY(7px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.mj-hero-tick { font-weight: 700; }
+
+/* ── Stage 3: Thread of Destiny ────────────────────────────────────────── */
+
+/* Cultural motifs stay background texture — felt, not illustrated. */
+.mj-hero-motifs { opacity: 0; transition: opacity 1200ms ease; }
+[data-stage="thread"] .mj-hero-motifs,
+[data-stage="connected"] .mj-hero-motifs,
+[data-stage="final"] .mj-hero-motifs { opacity: 0.09; }
+
+/* One route per breakpoint — the stacked and flanking layouts need different
+   paths, not one path stretched. */
+.mj-hero-route--wide { display: none; }
+.mj-hero-route--tall { display: block; }
+@media (min-width: 640px) {
+  .mj-hero-route--wide { display: block; }
+  .mj-hero-route--tall { display: none; }
+}
+
+.mj-hero-thread-line,
+.mj-hero-thread-glow {
+  stroke-dasharray: 1;      /* paths declare pathLength="1" */
+  stroke-dashoffset: 1;
+}
+.mj-hero-thread-glow { opacity: 0; }
+
+.mj-hero-thread[data-drawing="true"] .mj-hero-thread-line {
+  animation: mjDraw 1800ms cubic-bezier(0.32, 0.06, 0.28, 1) forwards;
+}
+.mj-hero-thread[data-drawing="true"] .mj-hero-thread-glow {
+  animation:
+    mjDraw 1800ms cubic-bezier(0.32, 0.06, 0.28, 1) forwards,
+    mjGlowIn 1800ms ease forwards;
+}
+@keyframes mjDraw { to { stroke-dashoffset: 0; } }
+@keyframes mjGlowIn {
+  0%   { opacity: 0; }
+  30%  { opacity: 0.5; }
+  100% { opacity: 0.34; }
+}
+
+/* Short bright dash riding the same path as a leading-edge spark. */
+.mj-hero-spark {
+  stroke-dasharray: 0.012 0.988;
+  stroke-dashoffset: 1;
+  opacity: 0;
+}
+.mj-hero-thread[data-drawing="true"] .mj-hero-spark {
+  animation: mjSparkRide 1800ms cubic-bezier(0.32, 0.06, 0.28, 1) forwards;
+}
+@keyframes mjSparkRide {
+  0%   { stroke-dashoffset: 1;    opacity: 0; }
+  8%   { opacity: 0.9; }
+  88%  { opacity: 0.9; }
+  100% { stroke-dashoffset: 0.02; opacity: 0; }
+}
+
+/* Centre knot — an infinity-style loop, deliberately not a heart. */
+/* Sits behind the compatibility badge, centred, with the loops reaching out
+   past it on both sides. */
+.mj-hero-knot-wrap {
+  transform: translate3d(-50%, -50%, 0);
+  overflow: visible;
+  pointer-events: none;
+}
+.mj-hero-knot {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0;
+}
+.mj-hero-knot-wrap[data-connected="true"] .mj-hero-knot {
+  animation: mjKnot 1100ms cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+@keyframes mjKnot {
+  0%   { stroke-dashoffset: 1; opacity: 0; }
+  30%  { opacity: 0.95; }
+  100% { stroke-dashoffset: 0; opacity: 0.85; }
+}
+
+/* ── Reduced motion ────────────────────────────────────────────────────────
+   The orchestrator already jumps straight to stage 'final' when reduced motion
+   is set, and the global rule collapses durations so keyframes park on their
+   100% state. These rules cover what is transition- or opacity-driven rather
+   than keyframe-driven, and switch off the purely ornamental particles — the
+   result is a clean static composition: brand settled, both cards in place,
+   thread fully drawn, knot tied. */
+@media (prefers-reduced-motion: reduce) {
+  .mj-hero-glyph,
+  .mj-hero-card,
+  .mj-hero-compat,
+  .mj-hero-signal { opacity: 1; }
+
+  .mj-hero-pulse,
+  .mj-hero-ripple,
+  .mj-hero-sparks,
+  .mj-hero-spark { display: none; }
+
+  .mj-hero-thread-line { stroke-dashoffset: 0; }
+  .mj-hero-thread-glow { stroke-dashoffset: 0; opacity: 0.3; }
+  .mj-hero-knot        { stroke-dashoffset: 0; opacity: 0.85; }
+  .mj-hero-motifs      { opacity: 0.09; }
+}
