@@ -7,6 +7,7 @@ import { FeaturedProfiles } from '@/components/home/FeaturedProfiles'
 import { WhyMithilaJodi } from '@/components/home/FeatureStrip'
 import { FamilyRoots } from '@/components/home/SuccessStories'
 import { BiodataSection } from '@/components/home/BiodataSection'
+import { FestivalStrip } from '@/components/home/FestivalStrip'
 import { FinalCTA } from '@/components/home/FinalCTA'
 import { CulturalStatement } from '@/components/home/CulturalStatement'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
@@ -172,6 +173,7 @@ export default function HomePage() {
         <FamilyRoots />
         <MithilaBorder variant="bottom" />
         <BiodataSection />
+        <FestivalStrip />
 
         {/* ── Frequently asked questions (SEO + genuine help) ── */}
         <section id="faq" className="bg-cream py-12 sm:py-16" aria-label="Frequently asked questions">

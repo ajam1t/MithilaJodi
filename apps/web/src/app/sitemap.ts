@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { createAdminClient } from '@/lib/supabase/server'
+import { FESTIVALS } from '@/lib/festivals'
 import { SITE_URL } from '@/lib/constants'
 
 const SITE = SITE_URL
@@ -16,6 +17,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }> = [
     { path: '/', priority: 1.0, changeFrequency: 'weekly' },
     { path: '/blogs', priority: 0.8, changeFrequency: 'weekly' },
+    { path: '/festivals', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/about', priority: 0.6, changeFrequency: 'monthly' },
     { path: '/pricing', priority: 0.6, changeFrequency: 'monthly' },
     { path: '/explore', priority: 0.7, changeFrequency: 'daily' },
@@ -31,6 +33,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: now,
     changeFrequency: r.changeFrequency,
     priority: r.priority,
+  }))
+
+  // Festival pages — derived from lib/festivals so new festivals are included
+  // automatically. Static content, so no DB call is needed.
+  const festivalEntries: MetadataRoute.Sitemap = FESTIVALS.map((f) => ({
+    url: `${SITE}/festivals/${f.slug}`,
+    lastModified: now,
+    changeFrequency: 'monthly' as const,
+    priority: 0.7,
   }))
 
   try {
@@ -79,9 +90,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.8,
       }))
 
-    return [...staticEntries, ...categoryEntries, ...postEntries]
+    return [...staticEntries, ...festivalEntries, ...categoryEntries, ...postEntries]
   } catch (err) {
     console.error('[sitemap] blog entries error:', err)
-    return staticEntries
+    // Festivals are static data — still emit them even if the blog query failed.
+    return [...staticEntries, ...festivalEntries]
   }
 }

@@ -6,10 +6,14 @@ import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils/cn'
 import { MithilaBorder } from '@/components/home/MithilaBorder'
 
-const NAV_LINKS = [
+/** `mobileLabel` lets the hamburger show a fuller label than the tighter desktop row. */
+type NavLink = { href: string; label: string; mobileLabel?: string }
+
+const NAV_LINKS: NavLink[] = [
   { href: '/', label: 'Home' },
   { href: '/about', label: 'About' },
   { href: '/#biodata', label: 'Marriage Biodata' },
+  { href: '/festivals', label: 'Festivals', mobileLabel: 'Mithila Festivals' },
   { href: '/blogs', label: 'Blogs' },
   { href: '/pricing', label: 'Pricing' },
   { href: '/safety', label: 'Safety' },
@@ -212,8 +216,8 @@ export function MithilaHeader() {
               </>
             ) : (
               <>
-                {NAV_LINKS.map(({ href, label }) => (
-                  <Link key={label} href={href} onClick={() => setOpen(false)} className={mobileLink(href)} aria-current={isActive(href) ? 'page' : undefined}>{label}</Link>
+                {NAV_LINKS.map(({ href, label, mobileLabel }) => (
+                  <Link key={label} href={href} onClick={() => setOpen(false)} className={mobileLink(href)} aria-current={isActive(href) ? 'page' : undefined}>{mobileLabel ?? label}</Link>
                 ))}
                 <div className="h-px bg-gold opacity-20" />
                 {authLoaded && (
