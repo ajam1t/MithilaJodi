@@ -5,7 +5,7 @@ import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { FestivalHeroArt } from '@/components/festivals/FestivalHeroArt'
-import { FestivalSongs } from '@/components/festivals/FestivalSongs'
+import { FestivalSongsTeaser } from '@/components/festivals/FestivalSongsTeaser'
 import { FestivalCard } from '@/components/festivals/FestivalCard'
 import { FESTIVALS, getFestival, getRelatedFestivals } from '@/lib/festivals'
 import { SITE_URL } from '@/lib/constants'
@@ -283,7 +283,7 @@ export default async function FestivalPage(
 
         {/* ── Songs ───────────────────────────────────────── */}
         <section className="wrap py-10 sm:py-14 max-w-3xl" aria-label={`Songs of ${festival.name}`}>
-          <FestivalSongs songs={festival.songs} festivalName={festival.name.split('—')[0].trim()} />
+          <FestivalSongsTeaser festival={festival} />
         </section>
 
         {/* ── Related festivals ───────────────────────────── */}

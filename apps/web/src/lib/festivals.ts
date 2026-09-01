@@ -20,15 +20,16 @@ export type FestivalSong = {
   title: string
   /** Devanagari title, shown as a secondary line where available. */
   titleDeva?: string
+  /** Singer, or the channel that published the recording. */
+  artist: string
   /** One line: what it is, who sings it, when. */
   note: string
-  /** Used to build a YouTube search link — always resolves to results. */
-  searchQuery: string
   /**
-   * Optional: a specific, manually verified YouTube video id. When present the
-   * card links straight to that video instead of a search.
+   * YouTube video id. Playback happens in an embedded player ON Mithila Jodi —
+   * we never host audio and never redirect the listener to YouTube.
+   * Songs without an id are omitted from the catalogue rather than linked out.
    */
-  youtubeId?: string
+  youtubeId: string
 }
 
 export type Ritual = {
@@ -126,28 +127,32 @@ export const FESTIVALS: Festival[] = [
     ],
     songs: [
       {
-        title: 'Kelva Ke Paat Par',
-        titleDeva: 'केलवा के पाट पर',
-        note: 'Perhaps the best-known Chhath geet — sung as the daala is prepared and carried to the ghat.',
-        searchQuery: 'Kelva Ke Paat Par Chhath Geet Sharda Sinha',
+        title: 'Kelwa Ke Paat Par',
+        titleDeva: 'केलवा के पात पर',
+        artist: 'Sharda Sinha',
+        note: 'The best-known Chhath geet of all — sung as the daala is prepared and carried to the ghat.',
+        youtubeId: 'knZ8b5YnQiY',
       },
       {
-        title: 'Ugi Hey Suraj Dev',
-        titleDeva: 'उगी हे सुरुज देव',
-        note: 'A dawn song calling the sun to rise, sung at Usha Arghya on the final morning.',
-        searchQuery: 'Ugi Hey Suraj Dev Chhath Geet',
+        title: 'Kelwa Ke Paat Par (Lyrical)',
+        titleDeva: 'केलवा के पात पर',
+        artist: 'Sharda Sinha',
+        note: 'The same geet with on-screen lyrics — useful if you are learning the words.',
+        youtubeId: 'y7hrM7PouQM',
       },
       {
-        title: 'Marbo Re Sugga',
-        titleDeva: 'मारबो रे सुग़ा',
-        note: 'A well-loved narrative geet about a parrot that pecks at the offering — sung on the ghat.',
-        searchQuery: 'Marbo Re Sugga Chhath Geet Sharda Sinha',
+        title: 'Pahile Pahil Chhathi Maiya',
+        titleDeva: 'पहिले पहिल छठी मैया',
+        artist: 'Sharda Sinha',
+        note: 'Sung by a family keeping the vrat for the first time — one of the most loved Chhath songs.',
+        youtubeId: 'DG8F-csoRAQ',
       },
       {
-        title: 'Hey Chhathi Maiya',
-        titleDeva: 'हे छठी मैया',
-        note: 'Direct invocation of Chhathi Maiya, sung through the evening vigil.',
-        searchQuery: 'Hey Chhathi Maiya Chhath Puja Geet Maithili',
+        title: 'Chhathi Maiya — Chhath Pooja Geet',
+        titleDeva: 'छठी मैया',
+        artist: 'Sharda Sinha',
+        note: 'A longer collection of invocations to Chhathi Maiya for the evening vigil.',
+        youtubeId: 'BsAFCc901MM',
       },
     ],
     related: ['kojagara', 'diwali', 'sama-chakeva'],
@@ -215,22 +220,39 @@ export const FESTIVALS: Festival[] = [
     ],
     songs: [
       {
-        title: 'Sama Khelay Chalu Hey Bahin',
-        titleDeva: 'सामा खेलय चलू हे बहिन',
-        note: 'The call that opens the evening — sisters inviting one another out to play Sama.',
-        searchQuery: 'Sama Chakeva geet Maithili Sama khelay chalu',
+        title: 'Sama Vidai Geet',
+        titleDeva: 'सामा बिदाई गीत',
+        artist: 'Maithili Ganga',
+        note: 'The farewell sung on Kartik Purnima as the clay figures are floated away.',
+        youtubeId: 'E63kxMtYf7M',
       },
       {
-        title: 'Chugla Ke Muh Jarai',
-        titleDeva: 'चुगला के मुँह जराई',
-        note: 'The mocking song sung while Chugla, the tale-bearer, is singed.',
-        searchQuery: 'Sama Chakeva Chugla geet Maithili',
+        title: 'Paramparik Sama Chakeva Geet',
+        titleDeva: 'पारम्परिक सामा चकेवा गीत',
+        artist: 'Maithili traditional (nonstop)',
+        note: 'A long traditional set — the closest thing to sitting in the courtyard through an evening.',
+        youtubeId: 'lN4pMJ2ToOE',
       },
       {
-        title: 'Sama Ke Bidai',
-        titleDeva: 'सामा के बिदाई',
-        note: 'The farewell on Kartik Purnima, sung as the figures are floated away.',
-        searchQuery: 'Sama Chakeva bidai geet Maithili folk',
+        title: 'Kone Bhaiya Ke Ghodwa',
+        titleDeva: 'कोने भैया के घोड़वा',
+        artist: 'Maithili Geet Maala',
+        note: 'A well-known Sama geet naming the brothers, sung call-and-response.',
+        youtubeId: '6n5K9wnLp14',
+      },
+      {
+        title: 'Sama Ke Fakra',
+        titleDeva: 'सामा के फकड़ा',
+        artist: 'Maithili Geet Maala',
+        note: 'The teasing fakra verses — including the mocking of Chugla, the tale-bearer.',
+        youtubeId: 'HvkgodJ69M8',
+      },
+      {
+        title: 'Top 5 Sama Chakeva Geet',
+        titleDeva: 'सामा चकेवा गीत संग्रह',
+        artist: 'Babita Yadav, Mala Jha, Puja Jha & others',
+        note: 'A five-song collection covering the main moments of the festival.',
+        youtubeId: 'jy1wZ5H97Co',
       },
     ],
     related: ['chhath-puja', 'madhushravani', 'kojagara'],
@@ -295,28 +317,39 @@ export const FESTIVALS: Festival[] = [
     ],
     songs: [
       {
-        title: 'Janak Nandini',
-        titleDeva: 'जनक नंदिनी',
-        note: 'A song in praise of Janak’s daughter, sung through the day of the ceremonial marriage.',
-        searchQuery: 'Janak Nandini Sita Vivah Panchami Maithili geet',
+        title: 'Maithili Vivah Panchami Geet',
+        titleDeva: 'मैथिली विवाह पंचमी गीत',
+        artist: 'Maithili Ganga',
+        note: 'The marriage sequence sung as a Maithil wedding would be — mandap through vidai.',
+        youtubeId: 'zKfJTp-hkAc',
       },
       {
-        title: 'Sita Ram Vivah Geet',
-        titleDeva: 'सीता राम विवाह गीत',
-        note: 'The marriage sequence itself — mandap, pheras, sindoor — sung as a Maithil wedding would be.',
-        searchQuery: 'Sita Ram vivah geet Maithili Vivah Panchami',
+        title: 'Raja Janak Ji Ke Ek Beti Sita',
+        titleDeva: 'राजा जनक जी के एक बेटी सीता',
+        artist: 'Maithili Vivah Geet',
+        note: 'A samdaun geet from the bride’s side — Janak’s household giving away its daughter.',
+        youtubeId: '_Gdh84IZoVY',
       },
       {
-        title: 'Vidyapati Padavali',
-        titleDeva: 'विद्यापति पदावली',
-        note: 'Compositions of Vidyapati, Mithila’s medieval poet, sung on devotional occasions.',
-        searchQuery: 'Vidyapati Maithili padavali geet',
+        title: 'Ram Ji Se Puche Janpur Ke Nari',
+        titleDeva: 'राम जी स पूछे जनपुर के नारी',
+        artist: 'Maithili Vivah Geet',
+        note: 'The women of Janakpur questioning Ram — a much-loved narrative geet.',
+        youtubeId: 'AYgDvvjo-7w',
       },
       {
-        title: 'Sita Ke Bidai',
-        titleDeva: 'सीता के बिदाई',
-        note: 'The farewell as Sita leaves Mithila — the ancestor of every Maithil vidai song.',
-        searchQuery: 'Sita bidai geet Maithili vidai',
+        title: 'Ram Vivah Geet',
+        titleDeva: 'राम विवाह गीत',
+        artist: 'Maithili Geet Maala',
+        note: 'Traditional Ram–Sita marriage songs in the Mithilanchal style.',
+        youtubeId: 'BDVFNWJE-tc',
+      },
+      {
+        title: 'Top 5 Vivah Panchami Geet',
+        titleDeva: 'विवाह पंचमी स्पेशल गीत',
+        artist: 'Various Maithili artists',
+        note: 'A five-song set for the day of the ceremonial marriage.',
+        youtubeId: 'VZPUqfhmDFY',
       },
     ],
     related: ['madhushravani', 'durga-puja', 'chhath-puja'],
@@ -385,20 +418,37 @@ export const FESTIVALS: Festival[] = [
       {
         title: 'Jogira Sa Ra Ra Ra',
         titleDeva: 'जोगीरा सा रा रा रा',
-        note: 'The form itself — improvised couplets with a fixed communal response.',
-        searchQuery: 'Jogira sa ra ra ra Maithili Holi',
+        artist: 'Prakash Sharma',
+        note: 'The Jogira form itself — improvised couplets with the fixed communal response.',
+        youtubeId: 'H_YcK2KKDGw',
       },
       {
-        title: 'Phagua Geet',
-        titleDeva: 'फगुआ गीत',
-        note: 'Seasonal Phalgun songs sung by groups moving house to house.',
-        searchQuery: 'Phagua geet Maithili Holi folk',
+        title: 'Jogira Sa Ra Ra',
+        titleDeva: 'जोगीरा सा रा रा',
+        artist: 'Ajeet Pandey Vidrohi',
+        note: 'Another Jogira set, closer to the dugola style sung between competing groups.',
+        youtubeId: 'gUqraRub9aY',
       },
       {
-        title: 'Holi Khelay Raghuveera',
-        titleDeva: 'होली खेलय रघुबीरा',
-        note: 'A devotional Holi song picturing Ram playing colour in Awadh — widely sung in Mithila too.',
-        searchQuery: 'Holi khele Raghuveera folk',
+        title: 'Paramparik Maithili Holi Geet',
+        titleDeva: 'मैथिली पारंपरिक होली गीत',
+        artist: 'Sangeeta Jha',
+        note: 'A traditional Maithili Holi geet, lyrics by Dinesh Jha Madhav.',
+        youtubeId: 'EBuKJvaDcII',
+      },
+      {
+        title: 'Top 5 Maithili Holi Geet',
+        titleDeva: 'मैथिली होली गीत',
+        artist: 'Bhawna Mishra',
+        note: 'Five Phaguwa songs — the sort played through the morning as groups move house to house.',
+        youtubeId: 'gFOcREHUY0U',
+      },
+      {
+        title: 'Maithili Top 10 Holi Geet',
+        titleDeva: 'मैथिली स्पेशल होली गीत',
+        artist: 'Maithili Ganga',
+        note: 'A long Phaguwa playlist for the whole day.',
+        youtubeId: 'X-nP5EIw5WA',
       },
     ],
     related: ['durga-puja', 'diwali', 'madhushravani'],
@@ -471,22 +521,39 @@ export const FESTIVALS: Festival[] = [
     ],
     songs: [
       {
-        title: 'Maithili Devi Geet',
-        titleDeva: 'मैथिली देवी गीत',
-        note: 'The household repertoire in praise of the Goddess, sung through Navratri.',
-        searchQuery: 'Maithili Devi geet Navratri Durga',
+        title: 'Maithili Bhagwati Geet',
+        titleDeva: 'मैथिली भगवती गीत',
+        artist: 'Pt. Premnath Jha',
+        note: 'Classical Maithili Bhagwati geet — the household repertoire for the nine nights.',
+        youtubeId: '8q8bSnawTQE',
       },
       {
-        title: 'Jai Jai Bhairavi',
-        titleDeva: 'जय जय भैरवि',
-        note: 'A celebrated Vidyapati composition to the Goddess, widely sung in Mithila.',
-        searchQuery: 'Jai Jai Bhairavi Asur Bhayaavni Vidyapati',
+        title: 'Maliya Ke Betwa',
+        titleDeva: 'मलिया के बेटवा',
+        artist: 'Annu Chaudhary',
+        note: 'A much-sung Maithili Devi geet for Durga Puja.',
+        youtubeId: 'wIIXO-_g03k',
       },
       {
-        title: 'Durga Saptashati Paath',
-        titleDeva: 'दुर्गा सप्तशती',
-        note: 'The recitation itself — chanted daily through the nine nights.',
-        searchQuery: 'Durga Saptashati paath Navratri',
+        title: 'Suniyo He Durga',
+        titleDeva: 'सुनियो हे दुर्गा',
+        artist: 'Madhav Rai',
+        note: 'A direct appeal to the Goddess, in the older Maithili devotional style.',
+        youtubeId: 'z5aobwVIaHQ',
+      },
+      {
+        title: 'Nonstop Durga Puja Special',
+        titleDeva: 'नॉनस्टॉप दुर्गा पूजा गीत',
+        artist: 'Various Maithili artists',
+        note: 'A long jukebox — suits the continuous singing of Saptami to Navami.',
+        youtubeId: 'Rx_TLFLusGs',
+      },
+      {
+        title: 'Top 5 Navratri Devi Geet',
+        titleDeva: 'नवरात्रि देवी गीत',
+        artist: 'Various Maithili artists',
+        note: 'Five Bhagwati geet for the nine nights.',
+        youtubeId: 'jjZOLVLhttM',
       },
     ],
     related: ['kojagara', 'diwali', 'vivah-panchami'],
@@ -561,22 +628,25 @@ export const FESTIVALS: Festival[] = [
     ],
     songs: [
       {
-        title: 'Maithili Diwali Geet',
-        titleDeva: 'मैथिली दीपावली गीत',
-        note: 'Household songs sung while lamps are set out and aripan is drawn.',
-        searchQuery: 'Maithili Diwali geet folk song',
+        title: 'Aai Chai Diyabati',
+        titleDeva: 'आई छई दियाबाती',
+        artist: 'Rashmi',
+        note: 'A Maithili Diwali geet for the evening the lamps go out along every wall.',
+        youtubeId: 'WblPBZrPYkQ',
       },
       {
-        title: 'Kali Puja Geet',
-        titleDeva: 'काली पूजा गीत',
-        note: 'Songs to the Goddess sung through the Kartik Amavasya night.',
-        searchQuery: 'Maithili Kali puja geet Shyama sangeet',
+        title: 'Lakshmi Mata Bhajan',
+        titleDeva: 'लक्ष्मी माता भजन',
+        artist: 'Rambabu Jha',
+        note: 'Invocation of Lakshmi, sung at the dusk puja.',
+        youtubeId: 'MmmDGScP3DI',
       },
       {
-        title: 'Lakshmi Vandana',
-        titleDeva: 'लक्ष्मी वंदना',
-        note: 'Invocation sung at the dusk Lakshmi puja.',
-        searchQuery: 'Lakshmi vandana Diwali puja geet',
+        title: 'Diwali Chail Aleye',
+        titleDeva: 'दिवाली चैल अलिये',
+        artist: 'Sannu Kumar',
+        note: 'A contemporary Maithili Diwali song, widely played across the Mithila belt.',
+        youtubeId: 'LEetquV4COw',
       },
     ],
     related: ['kojagara', 'durga-puja', 'chhath-puja'],
@@ -651,22 +721,32 @@ export const FESTIVALS: Festival[] = [
     ],
     songs: [
       {
-        title: 'Madhushravani Geet',
-        titleDeva: 'मधुश्रावणी गीत',
-        note: 'The fortnight’s own repertoire, sung by the women between katha episodes.',
-        searchQuery: 'Madhushravani geet Maithili',
+        title: 'Saanjhak Geet',
+        titleDeva: 'साँझक गीत',
+        artist: 'Anupama Choudhary',
+        note: 'The evening geet of the Madhushravani fortnight — sung after the day’s katha.',
+        youtubeId: 'yQhXU2GzqGg',
       },
       {
-        title: 'Bihula Vishahari Gatha',
-        titleDeva: 'बिहुला विषहरी गाथा',
-        note: 'The Bihula and Vishahari epic, narrated and sung during the Naag puja days.',
-        searchQuery: 'Bihula Vishahari gatha Maithili folk',
+        title: 'Phool Lodhay Mein Lage Sohan',
+        titleDeva: 'फूल लोढ़य में लगे सोहन',
+        artist: 'Sangita & Priyanka',
+        note: 'Sung while the women gather flowers at first light for the day’s worship.',
+        youtubeId: 'mWYSmibn6UA',
       },
       {
-        title: 'Gauri Vandana',
-        titleDeva: 'गौरी वंदना',
-        note: 'Invocation of Gauri, sung at the daily worship.',
-        searchQuery: 'Gauri vandana Maithili geet Madhushravani',
+        title: 'Pabain Ke Geet',
+        titleDeva: 'पाबैन के गीत',
+        artist: 'Maithili Geet Maala',
+        note: 'Traditional pabain songs of the fortnight, in the Mithilanchal style.',
+        youtubeId: 'jFtJJrzJTtA',
+      },
+      {
+        title: 'Madhushravani Pabain Geet',
+        titleDeva: 'मधुश्रावणी पाबैन गीत',
+        artist: 'Maithili traditional',
+        note: 'A further set from the fortnight’s repertoire, including Vishahari geet.',
+        youtubeId: 'TJhNbGUc6rQ',
       },
     ],
     related: ['vivah-panchami', 'kojagara', 'sama-chakeva'],
@@ -732,22 +812,32 @@ export const FESTIVALS: Festival[] = [
     ],
     songs: [
       {
-        title: 'Kojagara Geet',
-        titleDeva: 'कोजागरा गीत',
-        note: 'Songs of the night, sung by the women as the bhar is received and the groom honoured.',
-        searchQuery: 'Kojagara geet Maithili',
+        title: 'Bantab Paan Makhaan',
+        titleDeva: 'बाँटब पान मखान',
+        artist: 'Shobha Bharti',
+        note: 'The song of the night — makhan and paan being distributed to everyone who comes.',
+        youtubeId: 'jqT-CjhkTkY',
       },
       {
-        title: 'Maithili Lakshmi Geet',
-        titleDeva: 'मैथिली लक्ष्मी गीत',
-        note: 'Invocations to Lakshmi sung during the Sharad Purnima vigil.',
-        searchQuery: 'Maithili Lakshmi geet Sharad Purnima',
+        title: 'Maithili Kojagra Geet',
+        titleDeva: 'मैथिली कोजगरा गीत',
+        artist: 'Dilip Darbhangiya & Rani Jha',
+        note: 'Traditional Kojagara songs sung as the bhar arrives and the groom is honoured.',
+        youtubeId: 'zPqi26AvW-s',
       },
       {
-        title: 'Maithili Vivah Geet',
-        titleDeva: 'मैथिली विवाह गीत',
-        note: 'Wedding songs return on the first Kojagara, since the night honours the new marriage.',
-        searchQuery: 'Maithili vivah geet folk wedding songs',
+        title: 'Sanjh–Kobar Geet',
+        titleDeva: 'साँझ संग कोबर गीत',
+        artist: 'Minu Jha',
+        note: 'Evening and Kohbar songs — the wedding repertoire returns on the first Kojagara.',
+        youtubeId: 'RuC59f1MRiw',
+      },
+      {
+        title: 'Purnima Ke Din',
+        titleDeva: 'पूर्णिमा के दिन',
+        artist: 'Dolly Singh, Mahi & Puja',
+        note: 'A song for the full-moon night itself.',
+        youtubeId: 'ah_NYHK0kUY',
       },
     ],
     related: ['durga-puja', 'diwali', 'madhushravani'],
@@ -778,10 +868,31 @@ export function getRelatedFestivals(festival: Festival): Festival[] {
     .filter((f): f is Festival => Boolean(f))
 }
 
-/** Safe outbound link for a song — a specific video if curated, else a search. */
-export function songLink(song: FestivalSong): string {
-  if (song.youtubeId) {
-    return `https://www.youtube.com/watch?v=${encodeURIComponent(song.youtubeId)}`
-  }
-  return `https://www.youtube.com/results?search_query=${encodeURIComponent(song.searchQuery)}`
+/** Festivals that have at least one playable recording. */
+export function festivalsWithSongs(): Festival[] {
+  return FESTIVALS.filter((f) => f.songs.length > 0)
+}
+
+/** Total number of playable recordings across all festivals. */
+export function totalSongCount(): number {
+  return FESTIVALS.reduce((n, f) => n + f.songs.length, 0)
+}
+
+/**
+ * Privacy-enhanced YouTube embed URL. Playback stays on Mithila Jodi.
+ * `autoplay` is only ever set in response to a user tapping a song.
+ */
+export function songEmbedUrl(youtubeId: string, autoplay = true): string {
+  const params = new URLSearchParams({
+    autoplay: autoplay ? '1' : '0',
+    rel: '0',
+    modestbranding: '1',
+    playsinline: '1',
+  })
+  return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(youtubeId)}?${params}`
+}
+
+/** Lightweight YouTube thumbnail — used as the poster before an embed loads. */
+export function songThumbnail(youtubeId: string): string {
+  return `https://i.ytimg.com/vi/${encodeURIComponent(youtubeId)}/mqdefault.jpg`
 }

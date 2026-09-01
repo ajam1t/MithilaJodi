@@ -38,12 +38,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Festival pages — derived from lib/festivals so new festivals are included
   // automatically. Static content, so no DB call is needed.
-  const festivalEntries: MetadataRoute.Sitemap = FESTIVALS.map((f) => ({
-    url: `${SITE}/festivals/${f.slug}`,
-    lastModified: now,
-    changeFrequency: 'monthly' as const,
-    priority: 0.7,
-  }))
+  const festivalEntries: MetadataRoute.Sitemap = [
+    ...FESTIVALS.map((f) => ({
+      url: `${SITE}/festivals/${f.slug}`,
+      lastModified: now,
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+    })),
+    // Festival Songs hub + one page per festival that has recordings.
+    {
+      url: `${SITE}/festival-songs`,
+      lastModified: now,
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    ...FESTIVALS.filter((f) => f.songs.length > 0).map((f) => ({
+      url: `${SITE}/festival-songs/${f.slug}`,
+      lastModified: now,
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+    })),
+  ]
 
   try {
     const supabase = await createAdminClient()
