@@ -122,6 +122,8 @@ export async function GET() {
     .select('*')
     .eq('account_id', account.id)
     .is('deleted_at', null)
+    .order('updated_at', { ascending: false })
+    .limit(1)
     .maybeSingle()
 
   const photos: unknown[] = []
@@ -231,6 +233,8 @@ export async function PUT(request: NextRequest) {
     .select('id, profile_status')
     .eq('account_id', account.id)
     .is('deleted_at', null)
+    .order('updated_at', { ascending: false })
+    .limit(1)
     .maybeSingle()
 
   if (existing) {

@@ -22,6 +22,19 @@ const NAV_LINKS: NavLink[] = [
   { href: '/help', label: 'Help' },
 ]
 
+/**
+ * Content pages a signed-in member must not lose access to. Previously the
+ * header swapped NAV_LINKS out entirely once logged in, which hid Festivals,
+ * Songs, the Invitation maker and Blogs from members.
+ */
+const MEMBER_CONTENT_LINKS: NavLink[] = [
+  { href: '/festivals', label: 'Festivals', mobileLabel: 'Mithila Festivals' },
+  { href: '/festival-songs', label: 'Songs', mobileLabel: 'Festival Songs' },
+  { href: '/marriage-invitation', label: 'Invitation', mobileLabel: 'Marriage Invitation Card' },
+  { href: '/blogs', label: 'Blogs' },
+  { href: '/help', label: 'Help' },
+]
+
 const AUTH_NAV_LINKS = [
   { href: '/search', label: 'Search' },
   { href: '/messages', label: 'Messages' },
@@ -165,6 +178,12 @@ export function MithilaHeader() {
                 </Link>
               ))}
               <div className="h-4 w-px bg-gold opacity-40" />
+              {MEMBER_CONTENT_LINKS.filter(l => l.href !== '/help').map(({ href, label }) => (
+                <Link key={label} href={href} className={deskLink(href)} aria-current={isActive(href) ? 'page' : undefined}>
+                  {label}
+                </Link>
+              ))}
+              <div className="h-4 w-px bg-gold opacity-40" />
               <button
                 onClick={handleLogout}
                 className="text-[13px] text-maroon hover:text-terra transition-colors tracking-wide font-medium whitespace-nowrap"
@@ -206,6 +225,11 @@ export function MithilaHeader() {
               <>
                 {AUTH_NAV_LINKS.map(({ href, label }) => (
                   <Link key={label} href={href} onClick={() => setOpen(false)} className={mobileLink(href)} aria-current={isActive(href) ? 'page' : undefined}>{label}</Link>
+                ))}
+                <div className="h-px bg-gold opacity-20" />
+                <p className="text-[10px] uppercase tracking-[0.2em] text-terra font-semibold">Explore</p>
+                {MEMBER_CONTENT_LINKS.map(({ href, label, mobileLabel }) => (
+                  <Link key={label} href={href} onClick={() => setOpen(false)} className={mobileLink(href)} aria-current={isActive(href) ? 'page' : undefined}>{mobileLabel ?? label}</Link>
                 ))}
                 <div className="h-px bg-gold opacity-20" />
                 <button

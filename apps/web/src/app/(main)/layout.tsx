@@ -61,6 +61,23 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             >
               My Profile
             </Link>
+
+            {/* Content pages — members reached the member area and previously
+                had no way back to Festivals / Songs / Invitation from here. */}
+            <span className="mx-1 h-4 w-px bg-paper-3" aria-hidden="true" />
+            {[
+              { href: '/festivals', label: 'Festivals' },
+              { href: '/festival-songs', label: 'Songs' },
+              { href: '/marriage-invitation', label: 'Invitation' },
+            ].map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className="px-3 py-1.5 text-sm font-medium text-ink-soft hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
+              >
+                {label}
+              </Link>
+            ))}
           </div>
         </div>
       </nav>

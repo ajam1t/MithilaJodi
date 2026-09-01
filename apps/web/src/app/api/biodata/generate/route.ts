@@ -66,6 +66,8 @@ export async function POST(request: NextRequest) {
     .eq('account_id', session.id)
     .neq('profile_status', 'deleted')
     .is('deleted_at', null)
+    .order('updated_at', { ascending: false })
+    .limit(1)
     .maybeSingle()
 
   if (!profile) {

@@ -21,6 +21,8 @@ async function getProfile(adminClient: Awaited<ReturnType<typeof createAdminClie
     .select('id')
     .eq('account_id', accountId)
     .is('deleted_at', null)
+    .order('updated_at', { ascending: false })
+    .limit(1)
     .maybeSingle()
   return data
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import { WhatsAppRequests } from '@/components/whatsapp/WhatsAppConnect'
 
 type InterestProfile = {
   interest_id: string
@@ -194,8 +195,11 @@ export default function InterestsContent() {
         <div className="max-w-2xl mx-auto space-y-5">
           <h1 className="font-serif text-3xl text-ink">Interests</h1>
 
+          {/* WhatsApp requests awaiting my approval */}
+          <WhatsAppRequests />
+
           {error && (
-            <div className="rounded-mj-sm bg-red-50 border border-red-200 px-4 py-3 text-red-700 text-sm">
+            <div className="rounded-mj-sm bg-error-soft border border-error/30 px-4 py-3 text-error-fg text-sm">
               {error}
             </div>
           )}

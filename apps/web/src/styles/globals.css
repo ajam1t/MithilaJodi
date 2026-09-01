@@ -304,6 +304,24 @@
   100% { background-position: -200% 0; }
 }
 
+/* ── Announcement ticker ───────────────────────────────────
+   Two identical rows scroll left by exactly half the track, so the loop is
+   seamless. Transform-only for GPU compositing. The global
+   prefers-reduced-motion rule above collapses the duration, which parks the
+   strip at its start position with the message readable. */
+@keyframes mjTicker {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+.mj-ticker {
+  width: max-content;
+  animation: mjTicker 34s linear infinite;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mj-ticker { animation: none; transform: none; }
+}
+
 /* ── Petal elements ────────────────────────────────────── */
 .petal {
   position: absolute;

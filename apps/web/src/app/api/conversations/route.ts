@@ -20,6 +20,8 @@ export async function GET() {
     .eq('account_id', session.id)
     .neq('profile_status', 'deleted')
     .is('deleted_at', null)
+    .order('updated_at', { ascending: false })
+    .limit(1)
     .maybeSingle()
 
   if (!myProfileRow) return NextResponse.json({ ok: false, message: 'Profile not found' }, { status: 404 })

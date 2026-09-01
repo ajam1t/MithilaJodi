@@ -139,7 +139,6 @@ export default function ProfilePage() {
   const [tab, setTab] = useState<Tab>('about')
   const [loading, setLoading] = useState(true)
   const [logoutLoading, setLogoutLoading] = useState(false)
-  const [cardMode, setCardMode] = useState<'own' | 'preview'>('own')
   const [locationNames, setLocationNames] = useState<{ native_place_name: string | null; current_loc_name: string | null }>({ native_place_name: null, current_loc_name: null })
   const [stickyVisible, setStickyVisible] = useState(false)
   const headerRef = useRef<HTMLDivElement | null>(null)
@@ -157,9 +156,10 @@ export default function ProfilePage() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/auth/me').then(r => r.json()),
-      fetch('/api/profile').then(r => r.json()),
-      fetch('/api/profile/preferences').then(r => r.json()),
+      fetch('/api/auth/me', { cache: 'no-store' }).then(r => r.json()),
+      // no-store: after editing, the profile must never come from browser cache
+      fetch('/api/profile', { cache: 'no-store' }).then(r => r.json()),
+      fetch('/api/profile/preferences', { cache: 'no-store' }).then(r => r.json()),
     ])
       .then(([authData, profileData, prefsData]) => {
         if (!authData.ok) { router.replace('/login'); return }
@@ -197,7 +197,6 @@ export default function ProfilePage() {
   const pct = profile?.profile_complete ?? 0
 
   const ownPhotoUrl = primaryPhoto?.signed_url ?? null
-  const previewPhotoUrl = photos.find(p => p.is_primary && p.status === 'approved')?.signed_url ?? null
 
   const cardProfile: SearchCard | null = profile ? {
     id: profile.id,
@@ -216,8 +215,8 @@ export default function ProfilePage() {
     profile_status: profile.profile_status ?? 'active',
     native_place_name: locationNames.native_place_name,
     current_loc_name: locationNames.current_loc_name,
-    has_photo: cardMode === 'preview' ? !!previewPhotoUrl : !!ownPhotoUrl,
-    primary_photo_url: cardMode === 'preview' ? previewPhotoUrl : ownPhotoUrl,
+    has_photo: !!ownPhotoUrl,
+    primary_photo_url: ownPhotoUrl,
     employer: profile.employer,
     profession_detail: profile.profession_detail,
     education_detail: profile.education_detail,
@@ -380,22 +379,7 @@ export default function ProfilePage() {
           <div className="max-w-2xl mx-auto px-4 py-5">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft mb-1">Your Profile Gallery</h3>
             <p className="mb-3 text-xs text-ink-soft">Five rotating views of the details families see first.</p>
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              <button type="button" onClick={() => setCardMode('own')}
-                className={`text-xs px-3 py-1.5 rounded-mj-sm transition-colors ${cardMode === 'own' ? 'bg-maroon text-cream' : 'text-ink-soft border border-ink/20 hover:text-ink'}`}>
-                View Your Profile
-              </button>
-              <button type="button" onClick={() => setCardMode('preview')}
-                className={`text-xs px-3 py-1.5 rounded-mj-sm transition-colors ${cardMode === 'preview' ? 'bg-maroon text-cream' : 'text-ink-soft border border-ink/20 hover:text-ink'}`}>
-                Preview as Other Members
-              </button>
-            </div>
             <ProfileCardGallery3D profile={cardProfile} />
-            {cardMode === 'preview' && (
-              <p className="text-xs text-ink-soft text-center mt-3">
-                This is how your card appears to other members.
-              </p>
-            )}
           </div>
         </div>
       )}

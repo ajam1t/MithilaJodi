@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useToast } from '@/components/ui'
+import { WhatsAppOptIn } from '@/components/whatsapp/WhatsAppConnect'
 
 type Consent = {
   type: string
@@ -207,6 +208,15 @@ export default function SettingsContent() {
             <Link href="/legal/privacy" target="_blank" className="text-maroon hover:underline">Privacy Policy</Link>.
           </p>
         </div>
+      </section>
+
+      {/* WhatsApp sharing */}
+      <section className="card p-6 mb-6">
+        <h2 className="font-serif text-lg text-ink mb-1">WhatsApp</h2>
+        <p className="text-sm text-ink-soft mb-4">
+          Control whether matched members may request your WhatsApp.
+        </p>
+        <WhatsAppOptIn />
       </section>
 
       {/* Change Password */}

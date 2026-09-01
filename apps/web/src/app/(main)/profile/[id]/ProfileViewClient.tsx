@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import ProfileCard3D from '@/components/ProfileCard3D'
+import ProfileCardGallery3D from '@/components/ProfileCardGallery3D'
+import { WhatsAppConnect } from '@/components/whatsapp/WhatsAppConnect'
 import type { SearchCard } from '@/types/profile'
 
 type ProfileData = {
@@ -249,7 +250,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
 
           {/* 3D Profile Card */}
           <div className="flex justify-center">
-            <ProfileCard3D profile={data.cardData} hideActions />
+            <ProfileCardGallery3D profile={data.cardData} />
           </div>
 
           {/* Profile header */}
@@ -302,6 +303,16 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
               )}
             </div>
           </div>
+
+          {/* WhatsApp — only after an interest between us has been accepted */}
+          <WhatsAppConnect
+            profileId={data.id}
+            profileName={data.display_name}
+            canRequest={
+              data.interestSent?.status === 'accepted' ||
+              data.interestReceived?.status === 'accepted'
+            }
+          />
 
           {/* About */}
           {data.about_me && (

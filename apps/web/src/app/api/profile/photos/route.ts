@@ -26,6 +26,8 @@ export async function GET() {
     .select('id')
     .eq('account_id', account.id)
     .is('deleted_at', null)
+    .order('updated_at', { ascending: false })
+    .limit(1)
     .maybeSingle()
 
   if (!profile) return NextResponse.json({ ok: true, photos: [] })
@@ -71,6 +73,8 @@ export async function POST(request: NextRequest) {
     .select('id')
     .eq('account_id', account.id)
     .is('deleted_at', null)
+    .order('updated_at', { ascending: false })
+    .limit(1)
     .maybeSingle()
 
   if (!profile) {

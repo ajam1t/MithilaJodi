@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
+import { AnnouncementTicker } from '@/components/home/AnnouncementTicker'
 import { MithilaBorder } from '@/components/home/MithilaBorder'
 import { HeroSection } from '@/components/home/HeroSection'
 import { FeaturedProfiles } from '@/components/home/FeaturedProfiles'
@@ -12,7 +13,6 @@ import { FinalCTA } from '@/components/home/FinalCTA'
 import { CulturalStatement } from '@/components/home/CulturalStatement'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
-import { IntroAnimation } from '@/components/IntroAnimation'
 import { SITE_URL } from '@/lib/constants'
 
 const SITE = SITE_URL
@@ -158,13 +158,13 @@ const jsonLd = {
 export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
-      <IntroAnimation />
       {/* eslint-disable-next-line react/no-danger */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <MithilaHeader />
+      <AnnouncementTicker />
       <main className="flex-1 pb-16 lg:pb-0">
         <HeroSection />
         <FeaturedProfiles />
