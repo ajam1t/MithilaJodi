@@ -2,27 +2,24 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { AnnouncementTicker } from '@/components/home/AnnouncementTicker'
-import { MithilaBorder } from '@/components/home/MithilaBorder'
+import { FestivalAnnouncementStrip } from '@/components/home/FestivalAnnouncementStrip'
 import { HeroSection } from '@/components/home/HeroSection'
 import { FeaturedProfiles } from '@/components/home/FeaturedProfiles'
 import { WhyMithilaJodi } from '@/components/home/FeatureStrip'
-import { FamilyRoots } from '@/components/home/SuccessStories'
 import { BiodataSection } from '@/components/home/BiodataSection'
 import { FestivalStrip } from '@/components/home/FestivalStrip'
 import { FinalCTA } from '@/components/home/FinalCTA'
+import { MithilaFooter } from '@/components/home/MithilaFooter'
+import { MobileBottomNav } from '@/components/home/MobileBottomNav'
+import { SITE_URL } from '@/lib/constants'
+
+const SITE = SITE_URL
 
 // FeaturedProfiles is server-rendered and its photo URLs are signed with a
 // 1 hour TTL. Without this the homepage would be statically generated once and
 // serve expired image URLs an hour later; 15 minutes keeps them comfortably
 // fresh while still serving cached HTML to almost every visitor.
 export const revalidate = 900
-
-import { CulturalStatement } from '@/components/home/CulturalStatement'
-import { MithilaFooter } from '@/components/home/MithilaFooter'
-import { MobileBottomNav } from '@/components/home/MobileBottomNav'
-import { SITE_URL } from '@/lib/constants'
-
-const SITE = SITE_URL
 
 export const metadata: Metadata = {
   title: 'Mithila Jodi — Mithila & Maithili Matrimonial | Bride & Groom Profiles',
@@ -170,22 +167,20 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <MithilaHeader />
       <AnnouncementTicker />
-      <main className="flex-1 pb-16 lg:pb-0">
+      <MithilaHeader />
+      <FestivalAnnouncementStrip />
+      <main className="flex-1">
         <HeroSection />
         <FeaturedProfiles />
-        <MithilaBorder variant="top" />
         <WhyMithilaJodi />
-        <FamilyRoots />
-        <MithilaBorder variant="bottom" />
         <BiodataSection />
         <FestivalStrip />
 
         {/* ── Frequently asked questions (SEO + genuine help) ── */}
-        <section id="faq" className="bg-cream py-12 sm:py-16" aria-label="Frequently asked questions">
+        <section id="faq" className="bg-cream py-9 sm:py-12" aria-label="Frequently asked questions">
           <div className="wrap max-w-3xl">
-            <div className="text-center mb-8">
+            <div className="text-center mb-6">
               <p className="eyebrow mb-1.5">Common Questions</p>
               <h2 className="section-heading">Mithila Marriage &amp; Gotra — FAQ</h2>
               <div className="ornament-line w-16 mx-auto mt-2" />
@@ -201,7 +196,7 @@ export default function HomePage() {
                 </details>
               ))}
             </div>
-            <p className="text-center text-sm text-ink-soft mt-8">
+            <p className="text-center text-sm text-ink-soft mt-6">
               Explore more in the{' '}
               <Link href="/blogs/gotra-family-lineage" className="text-maroon underline underline-offset-2">
                 Gotra &amp; Family Lineage
@@ -215,10 +210,10 @@ export default function HomePage() {
           </div>
         </section>
 
-        <CulturalStatement />
         <FinalCTA />
       </main>
-      <MithilaFooter />
+      {/* Bottom-nav clearance lives on the footer, not on <main> — see MithilaFooter. */}
+      <MithilaFooter className="pb-16 lg:pb-0" />
       <MobileBottomNav />
     </div>
   )

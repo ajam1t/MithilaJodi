@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 export function FinalCTA() {
   return (
-    <section className="relative bg-maroon overflow-hidden py-20" aria-label="Create your profile — call to action">
+    <section className="relative bg-maroon overflow-hidden py-11 sm:py-14" aria-label="Create your profile — call to action">
       {/* Madhubani lotus decoration */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
         <svg viewBox="0 0 1200 300" xmlns="http://www.w3.org/2000/svg" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
@@ -32,35 +32,32 @@ export function FinalCTA() {
       <div className="absolute top-0 left-0 right-0 h-[4px] bg-gradient-to-r from-maroon-deep via-gold-lt to-maroon-deep" aria-hidden="true" />
 
       <div className="wrap relative z-10 text-center max-w-3xl mx-auto">
-        {/* Devanagari tagline */}
-        <p className="font-deva text-3xl text-gold-lt mb-2" lang="hi">
-          मिथिला जोड़ी — जहाँ परम्परा मिले, प्रेम से
-        </p>
-        <p className="font-serif text-[15px] text-paper-3 italic mb-8">
-          Mithila Jodi — Where tradition meets love.
-        </p>
-
-        <h2 className="font-serif text-display-md text-paper leading-snug mb-6">
+        {/* The "जहाँ परम्परा मिले, प्रेम से / Where tradition meets love" tagline
+            pair deliberately does NOT repeat here. It already appears in the
+            brand header, in the hero, and again in the footer immediately below
+            this section — a fourth copy in between was pure repetition and added
+            height right where the page should be closing out. */}
+        <h2 className="font-serif text-paper leading-snug mb-4 text-[26px] sm:text-[34px] lg:text-[40px]">
           Begin Your Family&apos;s Next Chapter
         </h2>
 
-        <p className="text-paper-2 text-[17px] leading-relaxed mb-10 max-w-xl mx-auto">
+        <p className="text-paper-2 text-[15.5px] sm:text-[16px] leading-relaxed mb-7 max-w-xl mx-auto">
           Create a verified biodata, connect with Maithili families across India, and let
           Mithila Jodi support your family through every step of the journey — with respect,
           privacy, and deep cultural understanding.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/register" className="btn bg-gold-lt text-maroon-deep text-base px-10 py-4 font-semibold hover:-translate-y-0.5 hover:shadow-mj transition-all">
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link href="/register" className="btn bg-gold-lt text-maroon-deep text-base px-9 py-3.5 font-semibold hover:-translate-y-0.5 hover:shadow-mj transition-all">
             Create Your Biodata
           </Link>
-          <Link href="/login" className="btn bg-transparent border-2 border-gold-lt text-gold-lt text-base px-10 py-4 hover:bg-gold-lt hover:text-maroon-deep transition-all">
+          <Link href="/login" className="btn bg-transparent border-2 border-gold-lt text-gold-lt text-base px-9 py-3.5 hover:bg-gold-lt hover:text-maroon-deep transition-all">
             Sign In
           </Link>
         </div>
 
         {/* Legal micro-links */}
-        <p className="mt-8 text-[12px] text-paper-3 opacity-60">
+        <p className="mt-6 text-[12px] text-paper-3 opacity-60">
           By registering you agree to our{' '}
           <a href="/legal/terms" className="underline hover:text-gold-lt transition-colors">Terms of Service</a>
           {' '}and{' '}

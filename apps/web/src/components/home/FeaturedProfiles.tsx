@@ -34,7 +34,7 @@ export async function FeaturedProfiles() {
   if (profiles.length === 0) return null
 
   return (
-    <section className="pt-10 pb-8 sm:pt-14 sm:pb-10 bg-paper-2/40" aria-label="Featured profiles">
+    <section className="pt-9 pb-8 sm:pt-12 sm:pb-10 bg-paper-2/40" aria-label="Featured profiles">
       <div className="wrap">
         <SectionHeading
           eyebrow="From Our Community"

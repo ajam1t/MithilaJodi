@@ -5,7 +5,6 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { cn } from '@/lib/utils/cn'
-import { MithilaBorder } from '@/components/home/MithilaBorder'
 import { useAuthState, resetAuthState } from '@/lib/hooks/useAuthState'
 
 /** `mobileLabel` lets the hamburger show a fuller label than the tighter desktop row. */
@@ -120,7 +119,7 @@ export function MithilaHeader() {
       <div className="h-[3px] w-full bg-gradient-to-r from-cream via-gold to-cream" />
 
       {/* ── Mobile: centered brand ── */}
-      <div className="lg:hidden relative px-12 py-3">
+      <div className="lg:hidden relative px-12 py-2">
         <FloralEdge side="left" />
         <FloralEdge side="right" />
 
@@ -143,10 +142,10 @@ export function MithilaHeader() {
         </button>
 
         <Link href="/" className="flex flex-col items-center text-center" aria-label="Mithila Jodi — home">
-          <span className="font-serif font-bold text-[28px] sm:text-[34px] text-maroon leading-none tracking-tight">
+          <span className="font-serif font-bold text-[24px] sm:text-[28px] text-maroon leading-none tracking-tight">
             Mithila Jodi
           </span>
-          <span className="font-deva text-[11px] sm:text-[12px] text-maroon opacity-80 mt-1.5" lang="hi">
+          <span className="font-deva text-[11px] sm:text-[12px] text-maroon opacity-80 mt-1" lang="hi">
             जहाँ परम्परा मिले, प्रेम से
           </span>
           <span className="font-serif italic text-[10px] sm:text-[11px] text-ink-soft mt-0.5">
@@ -155,7 +154,7 @@ export function MithilaHeader() {
         </Link>
 
         {/* Thin gold divider */}
-        <div className="mx-auto mt-2 h-px w-24 bg-gradient-to-r from-transparent via-gold to-transparent" />
+        <div className="mx-auto mt-1.5 h-px w-24 bg-gradient-to-r from-transparent via-gold to-transparent" />
       </div>
 
       {/* ── Desktop: brand + nav row ── */}
@@ -254,8 +253,6 @@ export function MithilaHeader() {
         </div>
       )}
 
-      {/* Decorative Mithila border — part of the sticky header so it never scrolls away */}
-      <MithilaBorder variant="bottom" className="h-6 sm:h-9 overflow-hidden" />
     </header>
   )
 }

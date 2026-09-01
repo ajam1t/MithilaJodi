@@ -34,9 +34,16 @@ const GROUPS = [
   },
 ]
 
-export function MithilaFooter() {
+/**
+ * `className` exists so a page can move the fixed-bottom-nav clearance ONTO the
+ * footer. The usual pattern — `pb-16` on <main> — puts 64px of page-coloured
+ * padding between the last section and the footer on mobile, which reads as a
+ * blank band before the footer, while the footer's own last 64px still sits
+ * under the nav. Passing the padding here instead fixes both.
+ */
+export function MithilaFooter({ className = '' }: { className?: string }) {
   return (
-    <footer className="bg-maroon-deep" role="contentinfo">
+    <footer className={`bg-maroon-deep ${className}`} role="contentinfo">
       {/* Gold top border */}
       <div className="h-[3px] bg-gradient-to-r from-maroon-deep via-gold to-maroon-deep" aria-hidden="true" />
 

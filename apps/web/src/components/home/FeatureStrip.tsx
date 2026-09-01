@@ -168,7 +168,7 @@ export function WhyMithilaJodi() {
   const active = FEATURES.find(f => f.id === activeId) ?? null
 
   return (
-    <section id="how" className="relative bg-cream py-10 sm:py-14" aria-label="Why choose Mithila Jodi">
+    <section id="how" className="relative bg-cream py-9 sm:py-12" aria-label="Why choose Mithila Jodi">
       <div className="wrap">
         {/* Section header */}
         <div className="text-center mb-7 sm:mb-9">

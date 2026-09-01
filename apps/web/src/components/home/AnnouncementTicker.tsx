@@ -1,5 +1,7 @@
 /**
- * Compact animated announcement strip, shown directly under the header.
+ * Compact rotating announcement strip. Sits at the very TOP of the page, above
+ * the brand header — the header is sticky, so this scrolls away and the header
+ * then pins to the top of the viewport.
  *
  * Replaces the oversized top promotional area. Deliberately short (~34px),
  * mobile-first, and in Mithila Jodi maroon/gold. The marquee is pure CSS
@@ -10,10 +12,10 @@
  */
 
 const ITEMS = [
-  '🌸 Mithila Jodi is currently free for all members',
-  'Create your profile',
-  'Connect with Maithili families',
-  'Marriage biodata in four languages',
+  '🌸 Find your life partner',
+  '❤️ Connect with Maithili families',
+  '✨ Currently free for all members',
+  '📜 Create your Maithili biodata',
 ]
 
 function Row({ ariaHidden = false }: { ariaHidden?: boolean }) {
