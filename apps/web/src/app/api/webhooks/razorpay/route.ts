@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getPaymentGateway } from '@/lib/services/payment/gateway'
 import { createAdminClient } from '@/lib/supabase/server'
+import { isFreeAccessMode } from '@/lib/membership'
 
 /**
  * Idempotently mark a payment captured and activate its pending membership.
@@ -102,7 +103,20 @@ async function capturePaymentAndActivate(
 }
 
 // Razorpay sends raw body for signature verification — must read as text
+// ── Payments are currently DISABLED ──────────────────────────────────────────
+// Mithila Jodi is free for all members, so this endpoint is closed. The
+// implementation below is deliberately retained so paid memberships can be
+// restored by setting PAID_MEMBERSHIPS_ENABLED=true (see lib/membership.ts).
+function paymentsDisabledResponse() {
+  return NextResponse.json(
+    { ok: false, message: 'Mithila Jodi is currently free for all members. No payment is required.' },
+    { status: 410 }
+  )
+}
+
 export async function POST(request: NextRequest) {
+  if (isFreeAccessMode()) return paymentsDisabledResponse()
+
   const signature = request.headers.get('x-razorpay-signature') ?? ''
   const body = await request.text()
 

@@ -5,7 +5,7 @@ import { SESSION_COOKIE } from '@/lib/constants'
 // protected page/route via getSessionAccount(). Middleware only does a fast
 // cookie-presence check so the Edge runtime stays lightweight.
 
-const PROTECTED_PATHS = ['/profile', '/search', '/messages', '/biodata', '/membership', '/interests', '/shortlists', '/settings']
+const PROTECTED_PATHS = ['/profile', '/search', '/messages', '/biodata', '/interests', '/shortlists', '/settings']
 const ADMIN_PATHS = ['/admin']
 
 export function middleware(request: NextRequest) {

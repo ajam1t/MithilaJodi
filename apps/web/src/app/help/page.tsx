@@ -26,7 +26,7 @@ const FAQS = [
   },
   {
     q: 'Does it cost anything?',
-    a: 'Creating an account, building a profile, and generating a biodata PDF are free. Sending interests and messaging require a paid membership: Mithila Member (₹151/year, 151 interests) or Mithila Premium (₹499/year, unlimited interests). You can receive and accept interests on a Free account.',
+    a: 'No. Mithila Jodi is currently free for all members. Creating an account, building a profile, generating a biodata PDF, searching, sending and accepting interests, and messaging your matches are all included at no cost.',
   },
   {
     q: 'Is Mithila Jodi available outside India?',

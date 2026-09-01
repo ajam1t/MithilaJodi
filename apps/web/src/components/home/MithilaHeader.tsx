@@ -17,7 +17,6 @@ const NAV_LINKS: NavLink[] = [
   { href: '/festival-songs', label: 'Songs', mobileLabel: 'Festival Songs' },
   { href: '/marriage-invitation', label: 'Invitation', mobileLabel: 'Marriage Invitation Card' },
   { href: '/blogs', label: 'Blogs' },
-  { href: '/pricing', label: 'Pricing' },
   { href: '/safety', label: 'Safety' },
   { href: '/contact', label: 'Contact' },
   { href: '/help', label: 'Help' },

@@ -8,7 +8,7 @@ const REASONS = [
   'Verification',
   'Privacy Concern',
   'Report a Profile',
-  'Premium / Payment',
+  'Account & Access',
   'Technical Issue',
   'Partnership',
   'Feedback',

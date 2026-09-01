@@ -6,8 +6,22 @@ import { getActiveMembership, getActivePlan } from '@/lib/membership'
 import type { PlanConfig } from '@/lib/membership'
 import { getPaymentGateway } from '@/lib/services/payment/gateway'
 import { createAdminClient } from '@/lib/supabase/server'
+import { isFreeAccessMode } from '@/lib/membership'
+
+// ── Payments are currently DISABLED ──────────────────────────────────────────
+// Mithila Jodi is free for all members, so this endpoint is closed. The
+// implementation below is deliberately retained so paid memberships can be
+// restored by setting PAID_MEMBERSHIPS_ENABLED=true (see lib/membership.ts).
+function paymentsDisabledResponse() {
+  return NextResponse.json(
+    { ok: false, message: 'Mithila Jodi is currently free for all members. No payment is required.' },
+    { status: 410 }
+  )
+}
 
 export async function POST(request: NextRequest) {
+  if (isFreeAccessMode()) return paymentsDisabledResponse()
+
   const session = await getSessionAccount()
   if (!session) return NextResponse.json({ ok: false, message: 'Unauthorized' }, { status: 401 })
 

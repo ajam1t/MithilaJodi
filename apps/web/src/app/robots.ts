@@ -24,7 +24,6 @@ export default function robots(): MetadataRoute.Robots {
           '/messages',
           '/interests',
           '/shortlists',
-          '/membership',
           '/biodata',        // auth-gated tool + /biodata/preview/[id]
           '/legal/consent',
         ],

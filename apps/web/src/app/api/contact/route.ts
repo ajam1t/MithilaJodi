@@ -7,7 +7,7 @@ const ALLOWED_REASONS = new Set([
   'Verification',
   'Privacy Concern',
   'Report a Profile',
-  'Premium / Payment',
+  'Account & Access',
   'Technical Issue',
   'Partnership',
   'Feedback',

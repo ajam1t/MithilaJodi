@@ -220,7 +220,7 @@ export async function PUT(request: NextRequest) {
   const profileCompletion = computeCompletion(data)
 
   // Free-access/testing mode: profiles are self-serve — they go live immediately
-  // and are discoverable by default. When FREE_ACCESS_MODE=false, the normal
+  // and are discoverable by default. With PAID_MEMBERSHIPS_ENABLED=true, the normal
   // draft → admin-moderation model applies (profile_status stays 'draft' on
   // create and is promoted to 'active' only by an admin).
   const freeMode = isFreeAccessMode()

@@ -102,13 +102,21 @@ export function isMembershipCurrentlyLive(m: ActiveMembership): boolean {
 }
 
 /**
- * Free-access testing mode. When FREE_ACCESS_MODE=true, membership/payment gates
- * are bypassed so every feature is free (registration, interests, messaging,
- * biodata, etc.). Set FREE_ACCESS_MODE=false (or remove it) to re-enable the
- * Razorpay membership gates without any code changes.
+ * Mithila Jodi is currently FREE for all members.
+ *
+ * Every registered member gets full access to all member features — interests,
+ * messaging, search and biodata. No payment or subscription is required, and
+ * this does not depend on any environment variable being set.
+ *
+ * The membership/payment machinery below (plans, Razorpay gateway, webhook,
+ * interest limits) is intentionally retained so paid memberships can be brought
+ * back later. To re-enable paid gating:
+ *   1. set PAID_MEMBERSHIPS_ENABLED=true, and
+ *   2. restore the pricing / membership UI routes (see git history for
+ *      app/pricing, app/(main)/membership and app/(main)/profile/CurrentPlanCard).
  */
 export function isFreeAccessMode(): boolean {
-  return process.env.FREE_ACCESS_MODE === 'true'
+  return process.env.PAID_MEMBERSHIPS_ENABLED !== 'true'
 }
 
 /**

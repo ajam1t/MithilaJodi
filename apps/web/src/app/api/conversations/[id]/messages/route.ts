@@ -12,7 +12,7 @@ export async function POST(
   const session = await getSessionAccount()
   if (!session) return NextResponse.json({ ok: false, message: 'Unauthorized' }, { status: 401 })
 
-  // Step 2: feature access gate (bypassed when FREE_ACCESS_MODE=true)
+  // Step 2: feature access gate (open to all members while the platform is free)
   if (!(await hasFeatureAccess(session.id))) {
     return NextResponse.json(
       { ok: false, message: 'An active membership is required to send messages' },

@@ -77,15 +77,12 @@ export default function TermsPage() {
       </section>
 
       <section className="mb-8">
-        <h2 className="font-serif text-xl text-ink mb-3">6. Membership and Payments</h2>
+        <h2 className="font-serif text-xl text-ink mb-3">6. Membership</h2>
         <p className="text-ink-soft text-sm leading-relaxed mb-3">
-          Certain features of the Platform require a paid membership. Membership prices and durations are set by us and may change with prior notice. All payments are processed through authorised payment gateways and are subject to the payment processor&rsquo;s terms.
-        </p>
-        <p className="text-ink-soft text-sm leading-relaxed mb-3">
-          Your account and profile data will not be deleted solely because your membership expires. Profile visibility may be reduced for expired memberships.
+          Mithila Jodi is currently free for all members. Registration, profile creation, marriage biodata generation, profile search, interests and messaging are provided at no charge, and we do not collect any payment from members.
         </p>
         <p className="text-ink-soft text-sm leading-relaxed">
-          Refund requests are handled on a case-by-case basis in accordance with applicable Indian consumer protection law.
+          Your account and profile data are retained in accordance with our Privacy Policy and are not deleted merely because you stop using the Platform.
         </p>
       </section>
 

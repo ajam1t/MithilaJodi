@@ -82,8 +82,8 @@ export default function PrivacyPage() {
           <div>
             <p className="text-sm font-medium text-ink mb-1">Payment Data</p>
             <ul className="list-disc list-inside space-y-1 text-ink-soft text-sm">
-              <li>Membership plan, payment status, transaction reference</li>
-              <li>Full payment card or bank details are NOT stored — handled exclusively by our authorised payment gateway</li>
+              <li>Mithila Jodi is currently free for all members, so we do not collect payment information</li>
+              <li>We have never stored full payment card or bank details, and do not do so</li>
             </ul>
           </div>
         </div>
@@ -96,7 +96,6 @@ export default function PrivacyPage() {
           <li>To display your profile to other members for matrimonial matching</li>
           <li>To enable messaging between mutually interested members</li>
           <li>To generate biodata documents for your personal use</li>
-          <li>To process membership payments and manage subscription status</li>
           <li>To moderate profile content and maintain platform safety</li>
           <li>To detect and prevent fraud, abuse, and violations of our Terms of Service</li>
           <li>To respond to your queries and grievances</li>

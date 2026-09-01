@@ -207,7 +207,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           ok: false,
-          message: `You have used all ${allowance.limit} interests for this membership year. Upgrade to Mithila Premium for unlimited interests.`,
+          message: `You have used all ${allowance.limit} interests for this membership year.`,
           code: 'INTEREST_LIMIT_REACHED',
           remaining: 0,
         },
