@@ -117,7 +117,7 @@ export default async function FestivalPage(
       {/* eslint-disable-next-line react/no-danger */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <main className="flex-1 pb-16 lg:pb-0">
+      <main className="flex-1">
         {/* ── Hero ─────────────────────────────────────────── */}
         <section className="relative">
           <FestivalHeroArt festival={festival} className="h-[190px] sm:h-[300px] lg:h-[360px]" priority />
@@ -335,7 +335,7 @@ export default async function FestivalPage(
         </section>
       </main>
 
-      <MithilaFooter />
+      <MithilaFooter className="pb-16 lg:pb-0" />
       <MobileBottomNav />
     </div>
   )

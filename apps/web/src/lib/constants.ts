@@ -29,3 +29,18 @@ export const INDIA_MOBILE_RE = /^[6-9]\d{9}$/
 export function toE164(digits: string): string {
   return `+91${digits}`
 }
+
+/**
+ * Strip a trailing "Mithila Jodi" brand suffix from a page title.
+ *
+ * The root layout applies `template: '%s | Mithila Jodi'`, so any title that
+ * already carries the brand renders it twice — e.g. "Browse Profiles — Discover
+ * Mithila Matches | Mithila Jodi | Mithila Jodi". Editor-supplied blog
+ * seo_titles are especially prone to this, so normalise here rather than
+ * trusting every caller.
+ */
+export function stripBrandSuffix(title: string): string {
+  return title
+    .replace(/\s*[|–—-]\s*Mithila Jodi(\s+Blog)?\s*$/i, '')
+    .trim()
+}

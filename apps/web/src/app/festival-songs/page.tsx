@@ -72,7 +72,7 @@ export default function FestivalSongsHubPage() {
       {/* eslint-disable-next-line react/no-danger */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <main className="flex-1 pb-16 lg:pb-0">
+      <main className="flex-1">
         {/* ── Hero ── */}
         <section className="relative overflow-hidden bg-maroon-deep">
           <div className="gold-strip absolute top-0 inset-x-0" aria-hidden="true" />
@@ -157,7 +157,7 @@ export default function FestivalSongsHubPage() {
         </section>
       </main>
 
-      <MithilaFooter />
+      <MithilaFooter className="pb-16 lg:pb-0" />
       <MobileBottomNav />
     </div>
   )

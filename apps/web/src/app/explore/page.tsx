@@ -14,7 +14,8 @@ const SITE = SITE_URL
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Browse Profiles — Discover Mithila Matches | Mithila Jodi',
+  // The root layout appends '| Mithila Jodi'; do not repeat it here.
+  title: 'Browse Profiles — Discover Mithila Matches',
   description:
     'Browse featured Maithili matrimonial profiles on Mithila Jodi. Create a free account to send interests and connect with matches rooted in Mithila heritage.',
   alternates: { canonical: `${SITE}/explore` },
@@ -32,7 +33,7 @@ export default async function ExplorePage() {
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
       <MithilaHeader />
-      <main className="flex-1 pb-16 lg:pb-0">
+      <main className="flex-1">
         <section className="wrap py-8 sm:py-12">
           <header className="text-center mb-8">
             <h1 className="font-serif text-2xl sm:text-3xl text-maroon">Browse Profiles</h1>
@@ -44,7 +45,7 @@ export default async function ExplorePage() {
           <ExploreGrid initialProfiles={initialProfiles} initialError={loadError} />
         </section>
       </main>
-      <MithilaFooter />
+      <MithilaFooter className="pb-16 lg:pb-0" />
       <MobileBottomNav />
     </div>
   )

@@ -7,7 +7,7 @@ import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { createAdminClient } from '@/lib/supabase/server'
-import { SITE_URL } from '@/lib/constants'
+import { SITE_URL, stripBrandSuffix } from '@/lib/constants'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,7 +47,7 @@ export async function generateMetadata(
   const p = data as any
   const catSlug = p.blog_categories?.slug ?? categorySlug
   const canonical = `${BASE}/blogs/${catSlug}/${p.slug}`
-  const title = p.seo_title ?? p.title
+  const title = stripBrandSuffix(p.seo_title ?? p.title)
   const description = p.seo_description ?? p.excerpt ?? ''
   const keywords = Array.isArray(p.keywords) ? p.keywords : []
 
@@ -177,7 +177,7 @@ export default async function ArticlePage(
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
-      <main className="flex-1 pb-16 lg:pb-0">
+      <main className="flex-1">
         {/* ── Breadcrumb ─────────────────────────────────────── */}
         <nav className="wrap pt-6" aria-label="Breadcrumb">
           <ol className="flex flex-wrap items-center gap-1.5 text-[13px] text-ink-soft">
@@ -310,7 +310,7 @@ export default async function ArticlePage(
         </section>
       </main>
 
-      <MithilaFooter />
+      <MithilaFooter className="pb-16 lg:pb-0" />
       <MobileBottomNav />
     </div>
   )

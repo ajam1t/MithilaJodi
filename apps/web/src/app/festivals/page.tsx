@@ -80,7 +80,7 @@ export default function FestivalsIndexPage() {
       {/* eslint-disable-next-line react/no-danger */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <main className="flex-1 pb-16 lg:pb-0">
+      <main className="flex-1">
         {/* ── Hero ─────────────────────────────────────────── */}
         <section className="relative overflow-hidden bg-maroon-deep">
           <div className="absolute inset-0 opacity-[0.16]" aria-hidden="true">
@@ -171,7 +171,7 @@ export default function FestivalsIndexPage() {
         </section>
       </main>
 
-      <MithilaFooter />
+      <MithilaFooter className="pb-16 lg:pb-0" />
       <MobileBottomNav />
     </div>
   )

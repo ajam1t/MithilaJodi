@@ -76,7 +76,7 @@ export default async function BlogIndexPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
-      <main className="flex-1 pb-16 lg:pb-0">
+      <main className="flex-1">
         {/* ── Hero header ──────────────────────────────────────── */}
         <section className="wrap pt-14 pb-8 text-center">
           <p className="eyebrow mb-3">Mithila Jodi Journal</p>
@@ -127,7 +127,7 @@ export default async function BlogIndexPage() {
         </section>
       </main>
 
-      <MithilaFooter />
+      <MithilaFooter className="pb-16 lg:pb-0" />
       <MobileBottomNav />
     </div>
   )
