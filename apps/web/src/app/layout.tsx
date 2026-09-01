@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import { Marcellus, Mukta, Kalam } from 'next/font/google'
 import { SITE_URL } from '@/lib/constants'
 import { ToastProvider } from '@/components/ui'
+import { MusicPlayerProvider } from '@/components/music/MusicPlayerContext'
+import { PersistentPlayer } from '@/components/music/PersistentPlayer'
 import '@/styles/globals.css'
 
 const marcellus = Marcellus({
@@ -96,7 +98,14 @@ export default function RootLayout({
       className={`${marcellus.variable} ${mukta.variable} ${kalam.variable}`}
     >
       <body>
-        <ToastProvider>{children}</ToastProvider>
+        <ToastProvider>
+          {/* Global music state + the persistent player live above the page
+              tree, so playback survives client-side navigation. */}
+          <MusicPlayerProvider>
+            {children}
+            <PersistentPlayer />
+          </MusicPlayerProvider>
+        </ToastProvider>
       </body>
     </html>
   )

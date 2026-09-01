@@ -144,7 +144,7 @@ export default async function FestivalSongsPage(
             Tap a song to play it here — you will not be taken to another site.
           </p>
 
-          <SongsPlayer songs={festival.songs} festivalName={short} />
+          <SongsPlayer songs={festival.songs} festivalName={short} festivalSlug={festival.slug} />
 
           <p className="text-[12px] text-ink-soft/80 leading-relaxed mt-6">
             Recordings play through an embedded player from the publishing channel. Mithila Jodi

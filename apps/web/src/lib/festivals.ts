@@ -878,21 +878,7 @@ export function totalSongCount(): number {
   return FESTIVALS.reduce((n, f) => n + f.songs.length, 0)
 }
 
-/**
- * Privacy-enhanced YouTube embed URL. Playback stays on Mithila Jodi.
- * `autoplay` is only ever set in response to a user tapping a song.
- */
-export function songEmbedUrl(youtubeId: string, autoplay = true): string {
-  const params = new URLSearchParams({
-    autoplay: autoplay ? '1' : '0',
-    rel: '0',
-    modestbranding: '1',
-    playsinline: '1',
-  })
-  return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(youtubeId)}?${params}`
-}
-
-/** Lightweight YouTube thumbnail — used as the poster before an embed loads. */
-export function songThumbnail(youtubeId: string): string {
-  return `https://i.ytimg.com/vi/${encodeURIComponent(youtubeId)}/mqdefault.jpg`
-}
+// NOTE: the embed URL is built inside components/music/PersistentPlayer.tsx,
+// because it needs `enablejsapi=1` (so the YouTube IFrame Player API can be
+// attached) plus the runtime `origin`. youtubeId is metadata only and is never
+// used as a navigation target.
