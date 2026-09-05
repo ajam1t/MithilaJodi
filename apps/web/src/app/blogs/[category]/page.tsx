@@ -126,7 +126,7 @@ export default async function CategoryPage(
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         {/* ── Breadcrumb ────────────────────────────────────── */}
         <nav className="wrap pt-6 pb-0" aria-label="Breadcrumb">
           <ol className="flex flex-wrap items-center gap-1.5 text-[13px] text-ink-soft">

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Marcellus, Mukta, Kalam } from 'next/font/google'
+import { Marcellus, Mukta, Kalam, Rozha_One } from 'next/font/google'
 import { SITE_URL } from '@/lib/constants'
 import { ToastProvider } from '@/components/ui'
 import { MusicPlayerProvider } from '@/components/music/MusicPlayerContext'
@@ -17,6 +17,24 @@ const mukta = Mukta({
   weight: ['400', '500', '600', '700'],
   subsets: ['latin', 'devanagari'],
   variable: '--font-mukta',
+  display: 'swap',
+})
+
+/**
+ * Rozha One — the Devanagari display face behind `.font-deva` and `font-display`.
+ *
+ * It was declared in tailwind.config.ts and in globals.css but never actually
+ * loaded, so every Devanagari line on the site — including the brand tagline
+ * "जहाँ परम्परा मिले, प्रेम से" in the header, hero and footer — was silently
+ * falling back to a generic serif. Loading it here is what makes those
+ * declarations real. It is above the fold, so it IS preloaded.
+ *
+ * Rozha One ships a single weight (400) and covers latin + devanagari.
+ */
+const rozhaOne = Rozha_One({
+  weight: '400',
+  subsets: ['latin', 'devanagari'],
+  variable: '--font-rozha',
   display: 'swap',
 })
 
@@ -95,9 +113,13 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${marcellus.variable} ${mukta.variable} ${kalam.variable}`}
+      className={`${marcellus.variable} ${mukta.variable} ${rozhaOne.variable} ${kalam.variable}`}
     >
       <body>
+        {/* First focusable element on every page, so a keyboard user can
+            bypass the header navigation. Targets the #main-content id that
+            each page puts on its <main id="main-content">. */}
+        <a href="#main-content" className="mj-skip-link">Skip to main content</a>
         <ToastProvider>
           {/* Global music state + the persistent player live above the page
               tree, so playback survives client-side navigation. */}

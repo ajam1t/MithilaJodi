@@ -124,7 +124,7 @@ export default function MarriageInvitationPage() {
       {/* eslint-disable-next-line react/no-danger */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         {/* ── Hero (server-rendered, indexable) ── */}
         <section className="relative overflow-hidden bg-maroon-deep">
           <div className="gold-strip absolute top-0 inset-x-0" aria-hidden="true" />

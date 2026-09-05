@@ -38,7 +38,7 @@ export default function HelpPage() {
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
       <MithilaHeader />
-      <main className="flex-1 wrap py-14 max-w-3xl">
+      <main id="main-content" className="flex-1 wrap py-14 max-w-3xl">
         <div className="text-center mb-10">
           <p className="eyebrow mb-3">Help &amp; Support</p>
           <h1 className="section-heading">How can we help?</h1>

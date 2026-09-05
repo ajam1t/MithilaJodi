@@ -707,7 +707,7 @@ export default function ProfileEditPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-paper flex items-center justify-center">
+      <main id="main-content" className="min-h-screen bg-paper flex items-center justify-center">
         <p className="text-ink-soft">Loading profile…</p>
       </main>
     )

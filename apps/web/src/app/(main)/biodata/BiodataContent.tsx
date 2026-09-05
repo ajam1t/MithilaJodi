@@ -158,7 +158,7 @@ export default function BiodataContent() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-paper">
+      <main id="main-content" className="min-h-screen bg-paper">
         <div className="wrap py-10">
           <div className="max-w-2xl mx-auto animate-pulse space-y-4">
             <div className="h-8 bg-paper-3 rounded w-1/3" />

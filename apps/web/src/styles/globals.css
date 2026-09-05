@@ -19,7 +19,7 @@
     --maroon: #7A1220;
     --maroon-2: #9B2233;
     --maroon-deep: #5A0E19;
-    --terra: #C4562F;
+    --terra: #B34A24; /* AA-safe for normal text on cream/paper — see tailwind.config.ts */
     --marigold: #E8912A;
     --turmeric: #D6A83C;
     --gold: #B98A2E;
@@ -409,4 +409,47 @@
 @media (prefers-reduced-motion: reduce) {
   /* Remove the sweep entirely; the underlying gold gradient stays. */
   .mj-line::after { display: none; }
+}
+
+/* ── Keyboard focus ────────────────────────────────────────────────────────
+   Tailwind's preflight removes the browser's default focus outline and nothing
+   replaced it, so 38 of the first 40 interactive elements on the homepage had
+   no visible focus indicator at all — the site was effectively unusable by
+   keyboard. One rule restores it everywhere.
+
+   :focus-visible rather than :focus, so a mouse click does not leave a ring
+   behind; keyboard and assistive-tech users still get one. Gold reads clearly
+   on both the cream/paper grounds and the maroon surfaces. */
+:focus-visible {
+  outline: 2px solid #B98A2E;
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+/* On maroon/dark surfaces the darker gold can disappear — use the light gold. */
+.bg-maroon :focus-visible,
+.bg-maroon-deep :focus-visible,
+footer :focus-visible {
+  outline-color: #E4C572;
+}
+
+/* ── Skip link ─────────────────────────────────────────────────────────────
+   Off-screen until focused, so keyboard users can jump past a header that
+   carries ten-plus navigation links. */
+.mj-skip-link {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, -120%);
+  z-index: 100;
+  padding: 10px 18px;
+  background: #7A1220;
+  color: #FFFAF0;
+  font-size: 14px;
+  font-weight: 600;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  transition: transform 160ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.mj-skip-link:focus {
+  transform: translate(-50%, 0);
 }

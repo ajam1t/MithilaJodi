@@ -192,7 +192,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
   const communityLine = [data.caste, data.self_gotra, data.mool, data.gram].filter(Boolean).join(' · ')
 
   return (
-    <main className="min-h-screen bg-paper">
+    <main id="main-content" className="min-h-screen bg-paper">
 
       {/* ── Compact sticky identity bar (appears when main header scrolls out) ── */}
       <div

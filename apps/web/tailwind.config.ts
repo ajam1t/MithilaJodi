@@ -40,7 +40,10 @@ const config: Config = {
           2: '#9B2233',
           deep: '#5A0E19',
         },
-        terra: '#C4562F',
+        // Darkened from #C4562F to clear WCAG AA for normal-size text on the
+        // cream/paper grounds — terra is used for .eyebrow and body copy in ~60
+        // places and failed 4.5:1 at the old value.
+        terra: '#B34A24',
         marigold: '#E8912A',
         turmeric: '#D6A83C',
         gold: {

@@ -103,7 +103,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="min-h-screen bg-paper lg:grid lg:grid-cols-[1.05fr_1fr] xl:grid-cols-2">
       <BrandPanel />
-      <main className="flex flex-col items-center justify-center px-4 py-8 sm:py-12">
+      <main id="main-content" className="flex flex-col items-center justify-center px-4 py-8 sm:py-12">
         {children}
       </main>
     </div>

@@ -33,7 +33,7 @@ export default async function ExplorePage() {
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
       <MithilaHeader />
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <section className="wrap py-8 sm:py-12">
           <header className="text-center mb-8">
             <h1 className="font-serif text-2xl sm:text-3xl text-maroon">Browse Profiles</h1>

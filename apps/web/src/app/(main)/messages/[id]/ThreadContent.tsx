@@ -144,7 +144,7 @@ export default function ThreadContent() {
 
   if (error) {
     return (
-      <main className="min-h-screen bg-paper">
+      <main id="main-content" className="min-h-screen bg-paper">
         <div className="wrap py-16 text-center">
           <p className="text-ink-soft text-sm">{error}</p>
           <Link href="/messages" className="text-maroon underline text-sm mt-3 inline-block">

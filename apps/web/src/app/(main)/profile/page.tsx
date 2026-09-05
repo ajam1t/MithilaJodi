@@ -181,7 +181,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-paper flex flex-col items-center justify-center gap-3 text-ink-soft">
+      <main id="main-content" className="min-h-screen bg-paper flex flex-col items-center justify-center gap-3 text-ink-soft">
         <Spinner className="w-8 h-8 text-maroon" />
         <p className="text-sm">Loading your profile…</p>
       </main>

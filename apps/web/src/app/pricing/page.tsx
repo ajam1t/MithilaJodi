@@ -52,7 +52,7 @@ export default function PricingPage() {
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
       <MithilaHeader />
 
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <section className="wrap max-w-3xl py-10 sm:py-14">
           <div className="text-center">
             <p className="eyebrow mb-2">Pricing</p>

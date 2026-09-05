@@ -144,7 +144,7 @@ export default function ContactPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <MithilaHeader />
 
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
 
         {/* ── Hero ────────────────────────────────────────────── */}
         <section className="bg-cream py-14 sm:py-20">

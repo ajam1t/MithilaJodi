@@ -190,7 +190,7 @@ export default function InterestsContent() {
   const items: InterestProfile[] = data?.[tab] ?? []
 
   return (
-    <main className="min-h-screen bg-paper">
+    <main id="main-content" className="min-h-screen bg-paper">
       <div className="wrap py-8">
         <div className="max-w-2xl mx-auto space-y-5">
           <h1 className="font-serif text-3xl text-ink">Interests</h1>

@@ -291,7 +291,7 @@ export default function SearchPageContent() {
   }
 
   return (
-    <main className="min-h-screen bg-paper">
+    <main id="main-content" className="min-h-screen bg-paper">
       {/* Search bar */}
       <div className="bg-cream border-b border-paper-3">
         <div className="wrap py-4">

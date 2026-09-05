@@ -3,7 +3,7 @@ import SearchPageContent from './SearchPageContent'
 
 function SearchFallback() {
   return (
-    <main className="min-h-screen bg-paper">
+    <main id="main-content" className="min-h-screen bg-paper">
       <div className="bg-cream border-b border-paper-3">
         <div className="wrap py-4">
           <div className="flex gap-2">

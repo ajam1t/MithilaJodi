@@ -10,7 +10,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
           </Link>
         </div>
       </nav>
-      <main className="wrap py-10 max-w-3xl">
+      <main id="main-content" className="wrap py-10 max-w-3xl">
         {children}
       </main>
 

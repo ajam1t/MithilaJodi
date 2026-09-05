@@ -228,7 +228,7 @@ export default async function ProfileViewPage({
 
   if (!data) {
     return (
-      <main className="min-h-screen bg-paper">
+      <main id="main-content" className="min-h-screen bg-paper">
         <div className="wrap py-16 text-center">
           <p className="font-serif text-2xl text-ink mb-2">Profile not found</p>
           <p className="text-ink-soft text-sm">

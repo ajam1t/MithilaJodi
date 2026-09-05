@@ -169,7 +169,7 @@ export default function HomePage() {
       <AnnouncementTicker />
       <MithilaHeader />
       <FestivalAnnouncementStrip />
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <HeroSection />
         <FeaturedProfiles />
         <WhyMithilaJodi />
