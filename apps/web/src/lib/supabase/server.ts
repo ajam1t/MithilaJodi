@@ -33,7 +33,14 @@ export async function createClient() {
 /**
  * Service-role client for server-only admin operations.
  * Bypasses RLS — NEVER import in client-side code.
- * Typed as `any` to avoid Supabase generic inference issues with custom schemas.
+ *
+ * Still typed as `any`, deliberately. types/database.ts now covers all 36 public
+ * tables, so the obvious next step is `createSupabaseClient<Database>` here —
+ * which is what would finally make the ~170 `as any` casts across the API routes
+ * unnecessary. I measured it: that change produces 232 type errors across 53
+ * files, because a lot of existing query shapes do not line up with the real
+ * schema. Those are worth fixing, but as their own piece of work, not as a side
+ * effect of regenerating types.
  *
  * Deliberately does NOT read cookies. Service-role auth is carried by the key,
  * so the cookie adapter this used to pass was never actually used for anything —
