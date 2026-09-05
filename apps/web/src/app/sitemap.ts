@@ -31,6 +31,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/safety', priority: 0.6, changeFrequency: 'monthly' },
     { path: '/contact', priority: 0.5, changeFrequency: 'yearly' },
     { path: '/help', priority: 0.4, changeFrequency: 'monthly' },
+    // 'Is it free?' is one of the first things a visitor wants answered, so this
+    // page is indexable rather than hidden.
+    { path: '/pricing', priority: 0.5, changeFrequency: 'monthly' },
     { path: '/legal/terms', priority: 0.3, changeFrequency: 'yearly' },
     { path: '/legal/privacy', priority: 0.3, changeFrequency: 'yearly' },
   ]

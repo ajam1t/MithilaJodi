@@ -133,7 +133,7 @@ const FAQS = [
   },
   {
     q: 'Can I report a suspicious profile?',
-    a: 'Yes. If you believe a profile is fake, misleading, abusive, or suspicious, you can report it using the Contact form on this site — select "Report a Profile" from the reason dropdown and include the relevant details. Reports are reviewed by the Mithila Jodi team. A dedicated in-profile report button is not yet available in the current version of the app.',
+    a: 'Yes. Open the profile and use the Report button on it — choose a reason and add any detail that helps. The same screen has a Block button, which stops that member from reaching you. If you are not signed in, or you would rather not use the in-profile option, you can also report through the Contact form on this site by selecting "Report a Profile" as the reason. Reports are reviewed by the Mithila Jodi team.',
   },
   {
     q: 'Can I block another member?',
@@ -421,7 +421,14 @@ export default function SafetyPage() {
                     it. Every report is reviewed by the Mithila Jodi team.
                   </p>
                   <p>
-                    To report a profile, go to the{' '}
+                    The quickest way is from the profile itself: open it and use the{' '}
+                    <strong className="text-ink">Report</strong> button, then choose a reason. The
+                    same screen has a <strong className="text-ink">Block</strong> button, which stops
+                    that member from reaching you.
+                  </p>
+                  <p>
+                    If you are not signed in, or you would rather not report from the profile, use
+                    the{' '}
                     <Link href="/contact" className="text-maroon hover:underline underline-offset-2">Contact page</Link>{' '}
                     and select <strong className="text-ink">&ldquo;Report a Profile&rdquo;</strong>{' '}
                     from the reason dropdown. Include the name or profile details of the member you
