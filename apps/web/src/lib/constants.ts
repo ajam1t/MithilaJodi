@@ -44,3 +44,18 @@ export function stripBrandSuffix(title: string): string {
     .replace(/\s*[|–—-]\s*Mithila Jodi(\s+Blog)?\s*$/i, '')
     .trim()
 }
+
+/* ── Legal / contact ───────────────────────────────────────────────────────
+   The single source of truth for the contact details published in the Terms
+   and Privacy Policy. These are the same details already published on
+   /contact, so the legal pages cannot drift away from the real ones.
+
+   LEGAL_VERSION must match the default used when consent is recorded
+   (TERMS_VERSION / PRIVACY_POLICY_VERSION, both default '1.0' — see
+   lib/authFlow.ts). Bumping a policy version here without bumping those means
+   stored consent records would point at the wrong document version. */
+export const SUPPORT_EMAIL = 'contact@mithilajodi.com'
+export const SUPPORT_PHONE_DISPLAY = '+91 8898372628'
+export const SUPPORT_PHONE_E164 = '918898372628'
+export const LEGAL_VERSION = '1.0'
+export const LEGAL_EFFECTIVE_DATE = '5 September 2026'

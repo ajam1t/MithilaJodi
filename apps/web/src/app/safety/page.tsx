@@ -50,7 +50,7 @@ const jsonLd = {
     {
       '@type': 'FAQPage',
       mainEntity: [
-        { '@type': 'Question', name: 'Does Mithila Jodi verify every profile?', acceptedAnswer: { '@type': 'Answer', text: 'Profiles go through an internal review process before becoming active. Mobile numbers are verified via OTP. Profile photographs are reviewed before appearing. Mithila Jodi does not perform identity document checks or background verification.' } },
+        { '@type': 'Question', name: 'Does Mithila Jodi verify every profile?', acceptedAnswer: { '@type': 'Answer', text: 'Mobile numbers are verified at registration via OTP. Profile photographs are reviewed by the team before they appear to other members. Other profile details publish immediately and are reviewed if they are reported or flagged. Mithila Jodi does not perform identity document checks or background verification.' } },
         { '@type': 'Question', name: 'What does Mobile Verified mean?', acceptedAnswer: { '@type': 'Answer', text: 'The member confirmed their mobile number by entering a one-time password sent to that number. It confirms the number is active and accessible. It does not verify identity beyond phone number ownership.' } },
         { '@type': 'Question', name: 'Should I share my OTP or password?', acceptedAnswer: { '@type': 'Answer', text: 'No. Never share your OTP, password, or any authentication credential with anyone — including people claiming to be from Mithila Jodi. The platform will never ask for your password or OTP.' } },
         { '@type': 'Question', name: 'Should I send money to another member?', acceptedAnswer: { '@type': 'Answer', text: 'No. Do not send money to someone you have only connected with through a matrimonial platform. Requests for financial transfers are a serious warning sign.' } },
@@ -125,7 +125,7 @@ const FAMILY_TIPS = [
 const FAQS = [
   {
     q: 'Does Mithila Jodi verify every profile?',
-    a: 'Profiles go through an internal review process before becoming active on the platform. Mobile numbers are verified at registration via OTP. Profile photographs are reviewed by the team before appearing. Mithila Jodi does not currently perform identity document checks, government ID verification, or background checks. Members should exercise their own judgement and involve trusted family members in the matching process.',
+    a: 'Mobile numbers are verified at registration via OTP. Profile photographs are reviewed by the team before they appear to other members. Other profile details publish immediately when a member saves them, and are reviewed if reported or flagged — so please do not treat an active profile as a vetted one. Mithila Jodi does not currently perform identity document checks, government ID verification, or background checks. Members should exercise their own judgement and involve trusted family members in the matching process.',
   },
   {
     q: 'What does Mobile Verified mean?',
