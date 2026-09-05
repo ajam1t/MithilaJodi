@@ -74,10 +74,10 @@ export function MithilaFooter({ className = '' }: { className?: string }) {
             {GROUPS.map(({ label, links }) => (
               <div key={label}>
                 <p className="text-gold-lt text-[10px] font-semibold tracking-widest uppercase mb-1.5 whitespace-nowrap">{label}</p>
-                <ul className="flex flex-col gap-1">
+                <ul className="flex flex-col">
                   {links.map(({ href, label: linkLabel }) => (
                     <li key={linkLabel}>
-                      <Link href={href} className="text-paper-3 text-[11px] hover:text-gold-lt transition-colors opacity-75 hover:opacity-100 leading-snug block">
+                      <Link href={href} className="text-paper-3 text-[11px] hover:text-gold-lt transition-colors opacity-90 hover:opacity-100 leading-snug block py-1.5">
                         {linkLabel}
                       </Link>
                     </li>
@@ -89,7 +89,7 @@ export function MithilaFooter({ className = '' }: { className?: string }) {
         </div>
 
         {/* Bottom micro bar */}
-        <div className="mt-3 pt-3 border-t border-gold border-opacity-15 flex flex-col sm:flex-row items-center justify-between gap-1 text-[10px] text-paper-3 opacity-50">
+        <div className="mt-3 pt-3 border-t border-gold border-opacity-15 flex flex-col sm:flex-row items-center justify-between gap-1 text-[10px] text-paper-3 opacity-90">
           <p>© {new Date().getFullYear()} Mithila Jodi. All rights reserved.</p>
           <p>India only · No data transferred outside India</p>
         </div>

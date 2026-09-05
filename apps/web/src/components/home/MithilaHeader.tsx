@@ -143,7 +143,7 @@ export function MithilaHeader() {
           )}
         </button>
 
-        <Link href="/" className="flex flex-col items-center text-center" aria-label="Mithila Jodi — home">
+        <Link href="/" className="flex flex-col items-center text-center">
           <span className="font-serif font-bold text-[24px] sm:text-[28px] text-maroon leading-none tracking-tight">
             Mithila Jodi
           </span>

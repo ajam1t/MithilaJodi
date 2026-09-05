@@ -18,7 +18,6 @@ export function FestivalAnnouncementStrip() {
       href="/festivals"
       className="group relative block bg-maroon hover:bg-maroon-deep transition-colors
                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-lt focus-visible:ring-inset"
-      aria-label="Mithila Festivals — explore rituals, stories and songs"
     >
       <div className="wrap py-[7px] flex items-center justify-center gap-2 sm:gap-3 text-center">
         <span aria-hidden="true" className="text-[12px] sm:text-[13px] shrink-0">🌸</span>

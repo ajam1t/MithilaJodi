@@ -78,7 +78,7 @@ export function FinalCTA() {
               </Link>
             </div>
 
-            <p className="mt-3.5 text-[11px] text-ink-soft opacity-80">
+            <p className="mt-3.5 text-[11px] text-ink-soft">
               By registering you agree to our{' '}
               <Link href="/legal/terms" className="underline underline-offset-2 hover:text-maroon transition-colors">
                 Terms of Service

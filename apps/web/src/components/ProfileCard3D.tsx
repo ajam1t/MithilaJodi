@@ -192,6 +192,7 @@ export function ProfileCard3D({
           className="absolute inset-0 flex flex-col rounded-mj-lg overflow-hidden bg-cream border border-paper-3 shadow-mj-sm"
           style={{ backfaceVisibility: 'hidden' }}
           aria-hidden={flipped}
+          inert={flipped}
         >
           <div className="gold-strip flex-shrink-0" />
 
@@ -305,6 +306,7 @@ export function ProfileCard3D({
           className="absolute inset-0 flex flex-col rounded-mj-lg overflow-hidden bg-cream border border-gold shadow-mj"
           style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
           aria-hidden={!flipped}
+          inert={!flipped}
         >
           <div className="gold-strip flex-shrink-0" />
           <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-gold/20 flex-shrink-0">

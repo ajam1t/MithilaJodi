@@ -76,7 +76,7 @@ export function CommunityStories() {
               {ILLUSTRATIVE && (
                 <span
                   className="absolute top-3 right-3 text-[9.5px] font-semibold uppercase tracking-wider
-                             text-ink-soft/70 bg-paper-2 border border-paper-3 rounded-pill px-2 py-0.5"
+                             text-ink-soft bg-paper-2 border border-paper-3 rounded-pill px-2 py-0.5"
                 >
                   Example
                 </span>
