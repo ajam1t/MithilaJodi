@@ -22,18 +22,17 @@ export const metadata: Metadata = {
   alternates: { canonical: CANONICAL },
   openGraph: {
     type: 'website',
+    images: ['/og-card.png'],
     url: CANONICAL,
     siteName: 'Mithila Jodi',
     title: 'Mithila Festival Songs — Maithili Geet',
     description:
       'Chhath geet, Sama Chakeva geet, Jogira, Devi geet and more — listen without leaving Mithila Jodi.',
-    images: ['/hero-couple.jpg'],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Mithila Festival Songs — Maithili Geet',
     description: 'Listen to Maithili festival songs on Mithila Jodi.',
-    images: ['/hero-couple.jpg'],
   },
 }
 

@@ -63,13 +63,13 @@ export async function generateMetadata(
       description,
       publishedTime: p.published_at ?? undefined,
       modifiedTime: p.updated_at ?? undefined,
-      images: [p.cover_url ?? '/hero-couple.jpg'],
+      images: [p.cover_url ?? '/og-card.png'],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: [p.cover_url ?? '/hero-couple.jpg'],
+      images: [p.cover_url ?? '/og-card.png'],
     },
   }
 }
@@ -150,7 +150,7 @@ export default async function ArticlePage(
     inLanguage: 'en',
     ...(cat && { articleSection: cat.name }),
     ...(keywords.length > 0 && { keywords: keywords.join(', ') }),
-    image: post.cover_url ?? `${BASE}/hero-couple.jpg`,
+    image: post.cover_url ?? `${BASE}/og-card.png`,
   }
 
   const breadcrumbJsonLd = {

@@ -24,18 +24,17 @@ export const metadata: Metadata = {
   alternates: { canonical: CANONICAL },
   openGraph: {
     type: 'website',
+    images: ['/og-card.png'],
     url: CANONICAL,
     siteName: 'Mithila Jodi',
     title: 'Free Wedding Invitation Card Maker — Mithila & Madhubani Designs',
     description:
       'Choose a Mithila-inspired design, add your wedding details, and download or share your invitation card instantly. Free, no login.',
-    images: ['/hero-couple.jpg'],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Free Wedding Invitation Card Maker — Mithila Jodi',
     description: 'Create and share a beautiful Mithila-inspired wedding invitation card, free.',
-    images: ['/hero-couple.jpg'],
   },
 }
 

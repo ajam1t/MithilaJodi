@@ -17,18 +17,17 @@ export const metadata: Metadata = {
   alternates: { canonical: `${SITE}/contact` },
   openGraph: {
     type: 'website',
+    images: ['/og-card.png'],
     url: `${SITE}/contact`,
     siteName: 'Mithila Jodi',
     title: 'Contact Mithila Jodi — Get in Touch',
     description:
       'Reach the Mithila Jodi support team by phone, WhatsApp, or email. We are here to help with your profile, biodata, membership, or any other question.',
-    images: ['/hero-couple.jpg'],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Contact Mithila Jodi',
     description: 'Call, WhatsApp or email the Mithila Jodi team. We are here to help.',
-    images: ['/hero-couple.jpg'],
   },
 }
 

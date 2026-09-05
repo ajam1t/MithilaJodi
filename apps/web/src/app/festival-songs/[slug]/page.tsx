@@ -45,13 +45,13 @@ export async function generateMetadata(
       siteName: 'Mithila Jodi',
       title,
       description,
-      images: [festival.heroImage ?? '/hero-couple.jpg'],
+      images: [festival.heroImage ?? '/og-card.png'],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: [festival.heroImage ?? '/hero-couple.jpg'],
+      images: [festival.heroImage ?? '/og-card.png'],
     },
   }
 }

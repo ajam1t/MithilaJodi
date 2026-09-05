@@ -13,18 +13,17 @@ export const metadata: Metadata = {
   alternates: { canonical: `${SITE}/safety` },
   openGraph: {
     type: 'website',
+    images: ['/og-card.png'],
     url: `${SITE}/safety`,
     siteName: 'Mithila Jodi',
     title: 'Safety & Verification — Mithila Jodi',
     description:
       'Understand how Mithila Jodi protects member privacy, what verification really means, and how to stay safe on a Mithila matrimonial platform.',
-    images: ['/hero-couple.jpg'],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Safety & Verification — Mithila Jodi',
     description: 'Your privacy, verification, and safety on Mithila Jodi matrimonial platform — explained honestly.',
-    images: ['/hero-couple.jpg'],
   },
 }
 

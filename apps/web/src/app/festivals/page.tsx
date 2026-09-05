@@ -22,18 +22,17 @@ export const metadata: Metadata = {
   alternates: { canonical: CANONICAL },
   openGraph: {
     type: 'website',
+    images: ['/og-card.png'],
     url: CANONICAL,
     siteName: 'Mithila Jodi',
     title: 'Mithila Festivals — Stories, Rituals & Songs',
     description:
       'Explore the festival year of Mithila — from the four days of Chhath to Sama Chakeva, Madhushravani and Kojagara, with the Maithili songs that belong to each.',
-    images: ['/hero-couple.jpg'],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Mithila Festivals — Stories, Rituals & Songs',
     description: 'The festival year of Mithila: stories, rituals and Maithili songs.',
-    images: ['/hero-couple.jpg'],
   },
 }
 

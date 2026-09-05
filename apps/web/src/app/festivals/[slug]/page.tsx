@@ -38,13 +38,13 @@ export async function generateMetadata(
       siteName: 'Mithila Jodi',
       title,
       description,
-      images: [festival.heroImage ?? '/hero-couple.jpg'],
+      images: [festival.heroImage ?? '/og-card.png'],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: [festival.heroImage ?? '/hero-couple.jpg'],
+      images: [festival.heroImage ?? '/og-card.png'],
     },
   }
 }
@@ -89,7 +89,7 @@ export default async function FestivalPage(
         inLanguage: 'en',
         articleSection: 'Mithila Festivals',
         keywords: festival.seo.keywords.join(', '),
-        image: festival.heroImage ? `${SITE_URL}${festival.heroImage}` : `${SITE_URL}/hero-couple.jpg`,
+        image: festival.heroImage ? `${SITE_URL}${festival.heroImage}` : `${SITE_URL}/og-card.png`,
         author: { '@type': 'Organization', name: 'Mithila Jodi', url: SITE_URL },
         publisher: {
           '@type': 'Organization',

@@ -80,18 +80,23 @@ export const metadata: Metadata = {
     url: SITE_URL,
     title: 'Mithila Jodi — जहाँ परम्परा मिले, प्रेम से',
     description: 'Where tradition meets love. A trusted matrimonial platform for the Mithila community of India.',
+    // 1200x630 brand card, 105 KB. Replaces /hero-couple.jpg, which at 605 KB was
+    // large enough for WhatsApp to skip generating a link preview — and WhatsApp
+    // is how biodata actually gets shared here. Authored with next/og and saved
+    // as a static file rather than rendered per request, because a page that
+    // defines its own `openGraph` block does not inherit the file-based image.
     images: [
       {
-        url: '/hero-couple.jpg',
-        width: 1536,
-        height: 1024,
-        alt: 'A Mithila bride and groom exchanging wedding garlands, surrounded by family',
+        url: '/og-card.png',
+        width: 1200,
+        height: 630,
+        alt: 'Mithila Jodi — a matrimonial platform for the Mithila community',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    images: ['/hero-couple.jpg'],
+    images: ['/og-card.png'],
   },
   robots: {
     index: true,

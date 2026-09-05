@@ -28,12 +28,12 @@ export const metadata: Metadata = {
   alternates: { canonical: `${SITE}/pricing` },
   openGraph: {
     type: 'website',
+    images: ['/og-card.png'],
     url: `${SITE}/pricing`,
     siteName: 'Mithila Jodi',
     title: 'Mithila Jodi Pricing — Currently Free for Every Member',
     description:
       'Every feature on Mithila Jodi is free right now: profiles, biodata in Maithili, Hindi, English and Sanskrit, search, interests and messaging.',
-    images: ['/hero-couple.jpg'],
   },
 }
 

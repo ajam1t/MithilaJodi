@@ -52,11 +52,11 @@ export async function generateMetadata(
     alternates: { canonical },
     openGraph: {
       type: 'website',
+      images: ['/og-card.png'],
       url: canonical,
       title,
       description,
-      images: ['/hero-couple.jpg'],
-    },
+      },
   }
 }
 

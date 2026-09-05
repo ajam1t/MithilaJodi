@@ -38,18 +38,17 @@ export const metadata: Metadata = {
   alternates: { canonical: SITE },
   openGraph: {
     type: 'website',
+    images: ['/og-card.png'],
     url: SITE,
     siteName: 'Mithila Jodi',
     title: 'Mithila Jodi — Maithili Matrimonial & Marriage Biodata',
     description:
       'A matrimonial platform rooted in Mithila culture — create a marriage biodata in your language and connect Maithili families across India.',
-    images: ['/hero-couple.jpg'],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Mithila Jodi — Maithili Matrimonial & Marriage Biodata',
     description: 'A matrimonial platform rooted in Mithila culture, for the Maithili community of India.',
-    images: ['/hero-couple.jpg'],
   },
 }
 
