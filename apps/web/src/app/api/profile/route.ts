@@ -31,6 +31,9 @@ const ProfileSchema = z.object({
   family_about: z.string().max(1000).optional().nullable(),
   marriage_timeline: z.enum(['within_3_months', 'within_6_months', 'within_1_year', 'within_2_years', 'no_rush', '']).optional().nullable(),
   discoverable: z.boolean().optional(),
+  // Member-facing visibility. `discoverable` is derived from this below and
+  // kept only because existing read paths and the search projection filter on it.
+  visibility: z.enum(['public', 'members', 'private']).optional(),
 
   // ── V10 additive fields ──
   // Master-data-driven free strings (values come from community_masters)
@@ -67,7 +70,6 @@ const ProfileSchema = z.object({
   contact_email: z.string().email().max(255).optional().nullable().or(z.literal('')),
   address: z.string().max(500).optional().nullable(),
   kundli_url: z.string().max(500).optional().nullable(),
-  contact_visibility: z.string().max(50).optional().nullable(),
   photo_visibility: z.string().max(50).optional().nullable(),
 
   // Partner preferences
@@ -88,6 +90,31 @@ const ProfileSchema = z.object({
   pref_marriage_timeline: z.string().max(100).optional().nullable(),
   pref_manglik: z.string().max(100).optional().nullable(),
 })
+
+/**
+ * Whether `profiles.visibility` exists yet, probed once per server process.
+ *
+ * The column arrives with migration 20260826000006. Writing it before that has
+ * run would fail the entire profile save and lose the member's edits, so the
+ * field is added to the payload only when it is really there. `discoverable` is
+ * written alongside and already encodes the private / not-private distinction,
+ * so nothing is lost in the meantime.
+ *
+ * Delete this helper and write `visibility` unconditionally once the migration
+ * has run in every environment.
+ */
+let visibilityColumnExists: boolean | null = null
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function hasVisibilityColumn(admin: any): Promise<boolean> {
+  if (visibilityColumnExists !== null) return visibilityColumnExists
+  const { error } = await admin.from('profiles').select('visibility').limit(1)
+  visibilityColumnExists = !error
+  if (error) {
+    console.warn('[profile] profiles.visibility not present yet — run migration 20260826000006')
+  }
+  return visibilityColumnExists
+}
 
 function computeCompletion(data: z.infer<typeof ProfileSchema>): number {
   // Field-based completeness. Discoverability is NOT gated on this value
@@ -249,7 +276,17 @@ export async function PUT(request: NextRequest) {
   // draft → admin-moderation model applies (profile_status stays 'draft' on
   // create and is promoted to 'active' only by an admin).
   const freeMode = isFreeAccessMode()
-  const discoverableDefault = data.discoverable ?? freeMode
+
+  // Visibility is the source of truth; `discoverable` is its cached boolean.
+  // Falling back to the legacy flag keeps older clients that still send only
+  // `discoverable` working, and defaults new profiles to 'members' — visible to
+  // signed-in members, never to the open web unless the member opts in.
+  const visibility =
+    data.visibility ??
+    (data.discoverable === false ? 'private' : freeMode ? 'members' : 'private')
+  const discoverableDefault = visibility !== 'private'
+  const canWriteVisibility = await hasVisibilityColumn(admin)
+  const visibilityPatch = canWriteVisibility ? { visibility } : {}
 
   const { data: existing } = await admin
     .from('profiles')
@@ -315,6 +352,7 @@ export async function PUT(request: NextRequest) {
         passing_year:     data.passing_year     ?? null,
         experience_years: data.experience_years ?? null,
         discoverable: discoverableDefault,
+        ...visibilityPatch,
         profile_status: promotedStatus,
         profile_complete: profileCompletion,
         search_needs_rebuild: true,
@@ -384,6 +422,7 @@ export async function PUT(request: NextRequest) {
       passing_year:     data.passing_year     ?? null,
       experience_years: data.experience_years ?? null,
       discoverable: discoverableDefault,
+      ...visibilityPatch,
       profile_complete: profileCompletion,
       profile_status: freeMode ? 'active' : 'draft',
     })
@@ -418,7 +457,6 @@ async function savePrivateAndPreferences(admin: Awaited<ReturnType<typeof create
     contact_email: data.contact_email || null,
     address: data.address || null,
     kundli_url: data.kundli_url || null,
-    contact_visibility: data.contact_visibility || null,
     photo_visibility: data.photo_visibility || null,
   })
   if (privateError) throw new Error(privateError.message)

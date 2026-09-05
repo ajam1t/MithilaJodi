@@ -110,7 +110,20 @@ export async function getPublicShowcaseProfiles(): Promise<SearchCard[]> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const profiles: any[] = rawProfiles ?? []
+  let profiles: any[] = rawProfiles ?? []
+
+  // Three-level visibility: only members who explicitly chose 'public' may
+  // appear on a no-login page. Admin curation (public_showcase) decides WHO is
+  // featured; this decides who is even eligible. Both must agree.
+  //
+  // Applied here rather than as a WHERE clause so the deploy does not depend on
+  // migration 20260826000006 having already run. Before it runs the column is
+  // simply absent and this is a no-op, leaving the pre-existing `discoverable`
+  // gate in charge — the page keeps working instead of silently emptying.
+  // Once the migration has landed everywhere, fold this back into the query.
+  if (profiles.length > 0 && 'visibility' in profiles[0]) {
+    profiles = profiles.filter((row) => row.visibility === 'public')
+  }
   if (profiles.length === 0) return []
 
   // Preserve the curator's ordering (sort_order asc).

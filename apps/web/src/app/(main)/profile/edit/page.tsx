@@ -49,6 +49,7 @@ type FormData = {
   about_me: string
   family_about: string
   discoverable: boolean
+  visibility: 'public' | 'members' | 'private'
   // Private details
   income_min_lpa: string
   income_max_lpa: string
@@ -61,7 +62,6 @@ type FormData = {
   contact_email: string
   address: string
   kundli_url: string
-  contact_visibility: string
   photo_visibility: string
   // Partner preferences
   pref_age_min: string
@@ -128,6 +128,7 @@ const EMPTY_FORM: FormData = {
   about_me: '',
   family_about: '',
   discoverable: false,
+  visibility: 'members',
   income_min_lpa: '',
   income_max_lpa: '',
   rashi: '',
@@ -139,7 +140,6 @@ const EMPTY_FORM: FormData = {
   contact_email: '',
   address: '',
   kundli_url: '',
-  contact_visibility: '',
   photo_visibility: '',
   pref_age_min: '',
   pref_age_max: '',
@@ -356,6 +356,29 @@ function MasterSelect({
   )
 }
 
+/**
+ * The three visibility levels, in decreasing order of exposure. The help text is
+ * deliberately concrete about what each one means for the open internet — the
+ * old single "discoverable" switch left that ambiguous.
+ */
+const VISIBILITY_OPTIONS = [
+  {
+    value: 'public' as const,
+    label: 'Public — anyone can see it',
+    help: 'May be shown on our homepage and Explore page, which do not require an account, and in member search. Surname is shortened and your date of birth, contact details and address are never included.',
+  },
+  {
+    value: 'members' as const,
+    label: 'Members only — signed-in members',
+    help: 'Appears in search for registered Mithila Jodi members. Never shown on public pages or to search engines.',
+  },
+  {
+    value: 'private' as const,
+    label: 'Private — hidden',
+    help: 'Not shown in search or on public pages, and members cannot send you new interests. Conversations you have already started are unaffected.',
+  },
+]
+
 type SaveState = 'idle' | 'saving' | 'success' | 'error'
 
 export default function ProfileEditPage() {
@@ -425,6 +448,7 @@ export default function ProfileEditPage() {
             about_me: p.about_me ?? '',
             family_about: p.family_about ?? '',
             discoverable: p.discoverable ?? false,
+            visibility: p.visibility ?? (p.discoverable ? 'members' : 'private'),
             marital_status: p.marital_status ?? '',
             mother_tongue: p.mother_tongue ?? '',
             degree: p.degree ?? '',
@@ -454,7 +478,6 @@ export default function ProfileEditPage() {
             contact_email: j.private?.contact_email ?? '',
             address: j.private?.address ?? '',
             kundli_url: j.private?.kundli_url ?? '',
-            contact_visibility: j.private?.contact_visibility ?? '',
             photo_visibility: j.private?.photo_visibility ?? '',
             pref_age_min: j.preferences?.pref_age_min?.toString() ?? '',
             pref_age_max: j.preferences?.pref_age_max?.toString() ?? '',
@@ -895,8 +918,11 @@ export default function ProfileEditPage() {
                 </div>
               ))}
               <div className="col-span-2"><label className="block text-sm font-medium text-ink mb-1">Address</label><textarea value={form.address} onChange={e => set('address', e.target.value)} rows={3} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm focus:outline-none focus:border-maroon" /></div>
-              <div><label className="block text-sm font-medium text-ink mb-1">Contact visibility</label><select value={form.contact_visibility} onChange={e => set('contact_visibility', e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm bg-white"><option value="">Select…</option><option value="mutual">Mutual interest</option><option value="connected">Connected only</option><option value="none">Hidden</option></select></div>
-              <div><label className="block text-sm font-medium text-ink mb-1">Photo visibility</label><select value={form.photo_visibility} onChange={e => set('photo_visibility', e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm bg-white"><option value="">Select…</option><option value="all">All approved members</option><option value="connected">Connected only</option><option value="on_request">On request</option></select></div>
+              <div className="col-span-2 text-xs text-ink-soft bg-paper border border-paper-3 rounded-mj-sm p-3">
+                These details are private. They are never shown to other members, whatever your
+                profile visibility is set to. Your registered mobile can only be shared through the
+                WhatsApp request flow, which you approve one request at a time.
+              </div>
             </div>
           </section>
 
@@ -1209,20 +1235,51 @@ export default function ProfileEditPage() {
             </div>
           </section>
 
-          {/* ── Section: Visibility ── */}
+          {/* ── Section: Who can see your profile ──
+              Three explicit levels instead of a single on/off switch. Each option
+              spells out the consequence, because "discoverable" told a member
+              nothing about whether the open internet could see them. */}
           <section className="card p-6">
-            <h2 className="font-semibold text-ink mb-3">Visibility</h2>
-            <label className="flex items-center gap-3 cursor-pointer">
-              <div className={`w-11 h-6 rounded-full transition-colors ${form.discoverable ? 'bg-maroon' : 'bg-ink/20'} relative`}>
-                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.discoverable ? 'translate-x-6' : 'translate-x-1'}`} />
-              </div>
-              <input type="checkbox" className="sr-only" checked={form.discoverable}
-                onChange={e => set('discoverable', e.target.checked)} />
-              <div>
-                <p className="text-sm font-medium text-ink">Make profile discoverable</p>
-                <p className="text-xs text-ink-soft">Other families can find your profile in search results</p>
-              </div>
-            </label>
+            <h2 className="font-semibold text-ink mb-1">Who can see your profile</h2>
+            <p className="text-xs text-ink-soft mb-4">
+              You can change this at any time. Your contact details are never shown to
+              other members on any of these settings.
+            </p>
+
+            <div className="space-y-2.5" role="radiogroup" aria-label="Profile visibility">
+              {VISIBILITY_OPTIONS.map((opt) => {
+                const active = form.visibility === opt.value
+                return (
+                  <label
+                    key={opt.value}
+                    className={`flex items-start gap-3 p-3 rounded-mj-sm border cursor-pointer transition-colors ${
+                      active ? 'border-maroon bg-cream' : 'border-ink/15 hover:border-gold'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="visibility"
+                      className="mt-1 accent-maroon"
+                      value={opt.value}
+                      checked={active}
+                      onChange={() => set('visibility', opt.value)}
+                    />
+                    <span>
+                      <span className="block text-sm font-medium text-ink">{opt.label}</span>
+                      <span className="block text-xs text-ink-soft leading-relaxed mt-0.5">{opt.help}</span>
+                    </span>
+                  </label>
+                )
+              })}
+            </div>
+
+            {form.visibility === 'public' && (
+              <p className="mt-3 text-xs text-ink-soft bg-paper border border-paper-3 rounded-mj-sm p-3">
+                Choosing this makes your profile <strong className="text-ink">eligible</strong> to be
+                shown on our public pages. It does not publish it by itself — the Mithila Jodi team
+                still chooses which profiles are featured.
+              </p>
+            )}
           </section>
 
           {error && saveState === 'error' && (

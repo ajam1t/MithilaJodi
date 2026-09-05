@@ -252,6 +252,8 @@ export async function POST(request: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const target = targetProfile as any
 
+  // `discoverable` is false for any profile set to 'private', so this one
+  // condition covers the private case too.
   if (target.profile_status !== 'active' || !target.discoverable) {
     return NextResponse.json({ ok: false, message: 'This profile is not available' }, { status: 422 })
   }

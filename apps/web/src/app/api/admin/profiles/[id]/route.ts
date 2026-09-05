@@ -26,7 +26,7 @@ function pickFields(input: Record<string, unknown>, fields: readonly string[]): 
 
 const PRIVATE_FIELDS = [
   'income_min_lpa', 'income_max_lpa', 'rashi', 'nakshatra', 'mangalik', 'contact_mobile',
-  'contact_email', 'address', 'birth_time', 'birth_place', 'kundli_url', 'contact_visibility',
+  'contact_email', 'address', 'birth_time', 'birth_place', 'kundli_url',
   'photo_visibility',
 ]
 
