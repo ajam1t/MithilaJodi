@@ -1,4 +1,5 @@
 import 'server-only'
+import { filterPhotoViewable } from '@/lib/photoAccess'
 import { createAdminClient } from '@/lib/supabase/server'
 import type { SearchCard } from '@/types/profile'
 
@@ -184,6 +185,14 @@ export async function getPublicShowcaseProfiles(): Promise<SearchCard[]> {
   // One batched call instead of a serialised loop. This runs during SSR of the
   // public /explore page, where N sequential Storage round trips (~30ms each)
   // went straight onto TTFB.
+  // A member who limits photographs to accepted connections must not have that
+  // photograph published on a page anyone can load. The open web is not a
+  // connection, so only 'all' owners are signed here.
+  const publicPhotoOk = await filterPhotoViewable(admin, null, [...photoByProfile.keys()])
+  for (const id of [...photoByProfile.keys()]) {
+    if (!publicPhotoOk.has(id)) photoByProfile.delete(id)
+  }
+
   const signEntries = [...photoByProfile.entries()]
   if (signEntries.length > 0) {
     try {

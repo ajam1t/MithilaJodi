@@ -6,6 +6,7 @@ import { FestivalAnnouncementStrip } from '@/components/home/FestivalAnnouncemen
 import { HeroSection } from '@/components/home/HeroSection'
 import { FeaturedProfiles } from '@/components/home/FeaturedProfiles'
 import { WhyMithilaJodi } from '@/components/home/FeatureStrip'
+import { CommunityStories } from '@/components/home/CommunityStories'
 import { BiodataSection } from '@/components/home/BiodataSection'
 import { FinalCTA } from '@/components/home/FinalCTA'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
@@ -173,6 +174,7 @@ export default function HomePage() {
         <HeroSection />
         <FeaturedProfiles />
         <WhyMithilaJodi />
+        <CommunityStories />
         <BiodataSection />
 
         {/* ── Frequently asked questions (SEO + genuine help) ── */}

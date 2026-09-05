@@ -1,6 +1,7 @@
 import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
+import { filterPhotoViewable } from '@/lib/photoAccess'
 import { getSessionAccount } from '@/lib/auth'
 import { getInterestAllowance } from '@/lib/membership'
 
@@ -115,11 +116,18 @@ export async function GET() {
       .in('profile_id', idList)
       .eq('is_primary', true)
       .eq('status', 'approved')
+    // Photo privacy: someone who has only SENT you an interest is not yet a
+    // connection, so a connections-only member's photograph is withheld from
+    // this list until the interest is accepted.
+    const photoOk = await filterPhotoViewable(admin, myId, idList)
+
     const pathByProfile = new Map<string, string>()
     for (const ph of (photoRows ?? [])) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const p = ph as any
-      if (!pathByProfile.has(p.profile_id as string)) pathByProfile.set(p.profile_id as string, p.storage_path as string)
+      const pid = p.profile_id as string
+      if (!photoOk.has(pid)) continue
+      if (!pathByProfile.has(pid)) pathByProfile.set(pid, p.storage_path as string)
     }
     const signedByProfile = new Map<string, string | null>()
     for (const [pid, path] of pathByProfile.entries()) {

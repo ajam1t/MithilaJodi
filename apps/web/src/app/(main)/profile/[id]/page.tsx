@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { getSessionAccount } from '@/lib/auth'
+import { canViewPhotos } from '@/lib/photoAccess'
 import { createAdminClient } from '@/lib/supabase/server'
 import ProfileViewClient from './ProfileViewClient'
 
@@ -74,9 +75,14 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
     .eq('status', 'approved')
     .maybeSingle()
 
+  // Photo privacy: a member who limits photographs to accepted connections
+  // shows one here only to those connections. The rest of the profile is
+  // unaffected — this withholds the photograph, not the profile.
+  const photoAllowed = await canViewPhotos(admin, myProfileId, profileId)
+
   let photoUrl: string | null = null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (photo && (photo as any).storage_path) {
+  if (photoAllowed && photo && (photo as any).storage_path) {
     const { data: signed } = await admin.storage
       .from('profile-photos')
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

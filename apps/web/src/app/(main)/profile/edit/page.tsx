@@ -919,9 +919,33 @@ export default function ProfileEditPage() {
               ))}
               <div className="col-span-2"><label className="block text-sm font-medium text-ink mb-1">Address</label><textarea value={form.address} onChange={e => set('address', e.target.value)} rows={3} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm focus:outline-none focus:border-maroon" /></div>
               <div className="col-span-2 text-xs text-ink-soft bg-paper border border-paper-3 rounded-mj-sm p-3">
-                These details are private. They are never shown to other members, whatever your
-                profile visibility is set to. Your registered mobile can only be shared through the
-                WhatsApp request flow, which you approve one request at a time.
+                The contact details above are private. They are never shown to other members,
+                whatever your profile visibility is set to. Your registered mobile can only be
+                shared through the WhatsApp request flow, which you approve one request at a time.
+              </div>
+
+              {/* Photo visibility is a separate axis from profile visibility:
+                  this decides who, among the people who can already see your
+                  profile, also sees your photographs. Only the two options we
+                  actually enforce are offered. */}
+              <div className="col-span-2">
+                <label htmlFor="photo-visibility" className="block text-sm font-medium text-ink mb-1">
+                  Who can see your photographs
+                </label>
+                <select
+                  id="photo-visibility"
+                  value={form.photo_visibility === 'all' || form.photo_visibility === '' ? 'all' : 'connected'}
+                  onChange={e => set('photo_visibility', e.target.value)}
+                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm bg-white"
+                >
+                  <option value="all">Everyone who can see my profile</option>
+                  <option value="connected">Only my accepted connections</option>
+                </select>
+                <p className="mt-1 text-xs text-ink-soft">
+                  Choosing connections-only keeps your profile visible but hides your photographs
+                  from search, from members who have only sent you an interest, and from the public
+                  pages — until you accept them.
+                </p>
               </div>
             </div>
           </section>

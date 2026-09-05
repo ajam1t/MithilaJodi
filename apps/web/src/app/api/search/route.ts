@@ -1,6 +1,7 @@
 import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
+import { filterPhotoViewable } from '@/lib/photoAccess'
 import { getSessionAccount } from '@/lib/auth'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -465,6 +466,14 @@ export async function GET(request: NextRequest) {
   // One batched call rather than one round trip per photo. A 20-result page
   // previously made up to 20 sequential Storage calls (~30ms each) before it
   // could respond.
+  // Photo privacy: a member set to connections-only shows a photo in search
+  // results ONLY to someone they have an accepted interest with. The profile
+  // itself still appears — this withholds the photograph, not the person.
+  const photoOk = await filterPhotoViewable(admin, myProfileIds[0] ?? null, [...photoByProfile.keys()])
+  for (const id of [...photoByProfile.keys()]) {
+    if (!photoOk.has(id)) photoByProfile.delete(id)
+  }
+
   const signEntries = [...photoByProfile.entries()]
   if (signEntries.length > 0) {
     try {
