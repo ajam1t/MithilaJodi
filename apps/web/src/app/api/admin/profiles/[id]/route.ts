@@ -101,11 +101,21 @@ export async function PATCH(
       const { error } = await admin.from('profile_preferences').upsert({ profile_id: id, ...preferenceData })
       if (error) return NextResponse.json({ ok: false, message: 'Could not update partner preferences.' }, { status: 500 })
     }
+    // Featuring a profile publicly needs BOTH the curation row and the profile's
+    // own visibility = 'public' — publicProfiles requires the two to agree. An
+    // admin toggling this on is the deliberate act of publishing, so set the
+    // visibility alongside it; otherwise the toggle appears to work but the
+    // profile never actually shows, which is exactly what happened when the
+    // three-level visibility backfill landed.
     if (showcase === true) {
       const { data: maxRow } = await admin.from('public_showcase').select('sort_order').order('sort_order', { ascending: false }).limit(1).maybeSingle()
       await admin.from('public_showcase').upsert({ profile_id: id, sort_order: (maxRow?.sort_order ?? -1) + 1, is_active: true, added_by: session.id })
+      await admin.from('profiles').update({ visibility: 'public', discoverable: true }).eq('id', id)
     } else if (showcase === false) {
       await admin.from('public_showcase').delete().eq('profile_id', id)
+      // Step back to members-only rather than private — un-featuring should
+      // remove someone from the open web, not hide them from the platform.
+      await admin.from('profiles').update({ visibility: 'members' }).eq('id', id).eq('visibility', 'public')
     }
     await admin.from('admin_audit_logs').insert({
       actor_id: session.id,

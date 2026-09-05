@@ -80,3 +80,10 @@ REVOKE ALL ON payments              FROM anon, authenticated;
 REVOKE ALL ON legal_consents        FROM anon, authenticated;
 REVOKE ALL ON biodata_generations   FROM anon, authenticated;
 REVOKE ALL ON family_permissions    FROM anon, authenticated;
+
+-- contact_submissions was missed by the original list. It holds contact-form
+-- data — names, emails, phone numbers and message bodies — and was live-readable
+-- with the public anon key (verified: HTTP 200 before, 401 after). RLS was
+-- already on, so a permissive policy must have been allowing it; revoking the
+-- grants closes it regardless. REVOKE is idempotent, so re-running is safe.
+REVOKE ALL ON contact_submissions FROM anon, authenticated;
