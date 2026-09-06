@@ -63,8 +63,8 @@ function CardFrame({ children, active }: { children: ReactNode; active: boolean 
   )
 }
 
-function Face({ index, profile }: { index: number; profile: SearchCard }) {
-  if (index === 0) {
+function Face({ card, profile }: { card: string; profile: SearchCard }) {
+  if (card === 'Profile') {
     return (
       <div className="flex h-full flex-col">
         <p className="mb-2 text-[10px] uppercase tracking-widest text-terra">Profile</p>
@@ -86,7 +86,7 @@ function Face({ index, profile }: { index: number; profile: SearchCard }) {
     )
   }
 
-  if (index === 1) {
+  if (card === 'Career') {
     return (
       <div>
         <p className="mb-3 text-[10px] uppercase tracking-widest text-terra">Career & education</p>
@@ -99,7 +99,7 @@ function Face({ index, profile }: { index: number; profile: SearchCard }) {
     )
   }
 
-  if (index === 2) {
+  if (card === 'Lifestyle') {
     return (
       <div>
         <p className="mb-3 text-[10px] uppercase tracking-widest text-terra">Lifestyle</p>
@@ -112,7 +112,7 @@ function Face({ index, profile }: { index: number; profile: SearchCard }) {
     )
   }
 
-  if (index === 3) {
+  if (card === 'Roots') {
     return (
       <div>
         <p className="mb-3 text-[10px] uppercase tracking-widest text-terra">Roots & community</p>
@@ -125,7 +125,7 @@ function Face({ index, profile }: { index: number; profile: SearchCard }) {
     )
   }
 
-  if (index === 4) {
+  if (card === 'Marriage') {
     return (
       <div>
         <p className="mb-3 text-[10px] uppercase tracking-widest text-terra">Marriage outlook</p>
@@ -141,7 +141,40 @@ function Face({ index, profile }: { index: number; profile: SearchCard }) {
     )
   }
 
-  // Match face — only ever rendered when profile.match exists (see cardsFor).
+  if (card === 'Preferences') {
+    // Only rendered when profile.preferences is non-null, and that loader
+    // already returns null unless the family actually stated something.
+    const q = profile.preferences!
+    return (
+      <div className="flex h-full flex-col">
+        <p className="mb-2 text-[10px] uppercase tracking-widest text-terra">Looking for</p>
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <Field label="Age" value={q.ageRange} />
+          <Field label="Bride / Groom" value={q.lookingFor} />
+          <Field label="Community" value={q.community} />
+          <Field label="Marital status" value={q.maritalStatus} />
+          <Field label="Education" value={q.education} />
+          <Field label="Profession" value={q.profession} />
+          <Field label="Location" value={q.location} />
+          <Field label="Diet" value={q.diet} />
+          <Field label="Timeline" value={q.marriageTimeline} />
+          <Field label="Manglik" value={q.manglik} />
+          {q.notes && (
+            <p className="mt-2 text-[11.5px] leading-snug text-ink-soft">
+              {q.notes.length > 150 ? `${q.notes.slice(0, 150)}…` : q.notes}
+            </p>
+          )}
+        </div>
+        {q.gotraSafe && (
+          <p className="mt-2 pt-2 border-t border-gold/20 text-[10px] leading-snug text-ink-soft">
+            Gotra-safe matches only
+          </p>
+        )}
+      </div>
+    )
+  }
+
+  // Match face — only ever rendered when profile.match exists (see CARDS).
   const match = profile.match!
   const blocked = match.blockers.length > 0
   return (
@@ -178,12 +211,15 @@ function Face({ index, profile }: { index: number; profile: SearchCard }) {
 }
 
 export default function ProfileCardGallery3D({ profile, autoRotate = true }: ProfileCardGallery3DProps) {
-  // The match face is added only when there is a score — on your own profile,
-  // and for a signed-out viewer, there is nothing to compare against and an
-  // empty sixth card would be worse than five.
-  const CARDS: readonly string[] = profile.match
-    ? [...BASE_CARDS, 'Match']
-    : BASE_CARDS
+  // Both extra faces are conditional. Preferences appears only when the family
+  // stated something; the match face only when there is a score to show (your
+  // own profile and a signed-out viewer have nothing to compare against). An
+  // empty card is worse than one fewer card.
+  const CARDS: readonly string[] = [
+    ...BASE_CARDS,
+    ...(profile.preferences ? ['Preferences'] : []),
+    ...(profile.match ? ['Match'] : []),
+  ]
 
   const [active, setActive] = useState(0)
   const [paused, setPaused] = useState(false)
@@ -255,7 +291,7 @@ export default function ProfileCardGallery3D({ profile, autoRotate = true }: Pro
                 onClick={() => { if (!isActive) { setStopped(true); setActive(index) } }}
                 aria-hidden={!isActive}
               >
-                <CardFrame active={isActive}><Face index={index} profile={profile} /></CardFrame>
+                <CardFrame active={isActive}><Face card={label} profile={profile} /></CardFrame>
               </div>
             )
           })}

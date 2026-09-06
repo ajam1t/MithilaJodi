@@ -28,6 +28,10 @@ const SECTIONS: Array<{ key: string; label: string; hint: string; locked?: boole
   { key: 'about',     label: 'About you',         hint: 'Your own words.' },
   { key: 'horoscope', label: 'Horoscope',         hint: 'Rashi, nakshatra, manglik, birth details.' },
   {
+    key: 'preferences', label: 'What you are looking for',
+    hint: 'Age, community, education, location and timeline you are hoping for.',
+  },
+  {
     key: 'contact', label: 'Contact details',
     hint: 'Mobile, email and address. Anyone this link reaches would get them — including whoever it is forwarded to.',
     sensitive: true,

@@ -43,6 +43,40 @@ export type SearchCard = {
    * of their own — there is nothing to compare against.
    */
   match?: MatchSummary | null
+  /**
+   * Partner preferences, when the surface chose to load them. Absent on search
+   * cards: there the match score already says how well the two sides' stated
+   * preferences line up, which is more use than the raw list.
+   */
+  preferences?: PartnerPreferencesDisplay | null
+}
+
+/**
+ * "What we are looking for", already resolved to display strings by
+ * lib/partnerPreferences — the stored columns include id arrays that need a
+ * database lookup, so the raw row is never handed to the UI.
+ */
+export type PartnerPreferencesDisplay = {
+  ageRange: string | null
+  lookingFor: string | null
+  community: string | null
+  maritalStatus: string | null
+  education: string | null
+  profession: string | null
+  location: string | null
+  diet: string | null
+  marriageTimeline: string | null
+  manglik: string | null
+  children: string | null
+  livingArrangement: string | null
+  career: string | null
+  notes: string | null
+  /**
+   * NOT NULL DEFAULT true in the schema, so this is true for every profile
+   * whether or not anyone chose it. Never treat it as evidence that a family
+   * stated a preference — see loadPartnerPreferences.
+   */
+  gotraSafe: boolean
 }
 
 /** Display-safe projection of lib/matchScore's MatchResult. */

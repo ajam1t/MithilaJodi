@@ -5,6 +5,8 @@ import { canViewPhotos } from '@/lib/photoAccess'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getLocationIndex } from '@/lib/locationIndex'
 import { scoreMatch, topReasons, type ScoreProfile, type ScorePreferences } from '@/lib/matchScore'
+import { formatPartnerPreferences } from '@/lib/partnerPreferences'
+import type { PartnerPreferencesDisplay } from '@/types/profile'
 import ProfileViewClient from './ProfileViewClient'
 
 export const dynamic = 'force-dynamic'
@@ -167,12 +169,19 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
     breakdown: Array<{ key: string; label: string; points: number; max: number; detail: string }>
   } | null = null
 
+  // Their stated preferences, for the gallery's "Looking for" face. Loaded
+  // regardless of whether the viewer has a profile of their own — unlike the
+  // match score, this does not need two sides to compare.
+  let theirPreferencesDisplay: PartnerPreferencesDisplay | null = null
+
   if (myProfileId) {
     const [{ data: myPrefs }, { data: theirPrefs }, locationIndex] = await Promise.all([
       admin.from('profile_preferences').select('*').eq('profile_id', myProfileId).maybeSingle(),
       admin.from('profile_preferences').select('*').eq('profile_id', profileId).maybeSingle(),
       getLocationIndex(admin),
     ])
+    // Reuse the row already fetched for scoring rather than querying again.
+    theirPreferencesDisplay = await formatPartnerPreferences(admin, theirPrefs)
     const result = scoreMatch(
       toScoreProfile(myProfile), toScorePrefs(myPrefs),
       toScoreProfile({ ...p, id: profileId }), toScorePrefs(theirPrefs),
@@ -187,6 +196,13 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
       cautions: result.cautions,
       breakdown: result.reasons.map(r => ({ key: r.key, label: r.label, points: r.points, max: r.max, detail: r.detail })),
     }
+  }
+
+  if (!myProfileId) {
+    theirPreferencesDisplay = await formatPartnerPreferences(
+      admin,
+      (await admin.from('profile_preferences').select('*').eq('profile_id', profileId).maybeSingle()).data,
+    )
   }
 
   const lastName = p.last_name as string | null
@@ -283,6 +299,7 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
         score: match.score, band: match.band, confidence: match.confidence,
         reasons: match.reasons, blockers: match.blockers, cautions: match.cautions,
       } : null,
+      preferences: theirPreferencesDisplay,
     },
   }
 }

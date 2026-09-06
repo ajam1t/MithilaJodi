@@ -1,5 +1,7 @@
 import 'server-only'
 import { randomBytes } from 'crypto'
+import { formatPartnerPreferences } from '@/lib/partnerPreferences'
+import type { PartnerPreferencesDisplay } from '@/types/profile'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -30,6 +32,11 @@ export const SHARE_SECTIONS = [
   { key: 'family',    label: 'Family',              hint: 'Family type, values, parents, siblings.' },
   { key: 'about',     label: 'About you',           hint: 'Your own words.' },
   { key: 'horoscope', label: 'Horoscope',           hint: 'Rashi, nakshatra, manglik, birth details.' },
+  {
+    key: 'preferences',
+    label: 'What you are looking for',
+    hint: 'Your partner preferences — age, community, education, location, timeline.',
+  },
   {
     key: 'contact',
     label: 'Contact details',
@@ -89,6 +96,7 @@ export type SharedProfile = {
   about: string | null
   horoscope: { rashi: string | null; nakshatra: string | null; manglik: string | null; birthTime: string | null; birthPlace: string | null } | null
   contact: { mobile: string | null; email: string | null; address: string | null } | null
+  preferences: PartnerPreferencesDisplay | null
 }
 
 export type ShareLoadResult =
@@ -199,6 +207,17 @@ export async function loadSharedProfile(admin: any, token: string): Promise<Shar
     }
   }
 
+  // ── Partner preferences ──
+  let preferences: PartnerPreferencesDisplay | null = null
+  if (granted.has('preferences')) {
+    const { data: prefRow } = await admin
+      .from('profile_preferences')
+      .select('*')
+      .eq('profile_id', p.id)
+      .maybeSingle()
+    preferences = await formatPartnerPreferences(admin, prefRow)
+  }
+
   // ── Private details, only for the sections that need them ──
   let priv: any = null
   if (granted.has('horoscope') || granted.has('contact')) {
@@ -288,6 +307,10 @@ export async function loadSharedProfile(admin: any, token: string): Promise<Shar
       email: priv?.contact_email ?? null,
       address: priv?.address ?? null,
     }),
+
+    // Already null when the family stated nothing, so an enabled-but-empty
+    // section drops out of the page rather than printing an empty panel.
+    preferences,
   }
 
   // Best-effort view counting. Never blocks the render, and a failure here must

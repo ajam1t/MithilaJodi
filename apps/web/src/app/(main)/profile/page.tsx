@@ -6,7 +6,7 @@ import Link from 'next/link'
 import ProfileCardGallery3D from '@/components/ProfileCardGallery3D'
 import { ShareProfileLinks } from '@/components/ShareProfileLinks'
 import { Spinner } from '@/components/ui'
-import type { SearchCard } from '@/types/profile'
+import type { SearchCard, PartnerPreferencesDisplay } from '@/types/profile'
 
 type AccountInfo = { id: string; mobile: string; role: string }
 
@@ -137,6 +137,9 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [photos, setPhotos] = useState<Photo[]>([])
   const [prefs, setPrefs] = useState<Preferences | null>(null)
+  // The same preferences with id arrays resolved and values formatted, for the
+  // "Looking for" face of the 3D gallery.
+  const [prefsDisplay, setPrefsDisplay] = useState<PartnerPreferencesDisplay | null>(null)
   const [tab, setTab] = useState<Tab>('about')
   const [loading, setLoading] = useState(true)
   const [logoutLoading, setLogoutLoading] = useState(false)
@@ -169,6 +172,7 @@ export default function ProfilePage() {
         setPhotos(profileData.photos ?? [])
         setLocationNames({ native_place_name: profileData.native_place_name ?? null, current_loc_name: profileData.current_loc_name ?? null })
         if (prefsData.ok && prefsData.preferences) setPrefs(prefsData.preferences)
+        if (prefsData.ok) setPrefsDisplay(prefsData.display ?? null)
       })
       .catch(() => router.replace('/login'))
       .finally(() => setLoading(false))
@@ -226,6 +230,10 @@ export default function ProfilePage() {
     maternal_gotra: profile.maternal_gotra,
     job_loc_name: null,
     marriage_timeline: profile.marriage_timeline,
+    marital_status: profile.marital_status,
+    family_type: profile.family_type,
+    job_title: profile.job_title,
+    preferences: prefsDisplay,
   } : null
 
   return (

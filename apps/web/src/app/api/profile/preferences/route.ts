@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
+import { formatPartnerPreferences } from '@/lib/partnerPreferences'
 
 const PreferencesSchema = z.object({
   pref_age_min:   z.number().int().min(18).max(70).nullable().optional(),
@@ -41,7 +42,12 @@ export async function GET() {
     .eq('profile_id', profile.id)
     .maybeSingle()
 
-  return NextResponse.json({ ok: true, preferences: prefs ?? null })
+  // `display` is the same row with the id arrays resolved to names and each
+  // value formatted for reading. The editor still needs `preferences` raw, so
+  // both are returned rather than making the client resolve ids itself.
+  const display = await formatPartnerPreferences(admin, prefs)
+
+  return NextResponse.json({ ok: true, preferences: prefs ?? null, display })
 }
 
 export async function PUT(request: NextRequest) {

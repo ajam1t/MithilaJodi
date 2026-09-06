@@ -191,6 +191,30 @@ function ProfileView({ profile }: { profile: SharedProfile }) {
         </Panel>
       )}
 
+      {p.preferences && (
+        <Panel title="Looking for">
+          <Fact label="Age" value={p.preferences.ageRange} />
+          <Fact label="Bride / Groom" value={p.preferences.lookingFor} />
+          <Fact label="Community" value={p.preferences.community} />
+          <Fact label="Marital status" value={p.preferences.maritalStatus} />
+          <Fact label="Education" value={p.preferences.education} />
+          <Fact label="Profession" value={p.preferences.profession} />
+          <Fact label="Location" value={p.preferences.location} />
+          <Fact label="Diet" value={p.preferences.diet} />
+          <Fact label="Timeline" value={p.preferences.marriageTimeline} />
+          <Fact label="Manglik" value={p.preferences.manglik} />
+          <Fact label="Children" value={p.preferences.children} />
+          <Fact label="Living" value={p.preferences.livingArrangement} />
+          <Fact label="Career" value={p.preferences.career} />
+          <Fact label="Notes" value={p.preferences.notes} />
+          {p.preferences.gotraSafe && (
+            <p className="pt-2 text-[12px] text-ink-soft leading-snug">
+              Gotra-safe matches only.
+            </p>
+          )}
+        </Panel>
+      )}
+
       {hasAny(p.horoscope) && p.horoscope && (
         <Panel title="Horoscope">
           <Fact label="Rashi" value={p.horoscope.rashi} />

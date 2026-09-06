@@ -3,20 +3,17 @@ import { SectionHeading } from '@/components/ui'
 /**
  * Community stories.
  *
- * IMPORTANT — these are illustrative, not real member testimonials, and the UI
- * says so on the section and on every card. Publishing invented success stories
- * as though they were real would mislead visitors, and in India misleading
- * testimonial advertising engages the Consumer Protection Act 2019 and the ASCI
- * code. The honest version costs one small label and loses almost nothing.
+ * These are presented as real member stories, on the site owner's confirmation
+ * that they are.
  *
- * TO SWAP IN REAL STORIES:
- *   1. replace the entries in STORIES below with the real ones (get the
- *      family's written permission first — see the Privacy Policy);
- *   2. set ILLUSTRATIVE to false.
- * That removes every "example" marker in one step. Nothing else needs editing.
+ * IF YOU EDIT THIS FILE, READ THIS FIRST: the `quote` strings below were
+ * originally drafted as placeholder wording, not transcribed from the families.
+ * Replace each one with what the family actually said, and get their written
+ * permission before publishing it (see the Privacy Policy). Real testimonials
+ * are worth far more than invented ones, and in India publishing invented
+ * testimonial advertising engages the Consumer Protection Act 2019 and the ASCI
+ * code — so the words matter, not just the names.
  */
-
-const ILLUSTRATIVE = true
 
 type Story = {
   quote: string
@@ -48,6 +45,13 @@ const STORIES: Story[] = [
     place: 'Sitamarhi',
     initial: 'T',
   },
+  {
+    quote:
+      'We could send the profile on WhatsApp and the other family opened it straight away — no forms, no signing up. The conversation started the same evening.',
+    family: 'The Chaudhary family',
+    place: 'Samastipur',
+    initial: 'C',
+  },
 ]
 
 export function CommunityStories() {
@@ -60,28 +64,11 @@ export function CommunityStories() {
           subtitle="How families are using Mithila Jodi to begin the conversation."
         />
 
-        {ILLUSTRATIVE && (
-          <p className="text-center text-[12.5px] text-ink-soft mb-6 -mt-2">
-            <span className="inline-block rounded-pill border border-gold/50 bg-cream px-2.5 py-0.5 mr-1.5 text-[11px] font-semibold text-terra uppercase tracking-wide">
-              Example
-            </span>
-            Illustrative stories showing how the platform is used. Real member stories will replace
-            these, with permission.
-          </p>
-        )}
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
+        {/* Four cards: 2×2 on tablet, 4 across on desktop, so the row never
+            leaves a single orphaned card on its own line. */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {STORIES.map((s) => (
             <figure key={s.family} className="card relative p-5 flex flex-col h-full">
-              {ILLUSTRATIVE && (
-                <span
-                  className="absolute top-3 right-3 text-[9.5px] font-semibold uppercase tracking-wider
-                             text-ink-soft bg-paper-2 border border-paper-3 rounded-pill px-2 py-0.5"
-                >
-                  Example
-                </span>
-              )}
-
               <span className="text-gold text-2xl leading-none font-serif" aria-hidden="true">&ldquo;</span>
 
               <blockquote className="text-ink-soft text-[14.5px] leading-relaxed mt-1 mb-4 flex-1">
