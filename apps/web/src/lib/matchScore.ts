@@ -1,4 +1,5 @@
 import 'server-only'
+import { canBeMatched } from '@/lib/matchEligibility'
 
 /**
  * Match scoring.
@@ -538,6 +539,21 @@ export function scoreMatch(
   const blockers: string[] = []
   const cautions: string[] = []
   const reasons: MatchReason[] = []
+
+  // Same gender: return no score at all rather than a low one. A percentage
+  // implies the pairing is on a scale this platform ranks, and it is not — a
+  // bride is matched with a groom. Callers render nothing when confidence is 0
+  // and there are no reasons.
+  if (!canBeMatched(viewer.gender, candidate.gender)) {
+    return {
+      score: 0,
+      band: 'fair',
+      confidence: 0,
+      reasons: [],
+      blockers: ['Mithila Jodi matches brides with grooms, so no compatibility score is shown here.'],
+      cautions: [],
+    }
+  }
 
   let earned = 0
   let applicable = 0

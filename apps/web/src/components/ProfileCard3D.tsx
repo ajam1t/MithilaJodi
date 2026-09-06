@@ -206,14 +206,18 @@ export function ProfileCard3D({
     ? TIMELINE_MAP[profile.marriage_timeline] ?? profile.marriage_timeline.replace(/_/g, ' ')
     : null
 
-  const match = profile.match ?? null
+  // `confidence === 0` with no reasons means nothing was scored at all (the
+  // same-gender case), so the ring is suppressed rather than showing a 0.
+  const rawMatch = profile.match ?? null
+  const match = rawMatch && (rawMatch.confidence > 0 || rawMatch.reasons.length > 0) ? rawMatch : null
+  const unscored = rawMatch !== null && match === null
   const blocked = (match?.blockers.length ?? 0) > 0
 
   const hasDetails = Boolean(
     profile.employer || profile.profession_detail || profile.education_detail ||
     profile.maternal_gotra || profile.gram || profile.diet || profile.smoking ||
     profile.drinking || profile.marriage_timeline || profile.job_loc_name ||
-    match
+    match || unscored
   )
 
   const handleShortlist = useCallback(async () => {
@@ -426,6 +430,12 @@ export function ProfileCard3D({
           </div>
 
           <div className="flex-1 min-h-0 overflow-y-auto px-4 py-2.5">
+            {unscored && rawMatch?.blockers[0] && (
+              <p className="mb-2.5 pb-2.5 border-b border-gold/25 text-[12px] leading-snug text-ink-soft">
+                {rawMatch.blockers[0]}
+              </p>
+            )}
+
             {/* Why this score — first, because it is the reason to read the rest. */}
             {match && (
               <div className="mb-2.5 pb-2.5 border-b border-gold/25">

@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { filterPhotoViewable } from '@/lib/photoAccess'
 import { getSessionAccount } from '@/lib/auth'
 import { getInterestAllowance } from '@/lib/membership'
+import { canBeMatched } from '@/lib/matchEligibility'
 
 function toDisplayName(firstName: string, lastName: string | null): string {
   if (lastName) return `${firstName} ${lastName}`
@@ -232,7 +233,7 @@ export async function POST(request: NextRequest) {
 
   const { data: myProfile } = await admin
     .from('profiles')
-    .select('id, first_name, last_name')
+    .select('id, first_name, last_name, gender')
     .eq('account_id', session.id)
     .is('deleted_at', null)
     .neq('profile_status', 'deleted')
@@ -250,7 +251,7 @@ export async function POST(request: NextRequest) {
 
   const { data: targetProfile } = await admin
     .from('profiles')
-    .select('id, account_id, profile_status, discoverable')
+    .select('id, account_id, profile_status, discoverable, gender')
     .eq('id', to_profile_id)
     .is('deleted_at', null)
     .maybeSingle()
@@ -264,6 +265,18 @@ export async function POST(request: NextRequest) {
   // condition covers the private case too.
   if (target.profile_status !== 'active' || !target.discoverable) {
     return NextResponse.json({ ok: false, message: 'This profile is not available' }, { status: 422 })
+  }
+
+  // Brides are matched with grooms. Search already only shows the opposite
+  // gender, so reaching this branch means the profile id came from somewhere
+  // other than the feed — a shared link, a bookmark, or a direct API call.
+  // Enforced here rather than trusted from the UI, because this is the endpoint
+  // that actually creates the connection.
+  if (!canBeMatched(me.gender, target.gender)) {
+    return NextResponse.json(
+      { ok: false, message: 'Mithila Jodi matches brides with grooms, so an interest cannot be sent here.' },
+      { status: 422 },
+    )
   }
 
   const { data: blockRow } = await admin

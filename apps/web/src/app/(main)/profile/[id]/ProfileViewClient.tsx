@@ -85,6 +85,20 @@ const BAND_LABEL: Record<MatchDetail['band'], string> = {
  */
 function MatchPanel({ match }: { match: MatchDetail }) {
   const blocked = match.blockers.length > 0
+
+  // Nothing was scored — currently only the same-gender case. Show the reason
+  // without a number: a ring reading "0" implies this pairing was assessed and
+  // rated badly, when in fact it was never on the scale.
+  if (match.confidence === 0 && match.breakdown.length === 0) {
+    return (
+      <section className="card p-5" aria-label="Match breakdown">
+        {match.blockers.map(b => (
+          <p key={b} className="text-[13.5px] leading-snug text-ink-soft">{b}</p>
+        ))}
+      </section>
+    )
+  }
+
   const colour = blocked
     ? 'text-terra'
     : match.score >= 80 ? 'text-green' : match.score >= 65 ? 'text-gold' : 'text-maroon'

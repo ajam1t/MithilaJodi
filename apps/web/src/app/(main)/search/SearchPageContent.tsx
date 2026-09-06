@@ -116,6 +116,7 @@ function FiltersPanel({
   onReset,
   locName,
   onLocChange,
+  showing,
 }: {
   filters: Filters
   onChange: (k: keyof Filters, v: string) => void
@@ -123,6 +124,8 @@ function FiltersPanel({
   onReset: () => void
   locName: string
   onLocChange: (id: number | null, name: string) => void
+  /** Gender the API actually applied, so the panel can say what is shown. */
+  showing: string | null
 }) {
   const field = (label: string, key: keyof Filters, type = 'text', placeholder = '') => (
     <div>
@@ -158,11 +161,16 @@ function FiltersPanel({
           className="text-xs text-maroon hover:underline">Reset</button>
       </div>
 
-      {select('Gender', 'gender', [
-        { value: 'any', label: 'Any' },
-        { value: 'male', label: 'Male' },
-        { value: 'female', label: 'Female' },
-      ])}
+      {/* No Gender control: Mithila Jodi matches brides with grooms, so the
+          server derives this from your own profile. A select here would be a
+          control that silently does nothing. The API reports what it applied
+          via `showing`, so this states the truth rather than guessing. */}
+      {showing && (
+        <p className="rounded-mj-sm border border-gold/35 bg-gold/[0.06] px-3 py-2 text-[12.5px] text-ink-soft leading-snug">
+          Showing <span className="font-semibold text-maroon">{showing === 'female' ? 'brides' : 'grooms'}</span>.
+          Mithila Jodi matches brides with grooms.
+        </p>
+      )}
 
       <div className="grid grid-cols-2 gap-2">
         {field('Age min', 'age_min', 'number', '18')}
@@ -263,6 +271,7 @@ export default function SearchPageContent() {
   const [total, setTotal] = useState(0)
   const [relaxed, setRelaxed] = useState<Relaxation[]>([])
   const [noProfile, setNoProfile] = useState(false)
+  const [showing, setShowing] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showFilters, setShowFilters] = useState(false)
@@ -300,6 +309,7 @@ export default function SearchPageContent() {
       setTotal(json.total ?? (json.results?.length ?? 0))
       setRelaxed(json.relaxed ?? [])
       setNoProfile(json.scoring === 'no_profile')
+      setShowing(json.showing ?? null)
       setSearched(true)
     } catch (e: unknown) {
       if (e instanceof Error && e.name !== 'AbortError') {
@@ -353,7 +363,8 @@ export default function SearchPageContent() {
   // radius_km is deliberately not a chip: on its own it means nothing, and it
   // is already shown as a select underneath the location field.
   const activeChips = (Object.keys(filters) as (keyof Filters)[])
-    .filter(k => k !== 'sort' && k !== 'radius_km' && filters[k] !== '' && filters[k] !== EMPTY_FILTERS[k])
+    .filter(k => k !== 'sort' && k !== 'radius_km' && k !== 'gender'
+      && filters[k] !== '' && filters[k] !== EMPTY_FILTERS[k])
     .map(k => ({
       key: k,
       label: k === 'loc_id'
@@ -433,6 +444,7 @@ export default function SearchPageContent() {
                 onApply={applyFilters}
                 onReset={resetFilters}
                 locName={locName}
+                showing={showing}
                 onLocChange={(id, name) => {
                   setLocName(name)
                   setFilters(f => ({ ...f, loc_id: id ? String(id) : '' }))
@@ -452,6 +464,7 @@ export default function SearchPageContent() {
                   onApply={applyFilters}
                   onReset={resetFilters}
                   locName={locName}
+                  showing={showing}
                   onLocChange={(id, name) => {
                     setLocName(name)
                     setFilters(f => ({ ...f, loc_id: id ? String(id) : '' }))

@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { filterPhotoViewable } from '@/lib/photoAccess'
 import { getSessionAccount } from '@/lib/auth'
 import { getLocationIndex, idsWithin, idsInSameState } from '@/lib/locationIndex'
+import { oppositeGender } from '@/lib/matchEligibility'
 import {
   scoreMatch, topReasons,
   type ScoreProfile, type ScorePreferences, type MatchResult,
@@ -280,6 +281,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: false, message: 'age_min cannot exceed age_max' }, { status: 400 })
   }
 
+  // Gender is not a filter the member chooses — it is derived from their own.
+  // A groom's feed is brides and a bride's feed is grooms, so an explicit
+  // `gender` parameter (including a stale bookmark or a hand-edited URL) cannot
+  // widen the feed to the same gender. Falls back to the requested value only
+  // when the viewer has no gender yet, which the onboarding gate prevents for
+  // anyone who has completed signup.
   const filters: Filters = {
     gender: genderParam,
     ageMin: ageMinParam,
@@ -301,6 +308,10 @@ export async function GET(request: NextRequest) {
 
   const admin = await createAdminClient()
   const locationIndex = await getLocationIndex(admin)
+
+  // Declared before the viewer lookup so the gender override below can narrow
+  // it, and before runQuery so every pass uses the same object.
+  let activeFilters: Filters = filters
 
   // ─── Step 0: Resolve caller's own profile, preferences and block list ─────
   //
@@ -325,6 +336,11 @@ export async function GET(request: NextRequest) {
     viewerPrefs = toScorePrefs(prefRow)
   }
   const viewer: ScoreProfile | null = viewerRow ? toScoreProfile(viewerRow) : null
+
+  // Derive the feed's gender from the viewer. Done here rather than at parse
+  // time because it needs the viewer's own profile.
+  const wanted = oppositeGender(viewerRow?.gender as string | undefined)
+  if (wanted) activeFilters = { ...activeFilters, gender: wanted }
 
   const blockedProfileIds = new Set<string>()
   if (myProfileIds.length > 0) {
@@ -496,7 +512,6 @@ export async function GET(request: NextRequest) {
     return null
   }
 
-  let activeFilters = filters
   const firstPass = await runQuery(activeFilters)
 
   if (firstPass.error) {
@@ -839,5 +854,8 @@ export async function GET(request: NextRequest) {
     scored_pool_truncated: poolTruncated,
     /** Null when the viewer has no profile yet, so the UI can prompt for one. */
     scoring: viewer ? 'on' : 'no_profile',
+    /** Gender actually applied, derived from the viewer. The UI states this
+     *  instead of offering a control that cannot change it. */
+    showing: activeFilters.gender === 'any' ? null : activeFilters.gender,
   })
 }
