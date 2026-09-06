@@ -39,6 +39,59 @@ function toPublicName(firstName: string, lastName: string | null): string {
   return last.length > 0 ? `${first} ${last}` : first
 }
 
+type AdminClient = Awaited<ReturnType<typeof createAdminClient>>
+
+/**
+ * Location id -> English name. Split out so it can be issued concurrently with
+ * the other per-profile reads; a query error degrades to unnamed places rather
+ * than failing the page, which is how the inline version behaved.
+ */
+async function fetchLocationNames(
+  admin: AdminClient,
+  ids: number[],
+): Promise<Map<number, string>> {
+  const map = new Map<number, string>()
+  if (ids.length === 0) return map
+  const { data, error } = await admin.from('india_locations').select('id, name_en').in('id', ids)
+  if (error) {
+    console.error('[publicProfiles] locations query error:', error.code, error.message)
+    return map
+  }
+  for (const loc of data ?? []) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const l = loc as any
+    map.set(l.id as number, l.name_en as string)
+  }
+  return map
+}
+
+/**
+ * Profile ids with at least one approved verification, for the Verified badge.
+ * Read-only and not sensitive; on error the set is empty, so the badge is simply
+ * not shown rather than shown untruthfully.
+ */
+async function fetchVerifiedProfileIds(
+  admin: AdminClient,
+  profileIds: string[],
+): Promise<Set<string>> {
+  const verified = new Set<string>()
+  if (profileIds.length === 0) return verified
+  const { data, error } = await admin
+    .from('verifications')
+    .select('profile_id')
+    .in('profile_id', profileIds)
+    .eq('status', 'verified')
+  if (error) {
+    console.error('[publicProfiles] verifications query error:', error.code, error.message)
+    return verified
+  }
+  for (const v of data ?? []) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    verified.add((v as any).profile_id as string)
+  }
+  return verified
+}
+
 /**
  * Fetch the curated public showcase as a strict display-safe allowlist.
  *
@@ -180,39 +233,32 @@ export async function getPublicShowcaseProfiles(): Promise<SearchCard[]> {
     (a, b) => (orderByProfileId.get(a.id as string) ?? 0) - (orderByProfileId.get(b.id as string) ?? 0)
   )
 
-  // Step 3: batch-fetch location names.
+  // Steps 3, 4 and 6 all key off the profile ids that survived the gates above
+  // and none of them depends on the others, but they ran one after another —
+  // three sequential Supabase round trips on every render of a public,
+  // Google-indexable page, straight onto TTFB. They now go out together.
+  //
+  // They are deliberately still issued *after* the visibility and account-status
+  // gates rather than alongside them: nothing should be read, and no URL signed,
+  // for a profile that is not allowed on this page in the first place.
   const locationIdSet = new Set<number>()
   for (const p of profiles) {
     if (p.native_place_id != null) locationIdSet.add(p.native_place_id as number)
     if (p.current_loc_id != null) locationIdSet.add(p.current_loc_id as number)
     if (p.job_loc_id != null) locationIdSet.add(p.job_loc_id as number)
   }
-
-  const locationMap = new Map<number, string>()
-  if (locationIdSet.size > 0) {
-    const { data: locationRows, error: locationError } = await admin
-      .from('india_locations')
-      .select('id, name_en')
-      .in('id', [...locationIdSet])
-    if (locationError) {
-      console.error('[publicProfiles] locations query error:', locationError.code, locationError.message)
-    } else {
-      for (const loc of locationRows ?? []) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const l = loc as any
-        locationMap.set(l.id as number, l.name_en as string)
-      }
-    }
-  }
-
-  // Step 4: batch-fetch primary approved photos.
   const profileIds = profiles.map((p) => p.id as string)
-  const { data: photoRows, error: photosError } = await admin
-    .from('profile_photos')
-    .select('id, profile_id, storage_path, is_primary, status')
-    .in('profile_id', profileIds)
-    .eq('is_primary', true)
-    .eq('status', 'approved')
+
+  const [locationMap, { data: photoRows, error: photosError }, verifiedSet] = await Promise.all([
+    fetchLocationNames(admin, [...locationIdSet]),
+    admin
+      .from('profile_photos')
+      .select('id, profile_id, storage_path, is_primary, status')
+      .in('profile_id', profileIds)
+      .eq('is_primary', true)
+      .eq('status', 'approved'),
+    fetchVerifiedProfileIds(admin, profileIds),
+  ])
 
   if (photosError) {
     console.error('[publicProfiles] photos query error:', photosError.code, photosError.message)
@@ -261,24 +307,6 @@ export async function getPublicShowcaseProfiles(): Promise<SearchCard[]> {
     } catch (err) {
       console.error('[publicProfiles] batch signed URL exception:', err)
       for (const [profileId] of signEntries) signedUrlByProfile.set(profileId, null)
-    }
-  }
-
-  // Step 6: verification status (trust badge) — a profile is "verified" when it
-  // has at least one approved verification. Read-only; verified status is not
-  // sensitive. Used only to render the Verified badge truthfully.
-  const verifiedSet = new Set<string>()
-  const { data: verifRows, error: verifError } = await admin
-    .from('verifications')
-    .select('profile_id')
-    .in('profile_id', profileIds)
-    .eq('status', 'verified')
-  if (verifError) {
-    console.error('[publicProfiles] verifications query error:', verifError.code, verifError.message)
-  } else {
-    for (const v of verifRows ?? []) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      verifiedSet.add((v as any).profile_id as string)
     }
   }
 
