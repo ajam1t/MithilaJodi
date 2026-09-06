@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { type SearchCard } from '@/types/profile'
 import { ProfileCard3D } from '@/components/ProfileCard3D'
+import { LocationPicker } from '@/components/LocationPicker'
 import { Button, EmptyState, Skeleton, useToast } from '@/components/ui'
 
 type Filters = {
@@ -18,6 +20,11 @@ type Filters = {
   diet: string
   height_min: string
   height_max: string
+  marital_status: string
+  marriage_timeline: string
+  /** india_locations.id, as a string so it round-trips through the URL. */
+  loc_id: string
+  radius_km: string
   q: string
   sort: string
 }
@@ -34,8 +41,12 @@ const EMPTY_FILTERS: Filters = {
   diet: '',
   height_min: '',
   height_max: '',
+  marital_status: '',
+  marriage_timeline: '',
+  loc_id: '',
+  radius_km: '120',
   q: '',
-  sort: 'newest',
+  sort: 'match',
 }
 
 const FILTER_LABELS: Partial<Record<keyof Filters, string>> = {
@@ -50,8 +61,23 @@ const FILTER_LABELS: Partial<Record<keyof Filters, string>> = {
   diet: 'Diet',
   height_min: 'Ht ≥',
   height_max: 'Ht ≤',
+  marital_status: 'Marital status',
+  marriage_timeline: 'Timeline',
+  loc_id: 'Near',
   q: 'Search',
 }
+
+/** What the API reports back when it had to loosen a filter to find anyone. */
+type Relaxation = { filter: string; label: string; from: string; to: string }
+
+const TIMELINE_OPTIONS = [
+  { value: '', label: 'Any timeline' },
+  { value: 'within_3_months', label: 'Within 3 months' },
+  { value: 'within_6_months', label: 'Within 6 months' },
+  { value: 'within_1_year', label: 'Within a year' },
+  { value: 'within_2_years', label: 'Within 2 years' },
+  { value: 'no_rush', label: 'No fixed timeline' },
+]
 
 function prettyValue(v: string): string {
   return v.replace(/_/g, '-')
@@ -70,8 +96,15 @@ function buildParams(filters: Filters, page: number): URLSearchParams {
   if (filters.diet) p.set('diet', filters.diet)
   if (filters.height_min) p.set('height_min', filters.height_min)
   if (filters.height_max) p.set('height_max', filters.height_max)
+  if (filters.marital_status.trim()) p.set('marital_status', filters.marital_status.trim())
+  if (filters.marriage_timeline) p.set('marriage_timeline', filters.marriage_timeline)
+  if (filters.loc_id) {
+    p.set('loc_id', filters.loc_id)
+    // Only meaningful alongside a location, so it is never sent on its own.
+    if (filters.radius_km) p.set('radius_km', filters.radius_km)
+  }
   if (filters.q.trim()) p.set('q', filters.q.trim())
-  if (filters.sort !== 'newest') p.set('sort', filters.sort)
+  if (filters.sort !== 'match') p.set('sort', filters.sort)
   if (page > 1) p.set('page', String(page))
   return p
 }
@@ -81,11 +114,15 @@ function FiltersPanel({
   onChange,
   onApply,
   onReset,
+  locName,
+  onLocChange,
 }: {
   filters: Filters
   onChange: (k: keyof Filters, v: string) => void
   onApply: () => void
   onReset: () => void
+  locName: string
+  onLocChange: (id: number | null, name: string) => void
 }) {
   const field = (label: string, key: keyof Filters, type = 'text', placeholder = '') => (
     <div>
@@ -132,10 +169,39 @@ function FiltersPanel({
         {field('Age max', 'age_max', 'number', '60')}
       </div>
 
+      <div>
+        <LocationPicker
+          compact
+          label="Near"
+          value={filters.loc_id ? Number(filters.loc_id) : null}
+          initialName={locName}
+          placeholder="City or district"
+          onChange={onLocChange}
+        />
+        {filters.loc_id && (
+          <div className="mt-2">
+            <label className="field-label">Within</label>
+            <select
+              value={filters.radius_km}
+              onChange={e => onChange('radius_km', e.target.value)}
+              className="select py-2 text-sm"
+            >
+              <option value="40">40 km — same city</option>
+              <option value="120">120 km — nearby towns</option>
+              <option value="250">250 km — same region</option>
+              <option value="600">600 km — wider</option>
+            </select>
+          </div>
+        )}
+      </div>
+
       {field('Gotra', 'gotra', 'text', 'e.g. Kashyap')}
       {field('Mool', 'mool', 'text', 'e.g. Saurath')}
       {field('Gram', 'gram', 'text', 'e.g. Madhubani')}
       {field('Caste', 'caste', 'text', 'e.g. Brahmin')}
+      {field('Marital status', 'marital_status', 'text', 'e.g. Never married')}
+
+      {select('Marriage timeline', 'marriage_timeline', TIMELINE_OPTIONS)}
 
       {select('Diet', 'diet', [
         { value: '', label: 'Any diet' },
@@ -151,6 +217,7 @@ function FiltersPanel({
       </div>
 
       {select('Sort by', 'sort', [
+        { value: 'match', label: 'Best match' },
         { value: 'newest', label: 'Recently updated' },
         { value: 'completeness', label: 'Most complete' },
         { value: 'age_asc', label: 'Younger first' },
@@ -182,18 +249,37 @@ export default function SearchPageContent() {
     diet: searchParams.get('diet') ?? '',
     height_min: searchParams.get('height_min') ?? '',
     height_max: searchParams.get('height_max') ?? '',
+    marital_status: searchParams.get('marital_status') ?? '',
+    marriage_timeline: searchParams.get('marriage_timeline') ?? '',
+    loc_id: searchParams.get('loc_id') ?? '',
+    radius_km: searchParams.get('radius_km') ?? '120',
     q: searchParams.get('q') ?? '',
-    sort: searchParams.get('sort') ?? 'newest',
+    sort: searchParams.get('sort') ?? 'match',
   }))
 
   const [page, setPage] = useState(Number(searchParams.get('page') ?? '1'))
   const [results, setResults] = useState<SearchCard[]>([])
   const [hasMore, setHasMore] = useState(false)
+  const [total, setTotal] = useState(0)
+  const [relaxed, setRelaxed] = useState<Relaxation[]>([])
+  const [noProfile, setNoProfile] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [searched, setSearched] = useState(false)
+  const [locName, setLocName] = useState('')
   const abortRef = useRef<AbortController | null>(null)
+
+  // Re-hydrate the location chip's display name when the page is opened from a
+  // shared or bookmarked URL, which carries the id but not the name.
+  useEffect(() => {
+    const id = searchParams.get('loc_id')
+    if (!id) return
+    fetch(`/api/locations?ids=${id}`)
+      .then(r => r.json())
+      .then(j => { if (j.ok && j.results?.[0]) setLocName(j.results[0].name_en) })
+      .catch(() => { /* the id still filters correctly; only the label is missing */ })
+  }, [searchParams])
 
   const runSearch = useCallback(async (f: Filters, p: number) => {
     if (abortRef.current) abortRef.current.abort()
@@ -211,6 +297,9 @@ export default function SearchPageContent() {
       }
       setResults(json.results ?? [])
       setHasMore(json.has_more ?? false)
+      setTotal(json.total ?? (json.results?.length ?? 0))
+      setRelaxed(json.relaxed ?? [])
+      setNoProfile(json.scoring === 'no_profile')
       setSearched(true)
     } catch (e: unknown) {
       if (e instanceof Error && e.name !== 'AbortError') {
@@ -236,6 +325,7 @@ export default function SearchPageContent() {
 
   function resetFilters() {
     setFilters(EMPTY_FILTERS)
+    setLocName('')
     setPage(1)
     router.replace('/search', { scroll: false })
     runSearch(EMPTY_FILTERS, 1)
@@ -252,6 +342,7 @@ export default function SearchPageContent() {
 
   function removeFilter(key: keyof Filters) {
     const next = { ...filters, [key]: EMPTY_FILTERS[key] }
+    if (key === 'loc_id') setLocName('')
     setFilters(next)
     setPage(1)
     const params = buildParams(next, 1)
@@ -259,9 +350,16 @@ export default function SearchPageContent() {
     runSearch(next, 1)
   }
 
+  // radius_km is deliberately not a chip: on its own it means nothing, and it
+  // is already shown as a select underneath the location field.
   const activeChips = (Object.keys(filters) as (keyof Filters)[])
-    .filter(k => k !== 'sort' && filters[k] !== '' && filters[k] !== EMPTY_FILTERS[k])
-    .map(k => ({ key: k, label: `${FILTER_LABELS[k] ?? k}: ${prettyValue(filters[k])}` }))
+    .filter(k => k !== 'sort' && k !== 'radius_km' && filters[k] !== '' && filters[k] !== EMPTY_FILTERS[k])
+    .map(k => ({
+      key: k,
+      label: k === 'loc_id'
+        ? `Near: ${locName || 'selected place'}${filters.radius_km ? ` (${filters.radius_km} km)` : ''}`
+        : `${FILTER_LABELS[k] ?? k}: ${prettyValue(filters[k])}`,
+    }))
 
   // Send interest directly from a search card. Throws on failure so the card
   // does not show a false "Sent!" state; the message is surfaced to the user.
@@ -334,6 +432,11 @@ export default function SearchPageContent() {
                 onChange={(k, v) => setFilters(f => ({ ...f, [k]: v }))}
                 onApply={applyFilters}
                 onReset={resetFilters}
+                locName={locName}
+                onLocChange={(id, name) => {
+                  setLocName(name)
+                  setFilters(f => ({ ...f, loc_id: id ? String(id) : '' }))
+                }}
               />
             </div>
           </div>
@@ -348,6 +451,11 @@ export default function SearchPageContent() {
                   onChange={(k, v) => setFilters(f => ({ ...f, [k]: v }))}
                   onApply={applyFilters}
                   onReset={resetFilters}
+                  locName={locName}
+                  onLocChange={(id, name) => {
+                    setLocName(name)
+                    setFilters(f => ({ ...f, loc_id: id ? String(id) : '' }))
+                  }}
                 />
               </div>
             )}
@@ -405,17 +513,52 @@ export default function SearchPageContent() {
             {!loading && searched && results.length === 0 && !error && (
               <EmptyState
                 title="No profiles match your filters"
-                description="Try broadening your search — fewer criteria will surface more matches."
+                description={
+                  relaxed.length > 0
+                    ? 'We also tried widening your filters and still found nobody. The community is still small — try again in a few days, or clear the filters to see everyone.'
+                    : 'Try broadening your search — fewer criteria will surface more matches.'
+                }
                 action={<Button variant="ghost" size="sm" onClick={resetFilters}>Clear all filters</Button>}
               />
+            )}
+
+            {/* Nothing matched the filters as given, so the API loosened them one
+                at a time. Saying exactly what it changed is the difference
+                between a helpful fallback and results that look wrong. */}
+            {!loading && relaxed.length > 0 && results.length > 0 && (
+              <div className="mb-4 rounded-mj-sm border border-gold/45 bg-gold/[0.07] px-4 py-3">
+                <p className="text-[13.5px] font-semibold text-maroon">
+                  No one matched everything you asked for — here is what is nearby.
+                </p>
+                <ul className="mt-1.5 space-y-0.5">
+                  {relaxed.map(r => (
+                    <li key={r.filter} className="text-[12.5px] text-ink-soft">
+                      <span className="text-ink">{r.label}</span>: widened from{' '}
+                      <span className="line-through opacity-70">{r.from}</span> to{' '}
+                      <span className="text-ink font-medium">{r.to}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Scores need a profile to compare against. Without one the results
+                are still correct, just unranked — say so rather than showing
+                blank rings. */}
+            {!loading && noProfile && results.length > 0 && (
+              <div className="mb-4 rounded-mj-sm border border-paper-3 bg-cream px-4 py-3 text-[13px] text-ink-soft">
+                Complete your own profile to see match scores and have these results ranked for you.{' '}
+                <Link href="/profile/edit" className="text-maroon font-semibold hover:underline">Complete profile →</Link>
+              </div>
             )}
 
             {!loading && results.length > 0 && (
               <>
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-sm text-ink-soft">
-                    <span className="text-ink font-semibold">{results.length}</span>{' '}
-                    {results.length === 1 ? 'profile' : 'profiles'} on this page
+                    <span className="text-ink font-semibold">{total}</span>{' '}
+                    {total === 1 ? 'profile' : 'profiles'} found
+                    {total > results.length && <> · showing {results.length}</>}
                   </p>
                   <p className="text-xs text-ink-soft">Page {page}</p>
                 </div>

@@ -31,7 +31,31 @@ export type SearchCard = {
   maternal_gotra: string | null
   job_loc_name: string | null
   marriage_timeline: string | null
+  job_title?: string | null
+  marital_status?: string | null
+  family_type?: string | null
   /** Trust signal — true only when an approved verification exists. Optional;
    *  the badge is shown only when this is explicitly true. */
   verified?: boolean
+  /**
+   * How well this profile fits the signed-in member, computed server-side by
+   * lib/matchScore. Null on public surfaces and for members without a profile
+   * of their own — there is nothing to compare against.
+   */
+  match?: MatchSummary | null
+}
+
+/** Display-safe projection of lib/matchScore's MatchResult. */
+export type MatchSummary = {
+  /** 0–100. */
+  score: number
+  band: 'excellent' | 'strong' | 'good' | 'fair'
+  /** Share of the scoring weight that had data behind it, 0–1. */
+  confidence: number
+  /** Already trimmed to the few worth showing, strongest first. */
+  reasons: Array<{ key: string; label: string; detail: string }>
+  /** Hard incompatibilities, e.g. same gotra. Non-empty means a capped score. */
+  blockers: string[]
+  /** Worth flagging, not disqualifying. */
+  cautions: string[]
 }

@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "mithila-web",
-      "runtimeExecutable": "C:\\Users\\amit.manoj.jha\\AppData\\Local\\nodejs-portable\\node-v22.23.2-win-x64\\npm.cmd",
-      "runtimeArgs": ["run", "dev", "--workspace", "@mithila-jodi/web"],
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--workspace", "apps/web"],
       "port": 3000
     }
   ]

@@ -22,6 +22,18 @@ interface ProfileCardProps {
   className?: string
 }
 
+/**
+ * Duplicated from lib/matchScore rather than imported: that module is
+ * `server-only` because it reads private profile fields, and this card is a
+ * client component. Two short label maps is the cheaper of the two mistakes.
+ */
+const BAND_LABEL: Record<'excellent' | 'strong' | 'good' | 'fair', string> = {
+  excellent: 'Excellent',
+  strong: 'Strong',
+  good: 'Good',
+  fair: 'Possible',
+}
+
 const TIMELINE_MAP: Record<string, string> = {
   within_3_months: 'Within 3 months',
   within_6_months: 'Within 6 months',
@@ -78,6 +90,44 @@ function StarIcon() {
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
     </svg>
+  )
+}
+
+/**
+ * Match score, drawn as a ring.
+ *
+ * A ring rather than a number alone because the score is a proportion, and
+ * because the colour has to carry the blocker case: a pair with a sagotra
+ * blocker is capped at 40 and must never look like a recommendation, whatever
+ * the rest of the profile says.
+ */
+function MatchRing({ score, blocked, size = 46 }: { score: number; blocked: boolean; size?: number }) {
+  const stroke = 4
+  const r = (size - stroke) / 2
+  const circumference = 2 * Math.PI * r
+  const filled = Math.max(0, Math.min(100, score)) / 100
+  const colour = blocked ? '#B34A24' : score >= 80 ? '#1F7A4D' : score >= 65 ? '#B98A2E' : '#7A1220'
+
+  return (
+    <span
+      className="relative inline-grid place-items-center"
+      style={{ width: size, height: size }}
+      role="img"
+      aria-label={blocked ? `${score} percent match, with a traditional restriction` : `${score} percent match`}
+    >
+      <svg width={size} height={size} className="absolute inset-0 -rotate-90" aria-hidden="true">
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#ECDCC0" strokeWidth={stroke} />
+        <circle
+          cx={size / 2} cy={size / 2} r={r} fill="none"
+          stroke={colour} strokeWidth={stroke} strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference * (1 - filled)}
+        />
+      </svg>
+      <span className="font-serif leading-none" style={{ color: colour, fontSize: size * 0.3 }}>
+        {score}
+      </span>
+    </span>
   )
 }
 
@@ -149,10 +199,21 @@ export function ProfileCard3D({
     .filter(Boolean)
     .slice(0, 3) as string[]
 
+  // What someone actually wants to know before flipping: what they do, and how
+  // soon they are looking to marry. Both were previously buried on the back.
+  const workLine = [profile.job_title, profile.employer].filter(Boolean).join(' · ') || profile.profession_detail
+  const timelineLabel = profile.marriage_timeline
+    ? TIMELINE_MAP[profile.marriage_timeline] ?? profile.marriage_timeline.replace(/_/g, ' ')
+    : null
+
+  const match = profile.match ?? null
+  const blocked = (match?.blockers.length ?? 0) > 0
+
   const hasDetails = Boolean(
     profile.employer || profile.profession_detail || profile.education_detail ||
     profile.maternal_gotra || profile.gram || profile.diet || profile.smoking ||
-    profile.drinking || profile.marriage_timeline || profile.job_loc_name
+    profile.drinking || profile.marriage_timeline || profile.job_loc_name ||
+    match
   )
 
   const handleShortlist = useCallback(async () => {
@@ -180,7 +241,7 @@ export function ProfileCard3D({
   return (
     <div className={cn('w-full mx-auto', compact ? 'max-w-[280px]' : 'max-w-[320px]', className)} style={{ perspective: 1200 }}>
       <div
-        className={cn('relative w-full transition-transform duration-500 ease-mj-out', compact ? 'h-[360px]' : 'h-[452px]')}
+        className={cn('relative w-full transition-transform duration-500 ease-mj-out', compact ? 'h-[400px]' : 'h-[492px]')}
         style={{
           transformStyle: 'preserve-3d',
           transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
@@ -197,7 +258,10 @@ export function ProfileCard3D({
           <div className="gold-strip flex-shrink-0" />
 
           {/* Photo */}
-          <div className="relative flex-shrink-0" style={{ aspectRatio: '4 / 3' }}>
+          {/* 3:2 rather than 4:3 — the front now carries a work line, a timeline
+              chip and the top match reason, and at 4:3 that pushed the action
+              row past the bottom of the card. */}
+          <div className="relative flex-shrink-0" style={{ aspectRatio: '3 / 2' }}>
             {profile.primary_photo_url ? (
               <Image
                 src={profile.primary_photo_url}
@@ -214,6 +278,19 @@ export function ProfileCard3D({
             {profile.verified && (
               <div className="absolute top-2.5 left-2.5">
                 <VerifiedBadge />
+              </div>
+            )}
+            {match && (
+              <div className="absolute top-2 right-2 rounded-mj-sm bg-cream/95 backdrop-blur-[2px] border border-gold/40 shadow-mj-xs px-1.5 py-1 flex items-center gap-1.5">
+                <MatchRing score={match.score} blocked={blocked} size={compact ? 38 : 44} />
+                <span className="pr-0.5 text-left">
+                  <span className="block text-[9px] uppercase tracking-wider text-ink-soft leading-none">
+                    {blocked ? 'Check' : BAND_LABEL[match.band]}
+                  </span>
+                  <span className="block text-[10px] text-ink-soft leading-tight mt-0.5">
+                    {Math.round(match.confidence * 100)}% of factors
+                  </span>
+                </span>
               </div>
             )}
             {!profile.primary_photo_url && (
@@ -237,8 +314,14 @@ export function ProfileCard3D({
               </p>
             )}
 
+            {workLine && (
+              <p className={cn('text-ink-soft truncate', compact ? 'text-[11px] mt-0.5' : 'text-[12px] mt-0.5')}>
+                {workLine}
+              </p>
+            )}
+
             {communityTags.length > 0 && (
-              <div className={cn('flex flex-wrap', compact ? 'gap-1 mt-1.5' : 'gap-1.5 mt-2.5')}>
+              <div className={cn('flex flex-wrap', compact ? 'gap-1 mt-1.5' : 'gap-1.5 mt-2')}>
                 {communityTags.map((t) => (
                   <span
                     key={t}
@@ -247,7 +330,25 @@ export function ProfileCard3D({
                     {t}
                   </span>
                 ))}
+                {timelineLabel && (
+                  <span className={cn('rounded-pill border border-gold/40 bg-gold/[0.08] text-maroon', compact ? 'text-[9px] px-1.5 py-0.5' : 'text-[10px] px-2 py-0.5')}>
+                    Marriage: {timelineLabel}
+                  </span>
+                )}
               </div>
+            )}
+
+            {/* The single strongest reason, on the front, so the score is never
+                just a number the member has to flip the card to understand. */}
+            {match && !compact && match.reasons[0] && !blocked && (
+              <p className="mt-2 text-[11.5px] text-green leading-snug line-clamp-2">
+                ✓ {match.reasons[0].detail}
+              </p>
+            )}
+            {match && blocked && (
+              <p className={cn('mt-2 text-terra leading-snug line-clamp-2', compact ? 'text-[10.5px]' : 'text-[11.5px]')}>
+                ⚠ {match.blockers[0]}
+              </p>
             )}
 
             <div className={cn('mt-auto flex flex-col', compact ? 'gap-1.5 pt-2' : 'gap-2 pt-3')}>
@@ -325,10 +426,55 @@ export function ProfileCard3D({
           </div>
 
           <div className="flex-1 min-h-0 overflow-y-auto px-4 py-2.5">
+            {/* Why this score — first, because it is the reason to read the rest. */}
+            {match && (
+              <div className="mb-2.5 pb-2.5 border-b border-gold/25">
+                <div className="flex items-center gap-2.5">
+                  <MatchRing score={match.score} blocked={blocked} size={40} />
+                  <div className="min-w-0">
+                    <p className="text-[12.5px] font-semibold text-maroon leading-tight">
+                      {blocked ? 'Needs checking' : `${BAND_LABEL[match.band]} match`}
+                    </p>
+                    <p className="text-[10.5px] text-ink-soft leading-tight">
+                      Scored on {Math.round(match.confidence * 100)}% of our factors
+                    </p>
+                  </div>
+                </div>
+
+                {match.blockers.map((b) => (
+                  <p key={b} className="mt-2 text-[11.5px] leading-snug text-terra bg-terra/[0.07] border border-terra/25 rounded-mj-sm px-2 py-1.5">
+                    {b}
+                  </p>
+                ))}
+
+                {match.reasons.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {match.reasons.map((r) => (
+                      <li key={r.key} className="text-[11.5px] leading-snug text-ink flex gap-1.5">
+                        <span aria-hidden="true" className="text-green flex-shrink-0">✓</span>
+                        <span><span className="text-ink-soft">{r.label}:</span> {r.detail}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {match.cautions.map((c) => (
+                  <p key={c} className="mt-1.5 text-[11px] leading-snug text-ink-soft flex gap-1.5">
+                    <span aria-hidden="true" className="text-gold flex-shrink-0">!</span>
+                    <span>{c}</span>
+                  </p>
+                ))}
+              </div>
+            )}
+
             <DetailRow label="Education" value={profile.education_detail} />
             <DetailRow label="Profession" value={profile.profession_detail} />
+            <DetailRow label="Role" value={profile.job_title} />
             <DetailRow label="Company" value={profile.employer} />
-            <DetailRow label="Job City" value={profile.job_loc_name} />
+            <DetailRow label="Work City" value={profile.job_loc_name} />
+            <DetailRow label="Native" value={profile.native_place_name} />
+            <DetailRow label="Status" value={profile.marital_status} />
+            <DetailRow label="Family" value={profile.family_type} />
             <DetailRow label="Gotra" value={profile.self_gotra} />
             <DetailRow label="Mat. Gotra" value={profile.maternal_gotra} />
             <DetailRow label="Mool" value={profile.mool} />
@@ -336,14 +482,7 @@ export function ProfileCard3D({
             <DetailRow label="Diet" value={formatDiet(profile.diet)} />
             <DetailRow label="Smoking" value={yesNo(profile.smoking)} />
             <DetailRow label="Drinking" value={yesNo(profile.drinking)} />
-            <DetailRow
-              label="Marriage"
-              value={
-                profile.marriage_timeline
-                  ? TIMELINE_MAP[profile.marriage_timeline] ?? profile.marriage_timeline.replace(/_/g, ' ')
-                  : null
-              }
-            />
+            <DetailRow label="Marriage" value={timelineLabel} />
           </div>
 
           <div className="p-3 flex-shrink-0 border-t border-gold/15">

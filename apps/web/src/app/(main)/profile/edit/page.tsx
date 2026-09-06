@@ -2,14 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef, useId } from 'react'
 import { useRouter } from 'next/navigation'
+import { LocationPicker } from '@/components/LocationPicker'
 
-type LocationResult = {
-  id: number
-  name_en: string
-  level: string
-  is_mithila_region: boolean
-  parent_name?: string | null
-}
 type CommunityResult = { id: number; value: string; label_en: string; is_mithila: boolean }
 
 type PhotoRow = {
@@ -181,185 +175,6 @@ const EMPTY_FORM: FormData = {
   siblings_info: '',
   family_expectations: '',
   family_introduction: '',
-}
-
-/**
- * Location picker.
- *
- * The value that is stored is an `india_locations.id`, never free text, so the
- * only way to set this field is to pick a row from the suggestion list. Two
- * things about the previous version made that fail silently:
- *
- *   1. typing over an existing selection left the stored id untouched, so
- *      someone who replaced "Darbhanga" with "Mumbai" and pressed Save saw
- *      "Darbhanga" come back and concluded the form does not save;
- *   2. a search with no hits closed the dropdown and said nothing at all.
- *
- * Both are now explicit: editing the text drops the id immediately and the
- * field tells you it is unset, and an empty result set says so.
- */
-function LocationSearch({
-  label, value, onChange, initialName = '', hint,
-}: {
-  label: string
-  value: number | null
-  onChange: (id: number | null, name: string) => void
-  /**
-   * Human-readable name of the already-saved location. The parent loads it
-   * asynchronously, so without this the field rendered EMPTY for anyone who had
-   * previously set a location — it looked like the value had been lost.
-   */
-  initialName?: string
-  hint?: string
-}) {
-  const inputId = useId()
-  const listId = `${inputId}-list`
-  const [text, setText] = useState(initialName)
-  const [results, setResults] = useState<LocationResult[]>([])
-  const [open, setOpen] = useState(false)
-  const [searching, setSearching] = useState(false)
-  const [noMatch, setNoMatch] = useState(false)
-  const [active, setActive] = useState(-1)
-  const debounce = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const seeded = useRef(false)
-
-  // Seed once the parent's profile fetch resolves, and only once, so it can
-  // never clobber what the user is typing.
-  useEffect(() => {
-    if (!seeded.current && initialName) {
-      seeded.current = true
-      setText(initialName)
-    }
-  }, [initialName])
-
-  const search = useCallback((query: string) => {
-    if (debounce.current) clearTimeout(debounce.current)
-    if (query.trim().length < 2) { setResults([]); setNoMatch(false); setSearching(false); return }
-    setSearching(true)
-    debounce.current = setTimeout(async () => {
-      try {
-        const r = await fetch(`/api/locations?q=${encodeURIComponent(query.trim())}&level=state,district,city,town,village`)
-        const j = await r.json()
-        const rows: LocationResult[] = j.results ?? []
-        setResults(rows)
-        setNoMatch(rows.length === 0)
-        setOpen(true)
-        setActive(rows.length > 0 ? 0 : -1)
-      } catch {
-        setResults([]); setNoMatch(false)
-      } finally {
-        setSearching(false)
-      }
-    }, 250)
-  }, [])
-
-  function pick(r: LocationResult) {
-    onChange(r.id, r.name_en)
-    setText(r.name_en)
-    setResults([])
-    setNoMatch(false)
-    setOpen(false)
-    setActive(-1)
-  }
-
-  function clear() {
-    onChange(null, '')
-    setText('')
-    setResults([])
-    setNoMatch(false)
-    setOpen(false)
-  }
-
-  // Text present but no id behind it — the value will NOT be saved. Say so.
-  const unresolved = text.trim().length > 0 && value === null
-
-  return (
-    <div className="relative">
-      <label htmlFor={inputId} className="block text-sm font-medium text-ink mb-1">{label}</label>
-      <div className="relative">
-        <input
-          id={inputId}
-          type="text"
-          role="combobox"
-          aria-expanded={open}
-          aria-controls={listId}
-          aria-autocomplete="list"
-          aria-activedescendant={active >= 0 && results[active] ? `${listId}-${results[active].id}` : undefined}
-          autoComplete="off"
-          value={text}
-          placeholder="Type a city or district…"
-          className={`w-full border rounded-mj-sm pl-3 pr-8 py-2 text-ink text-sm focus:outline-none focus:border-maroon ${
-            unresolved ? 'border-terra/60 bg-terra/[0.04]' : value ? 'border-green/40' : 'border-ink/20'
-          }`}
-          onChange={e => {
-            const next = e.target.value
-            setText(next)
-            // Editing the text invalidates the selection. Dropping the id here
-            // is what stops a stale value from being re-saved unnoticed.
-            if (value !== null) onChange(null, '')
-            search(next)
-          }}
-          onFocus={() => { if (results.length) setOpen(true) }}
-          onBlur={() => setTimeout(() => setOpen(false), 150)}
-          onKeyDown={e => {
-            if (!open || results.length === 0) return
-            if (e.key === 'ArrowDown') { e.preventDefault(); setActive(i => (i + 1) % results.length) }
-            else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(i => (i - 1 + results.length) % results.length) }
-            else if (e.key === 'Enter') { e.preventDefault(); if (results[active]) pick(results[active]) }
-            else if (e.key === 'Escape') { setOpen(false) }
-          }}
-        />
-        {text && (
-          <button
-            type="button"
-            aria-label={`Clear ${label}`}
-            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 grid place-items-center text-ink-soft text-xs hover:text-maroon"
-            onClick={clear}
-          >✕</button>
-        )}
-      </div>
-
-      {unresolved && !searching && (
-        <p className="text-[11.5px] text-terra mt-1">
-          {noMatch
-            ? `No place called “${text.trim()}” yet — try the nearest larger city or district.`
-            : 'Pick a place from the list — typing alone will not save.'}
-        </p>
-      )}
-      {!unresolved && hint && <p className="text-[11.5px] text-ink-soft mt-1">{hint}</p>}
-
-      {open && (results.length > 0 || noMatch) && (
-        <ul
-          id={listId}
-          role="listbox"
-          className="absolute z-20 w-full bg-white border border-ink/20 rounded-mj-sm shadow-mj-xs mt-1 max-h-56 overflow-y-auto"
-        >
-          {results.map((r, i) => (
-            <li
-              key={r.id}
-              id={`${listId}-${r.id}`}
-              role="option"
-              aria-selected={i === active}
-              className={`px-3 py-2 text-sm cursor-pointer text-ink flex justify-between gap-2 ${i === active ? 'bg-cream' : 'hover:bg-cream'}`}
-              onMouseEnter={() => setActive(i)}
-              onMouseDown={() => pick(r)}
-            >
-              <span className="truncate">
-                {r.name_en}
-                {r.parent_name && <span className="text-ink-soft">, {r.parent_name}</span>}
-              </span>
-              <span className="text-ink-soft text-xs capitalize flex-shrink-0">
-                {r.level}{r.is_mithila_region ? ' · Mithila' : ''}
-              </span>
-            </li>
-          ))}
-          {results.length === 0 && noMatch && (
-            <li className="px-3 py-2 text-sm text-ink-soft">No matching place found.</li>
-          )}
-        </ul>
-      )}
-    </div>
-  )
 }
 
 function CommunitySearch({
@@ -966,7 +781,7 @@ export default function ProfileEditPage() {
               so free text is not stored.
             </p>
             <div className="space-y-4">
-              <LocationSearch
+              <LocationPicker
                 label="Native Place"
                 value={form.native_place_id}
                 initialName={locationNames.native}
@@ -976,7 +791,7 @@ export default function ProfileEditPage() {
                   setLocationNames(n => ({ ...n, native: name }))
                 }}
               />
-              <LocationSearch
+              <LocationPicker
                 label="Current Location"
                 value={form.current_loc_id}
                 initialName={locationNames.current}
@@ -986,7 +801,7 @@ export default function ProfileEditPage() {
                   setLocationNames(n => ({ ...n, current: name }))
                 }}
               />
-              <LocationSearch
+              <LocationPicker
                 label="Work Location"
                 value={form.job_loc_id}
                 initialName={locationNames.job}

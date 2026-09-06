@@ -3,6 +3,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { filterPhotoViewable } from '@/lib/photoAccess'
 import { getSessionAccount } from '@/lib/auth'
+import { getLocationIndex, idsWithin, idsInSameState } from '@/lib/locationIndex'
+import {
+  scoreMatch, topReasons,
+  type ScoreProfile, type ScorePreferences, type MatchResult,
+} from '@/lib/matchScore'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -10,9 +15,35 @@ const PAGE_SIZE = 20
 
 const VALID_GENDERS = ['male', 'female', 'any'] as const
 const VALID_DIETS = ['vegetarian', 'non_vegetarian', 'eggetarian', 'vegan'] as const
-const VALID_SORTS = ['newest', 'completeness', 'age_asc', 'age_desc'] as const
+const VALID_SORTS = ['match', 'newest', 'completeness', 'age_asc', 'age_desc'] as const
+
+/**
+ * How far "near" reaches by default. 120 km is roughly Darbhanga to Muzaffarpur,
+ * or Mumbai to Nashik — far enough that families still consider it local, close
+ * enough that it does not quietly turn a city filter into a state filter.
+ */
+const DEFAULT_RADIUS_KM = 120
+const MAX_RADIUS_KM = 600
+
+/**
+ * Match scoring reads the whole candidate row, so it cannot run on a page that
+ * has already been sliced by the database. Instead we pull a bounded candidate
+ * pool, score it, then paginate. The cap is what keeps that honest: past this
+ * many candidates the pool is truncated by the SQL sort, and the response says
+ * so via `scored_pool_truncated`.
+ */
+const SCORING_POOL = 300
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+type MatchSummary = {
+  score: number
+  band: MatchResult['band']
+  confidence: number
+  reasons: Array<{ key: string; label: string; detail: string }>
+  blockers: string[]
+  cautions: string[]
+}
 
 type SearchCard = {
   id: string
@@ -41,15 +72,18 @@ type SearchCard = {
   maternal_gotra: string | null
   job_loc_name: string | null
   marriage_timeline: string | null
+  job_title: string | null
+  marital_status: string | null
+  family_type: string | null
+  /** Null when the viewer has no profile of their own to score against. */
+  match: MatchSummary | null
 }
+
+/** What the UI needs to explain a fallback honestly. */
+type Relaxation = { filter: string; label: string; from: string; to: string }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/**
- * Compute age in whole years from a YYYY-MM-DD date string.
- * Mirrors DATE_PART('year', AGE(dob)) semantics: birthday hasn't passed yet
- * this calendar year → subtract one.
- */
 /**
  * Age filters must run in SQL, not in JS after pagination.
  *
@@ -102,6 +136,96 @@ function sanitizeSearchQuery(raw: string): string {
   return raw.replace(/[,()\r\n]+/g, ' ').trim()
 }
 
+/** The columns match scoring needs, over and above what the card renders. */
+const PROFILE_COLUMNS = [
+  'id',
+  'account_id',     // internal — excluded from response
+  'first_name',
+  'last_name',
+  'gender',
+  'dob',            // internal — used to compute age, then discarded
+  'religion',
+  'caste',
+  'sub_caste',
+  'self_gotra',
+  'mool',
+  'gram',
+  'height_cm',
+  'diet',
+  'about_me',
+  // family_about intentionally omitted — private field
+  'profile_complete',
+  'profile_status',
+  'native_place_id',
+  'current_loc_id',
+  'updated_at',
+  'employer',
+  'profession_detail',
+  'education_detail',
+  'degree',
+  'smoking',
+  'drinking',
+  'maternal_gotra',
+  'job_loc_id',
+  'job_title',
+  'marital_status',
+  'family_type',
+  'family_values',
+  'marriage_timeline',
+].join(', ')
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toScoreProfile(row: any): ScoreProfile {
+  return {
+    id: row.id, gender: row.gender, dob: row.dob,
+    religion: row.religion, caste: row.caste, sub_caste: row.sub_caste,
+    self_gotra: row.self_gotra, maternal_gotra: row.maternal_gotra,
+    mool: row.mool, gram: row.gram,
+    native_place_id: row.native_place_id, current_loc_id: row.current_loc_id, job_loc_id: row.job_loc_id,
+    diet: row.diet, smoking: row.smoking, drinking: row.drinking,
+    marriage_timeline: row.marriage_timeline,
+    education_detail: row.education_detail, degree: row.degree,
+    family_type: row.family_type, family_values: row.family_values,
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toScorePrefs(row: any | null | undefined): ScorePreferences {
+  if (!row) return {}
+  return {
+    pref_age_min: row.pref_age_min, pref_age_max: row.pref_age_max,
+    pref_caste: row.pref_caste, pref_diet: row.pref_diet, pref_location: row.pref_location,
+    pref_marriage_timeline: row.pref_marriage_timeline, pref_gotra_safe: row.pref_gotra_safe,
+  }
+}
+
+// ─── Filter model ─────────────────────────────────────────────────────────────
+//
+// Held as data rather than applied inline so the relaxation passes can produce a
+// modified copy instead of rebuilding the query by hand each time.
+
+type Filters = {
+  gender: string
+  ageMin?: number
+  ageMax?: number
+  gotra?: string
+  mool?: string
+  gram?: string
+  caste?: string
+  religion?: string
+  diet?: string
+  heightMin?: number
+  heightMax?: number
+  maritalStatus?: string
+  timeline?: string
+  q?: string
+  /** Resolved to a concrete id set before the query runs. */
+  locId?: number
+  radiusKm: number
+  /** Set when a pass has widened the location filter to the whole state. */
+  locWholeState?: boolean
+}
+
 // ─── Route handler ────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
@@ -115,20 +239,13 @@ export async function GET(request: NextRequest) {
 
   // ── Parse query params ────────────────────────────────────────────────────
   const genderParam = sp.get('gender') ?? 'any'
-  const ageMinParam = parseIntParam(sp.get('age_min'))
-  const ageMaxParam = parseIntParam(sp.get('age_max'))
-  const gotraParam  = sp.get('gotra')
-  const moolParam   = sp.get('mool')
-  const gramParam   = sp.get('gram')
-  const casteParam  = sp.get('caste')
-  const religionParam = sp.get('religion')
   const dietParam   = sp.get('diet')
-  const heightMin   = parseIntParam(sp.get('height_min'))
-  const heightMax   = parseIntParam(sp.get('height_max'))
-  const qRaw        = sp.get('q')
-  const sortParam   = sp.get('sort') ?? 'newest'
+  const sortParam   = sp.get('sort') ?? 'match'
   const pageRaw     = parseIntParam(sp.get('page'))
   const page        = Math.max(1, pageRaw ?? 1)
+  const ageMinParam = parseIntParam(sp.get('age_min'))
+  const ageMaxParam = parseIntParam(sp.get('age_max'))
+  const radiusParam = parseIntParam(sp.get('radius_km'))
 
   // ── Validate params ───────────────────────────────────────────────────────
   if (!VALID_GENDERS.includes(genderParam as typeof VALID_GENDERS[number])) {
@@ -163,18 +280,51 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: false, message: 'age_min cannot exceed age_max' }, { status: 400 })
   }
 
-  const admin = await createAdminClient()
+  const filters: Filters = {
+    gender: genderParam,
+    ageMin: ageMinParam,
+    ageMax: ageMaxParam,
+    gotra: sp.get('gotra') ?? undefined,
+    mool: sp.get('mool') ?? undefined,
+    gram: sp.get('gram') ?? undefined,
+    caste: sp.get('caste') ?? undefined,
+    religion: sp.get('religion') ?? undefined,
+    diet: dietParam ?? undefined,
+    heightMin: parseIntParam(sp.get('height_min')),
+    heightMax: parseIntParam(sp.get('height_max')),
+    maritalStatus: sp.get('marital_status') ?? undefined,
+    timeline: sp.get('marriage_timeline') ?? undefined,
+    q: sp.get('q') ?? undefined,
+    locId: parseIntParam(sp.get('loc_id')),
+    radiusKm: Math.min(MAX_RADIUS_KM, Math.max(0, radiusParam ?? DEFAULT_RADIUS_KM)),
+  }
 
-  // ─── Step 0: Resolve caller's own profiles + block list ───────────────────
+  const admin = await createAdminClient()
+  const locationIndex = await getLocationIndex(admin)
+
+  // ─── Step 0: Resolve caller's own profile, preferences and block list ─────
   //
   // Security/UX: profiles the caller has blocked, or that have blocked the
   // caller, must not appear in search results (in either direction).
   const { data: myProfileRows } = await admin
     .from('profiles')
-    .select('id')
+    .select(PROFILE_COLUMNS)
     .eq('account_id', session.id)
+    .is('deleted_at', null)
+    .order('updated_at', { ascending: false })
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const myProfileIds: string[] = (myProfileRows ?? []).map((r: any) => r.id as string)
+  const myProfiles: any[] = myProfileRows ?? []
+  const myProfileIds: string[] = myProfiles.map((r) => r.id as string)
+  const viewerRow = myProfiles[0] ?? null
+
+  let viewerPrefs: ScorePreferences = {}
+  if (viewerRow) {
+    const { data: prefRow } = await admin
+      .from('profile_preferences').select('*').eq('profile_id', viewerRow.id).maybeSingle()
+    viewerPrefs = toScorePrefs(prefRow)
+  }
+  const viewer: ScoreProfile | null = viewerRow ? toScoreProfile(viewerRow) : null
 
   const blockedProfileIds = new Set<string>()
   if (myProfileIds.length > 0) {
@@ -193,7 +343,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // ─── Step 1: Query profiles ───────────────────────────────────────────────
+  // ─── Step 1: Fetch a candidate pool ───────────────────────────────────────
   //
   // Security notes:
   //   - `discoverable = true` is enforced server-side and cannot be bypassed.
@@ -205,141 +355,184 @@ export async function GET(request: NextRequest) {
   //   - `account_id` is fetched only for the account-status cross-check and
   //     to exclude own profiles; it is discarded before response.
   //   - `family_about` is intentionally NOT selected.
-  //
-  // Pagination: we request page_size+1 rows to determine `has_more` without
-  // an expensive COUNT query. Only page_size rows are returned to the client.
-  // Note: JS-side age / account-status filters applied in steps 2-3 may
-  // reduce the returned count below page_size on some pages — this is an
-  // acceptable trade-off vs. fetching the entire result set.
-
-  const offset = (page - 1) * PAGE_SIZE
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query: any = admin
-    .from('profiles')
-    .select(
-      [
-        'id',
-        'account_id',     // internal — excluded from response
-        'first_name',
-        'last_name',
-        'gender',
-        'dob',            // internal — used to compute age, then discarded
-        'religion',
-        'caste',
-        'self_gotra',
-        'mool',
-        'gram',
-        'height_cm',
-        'diet',
-        'about_me',
-        // family_about intentionally omitted — private field
-        'profile_complete',
-        'profile_status',
-        'native_place_id',
-        'current_loc_id',
-        'updated_at',
-        'employer',
-        'profession_detail',
-        'education_detail',
-        'smoking',
-        'drinking',
-        'maternal_gotra',
-        'job_loc_id',
-        'marriage_timeline',
-      ].join(', ')
-    )
-    // Security: server-enforced visibility gates
-    .eq('discoverable', true)
-    .neq('profile_status', 'deleted')
-    .neq('profile_status', 'deactivated')
-    .is('deleted_at', null)
-    // Security: exclude the authenticated user's own profiles
-    .neq('account_id', session.id)
+  function runQuery(f: Filters): Promise<{ data: any[] | null; error: any }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let query: any = admin
+      .from('profiles')
+      .select(PROFILE_COLUMNS)
+      // Security: server-enforced visibility gates
+      .eq('discoverable', true)
+      .neq('profile_status', 'deleted')
+      .neq('profile_status', 'deactivated')
+      .is('deleted_at', null)
+      // Security: exclude the authenticated user's own profiles
+      .neq('account_id', session!.id)
 
-  // Age → dob range, applied in SQL so it filters BEFORE pagination.
-  // Previously this ran in JS on the already-sliced page, which meant a narrow
-  // age range could return an empty page while matches remained, and made the
-  // filter behave as though it barely worked.
-  if (ageMinParam !== undefined) {
-    query = query.lte('dob', dobOnOrBefore(ageMinParam))
-  }
-  if (ageMaxParam !== undefined) {
-    query = query.gte('dob', earliestDobForAge(ageMaxParam))
+    // Age → dob range, applied in SQL so it filters BEFORE the pool is capped.
+    if (f.ageMin !== undefined) query = query.lte('dob', dobOnOrBefore(f.ageMin))
+    if (f.ageMax !== undefined) query = query.gte('dob', earliestDobForAge(f.ageMax))
+
+    if (f.gender !== 'any')      query = query.eq('gender', f.gender)
+    if (f.gotra)                 query = query.ilike('self_gotra', `%${f.gotra}%`)
+    if (f.mool)                  query = query.ilike('mool', `%${f.mool}%`)
+    if (f.gram)                  query = query.ilike('gram', `%${f.gram}%`)
+    if (f.caste)                 query = query.ilike('caste', `%${f.caste}%`)
+    if (f.religion)              query = query.ilike('religion', `%${f.religion}%`)
+    if (f.diet)                  query = query.eq('diet', f.diet)
+    if (f.maritalStatus)         query = query.ilike('marital_status', `%${f.maritalStatus}%`)
+    if (f.timeline)              query = query.eq('marriage_timeline', f.timeline)
+    if (f.heightMin !== undefined) query = query.gte('height_cm', f.heightMin)
+    if (f.heightMax !== undefined) query = query.lte('height_cm', f.heightMax)
+
+    // Location: expand the chosen place into the set of ids that count as
+    // "there", then match either the current or the work location against it.
+    if (f.locId !== undefined) {
+      const ids = f.locWholeState
+        ? idsInSameState(locationIndex, f.locId)
+        : idsWithin(locationIndex, f.locId, f.radiusKm)
+      const list = [...ids].join(',')
+      query = query.or(`current_loc_id.in.(${list}),job_loc_id.in.(${list})`)
+    }
+
+    if (f.q) {
+      // Sanitise: strip PostgREST filter-syntax special characters before
+      // embedding the value in an `or()` filter string.
+      const q = sanitizeSearchQuery(f.q)
+      if (q.length > 0) {
+        query = query.or(
+          `first_name.ilike.%${q}%,caste.ilike.%${q}%,mool.ilike.%${q}%,gram.ilike.%${q}%,job_title.ilike.%${q}%,employer.ilike.%${q}%`
+        )
+      }
+    }
+
+    // The pool's SQL ordering only decides what gets truncated when there are
+    // more than SCORING_POOL candidates; the returned order is set below.
+    if (sortParam === 'age_asc')            query = query.order('dob', { ascending: false })
+    else if (sortParam === 'age_desc')      query = query.order('dob', { ascending: true })
+    else if (sortParam === 'newest')        query = query.order('updated_at', { ascending: false })
+    else                                    query = query.order('profile_complete', { ascending: false })
+
+    return query.limit(SCORING_POOL)
   }
 
-  // Optional filters
-  if (genderParam !== 'any') {
-    query = query.eq('gender', genderParam)
+  // ─── Step 1b: Progressive relaxation ──────────────────────────────────────
+  //
+  // "No results" is a dead end for a member who cannot tell which of their six
+  // filters is the one with nothing behind it. Each pass loosens exactly one
+  // filter, widest-net-last, and the response reports every step it took so the
+  // UI can say "no one in Thane — here are 12 within 300 km" rather than
+  // pretending these were the results that were asked for.
+  const relaxations: Relaxation[] = []
+
+  function nextRelaxation(f: Filters): { filters: Filters; step: Relaxation } | null {
+    // Ordered least-costly to most-costly to give up.
+    if (f.heightMin !== undefined || f.heightMax !== undefined) {
+      return {
+        filters: { ...f, heightMin: undefined, heightMax: undefined },
+        step: { filter: 'height', label: 'Height', from: 'your height range', to: 'any height' },
+      }
+    }
+    if (f.timeline) {
+      return {
+        filters: { ...f, timeline: undefined },
+        step: { filter: 'marriage_timeline', label: 'Marriage timeline', from: f.timeline.replace(/_/g, ' '), to: 'any timeline' },
+      }
+    }
+    if (f.diet) {
+      return {
+        filters: { ...f, diet: undefined },
+        step: { filter: 'diet', label: 'Diet', from: f.diet.replace(/_/g, ' '), to: 'any diet' },
+      }
+    }
+    if (f.gram) {
+      return { filters: { ...f, gram: undefined }, step: { filter: 'gram', label: 'Ancestral village', from: f.gram, to: 'any village' } }
+    }
+    if (f.mool) {
+      return { filters: { ...f, mool: undefined }, step: { filter: 'mool', label: 'Mool', from: f.mool, to: 'any mool' } }
+    }
+    if (f.gotra) {
+      return { filters: { ...f, gotra: undefined }, step: { filter: 'gotra', label: 'Gotra', from: f.gotra, to: 'any gotra' } }
+    }
+    if (f.maritalStatus) {
+      return { filters: { ...f, maritalStatus: undefined }, step: { filter: 'marital_status', label: 'Marital status', from: f.maritalStatus, to: 'any' } }
+    }
+    // Location widens in two steps before it is dropped, because "somewhere
+    // else in Maharashtra" is a genuinely useful answer and "anywhere in India"
+    // usually is not.
+    if (f.locId !== undefined && !f.locWholeState && f.radiusKm < MAX_RADIUS_KM) {
+      const wider = Math.min(MAX_RADIUS_KM, Math.max(f.radiusKm * 2, 250))
+      return {
+        filters: { ...f, radiusKm: wider },
+        step: { filter: 'radius_km', label: 'Distance', from: `within ${f.radiusKm} km`, to: `within ${wider} km` },
+      }
+    }
+    if (f.locId !== undefined && !f.locWholeState) {
+      return {
+        filters: { ...f, locWholeState: true },
+        step: { filter: 'loc_id', label: 'Location', from: `within ${f.radiusKm} km`, to: 'anywhere in the same state' },
+      }
+    }
+    if (f.ageMin !== undefined || f.ageMax !== undefined) {
+      const lo = f.ageMin !== undefined ? Math.max(18, f.ageMin - 3) : undefined
+      const hi = f.ageMax !== undefined ? Math.min(100, f.ageMax + 3) : undefined
+      if (lo !== f.ageMin || hi !== f.ageMax) {
+        return {
+          filters: { ...f, ageMin: lo, ageMax: hi },
+          step: {
+            filter: 'age', label: 'Age',
+            from: `${f.ageMin ?? 18}–${f.ageMax ?? 100}`, to: `${lo ?? 18}–${hi ?? 100}`,
+          },
+        }
+      }
+    }
+    if (f.locId !== undefined) {
+      return { filters: { ...f, locId: undefined }, step: { filter: 'loc_id', label: 'Location', from: 'the location you chose', to: 'anywhere in India' } }
+    }
+    if (f.caste) {
+      return { filters: { ...f, caste: undefined }, step: { filter: 'caste', label: 'Community', from: f.caste, to: 'any community' } }
+    }
+    return null
   }
-  if (gotraParam) {
-    query = query.ilike('self_gotra', `%${gotraParam}%`)
+
+  let activeFilters = filters
+  const firstPass = await runQuery(activeFilters)
+
+  if (firstPass.error) {
+    console.error('[search GET] profiles query error:', firstPass.error.code, firstPass.error.message)
+    return NextResponse.json({ ok: false, message: 'Search failed' }, { status: 500 })
   }
-  if (moolParam) {
-    query = query.ilike('mool', `%${moolParam}%`)
-  }
-  if (gramParam) {
-    query = query.ilike('gram', `%${gramParam}%`)
-  }
-  if (casteParam) {
-    query = query.ilike('caste', `%${casteParam}%`)
-  }
-  if (religionParam) {
-    query = query.ilike('religion', `%${religionParam}%`)
-  }
-  if (dietParam) {
-    query = query.eq('diet', dietParam)
-  }
-  if (heightMin !== undefined) {
-    query = query.gte('height_cm', heightMin)
-  }
-  if (heightMax !== undefined) {
-    query = query.lte('height_cm', heightMax)
-  }
-  if (qRaw) {
-    // Sanitise: strip PostgREST filter-syntax special characters before
-    // embedding the value in an `or()` filter string.
-    const q = sanitizeSearchQuery(qRaw)
-    if (q.length > 0) {
-      query = query.or(
-        `first_name.ilike.%${q}%,caste.ilike.%${q}%,mool.ilike.%${q}%,gram.ilike.%${q}%`
-      )
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let rawProfiles: any[] | null = firstPass.data
+
+  // Only relax on the first page. Relaxing on page 3 would silently change what
+  // the earlier pages meant.
+  if (page === 1) {
+    let guard = 0
+    while ((rawProfiles ?? []).length === 0 && guard++ < 12) {
+      const next = nextRelaxation(activeFilters)
+      if (!next) break
+      activeFilters = next.filters
+      relaxations.push(next.step)
+      const res = await runQuery(activeFilters)
+      if (res.error) {
+        console.error('[search GET] relaxed query error:', res.error.message)
+        break
+      }
+      rawProfiles = res.data
     }
   }
 
-  // Sort
-  if (sortParam === 'completeness') {
-    query = query.order('profile_complete', { ascending: false })
-  } else if (sortParam === 'age_asc') {
-    // Youngest first → most recent date of birth → dob descending
-    query = query.order('dob', { ascending: false })
-  } else if (sortParam === 'age_desc') {
-    // Oldest first → earliest date of birth → dob ascending
-    query = query.order('dob', { ascending: true })
-  } else {
-    // Default: newest (most recently updated first)
-    query = query.order('updated_at', { ascending: false })
-  }
-
-  // Fetch page_size+1 to determine has_more.
-  // range(from, to) is inclusive on both ends → page_size+1 rows.
-  query = query.range(offset, offset + PAGE_SIZE)
-
-  const { data: rawProfiles, error: profilesError } = await query
-
-  if (profilesError) {
-    console.error('[search GET] profiles query error:', profilesError.code, profilesError.message)
-    return NextResponse.json({ ok: false, message: 'Search failed' }, { status: 500 })
-  }
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const allFetched: any[] = rawProfiles ?? []
-  const dbHasMore = allFetched.length > PAGE_SIZE
-  // Trim to the actual page before JS-side filtering
-  const pageSlice = dbHasMore ? allFetched.slice(0, PAGE_SIZE) : allFetched
+  const pool: any[] = rawProfiles ?? []
+  const poolTruncated = pool.length >= SCORING_POOL
 
-  if (pageSlice.length === 0) {
-    return NextResponse.json({ ok: true, results: [], page, has_more: dbHasMore })
+  if (pool.length === 0) {
+    return NextResponse.json({
+      ok: true, results: [], page, has_more: false,
+      total: 0, relaxed: relaxations, scored_pool_truncated: false,
+    })
   }
 
   // ─── Step 2: Account status check (JS-side, two-step query) ───────────────
@@ -351,7 +544,7 @@ export async function GET(request: NextRequest) {
   // We do NOT use PostgREST inner-joins (!inner) because they silently return
   // 0 rows in some configurations — two explicit queries are safer.
 
-  const accountIds = [...new Set<string>(pageSlice.map((p) => p.account_id as string))]
+  const accountIds = [...new Set<string>(pool.map((p) => p.account_id as string))]
 
   const { data: accountRows, error: accountsError } = await admin
     .from('accounts')
@@ -377,25 +570,86 @@ export async function GET(request: NextRequest) {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let validProfiles: any[] = pageSlice.filter((p) => validAccountIds.has(p.account_id as string))
-
-  // Exclude profiles involved in a block with the caller (either direction).
+  let candidates: any[] = pool.filter((p) => validAccountIds.has(p.account_id as string))
   if (blockedProfileIds.size > 0) {
-    validProfiles = validProfiles.filter((p) => !blockedProfileIds.has(p.id as string))
+    candidates = candidates.filter((p) => !blockedProfileIds.has(p.id as string))
   }
 
-  // Age is now filtered in SQL via the dob range above, before pagination.
-  // dob is still fetched to compute the displayed age, and is never forwarded
-  // to the client in this response path.
+  if (candidates.length === 0) {
+    return NextResponse.json({
+      ok: true, results: [], page, has_more: false,
+      total: 0, relaxed: relaxations, scored_pool_truncated: poolTruncated,
+    })
+  }
+
+  // ─── Step 3: Score the pool ───────────────────────────────────────────────
+  //
+  // Needs each candidate's own preferences, because several factors (age fit,
+  // marriage timeline) are mutual: "you are inside their range too" is a much
+  // stronger signal than "they are inside yours".
+
+  const scoreById = new Map<string, MatchResult>()
+  if (viewer) {
+    const { data: prefRows } = await admin
+      .from('profile_preferences')
+      .select('profile_id, pref_age_min, pref_age_max, pref_caste, pref_diet, pref_location, pref_marriage_timeline, pref_gotra_safe')
+      .in('profile_id', candidates.map((p) => p.id as string))
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const prefsByProfile = new Map<string, any>()
+    for (const row of (prefRows ?? [])) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      prefsByProfile.set((row as any).profile_id as string, row)
+    }
+
+    for (const c of candidates) {
+      scoreById.set(
+        c.id as string,
+        scoreMatch(viewer, viewerPrefs, toScoreProfile(c), toScorePrefs(prefsByProfile.get(c.id as string)), locationIndex),
+      )
+    }
+  }
+
+  // ─── Step 4: Order and paginate ───────────────────────────────────────────
+  //
+  // Ordering happens here rather than in SQL because the match score does not
+  // exist in the database. The non-match sorts are re-applied for the same
+  // reason: the pool query's ORDER BY only decided what survived truncation.
+  if (sortParam === 'match' && scoreById.size > 0) {
+    candidates.sort((a, b) => {
+      const sa = scoreById.get(a.id as string), sb = scoreById.get(b.id as string)
+      const diff = (sb?.score ?? 0) - (sa?.score ?? 0)
+      if (diff !== 0) return diff
+      // Tie-break on how much of the score was actually evidenced, then on how
+      // complete the profile is — both favour the candidate you can learn more
+      // about, which is the more useful one to show first.
+      const conf = (sb?.confidence ?? 0) - (sa?.confidence ?? 0)
+      if (conf !== 0) return conf
+      return (b.profile_complete ?? 0) - (a.profile_complete ?? 0)
+    })
+  } else if (sortParam === 'age_asc') {
+    candidates.sort((a, b) => String(b.dob ?? '').localeCompare(String(a.dob ?? '')))
+  } else if (sortParam === 'age_desc') {
+    candidates.sort((a, b) => String(a.dob ?? '').localeCompare(String(b.dob ?? '')))
+  } else if (sortParam === 'completeness') {
+    candidates.sort((a, b) => (b.profile_complete ?? 0) - (a.profile_complete ?? 0))
+  } else {
+    candidates.sort((a, b) => String(b.updated_at ?? '').localeCompare(String(a.updated_at ?? '')))
+  }
+
+  const total = candidates.length
+  const offset = (page - 1) * PAGE_SIZE
+  const validProfiles = candidates.slice(offset, offset + PAGE_SIZE)
+  const hasMore = offset + PAGE_SIZE < total
 
   if (validProfiles.length === 0) {
-    return NextResponse.json({ ok: true, results: [], page, has_more: dbHasMore })
+    return NextResponse.json({
+      ok: true, results: [], page, has_more: false,
+      total, relaxed: relaxations, scored_pool_truncated: poolTruncated,
+    })
   }
 
-  // ─── Step 3: Batch-fetch location names ───────────────────────────────────
-  //
-  // One query for all native_place_id + current_loc_id values. We build a
-  // Map<id, name_en> and resolve per-profile without N+1 queries.
+  // ─── Step 5: Batch-fetch location names ───────────────────────────────────
 
   const locationIdSet = new Set<number>()
   for (const p of validProfiles) {
@@ -423,11 +677,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // ─── Step 4: Batch-fetch primary approved photos ──────────────────────────
-  //
-  // One query for all profiles; only is_primary=true, status='approved' rows.
-  // storage_path is fetched here to generate a signed URL; it is never
-  // forwarded to the client.
+  // ─── Step 6: Batch-fetch primary approved photos ──────────────────────────
 
   const profileIds = validProfiles.map((p) => p.id as string)
 
@@ -455,7 +705,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // ─── Step 5: Generate signed URLs (best-effort, 1-hour expiry) ────────────
+  // ─── Step 7: Generate signed URLs (best-effort, 1-hour expiry) ────────────
   //
   // Security: we expose only the time-limited signed URL to the client.
   // The raw storage_path (internal bucket path) is intentionally never
@@ -463,9 +713,7 @@ export async function GET(request: NextRequest) {
 
   const signedUrlByProfile = new Map<string, string | null>()
 
-  // One batched call rather than one round trip per photo. A 20-result page
-  // previously made up to 20 sequential Storage calls (~30ms each) before it
-  // could respond.
+  // One batched call rather than one round trip per photo.
   // Photo privacy: a member set to connections-only shows a photo in search
   // results ONLY to someone they have an accepted interest with. The profile
   // itself still appears — this withholds the photograph, not the person.
@@ -507,12 +755,14 @@ export async function GET(request: NextRequest) {
   //   - mobile       (private; not selected from DB in this route)
   //   - family_about (private; not selected from DB in this route)
   //   - storage_path (internal; signed URL is exposed instead)
+  //   - family_values, sub_caste, degree (used for scoring only — the score's
+  //     `reasons` already say whatever needs saying about them)
 
   const results: SearchCard[] = validProfiles.map((p) => {
     const firstName = (p.first_name ?? '') as string
     const lastName  = p.last_name as string | null
 
-    // Display name: "FirstName L." if last name exists, otherwise just first name.
+    // Display name: "FirstName LastName" if last name exists, otherwise just first name.
     const displayName = lastName && lastName.length > 0
       ? `${firstName} ${lastName}`
       : firstName
@@ -530,6 +780,18 @@ export async function GET(request: NextRequest) {
     const hasPhoto = photoByProfile.has(p.id as string)
     // primary_photo_url is the signed URL only — storage_path never returned.
     const primaryPhotoUrl = signedUrlByProfile.get(p.id as string) ?? null
+
+    const scored = scoreById.get(p.id as string) ?? null
+    const match: MatchSummary | null = scored
+      ? {
+          score: scored.score,
+          band: scored.band,
+          confidence: Math.round(scored.confidence * 100) / 100,
+          reasons: topReasons(scored, 4).map(r => ({ key: r.key, label: r.label, detail: r.detail })),
+          blockers: scored.blockers,
+          cautions: scored.cautions,
+        }
+      : null
 
     return {
       id:               p.id as string,
@@ -558,8 +820,24 @@ export async function GET(request: NextRequest) {
       maternal_gotra:    (p.maternal_gotra    as string | null) ?? null,
       job_loc_name:      locationMap.get(p.job_loc_id as number) ?? null,
       marriage_timeline: (p.marriage_timeline as string | null) ?? null,
+      job_title:         (p.job_title         as string | null) ?? null,
+      marital_status:    (p.marital_status    as string | null) ?? null,
+      family_type:       (p.family_type       as string | null) ?? null,
+      match,
     } satisfies SearchCard
   })
 
-  return NextResponse.json({ ok: true, results, page, has_more: dbHasMore })
+  return NextResponse.json({
+    ok: true,
+    results,
+    page,
+    has_more: hasMore,
+    total,
+    /** Non-empty means these are NOT the results the filters asked for. */
+    relaxed: relaxations,
+    /** True when more candidates matched than could be scored in one pass. */
+    scored_pool_truncated: poolTruncated,
+    /** Null when the viewer has no profile yet, so the UI can prompt for one. */
+    scoring: viewer ? 'on' : 'no_profile',
+  })
 }
