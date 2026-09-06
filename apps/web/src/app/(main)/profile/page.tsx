@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ProfileCardGallery3D from '@/components/ProfileCardGallery3D'
+import { ShareProfileLinks } from '@/components/ShareProfileLinks'
 import { Spinner } from '@/components/ui'
 import type { SearchCard } from '@/types/profile'
 
@@ -363,6 +364,17 @@ export default function ProfilePage() {
           was taking the most valuable space on their own profile to answer a
           question they had already answered. It is still stated where it is
           actually load-bearing — /pricing, /help and the Terms. */}
+
+      {/* ── Shareable links ── placed above the gallery because "send my
+          biodata to a family" is one of the most common things a member wants
+          to do, and it had no home anywhere before. */}
+      {profile && (
+        <div className="border-b border-ink/10">
+          <div className="max-w-2xl mx-auto px-4 py-5">
+            <ShareProfileLinks hasProfile={!!profile} />
+          </div>
+        </div>
+      )}
 
       {/* ── 3D Profile Gallery ── */}
       {profile && cardProfile && (

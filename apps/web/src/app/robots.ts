@@ -29,6 +29,10 @@ export default function robots(): MetadataRoute.Robots {
           // biodata maker, which is meant to be indexed. Keep them on separate
           // paths — a `/biodata/...` URL for the public tool would be hidden here.
           '/biodata',        // auth-gated tool + /biodata/preview/[id]
+          // Shared profile links. The page also carries `noindex, nofollow` —
+          // robots.txt only asks a crawler not to fetch, and a URL pasted into a
+          // public group can still be indexed without the meta tag.
+          '/p/',
           '/legal/consent',
         ],
       },

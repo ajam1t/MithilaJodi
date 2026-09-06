@@ -18,7 +18,9 @@ const NAV_LINKS: NavLink[] = [
   { href: '/festival-songs', label: 'Songs', mobileLabel: 'Festival Songs' },
   { href: '/marriage-invitation', label: 'Invitation', mobileLabel: 'Marriage Invitation Card' },
   { href: '/blogs', label: 'Blogs' },
-  { href: '/safety', label: 'Safety' },
+  // Safety is deliberately not in the top nav: reporting is available directly
+  // on every profile, which is where someone actually needs it. The page is
+  // still reachable from the footer and the legal pages, and stays indexable.
   { href: '/contact', label: 'Contact' },
   { href: '/help', label: 'Help' },
 ]
