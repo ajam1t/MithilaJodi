@@ -1,9 +1,9 @@
-import type { Metadata } from 'next'
 import Link from 'next/link'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
-import { SITE_URL, SUPPORT_EMAIL } from '@/lib/constants'
+import { SUPPORT_EMAIL } from '@/lib/constants'
+import { pageMetadata, breadcrumbJsonLd, canonicalUrl, jsonLdScript } from '@/lib/seo'
 
 /**
  * /pricing — restored deliberately.
@@ -19,23 +19,14 @@ import { SITE_URL, SUPPORT_EMAIL } from '@/lib/constants'
  * does NOT list the dormant plan_config tiers, which are not purchasable.
  */
 
-const SITE = SITE_URL
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
+  path: '/pricing',
   title: 'Pricing — Free for Every Member',
   description:
     'Mithila Jodi is currently free for every member. Registration, profile creation, marriage biodata in four languages, search, interests and messaging are all included at no charge.',
-  alternates: { canonical: `${SITE}/pricing` },
-  openGraph: {
-    type: 'website',
-    images: ['/og-card.png'],
-    url: `${SITE}/pricing`,
-    siteName: 'Mithila Jodi',
-    title: 'Mithila Jodi Pricing — Currently Free for Every Member',
-    description:
-      'Every feature on Mithila Jodi is free right now: profiles, biodata in Maithili, Hindi, English and Sanskrit, search, interests and messaging.',
-  },
-}
+  socialTitle: 'Mithila Jodi Pricing — Currently Free for Every Member',
+})
 
 const INCLUDED = [
   'Create your matrimonial profile, with gotra, maternal gotra, mool and native gram',
@@ -48,8 +39,23 @@ const INCLUDED = [
 ]
 
 export default function PricingPage() {
+  const breadcrumb = breadcrumbJsonLd([
+    { name: 'Mithila Jodi', path: '/' },
+    { name: 'Pricing', path: '/pricing' },
+  ])
+  const webPage = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'Mithila Jodi Pricing',
+    url: canonicalUrl('/pricing'),
+    description: 'What Mithila Jodi costs to use. Currently free for every member.',
+    inLanguage: 'en-IN',
+    isPartOf: { '@type': 'WebSite', name: 'Mithila Jodi', url: canonicalUrl('/') },
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(breadcrumb, webPage)} />
       <MithilaHeader />
 
       <main id="main-content" className="flex-1">

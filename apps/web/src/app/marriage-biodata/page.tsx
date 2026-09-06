@@ -5,6 +5,7 @@ import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { BiodataBuilder } from './BiodataBuilder'
 import { SITE_URL } from '@/lib/constants'
+import { breadcrumbJsonLd } from '@/lib/seo'
 
 const CANONICAL = `${SITE_URL}/marriage-biodata`
 
@@ -91,11 +92,16 @@ export default function MarriageBiodataPage() {
     publisher: { '@type': 'Organization', name: 'Mithila Jodi', url: SITE_URL },
   }
 
+  const breadcrumb = breadcrumbJsonLd([
+    { name: 'Mithila Jodi', path: '/' },
+    { name: 'Marriage Biodata Maker', path: '/marriage-biodata' },
+  ])
+
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify([appJsonLd, faqJsonLd]) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([appJsonLd, faqJsonLd, breadcrumb]) }}
       />
 
       <MithilaHeader />
@@ -180,10 +186,21 @@ export default function MarriageBiodataPage() {
               <Link href="/register" className="btn-primary bg-cream text-maroon border-cream hover:bg-paper">
                 Create a free account
               </Link>
-              <Link href="/about" className="btn-ghost text-cream border-cream/40 hover:border-cream">
-                How it works
+              <Link href="/explore" className="btn-ghost text-cream border-cream/40 hover:border-cream">
+                Browse Mithila profiles
               </Link>
             </div>
+            <p className="text-paper-3 text-[13px] leading-relaxed mt-4">
+              Also free, no login:{' '}
+              <Link href="/marriage-invitation" className="text-cream underline underline-offset-2 hover:text-gold-lt">
+                the Mithila wedding invitation card maker
+              </Link>
+              . Or read{' '}
+              <Link href="/about" className="text-cream underline underline-offset-2 hover:text-gold-lt">
+                how Mithila Jodi works
+              </Link>
+              .
+            </p>
           </div>
         </section>
       </main>

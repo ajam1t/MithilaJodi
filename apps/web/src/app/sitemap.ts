@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next'
 import { createAdminClient } from '@/lib/supabase/server'
 import { FESTIVALS } from '@/lib/festivals'
 import { SITE_URL } from '@/lib/constants'
+import { canonicalUrl } from '@/lib/seo'
 
 const SITE = SITE_URL
 
@@ -40,7 +41,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]
 
   const staticEntries: MetadataRoute.Sitemap = staticRoutes.map((r) => ({
-    url: `${SITE}${r.path}`,
+    // canonicalUrl, not string concatenation: `${SITE}/` for the homepage does
+    // not match the bare-origin canonical the page itself emits.
+    url: canonicalUrl(r.path),
     lastModified: now,
     changeFrequency: r.changeFrequency,
     priority: r.priority,

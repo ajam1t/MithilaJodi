@@ -109,9 +109,14 @@ export function BiodataDocument({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo.png" alt="Mithila Jodi" style={{ width: '58px', height: '58px', objectFit: 'contain', margin: '0 auto 5px', display: 'block' }} />
         <div style={{ fontSize: '12px', color: '#A27A2A', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: '5px' }}>Mithila Jodi</div>
-        <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: '#7A1220', fontWeight: 'normal', letterSpacing: '0.04em' }}>
+        {/* Not an <h1>. This document is embedded inside /marriage-biodata,
+            whose own heading is the page's H1 — two competing H1s made the
+            public page ambiguous to a crawler. Styling is unchanged, and the
+            standalone print view at /biodata/preview/[id] is noindex, so
+            nothing loses a heading that mattered for search. */}
+        <p style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: '#7A1220', fontWeight: 'normal', letterSpacing: '0.04em' }}>
           {L.title}
-        </h1>
+        </p>
       </div>
 
       {/* Photo + name row */}

@@ -1,13 +1,12 @@
-import type { Metadata } from 'next'
 import Link from 'next/link'
 import {
   LEGAL_EFFECTIVE_DATE,
   LEGAL_VERSION,
-  SITE_URL,
   SUPPORT_EMAIL,
   SUPPORT_PHONE_DISPLAY,
   SUPPORT_PHONE_E164,
 } from '@/lib/constants'
+import { pageMetadata } from '@/lib/seo'
 
 /**
  * Privacy Policy — production document.
@@ -30,15 +29,14 @@ import {
  *  - There is no analytics or advertising tracking in the codebase.
  */
 
-export const metadata: Metadata = {
+// Indexable on purpose: a matrimonial platform's privacy terms should be
+// publicly readable before someone registers.
+export const metadata = pageMetadata({
+  path: '/legal/privacy',
   title: 'Privacy Policy',
   description:
     'How Mithila Jodi collects, uses, stores and shares your personal data — written to match what the platform actually does.',
-  alternates: { canonical: `${SITE_URL}/legal/privacy` },
-  // Indexable on purpose: a matrimonial platform's privacy terms should be
-  // publicly readable before someone registers.
-  robots: { index: true, follow: true },
-}
+})
 
 function H2({ n, children }: { n: number; children: React.ReactNode }) {
   return (

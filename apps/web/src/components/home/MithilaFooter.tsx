@@ -5,6 +5,7 @@ const GROUPS = [
   {
     label: 'Platform',
     links: [
+      { href: '/explore', label: 'Browse Profiles' },
       { href: '/register', label: 'Create Free Account' },
       { href: '/login', label: 'Login' },
       { href: '/about', label: 'About' },

@@ -1,15 +1,15 @@
-import type { Metadata } from 'next'
 import Link from 'next/link'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
-import { SITE_URL } from '@/lib/constants'
+import { pageMetadata, breadcrumbJsonLd, faqJsonLd, jsonLdScript } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  title: 'Help & Support',
+export const metadata = pageMetadata({
+  path: '/help',
+  title: 'Help & Support — Mithila Matrimony Questions Answered',
   description:
-    'How Mithila Jodi works — creating an account, building a marriage biodata in your language, privacy controls, and getting help.',
-  alternates: { canonical: `${SITE_URL}/help` },
-}
+    'How Mithila Jodi works: creating an account, building a Mithila marriage biodata in your language, who can see your profile, sharing it with families, and what it costs.',
+  keywords: ['Mithila Jodi help', 'Mithila matrimony questions', 'Mithila biodata help'],
+})
 
 const FAQS = [
   {
@@ -22,7 +22,19 @@ const FAQS = [
   },
   {
     q: 'Who can see my profile?',
-    a: 'You control your visibility. Your biodata is shown to verified families you approve, and you can make your profile discoverable or hidden at any time from Settings.',
+    a: 'You choose one of three levels. Public means it may appear on our homepage and the Mithila matrimonial profiles page, which do not require an account — with your surname shortened and your date of birth, contact details and address never included. Members only means it appears in search for signed-in members and nowhere public. Private means it is hidden entirely. You can change this at any time when editing your profile.',
+  },
+  {
+    q: 'How does Mithila matrimonial matching work?',
+    a: 'Search covers the fields Maithil families actually ask about — gotra, mool, gram, native district and current city — alongside age, education, diet and how soon each family is looking to marry. Every result carries a match score that lists the reasons behind it, and a sagotra match is flagged as something to check rather than quietly scored down. If nothing matches your filters exactly, the search widens one filter at a time and tells you which.',
+  },
+  {
+    q: 'Can I share my matrimonial profile with another family?',
+    a: 'Yes. From your profile you can create a shareable link and send it on WhatsApp. Whoever opens it sees your profile without creating an account, and you decide section by section what the link shows — contact details are off unless you include them. Each link expires on a date you choose and you can turn it off at any time.',
+  },
+  {
+    q: 'Can I create a Mithila wedding invitation card?',
+    a: 'Yes, free and without logging in. The invitation card maker offers Madhubani and Mithila-inspired designs; add your wedding details and download or share the card straight to WhatsApp.',
   },
   {
     q: 'Does it cost anything?',
@@ -35,8 +47,17 @@ const FAQS = [
 ]
 
 export default function HelpPage() {
+  const breadcrumb = breadcrumbJsonLd([
+    { name: 'Mithila Jodi', path: '/' },
+    { name: 'Help & Support', path: '/help' },
+  ])
+
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLdScript(breadcrumb, faqJsonLd(FAQS))}
+      />
       <MithilaHeader />
       <main id="main-content" className="flex-1 wrap py-14 max-w-3xl">
         <div className="text-center mb-10">

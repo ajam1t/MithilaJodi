@@ -18,9 +18,40 @@ export const OTP_LENGTH = 4
  * safely append paths. Keep every SEO surface pointed at this one value to
  * avoid duplicate-canonical issues.
  */
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mithilajodi.com')
-  .replace(/\/+$/, '')
-  .replace(/^https:\/\/www\./, 'https://')
+const SITE_URL_FALLBACK = 'https://mithilajodi.com'
+
+/**
+ * A production build must never emit a localhost canonical.
+ *
+ * `NEXT_PUBLIC_*` values are inlined at BUILD time, and `.env.local` in this
+ * repo sets NEXT_PUBLIC_SITE_URL=http://localhost:3000 for local development.
+ * Any production build that happens to see that file — a build run from a
+ * developer machine, a misconfigured CI checkout, a stray env var on the host —
+ * would bake `http://localhost:3000` into every canonical tag, og:url, JSON-LD
+ * url and sitemap entry. Google would then be told the canonical version of
+ * every page is an address it cannot reach, which de-indexes the site quietly.
+ *
+ * So in production anything that is not an https origin is rejected in favour
+ * of the apex. In development the value is honoured, so local links still work.
+ */
+function resolveSiteUrl(): string {
+  const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim()
+  if (!raw) return SITE_URL_FALLBACK
+
+  const cleaned = raw.replace(/\/+$/, '').replace(/^https:\/\/www\./, 'https://')
+  const isHttps = /^https:\/\//i.test(cleaned)
+
+  if (process.env.NODE_ENV === 'production' && !isHttps) {
+    console.warn(
+      `[constants] Ignoring NEXT_PUBLIC_SITE_URL="${raw}" in a production build ` +
+      `— it is not an https origin. Falling back to ${SITE_URL_FALLBACK}.`,
+    )
+    return SITE_URL_FALLBACK
+  }
+  return cleaned
+}
+
+export const SITE_URL = resolveSiteUrl()
 
 /** Indian mobile: 10 digits starting with 6–9 */
 export const INDIA_MOBILE_RE = /^[6-9]\d{9}$/

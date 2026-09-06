@@ -2,6 +2,13 @@ import { redirect } from 'next/navigation'
 import { getSessionAccount } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/server'
 import ConsentContent from './ConsentContent'
+import { noindexMetadata } from '@/lib/seo'
+
+// A member's own recorded consents. robots.txt disallows /legal/consent, but
+// that only asks a crawler not to fetch it — a URL discovered elsewhere could
+// still be indexed. `follow: false` too: everything this page links to is
+// already reachable from the public legal pages.
+export const metadata = noindexMetadata('Consent & Data', { follow: false })
 
 export const dynamic = 'force-dynamic'
 

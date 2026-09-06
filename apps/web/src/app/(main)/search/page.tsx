@@ -1,6 +1,11 @@
 import { Suspense } from 'react'
 import SearchPageContent from './SearchPageContent'
 
+// The (main) layout supplies robots: noindex. This exists only so the browser
+// tab, history entry and bookmark say what the page is, instead of every member
+// page reading as the site's default title.
+export const metadata = { title: 'Search Profiles' }
+
 function SearchFallback() {
   return (
     <main id="main-content" className="min-h-screen bg-paper">

@@ -15,6 +15,7 @@ export const dynamic = 'force-dynamic'
 // but declare noindex explicitly too: robots.txt only asks crawlers not to
 // fetch, it does not stop a URL discovered elsewhere from being indexed.
 export const metadata = {
+  title: 'Your Marriage Biodata',
   robots: { index: false, follow: false },
 }
 

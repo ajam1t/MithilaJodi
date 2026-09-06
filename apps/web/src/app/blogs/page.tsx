@@ -1,27 +1,19 @@
-import type { Metadata } from 'next'
 import Link from 'next/link'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { createAdminClient } from '@/lib/supabase/server'
 import { SITE_URL } from '@/lib/constants'
+import { pageMetadata } from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
+  path: '/blogs',
   title: 'Blog — Mithila & Maithili Marriage Guides',
   description:
     'Thoughtful articles on Maithili marriage traditions, Mithila culture, Madhubani heritage, and practical guidance for creating a marriage biodata. Explore the Mithila Jodi Journal.',
-  alternates: { canonical: `${SITE_URL}/blogs` },
-  openGraph: {
-    type: 'website',
-    images: ['/og-card.png'],
-    url: `${SITE_URL}/blogs`,
-    title: 'Blog — Mithila & Maithili Marriage Guides',
-    description:
-      'Thoughtful articles on Maithili marriage traditions, Mithila culture, and practical guidance for creating a marriage biodata.',
-  },
-}
+})
 
 const breadcrumbJsonLd = {
   '@context': 'https://schema.org',

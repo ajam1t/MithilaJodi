@@ -1,13 +1,12 @@
-import type { Metadata } from 'next'
 import Link from 'next/link'
 import {
   LEGAL_EFFECTIVE_DATE,
   LEGAL_VERSION,
-  SITE_URL,
   SUPPORT_EMAIL,
   SUPPORT_PHONE_DISPLAY,
   SUPPORT_PHONE_E164,
 } from '@/lib/constants'
+import { pageMetadata } from '@/lib/seo'
 
 /**
  * Terms of Service — production document.
@@ -30,13 +29,12 @@ import {
  *  - Deactivation is soft (DELETE /api/account) — data is retained.
  */
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
+  path: '/legal/terms',
   title: 'Terms of Service',
   description:
     'The terms that govern your use of Mithila Jodi — eligibility, profile accuracy, member conduct, interests and messaging, safety, and account termination.',
-  alternates: { canonical: `${SITE_URL}/legal/terms` },
-  robots: { index: true, follow: true },
-}
+})
 
 function H2({ n, children }: { n: number; children: React.ReactNode }) {
   return (
