@@ -51,7 +51,6 @@ export async function GET(request: NextRequest) {
     .in('id', profileAccountIds)
 
   const profileMap: Record<string, { name: string; mobile: string | null }> = {}
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const accountMobileMap: Record<string, string> = {}
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ;(accountRows as any[] ?? []).forEach(a => { accountMobileMap[a.id] = a.mobile })

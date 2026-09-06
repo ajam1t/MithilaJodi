@@ -68,7 +68,6 @@ export default function FestivalSongsHubPage() {
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
       <MithilaHeader />
-      {/* eslint-disable-next-line react/no-danger */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <main id="main-content" className="flex-1">

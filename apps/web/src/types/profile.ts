@@ -34,6 +34,10 @@ export type SearchCard = {
   job_title?: string | null
   marital_status?: string | null
   family_type?: string | null
+  /** Structured education, composed into one line by the card. */
+  degree?: string | null
+  specialization?: string | null
+  institution?: string | null
   /** Trust signal — true only when an approved verification exists. Optional;
    *  the badge is shown only when this is explicitly true. */
   verified?: boolean

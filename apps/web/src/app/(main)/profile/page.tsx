@@ -143,7 +143,11 @@ export default function ProfilePage() {
   const [tab, setTab] = useState<Tab>('about')
   const [loading, setLoading] = useState(true)
   const [logoutLoading, setLogoutLoading] = useState(false)
-  const [locationNames, setLocationNames] = useState<{ native_place_name: string | null; current_loc_name: string | null }>({ native_place_name: null, current_loc_name: null })
+  const [locationNames, setLocationNames] = useState<{
+    native_place_name: string | null
+    current_loc_name: string | null
+    job_loc_name: string | null
+  }>({ native_place_name: null, current_loc_name: null, job_loc_name: null })
   const [stickyVisible, setStickyVisible] = useState(false)
   const headerRef = useRef<HTMLDivElement | null>(null)
 
@@ -170,7 +174,11 @@ export default function ProfilePage() {
         setAccount(authData.account ?? null)
         if (profileData.profile) setProfile(profileData.profile)
         setPhotos(profileData.photos ?? [])
-        setLocationNames({ native_place_name: profileData.native_place_name ?? null, current_loc_name: profileData.current_loc_name ?? null })
+        setLocationNames({
+          native_place_name: profileData.native_place_name ?? null,
+          current_loc_name: profileData.current_loc_name ?? null,
+          job_loc_name: profileData.job_loc_name ?? null,
+        })
         if (prefsData.ok && prefsData.preferences) setPrefs(prefsData.preferences)
         if (prefsData.ok) setPrefsDisplay(prefsData.display ?? null)
       })
@@ -225,10 +233,15 @@ export default function ProfilePage() {
     employer: profile.employer,
     profession_detail: profile.profession_detail,
     education_detail: profile.education_detail,
+    degree: profile.degree,
+    specialization: profile.specialization,
+    institution: profile.institution,
     smoking: profile.smoking,
     drinking: profile.drinking,
     maternal_gotra: profile.maternal_gotra,
-    job_loc_name: null,
+    // Was hardcoded null, so "Work city" was blank on the gallery's Career face
+    // for every member — the API had been returning this all along.
+    job_loc_name: locationNames.job_loc_name,
     marriage_timeline: profile.marriage_timeline,
     marital_status: profile.marital_status,
     family_type: profile.family_type,

@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   const session = await getSessionAccount()
   if (!session || (session.role !== 'admin' && session.role !== 'moderator')) {
     return NextResponse.json({ ok: false }, { status: 403 })

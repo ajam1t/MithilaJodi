@@ -63,6 +63,21 @@ function CardFrame({ children, active }: { children: ReactNode; active: boolean 
   )
 }
 
+/**
+ * "MBA, Finance - Mumbai University" from whichever of the structured education
+ * fields are filled, falling back to the free-text field.
+ *
+ * The card previously showed `education_detail` alone, so a member who filled in
+ * Degree, Specialisation and Institution in the editor saw only whatever
+ * happened to be in the separate free-text box - usually far less than they had
+ * entered, which reads as "my education is not showing".
+ */
+function educationLine(profile: SearchCard): string | null {
+  const degree = [profile.degree, profile.specialization].filter(Boolean).join(', ')
+  const withPlace = [degree || null, profile.institution].filter(Boolean).join(' \u2014 ')
+  return withPlace || profile.education_detail || null
+}
+
 function Face({ card, profile }: { card: string; profile: SearchCard }) {
   if (card === 'Profile') {
     return (
@@ -90,7 +105,7 @@ function Face({ card, profile }: { card: string; profile: SearchCard }) {
     return (
       <div>
         <p className="mb-3 text-[10px] uppercase tracking-widest text-terra">Career & education</p>
-        <Field label="Education" value={profile.education_detail} />
+        <Field label="Education" value={educationLine(profile)} />
         <Field label="Role" value={profile.job_title} />
         <Field label="Profession" value={profile.profession_detail} />
         <Field label="Employer" value={profile.employer} />

@@ -1,12 +1,7 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { OtpBoxInput } from '@/components/OtpBoxInput'
-import { OtpSentAnimation } from '@/components/OtpSentAnimation'
-import { AuthProgress } from '@/components/AuthProgress'
-import { OTP_LENGTH } from '@/lib/constants'
-import { isMsg91Enabled, ensureMsg91, msg91SendOtp, msg91VerifyOtp, msg91RetryOtp } from '@/lib/msg91'
 
 
 function getSafeNextPath(): string | null {
@@ -26,13 +21,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword]     = useState(false)
   const [loading, setLoading]               = useState(false)
   const [error, setError]                   = useState('')
-  const [resendCooldown, setResendCooldown] = useState(false)
-  const [resendTimer, setResendTimer]       = useState(0)
-  const resendIntervalRef                   = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  const maskedMobile = mobile.length === 10
-    ? `+91 ${mobile.slice(0, 5)} ${mobile.slice(5)}`
-    : mobile
 
   /* ── Password login ── */
   async function handlePasswordLogin(e: React.FormEvent) {

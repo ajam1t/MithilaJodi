@@ -139,7 +139,6 @@ const CONTACT_CARDS = [
 export default function ContactPage() {
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
-      {/* eslint-disable-next-line react/no-danger */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <MithilaHeader />
 

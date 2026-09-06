@@ -68,6 +68,9 @@ type SearchCard = {
   employer: string | null
   profession_detail: string | null
   education_detail: string | null
+  degree: string | null
+  specialization: string | null
+  institution: string | null
   smoking: string | null
   drinking: string | null
   maternal_gotra: string | null
@@ -164,6 +167,8 @@ const PROFILE_COLUMNS = [
   'profession_detail',
   'education_detail',
   'degree',
+  'specialization',
+  'institution',
   'smoking',
   'drinking',
   'maternal_gotra',
@@ -307,7 +312,6 @@ export async function GET(request: NextRequest) {
   }
 
   const admin = await createAdminClient()
-  const locationIndex = await getLocationIndex(admin)
 
   // Declared before the viewer lookup so the gender override below can narrow
   // it, and before runQuery so every pass uses the same object.
@@ -317,24 +321,39 @@ export async function GET(request: NextRequest) {
   //
   // Security/UX: profiles the caller has blocked, or that have blocked the
   // caller, must not appear in search results (in either direction).
-  const { data: myProfileRows } = await admin
-    .from('profiles')
-    .select(PROFILE_COLUMNS)
-    .eq('account_id', session.id)
-    .is('deleted_at', null)
-    .order('updated_at', { ascending: false })
+  // The location index and the viewer's own profile are independent, so they
+  // are fetched together rather than one after the other. Every request pays
+  // this cost, and on a round trip to Supabase the saving is a whole latency.
+  const [locationIndex, { data: myProfileRows }] = await Promise.all([
+    getLocationIndex(admin),
+    admin
+      .from('profiles')
+      .select(PROFILE_COLUMNS)
+      .eq('account_id', session.id)
+      .is('deleted_at', null)
+      .order('updated_at', { ascending: false }),
+  ])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const myProfiles: any[] = myProfileRows ?? []
   const myProfileIds: string[] = myProfiles.map((r) => r.id as string)
   const viewerRow = myProfiles[0] ?? null
 
-  let viewerPrefs: ScorePreferences = {}
-  if (viewerRow) {
-    const { data: prefRow } = await admin
-      .from('profile_preferences').select('*').eq('profile_id', viewerRow.id).maybeSingle()
-    viewerPrefs = toScorePrefs(prefRow)
-  }
+  // Preferences and the block list are independent of each other; both are
+  // needed before scoring, so they are fetched together.
+  const [prefResult, blockResult] = await Promise.all([
+    viewerRow
+      ? admin.from('profile_preferences').select('*').eq('profile_id', viewerRow.id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    myProfileIds.length > 0
+      ? admin
+          .from('blocks')
+          .select('blocker_id, blocked_id')
+          .or(`blocker_id.in.(${myProfileIds.join(',')}),blocked_id.in.(${myProfileIds.join(',')})`)
+      : Promise.resolve({ data: [] }),
+  ])
+
+  const viewerPrefs: ScorePreferences = toScorePrefs(prefResult.data)
   const viewer: ScoreProfile | null = viewerRow ? toScoreProfile(viewerRow) : null
 
   // Derive the feed's gender from the viewer. Done here rather than at parse
@@ -343,13 +362,8 @@ export async function GET(request: NextRequest) {
   if (wanted) activeFilters = { ...activeFilters, gender: wanted }
 
   const blockedProfileIds = new Set<string>()
-  if (myProfileIds.length > 0) {
-    const { data: blockRows } = await admin
-      .from('blocks')
-      .select('blocker_id, blocked_id')
-      .or(
-        `blocker_id.in.(${myProfileIds.join(',')}),blocked_id.in.(${myProfileIds.join(',')})`,
-      )
+  {
+    const blockRows = blockResult.data
     for (const b of (blockRows ?? [])) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const row = b as any
@@ -830,6 +844,9 @@ export async function GET(request: NextRequest) {
       employer:          (p.employer          as string | null) ?? null,
       profession_detail: (p.profession_detail as string | null) ?? null,
       education_detail:  (p.education_detail  as string | null) ?? null,
+      degree:            (p.degree            as string | null) ?? null,
+      specialization:    (p.specialization    as string | null) ?? null,
+      institution:       (p.institution       as string | null) ?? null,
       smoking:           (p.smoking           as string | null) ?? null,
       drinking:          (p.drinking          as string | null) ?? null,
       maternal_gotra:    (p.maternal_gotra    as string | null) ?? null,

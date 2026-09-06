@@ -162,12 +162,26 @@ export async function GET() {
       .neq('status', 'deleted')
       .order('display_order', { ascending: true })
 
-    for (const p of (photoRows ?? [])) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const photo = p as any
-      const { data: signed } = await admin.storage
+    // One batched signing call rather than one round trip per photo. A member
+    // with five photos previously waited on five sequential Storage requests
+    // before their own profile could render; createSignedUrls signs them all in
+    // one and preserves input order.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rows = (photoRows ?? []) as any[]
+    let signedUrls: Array<string | null> = rows.map(() => null)
+    if (rows.length > 0) {
+      const { data: signedList, error: signErr } = await admin.storage
         .from('profile-photos')
-        .createSignedUrl(photo.storage_path, 3600)
+        .createSignedUrls(rows.map((r) => r.storage_path as string), 3600)
+      if (signErr) {
+        console.error('[profile GET] batch signed URL error:', signErr.message)
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        signedUrls = rows.map((_, i) => ((signedList ?? [])[i] as any)?.signedUrl ?? null)
+      }
+    }
+
+    rows.forEach((photo, i) => {
       photos.push({
         id: photo.id,
         is_primary: photo.is_primary,
@@ -176,9 +190,9 @@ export async function GET() {
         blurhash: photo.blurhash,
         width_px: photo.width_px,
         height_px: photo.height_px,
-        signed_url: signed?.signedUrl ?? null,
+        signed_url: signedUrls[i],
       })
-    }
+    })
   }
 
   const privateDetails = profile

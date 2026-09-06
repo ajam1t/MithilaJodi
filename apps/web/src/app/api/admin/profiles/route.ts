@@ -57,10 +57,25 @@ export async function GET(request: NextRequest) {
   const { data: photos } = profileIds.length
     ? await admin.from('profile_photos').select('profile_id, storage_path, is_primary, status').in('profile_id', profileIds).eq('is_primary', true).eq('status', 'approved')
     : { data: [] }
+  // Batched. This one scaled with the admin page size — a page of 20 profiles
+  // meant 20 sequential Storage round trips before the list could render, and it
+  // would keep getting slower as the platform grows.
   const photoMap = new Map<string, string | null>()
-  for (const photo of photos ?? []) {
-    const { data: signed } = await admin.storage.from('profile-photos').createSignedUrl(photo.storage_path, 3600)
-    photoMap.set(photo.profile_id, signed?.signedUrl ?? null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const photoRowsForSigning = (photos ?? []) as any[]
+  if (photoRowsForSigning.length > 0) {
+    const { data: signedList, error: signErr } = await admin.storage
+      .from('profile-photos')
+      .createSignedUrls(photoRowsForSigning.map((p) => p.storage_path as string), 3600)
+    if (signErr) {
+      console.error('[admin/profiles GET] batch signed URL error:', signErr.message)
+      for (const p of photoRowsForSigning) photoMap.set(p.profile_id, null)
+    } else {
+      photoRowsForSigning.forEach((p, i) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        photoMap.set(p.profile_id, ((signedList ?? [])[i] as any)?.signedUrl ?? null)
+      })
+    }
   }
 
   return NextResponse.json({

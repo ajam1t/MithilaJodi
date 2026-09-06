@@ -413,7 +413,7 @@ export default function AdminTeamPage() {
 
                       {/* Photo upload */}
                       <button
-                        onClick={() => { fileRef.current && (fileRef.current.dataset.target = m.id); fileRef.current?.click() }}
+                        onClick={() => { if (fileRef.current) fileRef.current.dataset.target = m.id; fileRef.current?.click() }}
                         disabled={uploadingFor === m.id}
                         className="text-xs py-1.5 px-3 border border-ink/20 text-ink-soft rounded-mj-sm hover:bg-cream disabled:opacity-60"
                       >

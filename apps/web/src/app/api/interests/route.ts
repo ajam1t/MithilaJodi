@@ -130,13 +130,29 @@ export async function GET() {
       if (!photoOk.has(pid)) continue
       if (!pathByProfile.has(pid)) pathByProfile.set(pid, p.storage_path as string)
     }
+    // Batched: this list grows with the number of people a member has
+    // interacted with, so one round trip per partner was the dominant cost of
+    // loading the Interests page.
     const signedByProfile = new Map<string, string | null>()
-    for (const [pid, path] of pathByProfile.entries()) {
+    const signEntries = [...pathByProfile.entries()]
+    if (signEntries.length > 0) {
       try {
-        const { data: signed } = await admin.storage.from('profile-photos').createSignedUrl(path, 3600)
-        signedByProfile.set(pid, signed?.signedUrl ?? null)
-      } catch {
-        signedByProfile.set(pid, null)
+        const { data: signedList, error: signErr } = await admin.storage
+          .from('profile-photos')
+          .createSignedUrls(signEntries.map(([, path]) => path), 3600)
+        if (signErr) {
+          console.error('[interests GET] batch signed URL error:', signErr.message)
+          for (const [pid] of signEntries) signedByProfile.set(pid, null)
+        } else {
+          // createSignedUrls preserves input order.
+          signEntries.forEach(([pid], i) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            signedByProfile.set(pid, ((signedList ?? [])[i] as any)?.signedUrl ?? null)
+          })
+        }
+      } catch (err) {
+        console.error('[interests GET] batch signed URL exception:', err)
+        for (const [pid] of signEntries) signedByProfile.set(pid, null)
       }
     }
 

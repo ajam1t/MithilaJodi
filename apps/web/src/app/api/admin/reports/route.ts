@@ -36,7 +36,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: true, reports: [] })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const allProfileIds = [
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ...new Set((reports as any[]).flatMap((r) => [r.reporter_id, r.reported_id].filter(Boolean))),
