@@ -54,7 +54,93 @@ type ProfileData = {
   interestReceived: { id: string; status: string } | null
   shortlisted: boolean
   blocked: boolean
+  match: MatchDetail | null
   cardData: SearchCard
+}
+
+type MatchDetail = {
+  score: number
+  band: 'excellent' | 'strong' | 'good' | 'fair'
+  confidence: number
+  reasons: Array<{ key: string; label: string; detail: string }>
+  blockers: string[]
+  cautions: string[]
+  breakdown: Array<{ key: string; label: string; points: number; max: number; detail: string }>
+}
+
+const BAND_LABEL: Record<MatchDetail['band'], string> = {
+  excellent: 'Excellent match',
+  strong: 'Strong match',
+  good: 'Good match',
+  fair: 'Possible match',
+}
+
+/**
+ * Full match breakdown.
+ *
+ * The card shows a score and its three strongest reasons; this page has room
+ * for all nine factors, including the ones that scored badly. Showing the weak
+ * factors is the point — a family deciding whether to make contact is better
+ * served by "location 0/18, 515 km away" than by a bare 58%.
+ */
+function MatchPanel({ match }: { match: MatchDetail }) {
+  const blocked = match.blockers.length > 0
+  const colour = blocked
+    ? 'text-terra'
+    : match.score >= 80 ? 'text-green' : match.score >= 65 ? 'text-gold' : 'text-maroon'
+
+  return (
+    <section className="card p-5" aria-label="Match breakdown">
+      <div className="flex items-baseline gap-3 mb-1">
+        <span className={`font-serif text-3xl leading-none ${colour}`}>{match.score}</span>
+        <div className="min-w-0">
+          <p className="font-serif text-[17px] text-maroon leading-tight">
+            {blocked ? 'Needs checking' : BAND_LABEL[match.band]}
+          </p>
+          <p className="text-[12px] text-ink-soft leading-tight">
+            Based on {Math.round(match.confidence * 100)}% of our matching factors
+          </p>
+        </div>
+      </div>
+
+      {match.blockers.map(b => (
+        <p key={b} className="mt-3 text-[13px] leading-snug text-terra bg-terra/[0.07] border border-terra/25 rounded-mj-sm px-3 py-2">
+          {b}
+        </p>
+      ))}
+      {match.cautions.map(c => (
+        <p key={c} className="mt-2 text-[13px] leading-snug text-ink-soft bg-gold/[0.07] border border-gold/30 rounded-mj-sm px-3 py-2">
+          {c}
+        </p>
+      ))}
+
+      <ul className="mt-3 space-y-2">
+        {match.breakdown.map(f => {
+          const pct = f.max > 0 ? Math.round((f.points / f.max) * 100) : 0
+          return (
+            <li key={f.key}>
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="text-[13px] font-medium text-ink">{f.label}</span>
+                <span className="text-[11.5px] text-ink-soft tabular-nums shrink-0">{f.points} / {f.max}</span>
+              </div>
+              <div className="h-1 rounded-full bg-paper-3 overflow-hidden mt-1" aria-hidden="true">
+                <div
+                  className={`h-full rounded-full ${pct >= 80 ? 'bg-green' : pct >= 40 ? 'bg-gold' : 'bg-terra'}`}
+                  style={{ width: `${Math.max(pct, 2)}%` }}
+                />
+              </div>
+              <p className="text-[12.5px] text-ink-soft leading-snug mt-0.5">{f.detail}</p>
+            </li>
+          )
+        })}
+      </ul>
+
+      <p className="mt-3 pt-3 border-t border-paper-3 text-[11.5px] text-ink-soft leading-snug">
+        A guide, not a verdict. Factors neither of you has filled in are left out of the
+        score rather than counted against it, which is what the percentage above refers to.
+      </p>
+    </section>
+  )
 }
 
 const TIMELINE_LABELS: Record<string, string> = {
@@ -252,6 +338,8 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
           <div className="flex justify-center">
             <ProfileCardGallery3D profile={data.cardData} />
           </div>
+
+          {data.match && <MatchPanel match={data.match} />}
 
           {/* Profile header */}
           <div ref={headerRef} className="card p-5 flex gap-5">

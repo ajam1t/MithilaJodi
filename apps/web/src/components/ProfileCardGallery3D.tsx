@@ -10,13 +10,20 @@ type ProfileCardGallery3DProps = {
   autoRotate?: boolean
 }
 
-const CARDS = ['Profile', 'Career', 'Lifestyle', 'Roots', 'Marriage'] as const
+const BASE_CARDS = ['Profile', 'Career', 'Lifestyle', 'Roots', 'Marriage'] as const
 const ROTATE_MS = 4800
 
-function offsetFor(index: number, active: number) {
+const BAND_LABEL: Record<'excellent' | 'strong' | 'good' | 'fair', string> = {
+  excellent: 'Excellent match',
+  strong: 'Strong match',
+  good: 'Good match',
+  fair: 'Possible match',
+}
+
+function offsetFor(index: number, active: number, count: number) {
   let offset = index - active
-  if (offset > CARDS.length / 2) offset -= CARDS.length
-  if (offset < -CARDS.length / 2) offset += CARDS.length
+  if (offset > count / 2) offset -= count
+  if (offset < -count / 2) offset += count
   return offset
 }
 
@@ -72,6 +79,7 @@ function Face({ index, profile }: { index: number; profile: SearchCard }) {
         <p className="mt-1 text-center text-[12px] text-ink-soft">{profile.age ? `${profile.age} yrs` : 'Age not provided'}{profile.gender ? ` · ${humanize(profile.gender)}` : ''}</p>
         <div className="mt-auto space-y-0.5">
           <Field label="Caste" value={profile.caste} />
+          <Field label="Status" value={humanize(profile.marital_status)} />
           <Field label="Location" value={profile.current_loc_name ?? profile.native_place_name} />
         </div>
       </div>
@@ -83,10 +91,10 @@ function Face({ index, profile }: { index: number; profile: SearchCard }) {
       <div>
         <p className="mb-3 text-[10px] uppercase tracking-widest text-terra">Career & education</p>
         <Field label="Education" value={profile.education_detail} />
+        <Field label="Role" value={profile.job_title} />
         <Field label="Profession" value={profile.profession_detail} />
         <Field label="Employer" value={profile.employer} />
         <Field label="Job city" value={profile.job_loc_name} />
-        <p className="mt-5 text-center text-xs leading-relaxed text-ink-soft">A little context helps families start the right conversation.</p>
       </div>
     )
   }
@@ -117,20 +125,66 @@ function Face({ index, profile }: { index: number; profile: SearchCard }) {
     )
   }
 
-  return (
-    <div>
-      <p className="mb-3 text-[10px] uppercase tracking-widest text-terra">Marriage outlook</p>
-      <Field label="Timeline" value={humanize(profile.marriage_timeline)} />
-      <Field label="Profile status" value={humanize(profile.profile_status)} />
-      <div className="mt-5 rounded-mj-sm border border-gold/25 bg-cream px-3 py-3 text-center">
-        <p className="font-serif text-lg text-maroon">A thoughtful beginning</p>
-        <p className="mt-1 text-[11px] leading-relaxed text-ink-soft">Review the full profile to see more details and connect respectfully.</p>
+  if (index === 4) {
+    return (
+      <div>
+        <p className="mb-3 text-[10px] uppercase tracking-widest text-terra">Marriage outlook</p>
+        <Field label="Timeline" value={humanize(profile.marriage_timeline)} />
+        <Field label="Marital status" value={humanize(profile.marital_status)} />
+        <Field label="Family" value={humanize(profile.family_type)} />
+        <Field label="Profile status" value={humanize(profile.profile_status)} />
+        <div className="mt-4 rounded-mj-sm border border-gold/25 bg-cream px-3 py-2.5 text-center">
+          <p className="font-serif text-[15px] text-maroon">A thoughtful beginning</p>
+          <p className="mt-0.5 text-[11px] leading-relaxed text-ink-soft">Review the full profile to see more details and connect respectfully.</p>
+        </div>
       </div>
+    )
+  }
+
+  // Match face — only ever rendered when profile.match exists (see cardsFor).
+  const match = profile.match!
+  const blocked = match.blockers.length > 0
+  return (
+    <div className="flex h-full flex-col">
+      <p className="mb-2 text-[10px] uppercase tracking-widest text-terra">How you match</p>
+      <div className="flex items-baseline gap-2">
+        <span className={`font-serif text-3xl leading-none ${blocked ? 'text-terra' : match.score >= 80 ? 'text-green' : match.score >= 65 ? 'text-gold' : 'text-maroon'}`}>
+          {match.score}
+        </span>
+        <span className="text-[12px] text-maroon">{blocked ? 'Needs checking' : BAND_LABEL[match.band]}</span>
+      </div>
+      <p className="mt-0.5 text-[10.5px] text-ink-soft">Based on {Math.round(match.confidence * 100)}% of our factors</p>
+
+      {blocked ? (
+        <p className="mt-2.5 rounded-mj-sm border border-terra/25 bg-terra/[0.07] px-2 py-1.5 text-[11.5px] leading-snug text-terra">
+          {match.blockers[0]}
+        </p>
+      ) : (
+        <ul className="mt-2.5 space-y-1.5">
+          {match.reasons.slice(0, 3).map(r => (
+            <li key={r.key} className="flex gap-1.5 text-[11.5px] leading-snug text-ink">
+              <span aria-hidden="true" className="shrink-0 text-green">✓</span>
+              <span>{r.detail}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <p className="mt-auto pt-2 text-[10px] leading-snug text-ink-soft">
+        A guide, not a verdict. Full breakdown below.
+      </p>
     </div>
   )
 }
 
 export default function ProfileCardGallery3D({ profile, autoRotate = true }: ProfileCardGallery3DProps) {
+  // The match face is added only when there is a score — on your own profile,
+  // and for a signed-out viewer, there is nothing to compare against and an
+  // empty sixth card would be worse than five.
+  const CARDS: readonly string[] = profile.match
+    ? [...BASE_CARDS, 'Match']
+    : BASE_CARDS
+
   const [active, setActive] = useState(0)
   const [paused, setPaused] = useState(false)
   const [stopped, setStopped] = useState(false)
@@ -139,7 +193,7 @@ export default function ProfileCardGallery3D({ profile, autoRotate = true }: Pro
 
   const navigate = useCallback((direction: 1 | -1) => {
     setActive(current => (current + direction + CARDS.length) % CARDS.length)
-  }, [])
+  }, [CARDS.length])
 
   useEffect(() => {
     if (!autoRotate || paused || stopped || reducedMotion.current) return
@@ -184,7 +238,7 @@ export default function ProfileCardGallery3D({ profile, autoRotate = true }: Pro
       >
         <div className="relative mx-auto h-[330px] max-w-[620px] sm:h-[370px]" style={{ transformStyle: 'preserve-3d' }}>
           {CARDS.map((label, index) => {
-            const style = styleForOffset(offsetFor(index, active))
+            const style = styleForOffset(offsetFor(index, active, CARDS.length))
             const isActive = index === active
             return (
               <div

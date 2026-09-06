@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import { getSessionAccount } from '@/lib/auth'
 import { canViewPhotos } from '@/lib/photoAccess'
 import { createAdminClient } from '@/lib/supabase/server'
+import { getLocationIndex } from '@/lib/locationIndex'
+import { scoreMatch, topReasons, type ScoreProfile, type ScorePreferences } from '@/lib/matchScore'
 import ProfileViewClient from './ProfileViewClient'
 
 export const dynamic = 'force-dynamic'
@@ -10,10 +12,11 @@ export const dynamic = 'force-dynamic'
 async function fetchProfileView(profileId: string, viewerAccountId: string) {
   const admin = await createAdminClient()
 
-  // Viewer's own profile
+  // Viewer's own profile. The full row, not just the id: it is what the match
+  // score is computed against.
   const { data: myProfile } = await admin
     .from('profiles')
-    .select('id')
+    .select('id, gender, dob, religion, caste, sub_caste, self_gotra, maternal_gotra, mool, gram, native_place_id, current_loc_id, job_loc_id, diet, smoking, drinking, marriage_timeline, education_detail, degree, family_type, family_values')
     .eq('account_id', viewerAccountId)
     .neq('profile_status', 'deleted')
     .is('deleted_at', null)
@@ -131,6 +134,61 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
     blocked = !!blockRes.data
   }
 
+  // ── Match score ───────────────────────────────────────────────────────────
+  // Only computable when the viewer has a profile of their own; there is
+  // nothing to compare an empty account against.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const toScoreProfile = (row: any): ScoreProfile => ({
+    id: row.id, gender: row.gender, dob: row.dob,
+    religion: row.religion, caste: row.caste, sub_caste: row.sub_caste,
+    self_gotra: row.self_gotra, maternal_gotra: row.maternal_gotra,
+    mool: row.mool, gram: row.gram,
+    native_place_id: row.native_place_id, current_loc_id: row.current_loc_id, job_loc_id: row.job_loc_id,
+    diet: row.diet, smoking: row.smoking, drinking: row.drinking,
+    marriage_timeline: row.marriage_timeline,
+    education_detail: row.education_detail, degree: row.degree,
+    family_type: row.family_type, family_values: row.family_values,
+  })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const toScorePrefs = (row: any | null): ScorePreferences => row ? {
+    pref_age_min: row.pref_age_min, pref_age_max: row.pref_age_max,
+    pref_caste: row.pref_caste, pref_diet: row.pref_diet, pref_location: row.pref_location,
+    pref_marriage_timeline: row.pref_marriage_timeline, pref_gotra_safe: row.pref_gotra_safe,
+  } : {}
+
+  let match: {
+    score: number
+    band: 'excellent' | 'strong' | 'good' | 'fair'
+    confidence: number
+    reasons: Array<{ key: string; label: string; detail: string }>
+    blockers: string[]
+    cautions: string[]
+    /** Every factor, not just the strong ones — this page has room for all of them. */
+    breakdown: Array<{ key: string; label: string; points: number; max: number; detail: string }>
+  } | null = null
+
+  if (myProfileId) {
+    const [{ data: myPrefs }, { data: theirPrefs }, locationIndex] = await Promise.all([
+      admin.from('profile_preferences').select('*').eq('profile_id', myProfileId).maybeSingle(),
+      admin.from('profile_preferences').select('*').eq('profile_id', profileId).maybeSingle(),
+      getLocationIndex(admin),
+    ])
+    const result = scoreMatch(
+      toScoreProfile(myProfile), toScorePrefs(myPrefs),
+      toScoreProfile({ ...p, id: profileId }), toScorePrefs(theirPrefs),
+      locationIndex,
+    )
+    match = {
+      score: result.score,
+      band: result.band,
+      confidence: Math.round(result.confidence * 100) / 100,
+      reasons: topReasons(result, 4).map(r => ({ key: r.key, label: r.label, detail: r.detail })),
+      blockers: result.blockers,
+      cautions: result.cautions,
+      breakdown: result.reasons.map(r => ({ key: r.key, label: r.label, points: r.points, max: r.max, detail: r.detail })),
+    }
+  }
+
   const lastName = p.last_name as string | null
   const displayName = lastName ? `${p.first_name} ${lastName}` : p.first_name
 
@@ -190,6 +248,7 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
     interestReceived,
     shortlisted,
     blocked,
+    match,
     cardData: {
       id: profileId,
       display_name: displayName,
@@ -217,6 +276,13 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
       maternal_gotra: (p.maternal_gotra as string | null) ?? null,
       job_loc_name: jobLocName,
       marriage_timeline: (p.marriage_timeline as string | null) ?? null,
+      job_title: (p.job_title as string | null) ?? null,
+      marital_status: (p.marital_status as string | null) ?? null,
+      family_type: (p.family_type as string | null) ?? null,
+      match: match ? {
+        score: match.score, band: match.band, confidence: match.confidence,
+        reasons: match.reasons, blockers: match.blockers, cautions: match.cautions,
+      } : null,
     },
   }
 }
