@@ -162,7 +162,7 @@ export default function FestivalsIndexPage() {
               <Link href="/blogs/mithila-culture-heritage" className="btn-ghost btn-sm">
                 Explore Mithila culture &amp; heritage
               </Link>
-              <Link href="/biodata" className="btn-primary btn-sm">
+              <Link href="/marriage-biodata" className="btn-primary btn-sm">
                 Create your marriage biodata
               </Link>
             </div>

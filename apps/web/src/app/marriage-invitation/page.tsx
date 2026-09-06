@@ -258,7 +258,7 @@ export default function MarriageInvitationPage() {
                 <Link href="/blogs/mithila-marriage-traditions" className="btn-ghost btn-sm">
                   Maithil marriage rituals
                 </Link>
-                <Link href="/biodata" className="btn-primary btn-sm">Create your biodata</Link>
+                <Link href="/marriage-biodata" className="btn-primary btn-sm">Create your biodata</Link>
               </div>
             </div>
           </div>

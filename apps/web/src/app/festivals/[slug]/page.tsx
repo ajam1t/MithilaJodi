@@ -327,7 +327,7 @@ export default async function FestivalPage(
                 these roots.
               </p>
               <div className="flex flex-wrap justify-center gap-3 mt-6">
-                <Link href="/biodata" className="btn-ghost btn-sm">Create your biodata</Link>
+                <Link href="/marriage-biodata" className="btn-ghost btn-sm">Create your biodata</Link>
                 <Link href="/register" className="btn-primary btn-sm">Find your match</Link>
               </div>
             </div>

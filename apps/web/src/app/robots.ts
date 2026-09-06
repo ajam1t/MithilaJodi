@@ -25,6 +25,9 @@ export default function robots(): MetadataRoute.Robots {
           '/messages',
           '/interests',
           '/shortlists',
+          // Note: this does NOT cover /marriage-biodata, the public no-login
+          // biodata maker, which is meant to be indexed. Keep them on separate
+          // paths — a `/biodata/...` URL for the public tool would be hidden here.
           '/biodata',        // auth-gated tool + /biodata/preview/[id]
           '/legal/consent',
         ],

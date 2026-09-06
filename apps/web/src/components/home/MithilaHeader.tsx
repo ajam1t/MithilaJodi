@@ -13,7 +13,7 @@ type NavLink = { href: string; label: string; mobileLabel?: string }
 const NAV_LINKS: NavLink[] = [
   { href: '/', label: 'Home' },
   { href: '/about', label: 'About' },
-  { href: '/#biodata', label: 'Marriage Biodata' },
+  { href: '/marriage-biodata', label: 'Marriage Biodata' },
   { href: '/festivals', label: 'Festivals', mobileLabel: 'Mithila Festivals' },
   { href: '/festival-songs', label: 'Songs', mobileLabel: 'Festival Songs' },
   { href: '/marriage-invitation', label: 'Invitation', mobileLabel: 'Marriage Invitation Card' },

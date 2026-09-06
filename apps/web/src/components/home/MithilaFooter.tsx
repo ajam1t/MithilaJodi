@@ -14,7 +14,7 @@ const GROUPS = [
   {
     label: 'Explore',
     links: [
-      { href: '/#biodata', label: 'Marriage Biodata' },
+      { href: '/marriage-biodata', label: 'Marriage Biodata' },
       { href: '/festivals', label: 'Mithila Festivals' },
       { href: '/festival-songs', label: 'Festival Songs' },
       { href: '/marriage-invitation', label: 'Invitation Card' },

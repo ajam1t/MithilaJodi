@@ -303,7 +303,7 @@ export default async function ArticlePage(
             </p>
             <div className="flex flex-wrap justify-center gap-3">
               <Link href="/explore" className="btn-ghost">Explore Mithila Profiles</Link>
-              <Link href="/biodata" className="btn-ghost">Create Your Biodata</Link>
+              <Link href="/marriage-biodata" className="btn-ghost">Create Your Biodata</Link>
               <Link href="/register" className="btn-primary">Find Your Match</Link>
             </div>
           </div>

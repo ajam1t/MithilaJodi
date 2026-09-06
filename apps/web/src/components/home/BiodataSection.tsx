@@ -51,11 +51,17 @@ export function BiodataSection() {
             ))}
           </ul>
 
-          <div>
-            <Link href="/register" className="btn-primary">
-              Create Your Biodata
+          <div className="flex flex-wrap gap-3 justify-center">
+            <Link href="/marriage-biodata" className="btn-primary">
+              Create Your Biodata — Free
+            </Link>
+            <Link href="/register" className="btn-ghost">
+              Create an account
             </Link>
           </div>
+          <p className="text-[12px] text-ink-soft mt-2.5">
+            No login needed. Download it as a PDF straight away.
+          </p>
         </div>
       </div>
     </section>
