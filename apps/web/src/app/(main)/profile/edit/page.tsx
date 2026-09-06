@@ -294,6 +294,97 @@ const VISIBILITY_OPTIONS = [
   },
 ]
 
+/**
+ * Which fields belong to which section.
+ *
+ * Used for the "4 of 7" counter in each section header. That counter is the
+ * whole point of collapsing the form: this page has around ninety inputs, and
+ * showing all of them at once made a member's own profile feel like a tax
+ * return with no indication of what was left. Collapsed sections state their
+ * progress, so nothing is hidden — only folded.
+ */
+const SECTION_FIELDS = {
+  basic:       ['first_name', 'last_name', 'gender', 'dob', 'height_cm', 'marital_status', 'mother_tongue'],
+  community:   ['religion', 'caste', 'sub_caste', 'mool', 'self_gotra', 'maternal_gotra', 'gram'],
+  location:    ['native_place_id', 'current_loc_id', 'job_loc_id'],
+  about:       ['about_me'],
+  education:   ['degree', 'specialization', 'institution', 'passing_year', 'education_detail'],
+  career:      ['job_title', 'employer', 'industry', 'employment_type', 'work_type', 'experience_years', 'profession_detail'],
+  lifestyle:   ['diet', 'smoking', 'drinking', 'marriage_timeline'],
+  family:      ['family_type', 'family_values', 'managed_by', 'parents_info', 'siblings_info', 'family_about', 'family_expectations', 'family_introduction'],
+  preferences: ['pref_age_min', 'pref_age_max', 'pref_gender', 'pref_caste', 'pref_education', 'pref_location',
+                'pref_diet', 'pref_profession', 'pref_marital_status', 'pref_children', 'pref_living_arrangement',
+                'pref_career', 'pref_marriage_timeline', 'pref_manglik', 'pref_notes'],
+  private:     ['income_min_lpa', 'income_max_lpa', 'rashi', 'nakshatra', 'mangalik', 'birth_time', 'birth_place',
+                'contact_mobile', 'contact_email', 'address', 'kundli_url', 'photo_visibility'],
+} as const satisfies Record<string, readonly (keyof FormData)[]>
+
+/**
+ * Sections open on first load: the ones a profile is useless without, plus the
+ * privacy control, which nobody should have to go looking for.
+ */
+const DEFAULT_OPEN = ['basic', 'community', 'location', 'photos', 'visibility']
+
+function FormSection({
+  id, title, subtitle, filled, total, open, onToggle, anchorId, children,
+}: {
+  id: string
+  title: string
+  subtitle: string
+  /** Omitted for sections whose progress is not a field count (photos, visibility). */
+  filled?: number
+  total?: number
+  open: boolean
+  onToggle: (id: string) => void
+  anchorId?: string
+  children: React.ReactNode
+}) {
+  const panelId = `section-${id}`
+  const complete = total != null && filled != null && filled >= total
+  return (
+    <section id={anchorId} className="card overflow-hidden scroll-mt-4">
+      <h2 id={`section-heading-${id}`}>
+        <button
+          type="button"
+          onClick={() => onToggle(id)}
+          aria-expanded={open}
+          aria-controls={panelId}
+          className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-paper-2/60 transition-colors"
+        >
+          <span className="flex-1 min-w-0">
+            <span className="block font-semibold text-ink text-[15px] leading-tight">{title}</span>
+            <span className="block text-[12px] text-ink-soft leading-snug mt-0.5">{subtitle}</span>
+          </span>
+          {total != null && filled != null && (
+            <span
+              className={`text-[11px] font-semibold rounded-pill px-2 py-0.5 whitespace-nowrap border ${
+                complete
+                  ? 'bg-green/[0.08] border-green/30 text-green'
+                  : filled > 0
+                    ? 'bg-gold/[0.10] border-gold/40 text-maroon'
+                    : 'bg-paper-2 border-paper-3 text-ink-soft'
+              }`}
+            >
+              {complete ? '✓ All set' : `${filled} of ${total}`}
+            </span>
+          )}
+          <svg
+            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"
+            className={`flex-shrink-0 text-ink-soft transition-transform ${open ? 'rotate-180' : ''}`}
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+      </h2>
+      {/* Unmounted rather than hidden: a collapsed section must not keep
+          focusable inputs in the tab order, and required fields inside a
+          display:none block still block form submission in some browsers. */}
+      {open && <div id={panelId} className="px-5 pb-5 pt-1 border-t border-paper-3">{children}</div>}
+    </section>
+  )
+}
+
 type SaveState = 'idle' | 'saving' | 'success' | 'error'
 
 export default function ProfileEditPage() {
@@ -310,6 +401,13 @@ export default function ProfileEditPage() {
   })
   const uploadingRef = useRef(false)
   const [locationNames, setLocationNames] = useState<{ native: string; current: string; job: string }>({ native: '', current: '', job: '' })
+  const [openSections, setOpenSections] = useState<Set<string>>(() => new Set(DEFAULT_OPEN))
+  // A ref, not state: the scroll has to happen after `openSections` commits, and
+  // storing the target in state made the effect re-run the moment it cleared
+  // itself — whose cleanup then cancelled the fallback timer below before it
+  // could fire.
+  const jumpTargetRef = useRef<string | null>(null)
+  const fallbackTimer = useRef<number | null>(null)
   const [options, setOptions] = useState<OptionsMap>({})
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -429,9 +527,69 @@ export default function ProfileEditPage() {
   const set = (key: keyof FormData, val: unknown) =>
     setForm(f => ({ ...f, [key]: val }))
 
+  useEffect(() => {
+    const id = jumpTargetRef.current
+    if (!id) return
+    jumpTargetRef.current = null
+    const el = document.getElementById(`section-heading-${id}`)
+    if (!el) return
+
+    const target = el.getBoundingClientRect().top + window.scrollY - 12
+    const start = window.scrollY
+    window.scrollTo({ top: target, behavior: 'smooth' })
+
+    // Smooth scrolling is a silent no-op in several embedded browsers — the
+    // WhatsApp and Instagram in-app webviews among them, which is how a lot of
+    // people will open a link to their own profile. Navigation that does
+    // nothing is worse than navigation without the animation, so if the page
+    // has not begun moving shortly after, jump.
+    //
+    // The timer is held in a ref rather than cancelled from this effect's
+    // cleanup, because React's development double-invoke runs that cleanup
+    // immediately and killed the fallback every time.
+    if (fallbackTimer.current) window.clearTimeout(fallbackTimer.current)
+    fallbackTimer.current = window.setTimeout(() => {
+      // `behavior: 'instant'` is required, not merely tidy: the stylesheet sets
+      // `scroll-behavior: smooth` on <html>, so omitting it makes the fallback
+      // smooth as well — and therefore just as broken as what it is rescuing.
+      if (Math.abs(window.scrollY - start) < 4) window.scrollTo({ top: target, behavior: 'instant' })
+    }, 250)
+  }, [openSections])
+
+  useEffect(() => () => {
+    if (fallbackTimer.current) window.clearTimeout(fallbackTimer.current)
+  }, [])
+
+  const toggleSection = useCallback((id: string) => {
+    setOpenSections(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     if (saving) return
+
+    // Collapsed sections are unmounted, not hidden — which is deliberate (a
+    // hidden `required` input blocks submission in some browsers with no
+    // visible reason). The cost is that the browser can no longer enforce
+    // `required` for a section that is closed, so the check happens here, and
+    // opens the section it is complaining about.
+    const missing = ([
+      ['first_name', 'your first name'],
+      ['gender', 'gender'],
+      ['dob', 'date of birth'],
+    ] as const).filter(([key]) => !String(form[key] ?? '').trim())
+
+    if (missing.length > 0) {
+      jumpToSection('basic')
+      setSaveState('error')
+      setError(`Please fill in ${missing.map(([, label]) => label).join(', ')} before saving.`)
+      return
+    }
 
     // Cheap client-side guard: the API rejects an inverted range, but catching
     // it here avoids a round trip and points at the offending field.
@@ -628,16 +786,48 @@ export default function ProfileEditPage() {
     )
   }
 
+  // Per-section counters for the collapsed headers. `pref_gotra_safe` and
+  // `discoverable` are excluded from SECTION_FIELDS on purpose: both default to
+  // a sensible value, so counting them would show progress nobody made.
+  const sectionProgress = Object.fromEntries(
+    Object.entries(SECTION_FIELDS).map(([key, fields]) => [
+      key,
+      {
+        filled: (fields as readonly (keyof FormData)[]).filter(f => {
+          const v = form[f]
+          return v !== '' && v !== null && v !== undefined
+        }).length,
+        total: fields.length,
+      },
+    ]),
+  ) as Record<keyof typeof SECTION_FIELDS, { filled: number; total: number }>
+
+  // Each chip jumps to its section, so the summary at the top is navigation
+  // rather than decoration — the point of collapsing the form is that you can
+  // get to the one thing you came to change without scrolling past ninety
+  // inputs.
   const sections = [
-    { label: 'Basic Info',        done: !!(form.first_name && form.gender && form.dob) },
-    { label: 'Community',         done: !!(form.caste) },
-    { label: 'Location',          done: !!(form.current_loc_id) },
-    { label: 'Education & Career',done: !!(form.education_detail || form.profession_detail) },
-    { label: 'Lifestyle',         done: !!(form.diet || form.marriage_timeline) },
-    { label: 'About Me',          done: !!(form.about_me) },
-    { label: 'Photos',            done: photos.some(p => p.status === 'approved' || p.status === 'pending_moderation') },
+    { id: 'basic',       label: 'Basic Info',         done: !!(form.first_name && form.gender && form.dob) },
+    { id: 'community',   label: 'Community',          done: !!(form.caste) },
+    { id: 'location',    label: 'Location',           done: !!(form.current_loc_id) },
+    { id: 'career',      label: 'Education & Career', done: !!(form.education_detail || form.profession_detail) },
+    { id: 'lifestyle',   label: 'Lifestyle',          done: !!(form.diet || form.marriage_timeline) },
+    { id: 'about',       label: 'About Me',           done: !!(form.about_me) },
+    { id: 'photos',      label: 'Photos',             done: photos.some(p => p.status === 'approved' || p.status === 'pending_moderation') },
+    { id: 'preferences', label: 'Preferences',        done: !!(form.pref_age_min || form.pref_age_max || form.pref_caste) },
   ]
   const doneSections = sections.filter(s => s.done).length
+
+  function jumpToSection(id: string) {
+    // The scroll is deferred to an effect rather than done here: opening the
+    // section is a state update, and scrolling in the same tick (or in a
+    // requestAnimationFrame) measures the layout React has not committed yet.
+    // Doing that left the page at the top instead of at the section.
+    jumpTargetRef.current = id
+    // A fresh Set even when the section is already open, so the effect's
+    // dependency always changes and the jump always runs.
+    setOpenSections(prev => new Set(prev).add(id))
+  }
 
   return (
     <main className="min-h-screen bg-paper py-8 px-4">
@@ -656,24 +846,37 @@ export default function ProfileEditPage() {
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
             {sections.map(s => (
-              <span
+              <button
                 key={s.label}
-                className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                type="button"
+                onClick={() => jumpToSection(s.id)}
+                className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border transition-colors hover:border-maroon ${
                   s.done
                     ? 'bg-green-50 border-green-200 text-green-700'
                     : 'bg-paper border-ink/20 text-ink-soft'
                 }`}
               >
-                {s.done ? '✓' : '○'} {s.label}
-              </span>
+                <span aria-hidden="true">{s.done ? '✓' : '○'}</span>
+                {s.label}
+                <span className="sr-only">{s.done ? ' — done' : ' — not filled in'}</span>
+              </button>
             ))}
           </div>
         </div>
 
-        <form onSubmit={handleSave} className="space-y-8">
-          {/* ── Section: Who is this profile for ── */}
-          <section className="card p-6">
-            <h2 className="font-semibold text-ink mb-4">Profile For</h2>
+        <form onSubmit={handleSave} className="space-y-3 pb-4">
+          <FormSection
+            id="basic"
+            title="Basic information"
+            subtitle="Name, gender, date of birth, height."
+            filled={sectionProgress.basic.filled}
+            total={sectionProgress.basic.total}
+            open={openSections.has('basic')}
+            onToggle={toggleSection}
+          >
+            <div className="space-y-4">
+              <div>
+                <span className="block text-sm font-medium text-ink mb-1.5">This profile is for</span>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
               {(['self', 'son', 'daughter', 'sibling', 'other'] as const).map(v => (
                 <label key={v} className={`flex items-center justify-center py-2 px-3 border rounded-mj-sm cursor-pointer text-sm font-medium transition-colors
@@ -684,12 +887,8 @@ export default function ProfileEditPage() {
                 </label>
               ))}
             </div>
-          </section>
+              </div>
 
-          {/* ── Section: Basic Info ── */}
-          <section className="card p-6">
-            <h2 className="font-semibold text-ink mb-4">Basic Information</h2>
-            <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-ink mb-1">First Name *</label>
@@ -739,11 +938,17 @@ export default function ProfileEditPage() {
               <MasterSelect label="Mother Tongue" value={form.mother_tongue}
                 opts={options.mother_tongue ?? []} onChange={v => set('mother_tongue', v)} />
             </div>
-          </section>
+          </FormSection>
 
-          {/* ── Section: Community ── */}
-          <section className="card p-6">
-            <h2 className="font-semibold text-ink mb-4">Community</h2>
+          <FormSection
+            id="community"
+            title="Community"
+            subtitle="Caste, gotra, mool and gram — used for gotra-safe matching."
+            filled={sectionProgress.community.filled}
+            total={sectionProgress.community.total}
+            open={openSections.has('community')}
+            onToggle={toggleSection}
+          >
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <MasterSelect label="Religion" value={form.religion}
@@ -771,11 +976,17 @@ export default function ProfileEditPage() {
               <CommunitySearch label="Gram (Ancestral Village)" type="gram" value={form.gram}
                 onChange={v => set('gram', v)} />
             </div>
-          </section>
+          </FormSection>
 
-          {/* ── Section: Location ── */}
-          <section className="card p-6">
-            <h2 className="font-semibold text-ink mb-4">Location</h2>
+          <FormSection
+            id="location"
+            title="Location"
+            subtitle="Native place, where you live, where you work."
+            filled={sectionProgress.location.filled}
+            total={sectionProgress.location.total}
+            open={openSections.has('location')}
+            onToggle={toggleSection}
+          >
             <p className="text-xs text-ink-soft mb-4">
               India only. Pick a place from the suggestions — matches are made on the place you select,
               so free text is not stored.
@@ -812,293 +1023,15 @@ export default function ProfileEditPage() {
                 }}
               />
             </div>
-          </section>
+          </FormSection>
 
-          {/* ── Section: Private details ── */}
-          <section className="card p-6">
-            <h2 className="font-semibold text-ink mb-1">Private details</h2>
-            <p className="text-xs text-ink-soft mb-4">These details are stored securely and are only shared according to your privacy settings.</p>
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                ['income_min_lpa', 'Income min (LPA)', 'number'], ['income_max_lpa', 'Income max (LPA)', 'number'],
-                ['rashi', 'Rashi', 'text'], ['nakshatra', 'Nakshatra', 'text'], ['mangalik', 'Mangalik', 'text'],
-                ['birth_time', 'Birth time', 'text'], ['birth_place', 'Birth place', 'text'],
-                ['contact_mobile', 'Contact mobile', 'tel'], ['contact_email', 'Contact email', 'email'],
-                ['kundli_url', 'Kundli URL', 'url'],
-              ].map(([key, label, type]) => (
-                <div key={key}>
-                  <label className="block text-sm font-medium text-ink mb-1">{label}</label>
-                  <input type={type} value={form[key as keyof FormData] as string} onChange={e => set(key as keyof FormData, e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm focus:outline-none focus:border-maroon" />
-                </div>
-              ))}
-              <div className="col-span-2"><label className="block text-sm font-medium text-ink mb-1">Address</label><textarea value={form.address} onChange={e => set('address', e.target.value)} rows={3} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm focus:outline-none focus:border-maroon" /></div>
-              <div className="col-span-2 text-xs text-ink-soft bg-paper border border-paper-3 rounded-mj-sm p-3">
-                The contact details above are private. They are never shown to other members,
-                whatever your profile visibility is set to. Your registered mobile can only be
-                shared through the WhatsApp request flow, which you approve one request at a time.
-              </div>
-
-              {/* Photo visibility is a separate axis from profile visibility:
-                  this decides who, among the people who can already see your
-                  profile, also sees your photographs. Only the two options we
-                  actually enforce are offered. */}
-              <div className="col-span-2">
-                <label htmlFor="photo-visibility" className="block text-sm font-medium text-ink mb-1">
-                  Who can see your photographs
-                </label>
-                <select
-                  id="photo-visibility"
-                  value={form.photo_visibility === 'all' || form.photo_visibility === '' ? 'all' : 'connected'}
-                  onChange={e => set('photo_visibility', e.target.value)}
-                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm bg-white"
-                >
-                  <option value="all">Everyone who can see my profile</option>
-                  <option value="connected">Only my accepted connections</option>
-                </select>
-                <p className="mt-1 text-xs text-ink-soft">
-                  Choosing connections-only keeps your profile visible but hides your photographs
-                  from search, from members who have only sent you an interest, and from the public
-                  pages — until you accept them.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* ── Section: Partner preferences ── */}
-          <section className="card p-6">
-            <h2 className="font-semibold text-ink mb-1">Partner preferences</h2>
-            <p className="text-xs text-ink-soft mb-4">Use commas to add multiple values where applicable.</p>
-            <div className="grid grid-cols-2 gap-4">
-              <div><label className="block text-sm font-medium text-ink mb-1">Age min</label><input type="number" value={form.pref_age_min} onChange={e => set('pref_age_min', e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm" /></div>
-              <div><label className="block text-sm font-medium text-ink mb-1">Age max</label><input type="number" value={form.pref_age_max} onChange={e => set('pref_age_max', e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm" /></div>
-              <div><label className="block text-sm font-medium text-ink mb-1">Preferred gender</label><select value={form.pref_gender} onChange={e => set('pref_gender', e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm bg-white"><option value="">Any</option><option value="male">Male</option><option value="female">Female</option></select></div>
-              {[
-                ['pref_caste', 'Preferred caste(s)'], ['pref_education', 'Preferred education IDs'], ['pref_location', 'Preferred location IDs'],
-                ['pref_diet', 'Preferred diet(s)'], ['pref_profession', 'Preferred profession(s)'], ['pref_marital_status', 'Preferred marital status'],
-                ['pref_children', 'Children preference'], ['pref_living_arrangement', 'Living arrangement'], ['pref_career', 'Career preference'],
-                ['pref_marriage_timeline', 'Marriage timeline'], ['pref_manglik', 'Manglik preference'],
-              ].map(([key, label]) => <div key={key}><label className="block text-sm font-medium text-ink mb-1">{label}</label><input value={form[key as keyof FormData] as string} onChange={e => set(key as keyof FormData, e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm" /></div>)}
-              <div className="col-span-2"><label className="block text-sm font-medium text-ink mb-1">Preference notes</label><textarea value={form.pref_notes} onChange={e => set('pref_notes', e.target.value)} rows={3} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm" /></div>
-              <label className="col-span-2 flex items-center gap-2 text-sm"><input type="checkbox" checked={form.pref_gotra_safe} onChange={e => set('pref_gotra_safe', e.target.checked)} /> Keep gotra safety rules enabled</label>
-            </div>
-          </section>
-
-          {/* ── Section: Lifestyle ── */}
-          <section className="card p-6">
-            <h2 className="font-semibold text-ink mb-4">Lifestyle</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-ink mb-1">Diet</label>
-                <select value={form.diet} onChange={e => set('diet', e.target.value)}
-                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon bg-white">
-                  <option value="">Select…</option>
-                  <option value="vegetarian">Vegetarian</option>
-                  <option value="non_vegetarian">Non-vegetarian</option>
-                  <option value="eggetarian">Eggetarian</option>
-                  <option value="vegan">Vegan</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-ink mb-1">Looking to marry</label>
-                <select value={form.marriage_timeline} onChange={e => set('marriage_timeline', e.target.value)}
-                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon bg-white">
-                  <option value="">Select…</option>
-                  <option value="within_3_months">Within 3 months</option>
-                  <option value="within_6_months">Within 6 months</option>
-                  <option value="within_1_year">Within 1 year</option>
-                  <option value="within_2_years">Within 2 years</option>
-                  <option value="no_rush">No rush</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-ink mb-1">Smoking</label>
-                <select value={form.smoking} onChange={e => set('smoking', e.target.value)}
-                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon bg-white">
-                  <option value="">Select…</option>
-                  <option value="no">No</option>
-                  <option value="occasionally">Occasionally</option>
-                  <option value="yes">Yes</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-ink mb-1">Drinking</label>
-                <select value={form.drinking} onChange={e => set('drinking', e.target.value)}
-                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon bg-white">
-                  <option value="">Select…</option>
-                  <option value="no">No</option>
-                  <option value="occasionally">Occasionally</option>
-                  <option value="yes">Yes</option>
-                </select>
-              </div>
-            </div>
-          </section>
-
-          {/* ── Section: Education ── */}
-          <section className="card p-6">
-            <h2 className="font-semibold text-ink mb-4">Education</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-ink mb-1">Education Level / Summary</label>
-                <input type="text" maxLength={500} value={form.education_detail}
-                  onChange={e => set('education_detail', e.target.value)}
-                  placeholder="e.g. B.Tech Computer Science, IIT Delhi"
-                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-ink mb-1">Degree</label>
-                  <input type="text" maxLength={200} value={form.degree}
-                    onChange={e => set('degree', e.target.value)}
-                    placeholder="e.g. B.Tech, MBA"
-                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-ink mb-1">Specialization</label>
-                  <input type="text" maxLength={200} value={form.specialization}
-                    onChange={e => set('specialization', e.target.value)}
-                    placeholder="e.g. Computer Science"
-                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-ink mb-1">Institution</label>
-                  <input type="text" maxLength={200} value={form.institution}
-                    onChange={e => set('institution', e.target.value)}
-                    placeholder="e.g. IIT Delhi"
-                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-ink mb-1">Passing Year</label>
-                  <input type="number" min={1950} max={new Date().getFullYear() + 1} value={form.passing_year}
-                    onChange={e => set('passing_year', e.target.value)}
-                    placeholder="e.g. 2018"
-                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* ── Section: Career ── */}
-          <section className="card p-6">
-            <h2 className="font-semibold text-ink mb-4">Career</h2>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <MasterSelect label="Employment Type" value={form.employment_type}
-                  opts={options.employment_type ?? []} onChange={v => set('employment_type', v)} />
-                <MasterSelect label="Industry" value={form.industry}
-                  opts={options.industry ?? []} onChange={v => set('industry', v)} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-ink mb-1">Job Title</label>
-                  <input type="text" maxLength={200} value={form.job_title}
-                    onChange={e => set('job_title', e.target.value)}
-                    placeholder="e.g. Senior Software Engineer"
-                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-ink mb-1">Company / Employer</label>
-                  <input type="text" maxLength={500} value={form.employer}
-                    onChange={e => set('employer', e.target.value)}
-                    placeholder="e.g. Infosys, Self-employed"
-                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-ink mb-1">Profession Summary</label>
-                <input type="text" maxLength={500} value={form.profession_detail}
-                  onChange={e => set('profession_detail', e.target.value)}
-                  placeholder="e.g. Software Engineer"
-                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-ink mb-1">Experience (years)</label>
-                  <input type="number" min={0} max={70} value={form.experience_years}
-                    onChange={e => set('experience_years', e.target.value)}
-                    placeholder="e.g. 5"
-                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
-                </div>
-                <MasterSelect label="Work Type" value={form.work_type}
-                  opts={options.work_type ?? []} onChange={v => set('work_type', v)} />
-              </div>
-            </div>
-          </section>
-
-          {/* ── Section: About ── */}
-          <section className="card p-6">
-            <h2 className="font-semibold text-ink mb-4">About</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-ink mb-1">
-                  About Me <span className="text-ink-soft font-normal">({form.about_me.length}/1000)</span>
-                </label>
-                <textarea rows={4} maxLength={1000} value={form.about_me}
-                  onChange={e => set('about_me', e.target.value)}
-                  placeholder="A short introduction about yourself…"
-                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon resize-none" />
-              </div>
-            </div>
-          </section>
-
-          {/* ── Section: Family ── */}
-          <section className="card p-6">
-            <h2 className="font-semibold text-ink mb-4">Family</h2>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <MasterSelect label="Profile Managed By" value={form.managed_by}
-                  opts={options.managed_by ?? []} onChange={v => set('managed_by', v)} />
-                <MasterSelect label="Family Type" value={form.family_type}
-                  opts={options.family_type ?? []} onChange={v => set('family_type', v)} />
-              </div>
-              <MasterSelect label="Family Values" value={form.family_values}
-                opts={options.family_values ?? []} onChange={v => set('family_values', v)} />
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-ink mb-1">Parents</label>
-                  <textarea rows={2} maxLength={200} value={form.parents_info}
-                    onChange={e => set('parents_info', e.target.value)}
-                    placeholder="e.g. Father — retired teacher; Mother — homemaker"
-                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon resize-none" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-ink mb-1">Siblings</label>
-                  <textarea rows={2} maxLength={200} value={form.siblings_info}
-                    onChange={e => set('siblings_info', e.target.value)}
-                    placeholder="e.g. One elder sister, married"
-                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon resize-none" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-ink mb-1">
-                  About Our Family <span className="text-ink-soft font-normal">({form.family_about.length}/1000)</span>
-                </label>
-                <textarea rows={3} maxLength={1000} value={form.family_about}
-                  onChange={e => set('family_about', e.target.value)}
-                  placeholder="About your family background…"
-                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon resize-none" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-ink mb-1">Family Introduction</label>
-                <textarea rows={2} maxLength={200} value={form.family_introduction}
-                  onChange={e => set('family_introduction', e.target.value)}
-                  placeholder="A short introduction to your family…"
-                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon resize-none" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-ink mb-1">Family Expectations</label>
-                <textarea rows={2} maxLength={200} value={form.family_expectations}
-                  onChange={e => set('family_expectations', e.target.value)}
-                  placeholder="What your family is looking for…"
-                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon resize-none" />
-              </div>
-            </div>
-          </section>
-
-          {/* ── Section: Photos ── */}
-          <section id="photos-section" className="card p-6">
-            <h2 className="font-semibold text-ink mb-1">Photos</h2>
+          <FormSection
+            id="photos"
+            title="Photos"
+            subtitle="Reviewed before they go live. Up to 5."
+            open={openSections.has('photos')}
+            onToggle={toggleSection} anchorId="photos-section"
+          >
             <p className="text-xs text-ink-soft mb-4">
               Photos are reviewed by our team. Max 5 photos, 5 MB each. JPEG, PNG, WebP, HEIC accepted.
             </p>
@@ -1171,14 +1104,339 @@ export default function ProfileEditPage() {
                 </label>
               )}
             </div>
-          </section>
+          </FormSection>
 
-          {/* ── Section: Who can see your profile ──
-              Three explicit levels instead of a single on/off switch. Each option
-              spells out the consequence, because "discoverable" told a member
-              nothing about whether the open internet could see them. */}
-          <section className="card p-6">
-            <h2 className="font-semibold text-ink mb-1">Who can see your profile</h2>
+          <FormSection
+            id="about"
+            title="About you"
+            subtitle="A few lines in your own words."
+            filled={sectionProgress.about.filled}
+            total={sectionProgress.about.total}
+            open={openSections.has('about')}
+            onToggle={toggleSection}
+          >
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">
+                  About Me <span className="text-ink-soft font-normal">({form.about_me.length}/1000)</span>
+                </label>
+                <textarea rows={4} maxLength={1000} value={form.about_me}
+                  onChange={e => set('about_me', e.target.value)}
+                  placeholder="A short introduction about yourself…"
+                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon resize-none" />
+              </div>
+            </div>
+          </FormSection>
+
+          <FormSection
+            id="education"
+            title="Education"
+            subtitle="Degree, specialisation, institution."
+            filled={sectionProgress.education.filled}
+            total={sectionProgress.education.total}
+            open={openSections.has('education')}
+            onToggle={toggleSection}
+          >
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">Education Level / Summary</label>
+                <input type="text" maxLength={500} value={form.education_detail}
+                  onChange={e => set('education_detail', e.target.value)}
+                  placeholder="e.g. B.Tech Computer Science, IIT Delhi"
+                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1">Degree</label>
+                  <input type="text" maxLength={200} value={form.degree}
+                    onChange={e => set('degree', e.target.value)}
+                    placeholder="e.g. B.Tech, MBA"
+                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1">Specialization</label>
+                  <input type="text" maxLength={200} value={form.specialization}
+                    onChange={e => set('specialization', e.target.value)}
+                    placeholder="e.g. Computer Science"
+                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1">Institution</label>
+                  <input type="text" maxLength={200} value={form.institution}
+                    onChange={e => set('institution', e.target.value)}
+                    placeholder="e.g. IIT Delhi"
+                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1">Passing Year</label>
+                  <input type="number" min={1950} max={new Date().getFullYear() + 1} value={form.passing_year}
+                    onChange={e => set('passing_year', e.target.value)}
+                    placeholder="e.g. 2018"
+                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
+                </div>
+              </div>
+            </div>
+          </FormSection>
+
+          <FormSection
+            id="career"
+            title="Career"
+            subtitle="Role, employer, industry, experience."
+            filled={sectionProgress.career.filled}
+            total={sectionProgress.career.total}
+            open={openSections.has('career')}
+            onToggle={toggleSection}
+          >
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <MasterSelect label="Employment Type" value={form.employment_type}
+                  opts={options.employment_type ?? []} onChange={v => set('employment_type', v)} />
+                <MasterSelect label="Industry" value={form.industry}
+                  opts={options.industry ?? []} onChange={v => set('industry', v)} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1">Job Title</label>
+                  <input type="text" maxLength={200} value={form.job_title}
+                    onChange={e => set('job_title', e.target.value)}
+                    placeholder="e.g. Senior Software Engineer"
+                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1">Company / Employer</label>
+                  <input type="text" maxLength={500} value={form.employer}
+                    onChange={e => set('employer', e.target.value)}
+                    placeholder="e.g. Infosys, Self-employed"
+                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">Profession Summary</label>
+                <input type="text" maxLength={500} value={form.profession_detail}
+                  onChange={e => set('profession_detail', e.target.value)}
+                  placeholder="e.g. Software Engineer"
+                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1">Experience (years)</label>
+                  <input type="number" min={0} max={70} value={form.experience_years}
+                    onChange={e => set('experience_years', e.target.value)}
+                    placeholder="e.g. 5"
+                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
+                </div>
+                <MasterSelect label="Work Type" value={form.work_type}
+                  opts={options.work_type ?? []} onChange={v => set('work_type', v)} />
+              </div>
+            </div>
+          </FormSection>
+
+          <FormSection
+            id="lifestyle"
+            title="Lifestyle & timeline"
+            subtitle="Diet, habits, and when you are looking to marry."
+            filled={sectionProgress.lifestyle.filled}
+            total={sectionProgress.lifestyle.total}
+            open={openSections.has('lifestyle')}
+            onToggle={toggleSection}
+          >
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">Diet</label>
+                <select value={form.diet} onChange={e => set('diet', e.target.value)}
+                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon bg-white">
+                  <option value="">Select…</option>
+                  <option value="vegetarian">Vegetarian</option>
+                  <option value="non_vegetarian">Non-vegetarian</option>
+                  <option value="eggetarian">Eggetarian</option>
+                  <option value="vegan">Vegan</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">Looking to marry</label>
+                <select value={form.marriage_timeline} onChange={e => set('marriage_timeline', e.target.value)}
+                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon bg-white">
+                  <option value="">Select…</option>
+                  <option value="within_3_months">Within 3 months</option>
+                  <option value="within_6_months">Within 6 months</option>
+                  <option value="within_1_year">Within 1 year</option>
+                  <option value="within_2_years">Within 2 years</option>
+                  <option value="no_rush">No rush</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">Smoking</label>
+                <select value={form.smoking} onChange={e => set('smoking', e.target.value)}
+                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon bg-white">
+                  <option value="">Select…</option>
+                  <option value="no">No</option>
+                  <option value="occasionally">Occasionally</option>
+                  <option value="yes">Yes</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">Drinking</label>
+                <select value={form.drinking} onChange={e => set('drinking', e.target.value)}
+                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon bg-white">
+                  <option value="">Select…</option>
+                  <option value="no">No</option>
+                  <option value="occasionally">Occasionally</option>
+                  <option value="yes">Yes</option>
+                </select>
+              </div>
+            </div>
+          </FormSection>
+
+          <FormSection
+            id="family"
+            title="Family"
+            subtitle="Family type, values, and who is managing this profile."
+            filled={sectionProgress.family.filled}
+            total={sectionProgress.family.total}
+            open={openSections.has('family')}
+            onToggle={toggleSection}
+          >
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <MasterSelect label="Profile Managed By" value={form.managed_by}
+                  opts={options.managed_by ?? []} onChange={v => set('managed_by', v)} />
+                <MasterSelect label="Family Type" value={form.family_type}
+                  opts={options.family_type ?? []} onChange={v => set('family_type', v)} />
+              </div>
+              <MasterSelect label="Family Values" value={form.family_values}
+                opts={options.family_values ?? []} onChange={v => set('family_values', v)} />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1">Parents</label>
+                  <textarea rows={2} maxLength={200} value={form.parents_info}
+                    onChange={e => set('parents_info', e.target.value)}
+                    placeholder="e.g. Father — retired teacher; Mother — homemaker"
+                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon resize-none" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1">Siblings</label>
+                  <textarea rows={2} maxLength={200} value={form.siblings_info}
+                    onChange={e => set('siblings_info', e.target.value)}
+                    placeholder="e.g. One elder sister, married"
+                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon resize-none" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">
+                  About Our Family <span className="text-ink-soft font-normal">({form.family_about.length}/1000)</span>
+                </label>
+                <textarea rows={3} maxLength={1000} value={form.family_about}
+                  onChange={e => set('family_about', e.target.value)}
+                  placeholder="About your family background…"
+                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon resize-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">Family Introduction</label>
+                <textarea rows={2} maxLength={200} value={form.family_introduction}
+                  onChange={e => set('family_introduction', e.target.value)}
+                  placeholder="A short introduction to your family…"
+                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon resize-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">Family Expectations</label>
+                <textarea rows={2} maxLength={200} value={form.family_expectations}
+                  onChange={e => set('family_expectations', e.target.value)}
+                  placeholder="What your family is looking for…"
+                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon resize-none" />
+              </div>
+            </div>
+          </FormSection>
+
+          <FormSection
+            id="preferences"
+            title="Partner preferences"
+            subtitle="What you are looking for. Drives your match scores."
+            filled={sectionProgress.preferences.filled}
+            total={sectionProgress.preferences.total}
+            open={openSections.has('preferences')}
+            onToggle={toggleSection}
+          >
+            <p className="text-xs text-ink-soft mb-4">Use commas to add multiple values where applicable.</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="block text-sm font-medium text-ink mb-1">Age min</label><input type="number" value={form.pref_age_min} onChange={e => set('pref_age_min', e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm" /></div>
+              <div><label className="block text-sm font-medium text-ink mb-1">Age max</label><input type="number" value={form.pref_age_max} onChange={e => set('pref_age_max', e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm" /></div>
+              <div><label className="block text-sm font-medium text-ink mb-1">Preferred gender</label><select value={form.pref_gender} onChange={e => set('pref_gender', e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm bg-white"><option value="">Any</option><option value="male">Male</option><option value="female">Female</option></select></div>
+              {[
+                ['pref_caste', 'Preferred caste(s)'], ['pref_education', 'Preferred education IDs'], ['pref_location', 'Preferred location IDs'],
+                ['pref_diet', 'Preferred diet(s)'], ['pref_profession', 'Preferred profession(s)'], ['pref_marital_status', 'Preferred marital status'],
+                ['pref_children', 'Children preference'], ['pref_living_arrangement', 'Living arrangement'], ['pref_career', 'Career preference'],
+                ['pref_marriage_timeline', 'Marriage timeline'], ['pref_manglik', 'Manglik preference'],
+              ].map(([key, label]) => <div key={key}><label className="block text-sm font-medium text-ink mb-1">{label}</label><input value={form[key as keyof FormData] as string} onChange={e => set(key as keyof FormData, e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm" /></div>)}
+              <div className="col-span-2"><label className="block text-sm font-medium text-ink mb-1">Preference notes</label><textarea value={form.pref_notes} onChange={e => set('pref_notes', e.target.value)} rows={3} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm" /></div>
+              <label className="col-span-2 flex items-center gap-2 text-sm"><input type="checkbox" checked={form.pref_gotra_safe} onChange={e => set('pref_gotra_safe', e.target.checked)} /> Keep gotra safety rules enabled</label>
+            </div>
+          </FormSection>
+
+          <FormSection
+            id="private"
+            title="Private details"
+            subtitle="Horoscope, income and contact. Never shown in search."
+            filled={sectionProgress.private.filled}
+            total={sectionProgress.private.total}
+            open={openSections.has('private')}
+            onToggle={toggleSection}
+          >
+            <p className="text-xs text-ink-soft mb-4">These details are stored securely and are only shared according to your privacy settings.</p>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                ['income_min_lpa', 'Income min (LPA)', 'number'], ['income_max_lpa', 'Income max (LPA)', 'number'],
+                ['rashi', 'Rashi', 'text'], ['nakshatra', 'Nakshatra', 'text'], ['mangalik', 'Mangalik', 'text'],
+                ['birth_time', 'Birth time', 'text'], ['birth_place', 'Birth place', 'text'],
+                ['contact_mobile', 'Contact mobile', 'tel'], ['contact_email', 'Contact email', 'email'],
+                ['kundli_url', 'Kundli URL', 'url'],
+              ].map(([key, label, type]) => (
+                <div key={key}>
+                  <label className="block text-sm font-medium text-ink mb-1">{label}</label>
+                  <input type={type} value={form[key as keyof FormData] as string} onChange={e => set(key as keyof FormData, e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm focus:outline-none focus:border-maroon" />
+                </div>
+              ))}
+              <div className="col-span-2"><label className="block text-sm font-medium text-ink mb-1">Address</label><textarea value={form.address} onChange={e => set('address', e.target.value)} rows={3} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm focus:outline-none focus:border-maroon" /></div>
+              <div className="col-span-2 text-xs text-ink-soft bg-paper border border-paper-3 rounded-mj-sm p-3">
+                The contact details above are private. They are never shown to other members,
+                whatever your profile visibility is set to. Your registered mobile can only be
+                shared through the WhatsApp request flow, which you approve one request at a time.
+              </div>
+
+              {/* Photo visibility is a separate axis from profile visibility:
+                  this decides who, among the people who can already see your
+                  profile, also sees your photographs. Only the two options we
+                  actually enforce are offered. */}
+              <div className="col-span-2">
+                <label htmlFor="photo-visibility" className="block text-sm font-medium text-ink mb-1">
+                  Who can see your photographs
+                </label>
+                <select
+                  id="photo-visibility"
+                  value={form.photo_visibility === 'all' || form.photo_visibility === '' ? 'all' : 'connected'}
+                  onChange={e => set('photo_visibility', e.target.value)}
+                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm bg-white"
+                >
+                  <option value="all">Everyone who can see my profile</option>
+                  <option value="connected">Only my accepted connections</option>
+                </select>
+                <p className="mt-1 text-xs text-ink-soft">
+                  Choosing connections-only keeps your profile visible but hides your photographs
+                  from search, from members who have only sent you an interest, and from the public
+                  pages — until you accept them.
+                </p>
+              </div>
+            </div>
+          </FormSection>
+
+          <FormSection
+            id="visibility"
+            title="Who can see your profile"
+            subtitle="Public, members only, or hidden."
+            open={openSections.has('visibility')}
+            onToggle={toggleSection}
+          >
             <p className="text-xs text-ink-soft mb-4">
               You can change this at any time. Your contact details are never shown to
               other members on any of these settings.
@@ -1218,7 +1476,8 @@ export default function ProfileEditPage() {
                 still chooses which profiles are featured.
               </p>
             )}
-          </section>
+          </FormSection>
+
 
           {error && saveState === 'error' && (
             <div className="rounded-mj-sm bg-red-50 border border-red-200 px-4 py-3 text-red-700 text-sm">{error}</div>
