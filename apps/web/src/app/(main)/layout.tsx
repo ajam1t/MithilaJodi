@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { AuthBottomNav } from '@/components/AuthBottomNav'
+import { MatchesNavLink } from '@/components/MatchesNavLink'
 
 // Everything under (main) is authenticated, private member area — never index it.
 // Individual pages may still set their own title; this robots default applies
@@ -31,12 +32,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             >
               Messages
             </Link>
-            <Link
-              href="/interests"
-              className="px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
-            >
-              Matches
-            </Link>
+            <MatchesNavLink />
             <Link
               href="/shortlists"
               className="px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"

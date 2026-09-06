@@ -358,20 +358,11 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* ── Access note — the single place this is stated in the app ── */}
-      <div className="border-b border-ink/10">
-        <div className="max-w-2xl mx-auto px-4 py-4">
-          <div className="rounded-mj-sm border border-gold/40 bg-gold/[0.07] px-4 py-3 flex items-start gap-3">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#B98A2E" strokeWidth="1.9" className="mt-0.5 shrink-0" aria-hidden="true">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-            </svg>
-            <p className="text-[13.5px] text-ink leading-relaxed">
-              <strong className="font-semibold">Mithila Jodi is currently free for all members.</strong>{' '}
-              Search, interests, messaging and biodata are all included with your account.
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* The "free for all members" banner used to sit here. Removed: a member
+          who is already signed in has nothing to decide about pricing, so it
+          was taking the most valuable space on their own profile to answer a
+          question they had already answered. It is still stated where it is
+          actually load-bearing — /pricing, /help and the Terms. */}
 
       {/* ── 3D Profile Gallery ── */}
       {profile && cardProfile && (

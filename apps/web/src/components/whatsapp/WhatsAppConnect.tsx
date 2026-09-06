@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { refreshPendingCounts } from '@/lib/hooks/usePendingCounts'
 
 /**
  * WhatsApp connection UI — the consent flow, in two parts:
@@ -103,7 +104,16 @@ export function WhatsAppConnect({
         <div className="min-w-0 flex-1">
           <p className="font-serif text-[16px] text-maroon leading-snug">WhatsApp</p>
 
-          {mine?.status === 'approved' && mine.whatsappNumber ? (
+          {mine?.status === 'approved' && !mine.whatsappNumber ? (
+            /* Approved, but the number is withheld — the owner has since turned
+               WhatsApp sharing off. Without this branch the component fell all
+               the way through to the initial state and showed "Request
+               WhatsApp" again, as though nothing had ever happened. */
+            <p className="text-[13px] text-ink-soft mt-1 leading-relaxed">
+              {first} approved WhatsApp, but has since turned off WhatsApp sharing,
+              so their number is not available. Messaging here still works.
+            </p>
+          ) : mine?.status === 'approved' && mine.whatsappNumber ? (
             <>
               <p className="text-[13px] text-ink-soft mt-1 leading-relaxed">
                 {first} has approved WhatsApp contact.
@@ -179,12 +189,18 @@ export function WhatsAppRequests() {
         body: JSON.stringify({ action }),
       })
       await refresh()
+      // Drop the nav badge straight away rather than leaving a count that is
+      // visibly wrong until the next full page load.
+      refreshPendingCounts()
     } finally { setBusyId(null) }
   }
 
   const pending = state?.incoming.filter((r) => r.status === 'pending') ?? []
   const approved = state?.incoming.filter((r) => r.status === 'approved') ?? []
-  if (pending.length === 0 && approved.length === 0) return null
+  // Requests I have sent. Previously these were only visible on the other
+  // member's profile page, so "did I already ask?" had no answer anywhere.
+  const sent = state?.outgoing.filter((r) => r.status === 'pending' || r.status === 'approved') ?? []
+  if (pending.length === 0 && approved.length === 0 && sent.length === 0) return null
 
   return (
     <section className="card p-4 sm:p-5" aria-label="WhatsApp requests">
@@ -234,6 +250,34 @@ export function WhatsAppRequests() {
           </li>
         ))}
       </ul>
+
+      {sent.length > 0 && (
+        <div className="mt-4 pt-3.5 border-t border-paper-3">
+          <p className="text-[12px] font-semibold uppercase tracking-wide text-ink-soft mb-2">
+            Requests you sent
+          </p>
+          <ul className="space-y-2">
+            {sent.map((r) => (
+              <li key={r.id} className="flex items-center justify-between gap-3 text-[13.5px]">
+                <span className="text-ink min-w-0 truncate">{r.name}</span>
+                {r.status === 'approved' && r.whatsappNumber ? (
+                  <a
+                    href={waLink(r.whatsappNumber, `Namaste ${r.name.split(' ')[0] || 'there'}, I found your profile on Mithila Jodi.`)}
+                    target="_blank" rel="noopener noreferrer"
+                    className="shrink-0 inline-flex items-center gap-1.5 text-green font-semibold hover:underline"
+                  >
+                    <WhatsAppIcon size={14} /> Message
+                  </a>
+                ) : (
+                  <span className="shrink-0 text-ink-soft">
+                    {r.status === 'approved' ? 'Number unavailable' : 'Waiting for approval'}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </section>
   )
 }
@@ -265,8 +309,9 @@ export function WhatsAppOptIn() {
       <div className="min-w-0">
         <p className="text-sm font-medium text-ink">Allow WhatsApp requests</p>
         <p className="text-[12.5px] text-ink-soft mt-0.5 leading-relaxed">
-          Lets members you have matched with ask to connect on WhatsApp. Your number is never shown
-          publicly and is shared only with members you individually approve.
+          On by default. Lets members you have matched with ask to connect on WhatsApp — it does not
+          share anything on its own. Your number is never shown publicly, and goes only to the
+          members you approve one by one, on the Matches page. You can withdraw access at any time.
         </p>
       </div>
       <button

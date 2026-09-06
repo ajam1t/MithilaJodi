@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { usePendingCounts } from '@/lib/hooks/usePendingCounts'
 
 type Tab = {
   href: string
@@ -72,11 +73,18 @@ const tabs: Tab[] = [
 
 export function AuthBottomNav() {
   const pathname = usePathname()
+  const pending = usePendingCounts()
 
   function isActive(tab: Tab) {
     const paths = tab.matchPaths ?? [tab.href]
     return paths.some(p => pathname === p || pathname.startsWith(p + '/'))
   }
+
+  // Interests and WhatsApp requests are both answered on /interests, so they
+  // share one badge. Without it a request could sit unanswered forever — the
+  // approve buttons are on a page nothing tells you to open.
+  const badgeFor = (tab: Tab) =>
+    tab.href === '/interests' ? pending.interests + pending.whatsapp : 0
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-cream border-t border-ink/10 lg:hidden"
@@ -84,17 +92,31 @@ export function AuthBottomNav() {
       <div className="flex items-stretch h-14">
         {tabs.map(tab => {
           const active = isActive(tab)
+          const badge = badgeFor(tab)
           return (
             <Link
               key={tab.href}
               href={tab.href}
-              className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors
+              className={`relative flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors
                 ${active ? 'text-maroon' : 'text-ink-soft hover:text-ink'}`}
             >
-              {tab.icon(active)}
+              <span className="relative">
+                {tab.icon(active)}
+                {badge > 0 && (
+                  <span
+                    className="absolute -top-1.5 -right-2 min-w-[17px] h-[17px] px-1 grid place-items-center
+                               rounded-full bg-maroon text-cream text-[10px] font-semibold leading-none"
+                  >
+                    {badge > 9 ? '9+' : badge}
+                  </span>
+                )}
+              </span>
               <span className={`text-[10px] leading-tight font-medium ${active ? 'text-maroon' : 'text-ink-soft'}`}>
                 {tab.label}
               </span>
+              {badge > 0 && (
+                <span className="sr-only">{badge} waiting for your response</span>
+              )}
             </Link>
           )
         })}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { WhatsAppRequests } from '@/components/whatsapp/WhatsAppConnect'
+import { refreshPendingCounts } from '@/lib/hooks/usePendingCounts'
 
 type InterestProfile = {
   interest_id: string
@@ -167,6 +168,8 @@ export default function InterestsContent() {
         const refreshRes = await fetch('/api/interests')
         const refreshJson = await refreshRes.json()
         if (refreshJson.ok) setData(refreshJson)
+        // Keep the nav badge honest — responding here is what clears it.
+        refreshPendingCounts()
       } else {
         setError(json.message ?? 'Could not complete that action. Please try again.')
       }
@@ -193,7 +196,13 @@ export default function InterestsContent() {
     <main id="main-content" className="min-h-screen bg-paper">
       <div className="wrap py-8">
         <div className="max-w-2xl mx-auto space-y-5">
-          <h1 className="font-serif text-3xl text-ink">Interests</h1>
+          <div>
+            <h1 className="font-serif text-3xl text-ink">Interests</h1>
+            <p className="text-[13px] text-ink-soft mt-1 leading-snug">
+              Interests you have received and sent — and where you approve WhatsApp requests from
+              members you have matched with.
+            </p>
+          </div>
 
           {/* WhatsApp requests awaiting my approval */}
           <WhatsAppRequests />

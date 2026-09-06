@@ -160,6 +160,29 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // The owner must be willing to receive these at all. This is checked here as
+  // well as at reveal time, because without it a request could be sent AND
+  // approved and still produce no number — GET re-checks the opt-in — leaving
+  // both people staring at a flow that appeared to work and did nothing.
+  const { data: ownerProfile } = await admin
+    .from('profiles')
+    .select('account_id')
+    .eq('id', ownerProfileId)
+    .maybeSingle()
+  if (ownerProfile) {
+    const { data: ownerAccount } = await admin
+      .from('accounts')
+      .select('whatsapp_opt_in')
+      .eq('id', (ownerProfile as any).account_id)
+      .maybeSingle()
+    if ((ownerAccount as any)?.whatsapp_opt_in !== true) {
+      return NextResponse.json(
+        { ok: false, message: 'This member is not accepting WhatsApp requests. You can still message them here.' },
+        { status: 403 }
+      )
+    }
+  }
+
   // Blocked either way → no contact requests.
   const { data: blocks } = await admin
     .from('blocks')
