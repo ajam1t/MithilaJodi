@@ -2,21 +2,55 @@
 
 import { useState, useEffect, useCallback } from 'react'
 
+/**
+ * `public_eligible` / `blocked_reason` are derived server-side with the same
+ * rules the public page uses, so this screen shows what will actually happen
+ * rather than a second guess. They are read-only: a member's visibility choice
+ * is not an admin's to override, and an override here is exactly how a private
+ * profile would end up indexed by Google.
+ */
 type ShowcaseEntry = {
   profile_id: string
   display_name: string
   mobile: string | null
   sort_order: number
   is_active: boolean
+  public_eligible: boolean
+  blocked_reason: string | null
 }
 
 type Candidate = {
   id: string
   name: string
   mobile: string | null
+  public_eligible?: boolean
+  blocked_reason?: string | null
 }
 
 const MAX = 20
+
+/**
+ * The one thing an admin needs to know on this screen: does featuring this
+ * person actually put them on a public, Google-indexable page, and if not why.
+ */
+function PublicBadge({ eligible, reason }: { eligible?: boolean; reason?: string | null }) {
+  if (eligible === undefined) return null
+  if (eligible) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full border border-green-300 bg-green-50 px-2 py-0.5 text-[10.5px] font-semibold text-green-700 whitespace-nowrap">
+        Public &amp; indexable
+      </span>
+    )
+  }
+  return (
+    <span
+      title={reason ?? undefined}
+      className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10.5px] font-semibold text-amber-800"
+    >
+      Will not appear{reason ? ` — ${reason}` : ''}
+    </span>
+  )
+}
 
 export default function AdminShowcasePage() {
   const [showcase, setShowcase] = useState<ShowcaseEntry[]>([])
@@ -209,6 +243,9 @@ export default function AdminShowcasePage() {
                   <span className="min-w-0">
                     <span className="font-semibold text-ink">{c.name}</span>
                     {c.mobile && <span className="ml-2 text-[11px] text-ink-soft font-mono">{c.mobile}</span>}
+                    <span className="ml-2 inline-block align-middle">
+                      <PublicBadge eligible={c.public_eligible} reason={c.blocked_reason} />
+                    </span>
                   </span>
                   <button
                     type="button"
@@ -246,6 +283,7 @@ export default function AdminShowcasePage() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-semibold text-ink text-sm">{e.display_name}</span>
                   {e.mobile && <span className="text-[11px] text-ink-soft font-mono">{e.mobile}</span>}
+                  <PublicBadge eligible={e.public_eligible} reason={e.blocked_reason} />
                   {!e.is_active && (
                     <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full font-medium">
                       Hidden

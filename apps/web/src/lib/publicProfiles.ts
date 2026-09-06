@@ -20,11 +20,23 @@ function computeAge(dob: string): number {
 }
 
 /** Public display name used consistently across the home/explore showcase. */
+/**
+ * Public display name — the member's full name.
+ *
+ * Showing the full name on public pages is a deliberate product decision: a
+ * family evaluating a match expects to see who it is, and an initial reads as
+ * evasive. It does mean a name, photo, city, caste and gotra appear together on
+ * a page that needs no account and is indexable, so the visibility copy in the
+ * profile editor and on /help states plainly what Public means rather than
+ * implying the surname is hidden.
+ *
+ * Everything genuinely private is still withheld from this projection: date of
+ * birth, mobile, email, address, family detail, horoscope and free text.
+ */
 function toPublicName(firstName: string, lastName: string | null): string {
   const first = (firstName ?? '').trim()
   const last = (lastName ?? '').trim()
-  if (last.length > 0) return `${first} ${last}`
-  return first
+  return last.length > 0 ? `${first} ${last}` : first
 }
 
 /**
@@ -72,6 +84,8 @@ export async function getPublicShowcaseProfiles(): Promise<SearchCard[]> {
     .select(
       [
         'id',
+        'account_id',     // internal — used for the account-status gate, then dropped
+        'visibility',     // internal — drives the public/members gate, then dropped
         'first_name',
         'last_name',
         'gender',
@@ -117,15 +131,49 @@ export async function getPublicShowcaseProfiles(): Promise<SearchCard[]> {
   // appear on a no-login page. Admin curation (public_showcase) decides WHO is
   // featured; this decides who is even eligible. Both must agree.
   //
-  // Applied here rather than as a WHERE clause so the deploy does not depend on
-  // migration 20260826000006 having already run. Before it runs the column is
-  // simply absent and this is a no-op, leaving the pre-existing `discoverable`
-  // gate in charge — the page keeps working instead of silently emptying.
-  // Once the migration has landed everywhere, fold this back into the query.
-  if (profiles.length > 0 && 'visibility' in profiles[0]) {
-    profiles = profiles.filter((row) => row.visibility === 'public')
-  }
+  // This filter was previously guarded by `'visibility' in profiles[0]` so the
+  // deploy would survive migration 20260826000006 not having run yet — but
+  // `visibility` was never added to the select, so the guard was always false
+  // and the filter never ran at all. A member set to "Members only" would have
+  // appeared on this no-login, indexable page the moment an admin featured
+  // them. The migration has since run everywhere, so the column is selected
+  // above and the gate is now unconditional.
+  profiles = profiles.filter((row) => row.visibility === 'public')
   if (profiles.length === 0) return []
+
+  // The owning account must be in good standing. Member search and the shared
+  // /p/ links both check this; this page did not, which meant banning an
+  // account — the strongest action an admin has — left that person's profile on
+  // the most exposed surface there is: a public, Google-indexable page.
+  const accountIds = [...new Set(profiles.map((row) => row.account_id as string).filter(Boolean))]
+  if (accountIds.length > 0) {
+    const { data: accountRows, error: accountsError } = await admin
+      .from('accounts')
+      .select('id, account_status, deleted_at')
+      .in('id', accountIds)
+
+    if (accountsError) {
+      // Fail closed. An unreadable account table must not default to showing
+      // profiles whose ban status is unknown.
+      console.error('[publicProfiles] accounts query error:', accountsError.code, accountsError.message)
+      throw new Error('accounts_query_failed')
+    }
+
+    const inGoodStanding = new Set<string>()
+    for (const row of (accountRows ?? [])) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const acct = row as any
+      if (
+        acct.deleted_at === null &&
+        acct.account_status !== 'banned' &&
+        acct.account_status !== 'deleted'
+      ) {
+        inGoodStanding.add(acct.id as string)
+      }
+    }
+    profiles = profiles.filter((row) => inGoodStanding.has(row.account_id as string))
+    if (profiles.length === 0) return []
+  }
 
   // Preserve the curator's ordering (sort_order asc).
   profiles.sort(

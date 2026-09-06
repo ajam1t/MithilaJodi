@@ -26,9 +26,9 @@ export const metadata = pageMetadata({
  * The public window onto the community.
  *
  * Only the admin-curated showcase appears here, and only profiles the member set
- * to 'public'. The projection in lib/publicProfiles masks the surname to an
- * initial and drops free-text and every private field — no date of birth, phone,
- * email, address, family or horoscope detail reaches this page. Individual member
+ * to 'public'. Names are shown in full, by product decision. The projection in
+ * lib/publicProfiles drops free-text and every private field — no date of birth,
+ * phone, email, address, family or horoscope detail reaches this page. Individual member
  * profiles live under the authenticated area and are noindex; nothing here links
  * a search engine to one.
  */
@@ -75,7 +75,7 @@ export default async function ExplorePage() {
             <p className="text-sm sm:text-base text-ink-soft mt-2 leading-relaxed">
               Maithil brides and grooms featured from our community, shown the way Mithila families
               read a profile — <span className="text-maroon">gotra, mool and native place</span> first.
-              Surnames are shortened and contact details are never shown here.
+              Contact details, date of birth and address are never shown here.
             </p>
           </header>
 

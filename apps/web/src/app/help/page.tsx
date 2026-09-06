@@ -22,7 +22,7 @@ const FAQS = [
   },
   {
     q: 'Who can see my profile?',
-    a: 'You choose one of three levels. Public means it may appear on our homepage and the Mithila matrimonial profiles page, which do not require an account — with your surname shortened and your date of birth, contact details and address never included. Members only means it appears in search for signed-in members and nowhere public. Private means it is hidden entirely. You can change this at any time when editing your profile.',
+    a: 'You choose one of three levels. Public means it may appear on our homepage and the Mithila matrimonial profiles page, which do not require an account — your name, photo and community details are visible there, while your date of birth, contact details and address are never included. Members only means it appears in search for signed-in members and nowhere public. Private means it is hidden entirely. You can change this at any time when editing your profile.',
   },
   {
     q: 'How does Mithila matrimonial matching work?',

@@ -14,7 +14,7 @@ import { FeaturedCarousel } from './FeaturedCarousel'
  *     visibly popped in.
  *
  * It now calls the same shared projection the API route uses, so the privacy
- * allowlist (masked surname, no dob/contact/free-text) is identical.
+ * allowlist (no dob/contact/free-text) is identical.
  *
  * The photo URLs are signed with a 1 hour TTL, so the page embedding this must
  * revalidate well inside that window — see `revalidate` in app/page.tsx.

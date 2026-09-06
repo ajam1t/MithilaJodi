@@ -10,6 +10,68 @@ function sanitize(raw: string): string {
 
 // ── GET: current showcase (+ optional add-candidates via ?search=) ──
 // Reads allowed for admin || moderator.
+/**
+ * Why a profile would or would not actually appear on the public homepage and
+ * /explore, evaluated with the SAME rules as getPublicShowcaseProfiles.
+ *
+ * Curating the showcase is the one admin action that puts a member's name,
+ * photo and community details on a page that needs no account and is indexable
+ * by Google. Until now the admin saw only a name and a mobile number, so there
+ * was no way to tell that featuring a "Members only" profile does nothing - it
+ * simply never showed up, with no explanation anywhere.
+ *
+ * Read-only and derived. It deliberately does not let an admin override any of
+ * these gates: a member's own visibility choice is not an admin's to change,
+ * and an editable override here is exactly how a private profile would end up
+ * indexed.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function publicEligibility(profile: any, approvedPhotos: number): { eligible: boolean; reason: string | null } {
+  if (!profile) return { eligible: false, reason: 'Profile not found' }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const account = (profile.accounts ?? null) as any
+  if (profile.deleted_at) return { eligible: false, reason: 'Profile deleted' }
+  if (profile.profile_status !== 'active') {
+    return { eligible: false, reason: 'Profile status is ' + (profile.profile_status ?? 'unknown') }
+  }
+  if (profile.is_demo) return { eligible: false, reason: 'Demo profile - never shown publicly' }
+  if (profile.visibility !== 'public') {
+    const chose = profile.visibility === 'members' ? 'Members only' : 'Private'
+    return { eligible: false, reason: 'Member chose "' + chose + '" - only they can change this' }
+  }
+  if (profile.discoverable !== true) return { eligible: false, reason: 'Member turned off discoverability' }
+  if (!account) return { eligible: false, reason: 'Owning account not found' }
+  if (account.deleted_at) return { eligible: false, reason: 'Account deleted' }
+  if (account.account_status === 'banned') return { eligible: false, reason: 'Account banned' }
+  if (account.account_status === 'deleted') return { eligible: false, reason: 'Account deleted' }
+  if (approvedPhotos === 0) {
+    return { eligible: false, reason: 'No approved photo yet - the card shows a placeholder' }
+  }
+  return { eligible: true, reason: null }
+}
+
+/** Approved-photo counts for a set of profiles, in one query. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function approvedPhotoCounts(admin: any, profileIds: string[]): Promise<Map<string, number>> {
+  const counts = new Map<string, number>()
+  if (profileIds.length === 0) return counts
+  const { data } = await admin
+    .from('profile_photos')
+    .select('profile_id')
+    .in('profile_id', profileIds)
+    .eq('status', 'approved')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  for (const row of ((data ?? []) as any[])) {
+    const id = row.profile_id as string
+    counts.set(id, (counts.get(id) ?? 0) + 1)
+  }
+  return counts
+}
+
+const ELIGIBILITY_COLUMNS =
+  'id, first_name, last_name, visibility, profile_status, discoverable, is_demo, deleted_at, ' +
+  'accounts(mobile, account_status, deleted_at)'
+
 export async function GET(request: NextRequest) {
   const session = await getSessionAccount()
   if (!session || (session.role !== 'admin' && session.role !== 'moderator')) {
@@ -34,19 +96,25 @@ export async function GET(request: NextRequest) {
   const showcaseIds = rows.map((r) => r.profile_id as string)
 
   // Resolve name + mobile for each showcased profile.
-  const nameMobileMap = new Map<string, { display_name: string; mobile: string | null }>()
+  const nameMobileMap = new Map<string, {
+    display_name: string; mobile: string | null; eligible: boolean; reason: string | null
+  }>()
   if (showcaseIds.length > 0) {
     const { data: profRows } = await admin
       .from('profiles')
-      .select('id, first_name, last_name, accounts(mobile)')
+      .select(ELIGIBILITY_COLUMNS)
       .in('id', showcaseIds)
+    const photoCounts = await approvedPhotoCounts(admin, showcaseIds)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(profRows as any[] ?? []).forEach((p) => {
       const name = p.last_name ? `${p.first_name} ${p.last_name}` : p.first_name
+      const verdict = publicEligibility(p, photoCounts.get(p.id as string) ?? 0)
       nameMobileMap.set(p.id as string, {
         display_name: (name as string) ?? '—',
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         mobile: (p.accounts as any)?.mobile ?? null,
+        eligible: verdict.eligible,
+        reason: verdict.reason,
       })
     })
   }
@@ -59,6 +127,9 @@ export async function GET(request: NextRequest) {
       mobile: info?.mobile ?? null,
       sort_order: r.sort_order as number,
       is_active: r.is_active as boolean,
+      // Whether this entry actually reaches the public page, and if not, why.
+      public_eligible: info?.eligible ?? false,
+      blocked_reason: info?.reason ?? 'Profile not found',
     }
   })
 
@@ -83,7 +154,7 @@ export async function GET(request: NextRequest) {
 
   const { data: candRows, error: candError } = await admin
     .from('profiles')
-    .select('id, first_name, last_name, accounts(mobile)')
+    .select(ELIGIBILITY_COLUMNS)
     .or(ors.join(','))
     .limit(20)
 
@@ -93,17 +164,21 @@ export async function GET(request: NextRequest) {
   }
 
   const inShowcase = new Set(showcaseIds)
-  const candidates = ((candRows as unknown[] ?? []) as Array<Record<string, unknown>>)
-    .filter((p) => !inShowcase.has(p.id as string))
-    .map((p) => {
-      const name = p.last_name ? `${p.first_name as string} ${p.last_name as string}` : (p.first_name as string)
-      return {
-        id: p.id as string,
-        name: name ?? '—',
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        mobile: (p.accounts as any)?.mobile ?? null,
-      }
-    })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const candList = ((candRows ?? []) as any[]).filter((p) => !inShowcase.has(p.id as string))
+  const candPhotoCounts = await approvedPhotoCounts(admin, candList.map((p) => p.id as string))
+  const candidates = candList.map((p) => {
+    const name = p.last_name ? `${p.first_name as string} ${p.last_name as string}` : (p.first_name as string)
+    const verdict = publicEligibility(p, candPhotoCounts.get(p.id as string) ?? 0)
+    return {
+      id: p.id as string,
+      name: name ?? '—',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      mobile: (p.accounts as any)?.mobile ?? null,
+      public_eligible: verdict.eligible,
+      blocked_reason: verdict.reason,
+    }
+  })
 
   return NextResponse.json({ ok: true, showcase, candidates })
 }

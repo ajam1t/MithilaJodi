@@ -280,7 +280,7 @@ const VISIBILITY_OPTIONS = [
   {
     value: 'public' as const,
     label: 'Public — anyone can see it',
-    help: 'May be shown on our homepage and Explore page, which do not require an account, and in member search. Surname is shortened and your date of birth, contact details and address are never included.',
+    help: 'May be shown on our homepage and Explore page, which do not require an account, and in member search. Your name, photo and community details are visible there; your date of birth, contact details and address are never included.',
   },
   {
     value: 'members' as const,
