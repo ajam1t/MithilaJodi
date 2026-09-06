@@ -1,7 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { AuthBottomNav } from '@/components/AuthBottomNav'
 import { MatchesNavLink } from '@/components/MatchesNavLink'
+import { getSessionAccount } from '@/lib/auth'
+import { createAdminClient } from '@/lib/supabase/server'
+import { getOnboardingState } from '@/lib/onboarding'
 
 // Everything under (main) is authenticated, private member area — never index it.
 // Individual pages may still set their own title; this robots default applies
@@ -10,7 +14,30 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-export default function MainLayout({ children }: { children: React.ReactNode }) {
+/**
+ * Every member page passes through this layout, which is why the onboarding
+ * gate lives here rather than in each page or in middleware.
+ *
+ * Middleware would be the wrong layer: it runs on the edge and only sees the
+ * session cookie, and deciding this needs a database read. Per-page checks
+ * would be a list to keep in sync, and the first page anyone forgot would be
+ * the hole. One server-side check here covers search, interests, messages,
+ * shortlists, biodata, settings and the profile pages at once, and cannot be
+ * bypassed by client-side navigation.
+ *
+ * The cost is one indexed query per member page view. /welcome sits outside
+ * this group so it does not redirect to itself.
+ */
+export default async function MainLayout({ children }: { children: React.ReactNode }) {
+  const account = await getSessionAccount()
+  if (account) {
+    const admin = await createAdminClient()
+    const onboarding = await getOnboardingState(admin, account.id)
+    if (!onboarding.complete) redirect('/welcome')
+  }
+  // A missing session is left to the individual pages and middleware, which
+  // already handle it — this layout only enforces profile completeness.
+
   return (
     <>
       {/* Top nav — hidden on mobile, visible from lg breakpoint */}

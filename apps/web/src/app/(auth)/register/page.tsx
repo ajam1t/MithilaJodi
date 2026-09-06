@@ -212,7 +212,8 @@ export default function RegisterPage() {
       })
       const data: { ok: boolean; message?: string } = await res.json()
       if (!data.ok) { setError(data.message ?? 'Could not save password. Please try again.'); return }
-      window.location.href = '/profile'
+      // Straight into required onboarding rather than an empty profile shell.
+      window.location.href = '/welcome'
     } catch {
       setError('Network error. Please check your connection and try again.')
     } finally {
