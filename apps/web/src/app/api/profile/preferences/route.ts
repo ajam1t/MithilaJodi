@@ -47,7 +47,33 @@ export async function GET() {
   // both are returned rather than making the client resolve ids itself.
   const display = await formatPartnerPreferences(admin, prefs)
 
-  return NextResponse.json({ ok: true, preferences: prefs ?? null, display })
+  // `display` joins the resolved names into one string, which reads well but is
+  // useless to an editor that has to render one removable chip per entry. These
+  // are the same two id arrays resolved to id/label pairs. Without them the
+  // editor could only show the raw numbers — which is exactly what the old
+  // "Preferred education IDs" and "Preferred location IDs" fields did.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const raw = prefs as any
+  const eduIds = Array.isArray(raw?.pref_education) ? raw.pref_education.filter(Number.isFinite) : []
+  const locIds = Array.isArray(raw?.pref_location) ? raw.pref_location.filter(Number.isFinite) : []
+
+  const [eduRows, locRows] = await Promise.all([
+    eduIds.length > 0
+      ? admin.from('education_levels').select('id, label_en').in('id', eduIds)
+      : Promise.resolve({ data: [] }),
+    locIds.length > 0
+      ? admin.from('india_locations').select('id, name_en').in('id', locIds)
+      : Promise.resolve({ data: [] }),
+  ])
+
+  const chips = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    education: ((eduRows.data ?? []) as any[]).map(r => ({ id: r.id as number, label: r.label_en as string })),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    location: ((locRows.data ?? []) as any[]).map(r => ({ id: r.id as number, label: r.name_en as string })),
+  }
+
+  return NextResponse.json({ ok: true, preferences: prefs ?? null, display, chips })
 }
 
 export async function PUT(request: NextRequest) {

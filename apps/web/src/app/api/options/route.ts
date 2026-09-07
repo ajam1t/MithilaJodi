@@ -45,5 +45,52 @@ export async function GET(request: NextRequest) {
     options[type].push({ value: row.value as string, label: row.label_en as string })
   })
 
-  return NextResponse.json({ ok: true, options })
+  // education_level lives in its own table, not community_masters, because
+  // profiles.education_level_id and profile_preferences.pref_education are
+  // foreign keys into it. Its `value` is therefore the numeric id as a string.
+  if (types.includes('education_level')) {
+    const { data: eduRows, error: eduError } = await admin
+      .from('education_levels')
+      .select('id, label_en, sort_order')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true })
+
+    if (eduError) {
+      console.error('[options GET] education_levels error:', eduError.message)
+    } else {
+      options.education_level = (eduRows ?? []).map((row) => ({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        value: String((row as any).id),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        label: (row as any).label_en as string,
+      }))
+    }
+  }
+
+  // Mool → gotra. A Maithil family generally knows its mool and reads the gotra
+  // off it, so the form uses this to fix or narrow the gotra once a mool is
+  // chosen rather than asking twice and risking a contradiction. Several mools
+  // (Brahmapura sits under five gotras) map to more than one, which is why this
+  // is a list per mool and not a single value.
+  let moolGotra: Record<string, string[]> | undefined
+  if (types.includes('mool')) {
+    const { data: mapRows, error: mapError } = await admin
+      .from('maithil_mool_gotra')
+      .select('mool_value, gotra_value')
+
+    if (mapError) {
+      // Not fatal: without the map the member simply picks the gotra by hand.
+      console.error('[options GET] mool→gotra error:', mapError.message)
+    } else {
+      moolGotra = {}
+      for (const row of (mapRows ?? [])) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const r = row as any
+        const mool = r.mool_value as string
+        ;(moolGotra[mool] ??= []).push(r.gotra_value as string)
+      }
+    }
+  }
+
+  return NextResponse.json({ ok: true, options, ...(moolGotra ? { moolGotra } : {}) })
 }

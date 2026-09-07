@@ -53,6 +53,10 @@ type FormData = {
   // Private details
   income_min_lpa: string
   income_max_lpa: string
+  /** The band the member picks; min/max above are derived from it on save. */
+  income_range: string
+  /** Whose number contact_mobile is — self, father, brother, … */
+  contact_relation: string
   rashi: string
   nakshatra: string
   mangalik: string
@@ -84,6 +88,7 @@ type FormData = {
   marital_status: string
   mother_tongue: string
   degree: string
+  education_level_id: string
   specialization: string
   institution: string
   passing_year: string
@@ -107,7 +112,11 @@ const EMPTY_FORM: FormData = {
   last_name: '',
   gender: '',
   dob: '',
-  religion: 'Hindu',
+  // Must be the option *key*, not the label. Defaulting to 'Hindu' meant the
+  // value matched no option, so MasterSelect prepended it as an extra entry and
+  // the religion dropdown listed Hindu twice. Hindu is the default because the
+  // platform serves the Maithil community.
+  religion: 'hindu',
   caste: '',
   sub_caste: '',
   self_gotra: '',
@@ -131,6 +140,8 @@ const EMPTY_FORM: FormData = {
   visibility: 'members',
   income_min_lpa: '',
   income_max_lpa: '',
+  income_range: '',
+  contact_relation: '',
   rashi: '',
   nakshatra: '',
   mangalik: '',
@@ -160,6 +171,7 @@ const EMPTY_FORM: FormData = {
   marital_status: '',
   mother_tongue: '',
   degree: '',
+  education_level_id: '',
   specialization: '',
   institution: '',
   passing_year: '',
@@ -239,6 +251,253 @@ type OptionsMap = Record<string, Option[]>
 // A <select> driven by master-data options. If the profile's stored value is
 // not present in the (active) options list, it is appended so the user never
 // silently loses a value an admin later deactivated.
+/**
+ * Multi-select as toggleable chips over a master list.
+ *
+ * These fields were comma-separated text boxes — "Use commas to add multiple
+ * values" — so a member had to know the exact spelling of every accepted value,
+ * and anything mistyped was silently dropped on save. Chips show the whole
+ * choice set and cannot produce an invalid value.
+ *
+ * The form still holds a comma-joined string, which is what the save path
+ * already splits, so nothing downstream changes.
+ */
+function MultiChips({
+  label, value, onChange, opts, hint,
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  opts: Option[]
+  hint?: string
+}) {
+  const chosen = value.split(',').map(v => v.trim()).filter(Boolean)
+  const toggle = (v: string) => {
+    const next = chosen.includes(v) ? chosen.filter(c => c !== v) : [...chosen, v]
+    onChange(next.join(', '))
+  }
+  return (
+    <div>
+      <span className="block text-sm font-medium text-ink mb-1.5">{label}</span>
+      {opts.length === 0 ? (
+        <p className="text-xs text-ink-soft">Loading…</p>
+      ) : (
+        <div className="flex flex-wrap gap-1.5">
+          {opts.map(o => {
+            const on = chosen.includes(o.value)
+            return (
+              <button key={o.value} type="button" onClick={() => toggle(o.value)} aria-pressed={on}
+                className={`rounded-pill border px-2.5 py-1 text-[12.5px] transition-colors ${
+                  on ? 'border-maroon bg-maroon text-gold-lt'
+                     : 'border-ink/20 text-ink-soft hover:border-maroon hover:text-maroon'}`}>
+                {o.label}
+              </button>
+            )
+          })}
+        </div>
+      )}
+      <p className="mt-1 text-xs text-ink-soft">{hint ?? (chosen.length === 0 ? 'Nothing selected — treated as no preference.' : `${chosen.length} selected`)}</p>
+    </div>
+  )
+}
+
+/**
+ * Multiple locations, added one at a time and shown as removable chips.
+ *
+ * Replaces a text input labelled "Preferred location IDs" that expected a member
+ * to type comma-separated numeric database ids.
+ */
+function MultiLocation({
+  label, ids, names, onChange,
+}: {
+  label: string
+  ids: string
+  names: Record<string, string>
+  onChange: (ids: string, names: Record<string, string>) => void
+}) {
+  const chosen = ids.split(',').map(v => v.trim()).filter(Boolean)
+  const remove = (id: string) => {
+    const nextNames = { ...names }
+    delete nextNames[id]
+    onChange(chosen.filter(c => c !== id).join(', '), nextNames)
+  }
+  return (
+    <div>
+      <span className="block text-sm font-medium text-ink mb-1.5">{label}</span>
+      {chosen.length > 0 && (
+        <div className="mb-2 flex flex-wrap gap-1.5">
+          {chosen.map(id => (
+            <span key={id} className="inline-flex items-center gap-1 rounded-pill border border-maroon bg-maroon px-2.5 py-1 text-[12.5px] text-gold-lt">
+              {names[id] ?? `#${id}`}
+              <button type="button" onClick={() => remove(id)} aria-label={`Remove ${names[id] ?? id}`}
+                className="text-gold-lt/80 hover:text-white">×</button>
+            </span>
+          ))}
+        </div>
+      )}
+      <LocationPicker
+        label=""
+        value={null}
+        compact
+        placeholder="Add a city or district…"
+        onChange={(id, name) => {
+          if (id == null) return
+          const key = String(id)
+          if (chosen.includes(key)) return
+          onChange([...chosen, key].join(', '), { ...names, [key]: name })
+        }}
+      />
+      <p className="mt-1 text-xs text-ink-soft">
+        {chosen.length === 0 ? 'No location preference — matches anywhere in India.' : `${chosen.length} added`}
+      </p>
+    </div>
+  )
+}
+
+/**
+ * A searchable picker over a master list that stores the option *key*.
+ *
+ * This replaces CommunitySearch for the community fields. CommunitySearch wrote
+ * `label_en` into the form, so profiles ended up holding display text
+ * ('Kashyap', 'Hindu') while the option lists are keyed by slug ('kashyapa',
+ * 'hindu'). Every one of those fields then rendered a duplicate entry, because
+ * the select prepends an unmatched value as its own option — the reported
+ * "Hindu listed twice", which was really happening to caste, gotra and mool too.
+ *
+ * It also accepts a filtered subset, which is how choosing a mool narrows the
+ * gotra list to the gotras that mool actually belongs to.
+ */
+function MasterCombo({
+  label, value, onChange, opts, hint, placeholder = 'Type to search…', allowOther = true,
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  opts: Option[]
+  hint?: string
+  placeholder?: string
+  allowOther?: boolean
+}) {
+  const inputId = useId()
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(false)
+
+  const selected = opts.find(o => o.value === value)
+  // A value with no matching option is legacy free text; show it as typed
+  // rather than silently blanking what the member previously saved.
+  const display = selected?.label ?? value ?? ''
+
+  const q = query.trim().toLowerCase()
+  const matches = (q ? opts.filter(o => o.label.toLowerCase().includes(q)) : opts).slice(0, 60)
+
+  return (
+    <div className="relative">
+      <label htmlFor={inputId} className="block text-sm font-medium text-ink mb-1">{label}</label>
+      <input
+        id={inputId}
+        type="text"
+        value={open ? query : display}
+        placeholder={placeholder}
+        autoComplete="off"
+        role="combobox"
+        aria-expanded={open}
+        aria-controls={`${inputId}-list`}
+        className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-ink text-sm focus:outline-none focus:border-maroon bg-white"
+        onFocus={() => { setQuery(''); setOpen(true) }}
+        onChange={e => { setQuery(e.target.value); setOpen(true) }}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+      />
+      {value && !open && (
+        <button type="button" onClick={() => onChange('')}
+          className="absolute right-2 top-[34px] text-ink-soft hover:text-maroon text-sm leading-none"
+          aria-label={`Clear ${label}`}>×</button>
+      )}
+      {open && (
+        <ul id={`${inputId}-list`} role="listbox"
+          className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-mj-sm border border-ink/20 bg-white shadow-mj-xs">
+          {matches.length === 0 && (
+            <li className="px-3 py-2 text-sm text-ink-soft">No match in the list.</li>
+          )}
+          {matches.map(o => (
+            <li key={o.value} role="option" aria-selected={o.value === value}
+              className={`cursor-pointer px-3 py-2 text-sm hover:bg-cream ${o.value === value ? 'text-maroon font-medium' : 'text-ink'}`}
+              onMouseDown={() => { onChange(o.value); setOpen(false) }}>
+              {o.label}
+            </li>
+          ))}
+          {allowOther && !opts.some(o => o.value === 'other') && (
+            <li role="option" aria-selected={value === 'other'}
+              className="cursor-pointer border-t border-paper-3 px-3 py-2 text-sm text-ink-soft hover:bg-cream"
+              onMouseDown={() => { onChange('other'); setOpen(false) }}>
+              Not listed / Other
+            </li>
+          )}
+        </ul>
+      )}
+      {hint && <p className="mt-1 text-xs text-ink-soft">{hint}</p>}
+    </div>
+  )
+}
+
+/**
+ * Height in centimetres and in feet/inches, kept in step.
+ *
+ * cm is what the database stores and what matching uses, but almost nobody in
+ * India volunteers their height in centimetres — a family says "five foot ten".
+ * Asking only for cm made people either guess or leave it blank, and height is
+ * one of the twelve fields the completion score counts.
+ *
+ * Editing either side rewrites the other immediately. cm remains the single
+ * stored value, so nothing downstream changes.
+ */
+function HeightField({ cm, onChange }: { cm: string; onChange: (cm: string) => void }) {
+  const cmId = useId()
+  const n = parseInt(cm, 10)
+  const valid = Number.isFinite(n) && n > 0
+  const totalInches = valid ? Math.round(n / 2.54) : null
+  const feet = totalInches != null ? Math.floor(totalInches / 12) : ''
+  const inches = totalInches != null ? totalInches % 12 : ''
+
+  // Recompose cm from whichever part the member just edited.
+  const fromImperial = (f: number | '', i: number | '') => {
+    const ft = typeof f === 'number' ? f : 0
+    const inch = typeof i === 'number' ? i : 0
+    if (ft === 0 && inch === 0) { onChange(''); return }
+    onChange(String(Math.round((ft * 12 + inch) * 2.54)))
+  }
+
+  const box = 'w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon'
+
+  return (
+    <div>
+      <label htmlFor={cmId} className="block text-sm font-medium text-ink mb-1">Height</label>
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <input id={cmId} type="number" min={100} max={250} value={cm} placeholder="165"
+            onChange={e => onChange(e.target.value)} className={`${box} pr-9`} aria-label="Height in centimetres" />
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-ink-soft">cm</span>
+        </div>
+        <span className="text-xs text-ink-soft">or</span>
+        <div className="relative w-[72px]">
+          <input type="number" min={3} max={8} value={feet} placeholder="5"
+            onChange={e => fromImperial(e.target.value === '' ? '' : parseInt(e.target.value, 10), inches)}
+            className={`${box} pr-6`} aria-label="Height, feet" />
+          <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-ink-soft">ft</span>
+        </div>
+        <div className="relative w-[72px]">
+          <input type="number" min={0} max={11} value={inches} placeholder="7"
+            onChange={e => fromImperial(feet, e.target.value === '' ? '' : parseInt(e.target.value, 10))}
+            className={`${box} pr-7`} aria-label="Height, inches" />
+          <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-ink-soft">in</span>
+        </div>
+      </div>
+      <p className="mt-1 text-xs text-ink-soft">
+        {valid ? `${feet}′${inches}″ · ${n} cm` : 'Type centimetres, or feet and inches — the other updates itself.'}
+      </p>
+    </div>
+  )
+}
+
 function MasterSelect({
   label, value, onChange, opts, placeholder = 'Select…',
 }: {
@@ -303,20 +562,21 @@ const VISIBILITY_OPTIONS = [
  * return with no indication of what was left. Collapsed sections state their
  * progress, so nothing is hidden — only folded.
  */
+
 const SECTION_FIELDS = {
   basic:       ['first_name', 'last_name', 'gender', 'dob', 'height_cm', 'marital_status', 'mother_tongue'],
   community:   ['religion', 'caste', 'sub_caste', 'mool', 'self_gotra', 'maternal_gotra', 'gram'],
   location:    ['native_place_id', 'current_loc_id', 'job_loc_id'],
   about:       ['about_me'],
-  education:   ['degree', 'specialization', 'institution', 'passing_year', 'education_detail'],
+  education:   ['education_level_id', 'degree', 'specialization', 'institution', 'passing_year', 'education_detail'],
   career:      ['job_title', 'employer', 'industry', 'employment_type', 'work_type', 'experience_years', 'profession_detail'],
   lifestyle:   ['diet', 'smoking', 'drinking', 'marriage_timeline'],
   family:      ['family_type', 'family_values', 'managed_by', 'parents_info', 'siblings_info', 'family_about', 'family_expectations', 'family_introduction'],
   preferences: ['pref_age_min', 'pref_age_max', 'pref_gender', 'pref_caste', 'pref_education', 'pref_location',
                 'pref_diet', 'pref_profession', 'pref_marital_status', 'pref_children', 'pref_living_arrangement',
                 'pref_career', 'pref_marriage_timeline', 'pref_manglik', 'pref_notes'],
-  private:     ['income_min_lpa', 'income_max_lpa', 'rashi', 'nakshatra', 'mangalik', 'birth_time', 'birth_place',
-                'contact_mobile', 'contact_email', 'address', 'kundli_url', 'photo_visibility'],
+  private:     ['income_range', 'rashi', 'nakshatra', 'mangalik', 'birth_time', 'birth_place',
+                'contact_mobile', 'contact_relation', 'contact_email', 'address', 'kundli_url', 'photo_visibility'],
 } as const satisfies Record<string, readonly (keyof FormData)[]>
 
 /**
@@ -409,12 +669,19 @@ export default function ProfileEditPage() {
   const jumpTargetRef = useRef<string | null>(null)
   const fallbackTimer = useRef<number | null>(null)
   const [options, setOptions] = useState<OptionsMap>({})
+  /** mool key → the gotras that mool belongs to. Empty until /api/options loads. */
+  const [moolGotra, setMoolGotra] = useState<Record<string, string[]>>({})
+  /** Preferred-location id → place name, so the chips read as places not numbers. */
+  const [prefLocationNames, setPrefLocationNames] = useState<Record<string, string>>({})
   const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    fetch('/api/options?types=religion,mother_tongue,marital_status,gotra,mool,caste,sub_caste,industry,employment_type,work_type,diet,family_type,family_values,managed_by')
+    fetch('/api/options?types=religion,mother_tongue,marital_status,gotra,mool,caste,sub_caste,industry,employment_type,work_type,diet,family_type,family_values,managed_by,rashi,nakshatra,manglik,income_range,contact_relation,children_pref,living_arrangement,career_pref,marriage_timeline,manglik_pref,education_level')
       .then(r => r.json())
-      .then(j => { if (j.ok && j.options) setOptions(j.options as OptionsMap) })
+      .then(j => {
+        if (j.ok && j.options) setOptions(j.options as OptionsMap)
+        if (j.ok && j.moolGotra) setMoolGotra(j.moolGotra as Record<string, string[]>)
+      })
       .catch(() => { /* non-fatal: selects fall back to stored value only */ })
   }, [])
 
@@ -440,7 +707,7 @@ export default function ProfileEditPage() {
             last_name: p.last_name ?? '',
             gender: p.gender ?? '',
             dob: p.dob ?? '',
-            religion: p.religion ?? 'Hindu',
+            religion: p.religion ?? 'hindu',
             caste: p.caste ?? '',
             sub_caste: p.sub_caste ?? '',
             self_gotra: p.self_gotra ?? '',
@@ -465,6 +732,7 @@ export default function ProfileEditPage() {
             marital_status: p.marital_status ?? '',
             mother_tongue: p.mother_tongue ?? '',
             degree: p.degree ?? '',
+            education_level_id: p.education_level_id?.toString() ?? '',
             specialization: p.specialization ?? '',
             institution: p.institution ?? '',
             passing_year: p.passing_year?.toString() ?? '',
@@ -482,6 +750,8 @@ export default function ProfileEditPage() {
             family_introduction: p.family_introduction ?? '',
             income_min_lpa: j.private?.income_min_lpa?.toString() ?? '',
             income_max_lpa: j.private?.income_max_lpa?.toString() ?? '',
+            income_range: j.private?.income_range ?? '',
+            contact_relation: j.private?.contact_relation ?? '',
             rashi: j.private?.rashi ?? '',
             nakshatra: j.private?.nakshatra ?? '',
             mangalik: j.private?.mangalik ?? '',
@@ -512,6 +782,7 @@ export default function ProfileEditPage() {
           setLocationNames({ native: j.native_place_name ?? '', current: j.current_loc_name ?? '', job: j.job_loc_name ?? '' })
         }
         setPhotos(j.photos ?? [])
+        if (j.pref_location_names) setPrefLocationNames(j.pref_location_names as Record<string, string>)
         setLoading(false)
       })
       .catch((err: unknown) => {
@@ -526,6 +797,19 @@ export default function ProfileEditPage() {
 
   const set = (key: keyof FormData, val: unknown) =>
     setForm(f => ({ ...f, [key]: val }))
+
+  // Preferred gender follows from the profile's own gender: a groom's family is
+  // looking for a bride. Only ever seeded when the family has not answered —
+  // never overwrites a deliberate choice, and never fights the user mid-edit.
+  const genderSeeded = useRef(false)
+  useEffect(() => {
+    if (loading || genderSeeded.current) return
+    if (!form.gender || form.pref_gender) { genderSeeded.current = !!form.pref_gender; return }
+    const opposite = form.gender === 'male' ? 'female' : form.gender === 'female' ? 'male' : ''
+    if (!opposite) return
+    genderSeeded.current = true
+    setForm(f => (f.pref_gender ? f : { ...f, pref_gender: opposite }))
+  }, [loading, form.gender, form.pref_gender])
 
   // Deep-link support: /profile/edit#community opens that section and scrolls to
   // it once the form has loaded. The profile-completion checklist on /profile
@@ -630,9 +914,13 @@ export default function ProfileEditPage() {
       current_loc_id: form.current_loc_id,
       job_loc_id: form.job_loc_id,
       passing_year: form.passing_year ? parseInt(form.passing_year) : null,
+      education_level_id: form.education_level_id ? parseInt(form.education_level_id) : null,
       experience_years: form.experience_years ? parseInt(form.experience_years) : null,
-      income_min_lpa: form.income_min_lpa ? parseInt(form.income_min_lpa) : null,
-      income_max_lpa: form.income_max_lpa ? parseInt(form.income_max_lpa) : null,
+      // Only the band is sent; the API derives income_min_lpa / income_max_lpa
+      // from it, so there is one copy of that mapping rather than two that can
+      // drift apart.
+      income_range: form.income_range || null,
+      contact_relation: form.contact_relation || null,
       pref_age_min: form.pref_age_min ? parseInt(form.pref_age_min) : null,
       pref_age_max: form.pref_age_max ? parseInt(form.pref_age_max) : null,
       pref_caste: form.pref_caste.split(',').map(v => v.trim()).filter(Boolean),
@@ -796,6 +1084,29 @@ export default function ProfileEditPage() {
     }
   }
 
+  // ── Mool → gotra. The mool is the fact a Maithil family actually knows; the
+  //    gotra follows from it. So once a mool is chosen the gotra list is narrowed
+  //    to the gotras that mool belongs to, which both saves a decision and stops
+  //    a contradictory pair being saved. A mool with no recorded link (or the
+  //    "not listed" fallback) leaves the full list alone rather than blocking.
+  const allGotras = options.gotra ?? []
+  const linkedGotras = form.mool ? (moolGotra[form.mool] ?? []) : []
+  const gotraOptionsForMool =
+    linkedGotras.length > 0
+      ? allGotras.filter(o => linkedGotras.includes(o.value) || o.value === 'other')
+      : allGotras
+
+  const moolGotraHint = (() => {
+    if (!form.mool || form.mool === 'other') return undefined
+    if (linkedGotras.length === 0) return 'No gotra recorded for this mool — please pick it yourself.'
+    const names = linkedGotras
+      .map(g => allGotras.find(o => o.value === g)?.label ?? g)
+      .join(', ')
+    return linkedGotras.length === 1
+      ? `Gotra for this mool: ${names}.`
+      : `This mool appears under ${linkedGotras.length} gotras: ${names}. Pick the one your family follows.`
+  })()
+
   if (loading) {
     return (
       <main id="main-content" className="min-h-screen bg-paper flex items-center justify-center">
@@ -941,17 +1252,10 @@ export default function ProfileEditPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-ink mb-1">Height (cm)</label>
-                  <input type="number" min={100} max={250} value={form.height_cm}
-                    onChange={e => set('height_cm', e.target.value)}
-                    placeholder="e.g. 165"
-                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
-                </div>
-                <MasterSelect label="Marital Status" value={form.marital_status}
-                  opts={options.marital_status ?? []} onChange={v => set('marital_status', v)} />
-              </div>
+              <HeightField cm={form.height_cm} onChange={v => set('height_cm', v)} />
+
+              <MasterSelect label="Marital Status" value={form.marital_status}
+                opts={options.marital_status ?? []} onChange={v => set('marital_status', v)} />
 
               <MasterSelect label="Mother Tongue" value={form.mother_tongue}
                 opts={options.mother_tongue ?? []} onChange={v => set('mother_tongue', v)} />
@@ -969,26 +1273,40 @@ export default function ProfileEditPage() {
           >
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <MasterSelect label="Religion" value={form.religion}
-                  opts={options.religion ?? []} onChange={v => set('religion', v)} />
-                <div>
-                  <CommunitySearch label="Caste" type="caste" value={form.caste}
-                    onChange={v => set('caste', v)} />
-                </div>
+                <MasterCombo label="Religion" value={form.religion}
+                  opts={options.religion ?? []} onChange={v => set('religion', v)} allowOther={false} />
+                <MasterCombo label="Caste" value={form.caste}
+                  opts={options.caste ?? []} onChange={v => set('caste', v)} />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <CommunitySearch label="Sub-caste" type="sub_caste" value={form.sub_caste}
-                  onChange={v => set('sub_caste', v)} />
-                <CommunitySearch label="Mool" type="mool" value={form.mool}
-                  onChange={v => set('mool', v)} />
+                <MasterCombo label="Sub-caste" value={form.sub_caste}
+                  opts={options.sub_caste ?? []} onChange={v => set('sub_caste', v)} />
+                <MasterCombo
+                  label="Mool"
+                  value={form.mool}
+                  opts={options.mool ?? []}
+                  hint={moolGotraHint}
+                  onChange={v => {
+                    // Choosing a mool settles the gotra in most cases, so fill it
+                    // in rather than asking the same question twice. Only when the
+                    // mool maps to exactly one gotra, and only when the member has
+                    // not already chosen one — never overwrite their answer.
+                    const linked = moolGotra[v] ?? []
+                    if (linked.length === 1 && !form.self_gotra) {
+                      setForm(f => ({ ...f, mool: v, self_gotra: linked[0] }))
+                    } else {
+                      set('mool', v)
+                    }
+                  }}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <CommunitySearch label="Self Gotra" type="gotra" value={form.self_gotra}
-                  onChange={v => set('self_gotra', v)} />
-                <CommunitySearch label="Maternal Gotra" type="gotra" value={form.maternal_gotra}
-                  onChange={v => set('maternal_gotra', v)} />
+                <MasterCombo label="Self Gotra" value={form.self_gotra}
+                  opts={gotraOptionsForMool} onChange={v => set('self_gotra', v)} />
+                <MasterCombo label="Maternal Gotra" value={form.maternal_gotra}
+                  opts={options.gotra ?? []} onChange={v => set('maternal_gotra', v)} />
               </div>
 
               <CommunitySearch label="Gram (Ancestral Village)" type="gram" value={form.gram}
@@ -1149,15 +1467,23 @@ export default function ProfileEditPage() {
           <FormSection
             id="education"
             title="Education"
-            subtitle="Degree, specialisation, institution."
+            subtitle="Qualification level, degree, specialisation, institution."
             filled={sectionProgress.education.filled}
             total={sectionProgress.education.total}
             open={openSections.has('education')}
             onToggle={toggleSection}
           >
             <div className="space-y-4">
+              {/* The qualification level, asked first because it is what a family
+                  filters on before reading the degree name. This is the one field
+                  in the section with a fixed answer set, so it is a picker; the
+                  rest stay free text because degree names vary endlessly. */}
+              <MasterCombo label="Qualification level" value={form.education_level_id}
+                opts={options.education_level ?? []} onChange={v => set('education_level_id', v)}
+                placeholder="Graduate, Post Graduate…" allowOther={false} />
+
               <div>
-                <label className="block text-sm font-medium text-ink mb-1">Education Level / Summary</label>
+                <label className="block text-sm font-medium text-ink mb-1">Education summary</label>
                 <input type="text" maxLength={500} value={form.education_detail}
                   onChange={e => set('education_detail', e.target.value)}
                   placeholder="e.g. B.Tech Computer Science, IIT Delhi"
@@ -1376,19 +1702,89 @@ export default function ProfileEditPage() {
             open={openSections.has('preferences')}
             onToggle={toggleSection}
           >
-            <p className="text-xs text-ink-soft mb-4">Use commas to add multiple values where applicable.</p>
-            <div className="grid grid-cols-2 gap-4">
-              <div><label className="block text-sm font-medium text-ink mb-1">Age min</label><input type="number" value={form.pref_age_min} onChange={e => set('pref_age_min', e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm" /></div>
-              <div><label className="block text-sm font-medium text-ink mb-1">Age max</label><input type="number" value={form.pref_age_max} onChange={e => set('pref_age_max', e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm" /></div>
-              <div><label className="block text-sm font-medium text-ink mb-1">Preferred gender</label><select value={form.pref_gender} onChange={e => set('pref_gender', e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm bg-white"><option value="">Any</option><option value="male">Male</option><option value="female">Female</option></select></div>
-              {[
-                ['pref_caste', 'Preferred caste(s)'], ['pref_education', 'Preferred education IDs'], ['pref_location', 'Preferred location IDs'],
-                ['pref_diet', 'Preferred diet(s)'], ['pref_profession', 'Preferred profession(s)'], ['pref_marital_status', 'Preferred marital status'],
-                ['pref_children', 'Children preference'], ['pref_living_arrangement', 'Living arrangement'], ['pref_career', 'Career preference'],
-                ['pref_marriage_timeline', 'Marriage timeline'], ['pref_manglik', 'Manglik preference'],
-              ].map(([key, label]) => <div key={key}><label className="block text-sm font-medium text-ink mb-1">{label}</label><input value={form[key as keyof FormData] as string} onChange={e => set(key as keyof FormData, e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm" /></div>)}
-              <div className="col-span-2"><label className="block text-sm font-medium text-ink mb-1">Preference notes</label><textarea value={form.pref_notes} onChange={e => set('pref_notes', e.target.value)} rows={3} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm" /></div>
-              <label className="col-span-2 flex items-center gap-2 text-sm"><input type="checkbox" checked={form.pref_gotra_safe} onChange={e => set('pref_gotra_safe', e.target.checked)} /> Keep gotra safety rules enabled</label>
+            <p className="text-xs text-ink-soft mb-4">
+              Leave anything blank to mean &ldquo;no preference&rdquo; — a blank field never narrows your matches.
+            </p>
+            <div className="space-y-5">
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1">Age from</label>
+                  <input type="number" min={18} max={90} value={form.pref_age_min}
+                    onChange={e => set('pref_age_min', e.target.value)}
+                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm focus:outline-none focus:border-maroon" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1">Age to</label>
+                  <input type="number" min={18} max={90} value={form.pref_age_max}
+                    onChange={e => set('pref_age_max', e.target.value)}
+                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm focus:outline-none focus:border-maroon" />
+                </div>
+                <div>
+                  <label htmlFor="pref-gender" className="block text-sm font-medium text-ink mb-1">Looking for</label>
+                  <select id="pref-gender" value={form.pref_gender} onChange={e => set('pref_gender', e.target.value)}
+                    className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm bg-white focus:outline-none focus:border-maroon">
+                    <option value="">Any</option>
+                    <option value="female">A bride (female)</option>
+                    <option value="male">A groom (male)</option>
+                  </select>
+                  {/* Set from the profile's own gender when the family has not
+                      chosen otherwise — see the effect that seeds it. */}
+                  <p className="mt-1 text-xs text-ink-soft">Set from your profile; change it if you need to.</p>
+                </div>
+              </div>
+
+              <MultiChips label="Preferred caste / community" value={form.pref_caste}
+                opts={options.caste ?? []} onChange={v => set('pref_caste', v)} />
+
+              <MultiChips label="Preferred education level" value={form.pref_education}
+                opts={options.education_level ?? []} onChange={v => set('pref_education', v)} />
+
+              <MultiLocation label="Preferred locations" ids={form.pref_location} names={prefLocationNames}
+                onChange={(ids, names) => { set('pref_location', ids); setPrefLocationNames(names) }} />
+
+              <div className="grid grid-cols-2 gap-5">
+                <MultiChips label="Preferred diet" value={form.pref_diet}
+                  opts={options.diet ?? []} onChange={v => set('pref_diet', v)} />
+                <MultiChips label="Preferred marital status" value={form.pref_marital_status}
+                  opts={options.marital_status ?? []} onChange={v => set('pref_marital_status', v)} />
+              </div>
+
+              <MultiChips label="Preferred profession / industry" value={form.pref_profession}
+                opts={options.industry ?? []} onChange={v => set('pref_profession', v)} />
+
+              <div className="grid grid-cols-2 gap-4">
+                <MasterCombo label="Children" value={form.pref_children}
+                  opts={options.children_pref ?? []} onChange={v => set('pref_children', v)}
+                  placeholder="No preference" allowOther={false} />
+                <MasterCombo label="Living arrangement" value={form.pref_living_arrangement}
+                  opts={options.living_arrangement ?? []} onChange={v => set('pref_living_arrangement', v)}
+                  placeholder="No preference" allowOther={false} />
+                <MasterCombo label="Career after marriage" value={form.pref_career}
+                  opts={options.career_pref ?? []} onChange={v => set('pref_career', v)}
+                  placeholder="No preference" allowOther={false} />
+                <MasterCombo label="Marriage timeline" value={form.pref_marriage_timeline}
+                  opts={options.marriage_timeline ?? []} onChange={v => set('pref_marriage_timeline', v)}
+                  placeholder="No preference" allowOther={false} />
+                <MasterCombo label="Manglik" value={form.pref_manglik}
+                  opts={options.manglik_pref ?? []} onChange={v => set('pref_manglik', v)}
+                  placeholder="Does not matter" allowOther={false} />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">Anything else</label>
+                <textarea value={form.pref_notes} onChange={e => set('pref_notes', e.target.value)} rows={3}
+                  placeholder="Anything else that matters to your family."
+                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm focus:outline-none focus:border-maroon" />
+              </div>
+
+              <label className="flex items-start gap-2 text-sm text-ink">
+                <input type="checkbox" className="mt-0.5" checked={form.pref_gotra_safe}
+                  onChange={e => set('pref_gotra_safe', e.target.checked)} />
+                <span>
+                  Keep gotra safety rules enabled
+                  <span className="block text-xs text-ink-soft">Hides matches that share your gotra.</span>
+                </span>
+              </label>
             </div>
           </FormSection>
 
@@ -1403,18 +1799,59 @@ export default function ProfileEditPage() {
           >
             <p className="text-xs text-ink-soft mb-4">These details are stored securely and are only shared according to your privacy settings.</p>
             <div className="grid grid-cols-2 gap-4">
-              {[
-                ['income_min_lpa', 'Income min (LPA)', 'number'], ['income_max_lpa', 'Income max (LPA)', 'number'],
-                ['rashi', 'Rashi', 'text'], ['nakshatra', 'Nakshatra', 'text'], ['mangalik', 'Mangalik', 'text'],
-                ['birth_time', 'Birth time', 'text'], ['birth_place', 'Birth place', 'text'],
-                ['contact_mobile', 'Contact mobile', 'tel'], ['contact_email', 'Contact email', 'email'],
-                ['kundli_url', 'Kundli URL', 'url'],
-              ].map(([key, label, type]) => (
-                <div key={key}>
-                  <label className="block text-sm font-medium text-ink mb-1">{label}</label>
-                  <input type={type} value={form[key as keyof FormData] as string} onChange={e => set(key as keyof FormData, e.target.value)} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm focus:outline-none focus:border-maroon" />
-                </div>
-              ))}
+              {/* Income as one chosen band. Two "LPA" number boxes asked members
+                  to translate their salary into a pair of integers, which is why
+                  the field was mostly empty; the band is what a family discusses
+                  anyway. The stored min/max are derived from it on save. */}
+              <div className="col-span-2">
+                <MasterCombo label="Annual income" value={form.income_range}
+                  opts={options.income_range ?? []} onChange={v => set('income_range', v)}
+                  placeholder="Select a range…" allowOther={false}
+                  hint="Shown only as a range, and only per your privacy settings." />
+              </div>
+
+              <MasterCombo label="Rashi (moon sign)" value={form.rashi}
+                opts={options.rashi ?? []} onChange={v => set('rashi', v)} allowOther={false} />
+              <MasterCombo label="Nakshatra" value={form.nakshatra}
+                opts={options.nakshatra ?? []} onChange={v => set('nakshatra', v)} allowOther={false} />
+              <MasterCombo label="Manglik" value={form.mangalik}
+                opts={options.manglik ?? []} onChange={v => set('mangalik', v)} allowOther={false} />
+
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">Birth time</label>
+                <input type="time" value={form.birth_time} onChange={e => set('birth_time', e.target.value)}
+                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm focus:outline-none focus:border-maroon" />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-ink mb-1">Birth place</label>
+                <input type="text" value={form.birth_place} onChange={e => set('birth_place', e.target.value)}
+                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm focus:outline-none focus:border-maroon" />
+              </div>
+
+              {/* Whose number this is. A matrimonial enquiry very often goes to
+                  the father or a brother rather than the candidate, and members
+                  were writing that into the number field where nothing could
+                  read it. */}
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">Contact mobile</label>
+                <input type="tel" inputMode="numeric" value={form.contact_mobile}
+                  onChange={e => set('contact_mobile', e.target.value)}
+                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm focus:outline-none focus:border-maroon" />
+              </div>
+              <MasterCombo label="This number belongs to" value={form.contact_relation}
+                opts={options.contact_relation ?? []} onChange={v => set('contact_relation', v)}
+                placeholder="Self, father, brother…" allowOther={false} />
+
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">Contact email</label>
+                <input type="email" value={form.contact_email} onChange={e => set('contact_email', e.target.value)}
+                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm focus:outline-none focus:border-maroon" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">Kundli URL</label>
+                <input type="url" value={form.kundli_url} onChange={e => set('kundli_url', e.target.value)}
+                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm focus:outline-none focus:border-maroon" />
+              </div>
               <div className="col-span-2"><label className="block text-sm font-medium text-ink mb-1">Address</label><textarea value={form.address} onChange={e => set('address', e.target.value)} rows={3} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm focus:outline-none focus:border-maroon" /></div>
               <div className="col-span-2 text-xs text-ink-soft bg-paper border border-paper-3 rounded-mj-sm p-3">
                 The contact details above are private. They are never shown to other members,

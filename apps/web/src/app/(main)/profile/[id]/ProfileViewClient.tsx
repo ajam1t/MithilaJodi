@@ -307,7 +307,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
           <div className="shrink-0 w-10 h-10 rounded-full overflow-hidden border border-ink/10 bg-paper flex items-center justify-center">
             {data.photo_url ? (
               /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={data.photo_url} alt="" className="w-full h-full object-cover" />
+              <img src={data.photo_url} alt="" className="w-full h-full object-cover object-[center_22%]" />
             ) : (
               <span className="text-base font-serif text-ink-soft">
                 {data.display_name[0]?.toUpperCase() ?? '?'}
@@ -360,7 +360,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
             {/* Avatar */}
             <div className="shrink-0 w-28 h-36 rounded-mj-sm overflow-hidden bg-cream border border-paper-3 flex items-center justify-center">
               {data.photo_url ? (
-                <img src={data.photo_url} alt={data.display_name} className="w-full h-full object-cover" />
+                <img src={data.photo_url} alt={data.display_name} className="w-full h-full object-cover object-[center_22%]" />
               ) : (
                 <span className="text-3xl text-ink-soft select-none">
                   {data.display_name[0]?.toUpperCase() ?? '?'}

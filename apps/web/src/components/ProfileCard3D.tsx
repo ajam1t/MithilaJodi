@@ -272,7 +272,12 @@ export function ProfileCard3D({
                 alt={profile.display_name}
                 fill
                 sizes={compact ? '(max-width: 640px) 80vw, 280px' : '(max-width: 640px) 90vw, 320px'}
-                className="object-cover"
+                /* The frame is 3:2 landscape but almost every photo uploaded is a
+                   portrait from a phone. A centred cover crop therefore keeps the
+                   vertical middle — the torso — and cuts the head off, which is
+                   what "faces getting cropped" was. Biasing the crop to the upper
+                   quarter keeps the face, which is the whole point of the card. */
+                className="object-cover object-[center_22%]"
               />
             ) : (
               <LotusPlaceholder initial={profile.display_name.charAt(0).toUpperCase()} />

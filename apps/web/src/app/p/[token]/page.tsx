@@ -86,7 +86,7 @@ function ProfileView({ profile }: { profile: SharedProfile }) {
           {p.photos[0] ? (
             <div className="mx-auto mb-3 h-28 w-28 rounded-full overflow-hidden border-[3px] border-gold/60 shadow-mj-xs">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.photos[0]} alt={p.displayName} className="h-full w-full object-cover" />
+              <img src={p.photos[0]} alt={p.displayName} className="h-full w-full object-cover object-[center_22%]" />
             </div>
           ) : (
             <div className="mx-auto mb-3 h-28 w-28 rounded-full grid place-items-center bg-paper-2 border-[3px] border-gold/40">
@@ -116,7 +116,7 @@ function ProfileView({ profile }: { profile: SharedProfile }) {
           {p.photos.slice(1, 4).map((src, i) => (
             <div key={src} className="aspect-[3/4] rounded-mj-sm overflow-hidden border border-gold/30">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src} alt={`${p.displayName}, photo ${i + 2}`} className="h-full w-full object-cover" />
+              <img src={src} alt={`${p.displayName}, photo ${i + 2}`} className="h-full w-full object-cover object-[center_22%]" />
             </div>
           ))}
         </div>

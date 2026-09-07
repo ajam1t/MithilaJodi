@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import ProfileCardGallery3D from '@/components/ProfileCardGallery3D'
+import ProfileCardGallery3D, { galleryFaceCount } from '@/components/ProfileCardGallery3D'
 import { ShareProfileLinks } from '@/components/ShareProfileLinks'
 import { Spinner } from '@/components/ui'
 import type { SearchCard, PartnerPreferencesDisplay } from '@/types/profile'
@@ -380,7 +380,7 @@ export default function ProfilePage() {
           <div className="shrink-0 w-10 h-10 rounded-full overflow-hidden border border-ink/10 bg-paper flex items-center justify-center">
             {primaryPhoto?.signed_url ? (
               /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={primaryPhoto.signed_url} alt="" className="w-full h-full object-cover" />
+              <img src={primaryPhoto.signed_url} alt="" className="w-full h-full object-cover object-[center_22%]" />
             ) : (
               <span className="text-base font-serif text-ink-soft">
                 {profile?.first_name?.[0]?.toUpperCase() ?? '?'}
@@ -415,7 +415,7 @@ export default function ProfilePage() {
             <div className="shrink-0 w-20 h-20 rounded-full overflow-hidden border-2 border-ink/10 bg-paper flex items-center justify-center">
               {primaryPhoto?.signed_url ? (
                 <img src={primaryPhoto.signed_url} alt={displayName ?? 'Profile'}
-                  className="w-full h-full object-cover" />
+                  className="w-full h-full object-cover object-[center_22%]" />
               ) : (
                 <span className="text-3xl font-serif text-ink-soft">
                   {profile?.first_name?.[0]?.toUpperCase() ?? '?'}
@@ -511,7 +511,9 @@ export default function ProfilePage() {
         <div className="border-b border-ink/10">
           <div className="max-w-2xl mx-auto px-4 py-5">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft mb-1">Your Profile Gallery</h3>
-            <p className="mb-3 text-xs text-ink-soft">Five rotating views of the details families see first.</p>
+            <p className="mb-3 text-xs text-ink-soft">
+              {galleryFaceCount(cardProfile)} rotating views of the details families see first.
+            </p>
             <ProfileCardGallery3D profile={cardProfile} />
           </div>
         </div>
@@ -689,7 +691,7 @@ export default function ProfilePage() {
                       className="aspect-square rounded-mj-sm overflow-hidden border border-ink/10 bg-cream relative">
                       {photo.signed_url ? (
                         <img src={photo.signed_url} alt="Profile photo"
-                          className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                          className="w-full h-full object-cover object-[center_22%]" loading="lazy" decoding="async" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-ink-soft text-xs">
                           No preview

@@ -85,7 +85,7 @@ function Face({ card, profile }: { card: string; profile: SearchCard }) {
         <p className="mb-2 text-[10px] uppercase tracking-widest text-terra">Profile</p>
         <div className="relative mx-auto mb-3 h-24 w-24 overflow-hidden rounded-full border-2 border-gold/60 bg-cream">
           {profile.primary_photo_url ? (
-            <Image src={profile.primary_photo_url} alt={profile.display_name} fill sizes="96px" className="object-cover" />
+            <Image src={profile.primary_photo_url} alt={profile.display_name} fill sizes="96px" className="object-cover object-[center_22%]" />
           ) : (
             <div className="flex h-full items-center justify-center font-serif text-4xl text-maroon">{profile.display_name.charAt(0).toUpperCase()}</div>
           )}
@@ -225,16 +225,34 @@ function Face({ card, profile }: { card: string; profile: SearchCard }) {
   )
 }
 
-export default function ProfileCardGallery3D({ profile, autoRotate = true }: ProfileCardGallery3DProps) {
-  // Both extra faces are conditional. Preferences appears only when the family
-  // stated something; the match face only when there is a score to show (your
-  // own profile and a signed-out viewer have nothing to compare against). An
-  // empty card is worse than one fewer card.
-  const CARDS: readonly string[] = [
+/**
+ * The faces this profile will actually show.
+ *
+ * Both extra faces are conditional. Preferences appears only when the family
+ * stated something; the match face only when there is a score to show (your own
+ * profile and a signed-out viewer have nothing to compare against). An empty
+ * card is worse than one fewer card.
+ */
+function facesFor(profile: SearchCard): string[] {
+  return [
     ...BASE_CARDS,
     ...(profile.preferences ? ['Preferences'] : []),
     ...(profile.match ? ['Match'] : []),
   ]
+}
+
+/**
+ * How many faces the gallery will render. Exported so the caption above the
+ * gallery can state the real number instead of hardcoding one — the caption
+ * read "Five rotating views" while a profile with partner preferences showed
+ * six.
+ */
+export function galleryFaceCount(profile: SearchCard): number {
+  return facesFor(profile).length
+}
+
+export default function ProfileCardGallery3D({ profile, autoRotate = true }: ProfileCardGallery3DProps) {
+  const CARDS: readonly string[] = facesFor(profile)
 
   const [active, setActive] = useState(0)
   const [paused, setPaused] = useState(false)

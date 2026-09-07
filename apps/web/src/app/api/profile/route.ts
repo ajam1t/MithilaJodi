@@ -10,7 +10,9 @@ const ProfileSchema = z.object({
   last_name: z.string().max(100).optional().nullable(),
   gender: z.enum(['male', 'female']),
   dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
-  religion: z.string().max(100).default('Hindu'),
+  // The option *key*, not the label — 'Hindu' here is what made the religion
+  // dropdown render a duplicate entry alongside the real 'hindu' option.
+  religion: z.string().max(100).default('hindu'),
   caste: z.string().max(100).optional().nullable(),
   sub_caste: z.string().max(100).optional().nullable(),
   self_gotra: z.string().max(100).optional().nullable(),
@@ -47,6 +49,9 @@ const ProfileSchema = z.object({
   family_values:   z.string().max(100).optional().nullable(),
   // Free-text fields
   degree:               z.string().max(200).optional().nullable(),
+  // FK into education_levels. The column and table shipped long ago but no form
+  // ever wrote to them, so every profile had a NULL qualification level.
+  education_level_id:   z.coerce.number().int().positive().optional().nullable(),
   specialization:       z.string().max(200).optional().nullable(),
   institution:          z.string().max(200).optional().nullable(),
   job_title:            z.string().max(200).optional().nullable(),
@@ -61,6 +66,11 @@ const ProfileSchema = z.object({
   // Private details
   income_min_lpa: z.coerce.number().int().min(0).max(100000).optional().nullable(),
   income_max_lpa: z.coerce.number().int().min(0).max(100000).optional().nullable(),
+  // The band the member actually chose; min/max above are derived from it by the
+  // editor so existing matching and search keep working on the numbers.
+  income_range: z.string().max(40).optional().nullable(),
+  // Whose number contact_mobile is — self, father, brother, …
+  contact_relation: z.string().max(40).optional().nullable(),
   rashi: z.string().max(100).optional().nullable(),
   nakshatra: z.string().max(100).optional().nullable(),
   mangalik: z.string().max(100).optional().nullable(),
@@ -114,6 +124,37 @@ async function hasVisibilityColumn(admin: any): Promise<boolean> {
     console.warn('[profile] profiles.visibility not present yet — run migration 20260826000006')
   }
   return visibilityColumnExists
+}
+
+/**
+ * Chosen income band → the numeric bounds stored alongside it.
+ *
+ * Keys match community_masters type='income_range'. The top band has no upper
+ * bound, which is left null rather than invented.
+ */
+const INCOME_BANDS: Record<string, [number | null, number | null]> = {
+  below_3:   [0, 3],
+  '3_5':     [3, 5],
+  '5_10':    [5, 10],
+  '10_15':   [10, 15],
+  '15_25':   [15, 25],
+  '25_50':   [25, 50],
+  '50_plus': [50, null],
+}
+
+/**
+ * A recognised band wins, because it is what the member actually picked. An
+ * unrecognised or absent band falls back to whatever numbers were sent, so an
+ * older client that still posts only min/max keeps working.
+ */
+function deriveIncome(
+  range: string | null | undefined,
+  min: number | null | undefined,
+  max: number | null | undefined,
+): { income_min_lpa: number | null; income_max_lpa: number | null } {
+  const band = range ? INCOME_BANDS[range] : undefined
+  if (band) return { income_min_lpa: band[0], income_max_lpa: band[1] }
+  return { income_min_lpa: min ?? null, income_max_lpa: max ?? null }
 }
 
 function computeCompletion(data: z.infer<typeof ProfileSchema>): number {
@@ -231,7 +272,29 @@ export async function GET() {
       )
     : profile
 
-  return NextResponse.json({ ok: true, profile: safeProfile, private: privateDetails, preferences, photos, native_place_name, current_loc_name, job_loc_name })
+  // pref_location is an array of india_locations ids. The editor shows one
+  // removable chip per entry, so it needs the place names — otherwise the only
+  // thing it could render is the raw number, which is what the old "Preferred
+  // location IDs" text box exposed.
+  const prefLocationNames: Record<string, string> = {}
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const prefLocIds = Array.isArray((preferences as any)?.pref_location)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ? ((preferences as any).pref_location as unknown[]).filter((v): v is number => Number.isFinite(v))
+    : []
+  if (prefLocIds.length > 0) {
+    const { data: prefLocRows } = await admin
+      .from('india_locations')
+      .select('id, name_en')
+      .in('id', prefLocIds)
+    for (const row of (prefLocRows ?? [])) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const r = row as any
+      prefLocationNames[String(r.id)] = r.name_en as string
+    }
+  }
+
+  return NextResponse.json({ ok: true, profile: safeProfile, private: privateDetails, preferences, photos, native_place_name, current_loc_name, job_loc_name, pref_location_names: prefLocationNames })
 }
 
 export async function PUT(request: NextRequest) {
@@ -356,6 +419,7 @@ export async function PUT(request: NextRequest) {
         managed_by:      data.managed_by      || null,
         family_values:   data.family_values   || null,
         degree:               data.degree               || null,
+        education_level_id:   data.education_level_id   ?? null,
         specialization:       data.specialization       || null,
         institution:          data.institution          || null,
         job_title:            data.job_title             || null,
@@ -426,6 +490,7 @@ export async function PUT(request: NextRequest) {
       managed_by:      data.managed_by      || null,
       family_values:   data.family_values   || null,
       degree:               data.degree               || null,
+      education_level_id:   data.education_level_id   ?? null,
       specialization:       data.specialization       || null,
       institution:          data.institution          || null,
       job_title:            data.job_title             || null,
@@ -460,8 +525,13 @@ export async function PUT(request: NextRequest) {
 async function savePrivateAndPreferences(admin: Awaited<ReturnType<typeof createAdminClient>>, profileId: string, data: z.infer<typeof ProfileSchema>) {
   const { error: privateError } = await admin.from('profile_private').upsert({
     profile_id: profileId,
-    income_min_lpa: data.income_min_lpa ?? null,
-    income_max_lpa: data.income_max_lpa ?? null,
+    // The band is what the member chooses; these two numbers are what partner
+    // preferences and search actually read. Deriving them here rather than in
+    // the editor means any caller that sets a band gets consistent numbers —
+    // the admin editor included — instead of a band with null bounds.
+    ...deriveIncome(data.income_range, data.income_min_lpa, data.income_max_lpa),
+    income_range: data.income_range || null,
+    contact_relation: data.contact_relation || null,
     rashi: data.rashi || null,
     nakshatra: data.nakshatra || null,
     mangalik: data.mangalik || null,
