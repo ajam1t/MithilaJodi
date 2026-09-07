@@ -245,7 +245,12 @@ export function ProfileCard3D({
   return (
     <div className={cn('w-full mx-auto', compact ? 'max-w-[280px]' : 'max-w-[320px]', className)} style={{ perspective: 1200 }}>
       <div
-        className={cn('relative w-full transition-transform duration-500 ease-mj-out', compact ? 'h-[400px]' : 'h-[492px]')}
+        /* Taller than it used to be because the photograph is now a portrait
+           frame rather than a 3:2 letterbox. The details block below takes its
+           natural height and the photograph absorbs whatever is left, so the
+           action row cannot be pushed out of view no matter how many chips
+           wrap — which is what happened when the frame alone was made taller. */
+        className={cn('relative w-full transition-transform duration-500 ease-mj-out', compact ? 'h-[512px]' : 'h-[580px]')}
         style={{
           transformStyle: 'preserve-3d',
           transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
@@ -274,7 +279,7 @@ export function ProfileCard3D({
               is small enough that faces survive wherever they sit in the frame.
               The mild upward bias then only has to cover the remainder, rather
               than trying to guess where a face is. */}
-          <div className="relative flex-shrink-0" style={{ aspectRatio: '4 / 5' }}>
+          <div className="relative flex-1 min-h-[200px]">
             {profile.primary_photo_url ? (
               <Image
                 src={profile.primary_photo_url}
@@ -314,7 +319,11 @@ export function ProfileCard3D({
           </div>
 
           {/* Body */}
-          <div className={cn('flex-1 min-h-0 flex flex-col', compact ? 'px-3 pt-2 pb-2.5' : 'px-4 pt-3 pb-3.5')}>
+          {/* Natural height, not flex-1: the details and the action row decide
+              how much space they need and the photograph above takes the rest.
+              Stretching this instead let the photograph dictate the split, and a
+              tall photograph clipped the "View profile" / "Details" buttons. */}
+          <div className={cn('flex-shrink-0 flex flex-col', compact ? 'px-3 pt-2 pb-2.5' : 'px-4 pt-3 pb-3.5')}>
             <Link href={`/profile/${profile.id}`} className="group">
               <h3 className={cn('font-serif text-maroon leading-tight group-hover:text-terra transition-colors truncate', compact ? 'text-[17px]' : 'text-[19px]')}>
                 {profile.display_name}

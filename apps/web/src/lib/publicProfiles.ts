@@ -345,7 +345,7 @@ export async function getPublicShowcaseProfiles(): Promise<SearchCard[]> {
       education_detail: (p.education_detail as string | null) ?? null,
       smoking: (p.smoking as string | null) ?? null,
       drinking: (p.drinking as string | null) ?? null,
-      maternal_gotra: (p.maternal_gotra as string | null) ?? null,
+      maternal_gotra: labelFor(labels, 'gotra', p.maternal_gotra as string | null),
       job_loc_name: locationMap.get(p.job_loc_id as number) ?? null,
       marriage_timeline: (p.marriage_timeline as string | null) ?? null,
     } satisfies SearchCard

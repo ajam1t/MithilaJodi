@@ -858,11 +858,11 @@ export async function GET(request: NextRequest) {
       institution:       (p.institution       as string | null) ?? null,
       smoking:           (p.smoking           as string | null) ?? null,
       drinking:          (p.drinking          as string | null) ?? null,
-      maternal_gotra:    (p.maternal_gotra    as string | null) ?? null,
+      maternal_gotra:    labelFor(labels, 'gotra', p.maternal_gotra as string | null),
       job_loc_name:      locationMap.get(p.job_loc_id as number) ?? null,
       marriage_timeline: (p.marriage_timeline as string | null) ?? null,
       job_title:         (p.job_title         as string | null) ?? null,
-      marital_status:    (p.marital_status    as string | null) ?? null,
+      marital_status:    labelFor(labels, 'marital_status', p.marital_status as string | null),
       family_type:       (p.family_type       as string | null) ?? null,
       match,
     } satisfies SearchCard

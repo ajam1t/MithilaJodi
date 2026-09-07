@@ -228,7 +228,7 @@ INSERT INTO community_masters (type, value, label_en, is_mithila, sort_order, is
 INSERT INTO community_masters (type, value, label_en, is_mithila, sort_order, is_active) VALUES ('mool', 'uttamapur', 'Uttamapur', true, 138, true) ON CONFLICT (type, value) DO UPDATE SET label_en = EXCLUDED.label_en, sort_order = EXCLUDED.sort_order, is_active = true;
 INSERT INTO community_masters (type, value, label_en, is_mithila, sort_order, is_active) VALUES ('mool', 'uttampur', 'Uttampur', true, 139, true) ON CONFLICT (type, value) DO UPDATE SET label_en = EXCLUDED.label_en, sort_order = EXCLUDED.sort_order, is_active = true;
 INSERT INTO community_masters (type, value, label_en, is_mithila, sort_order, is_active) VALUES ('mool', 'vrishtiwal', 'Vrishtiwal', true, 140, true) ON CONFLICT (type, value) DO UPDATE SET label_en = EXCLUDED.label_en, sort_order = EXCLUDED.sort_order, is_active = true;
-INSERT INTO community_masters (type, value, label_en, label_hi, is_mithila, sort_order, is_active) VALUES ('mool', 'other', 'Mool not listed / Other', 'अन्य', true, 999, true) ON CONFLICT (type, value) DO UPDATE SET label_en = EXCLUDED.label_en, sort_order = 999, is_active = true;
+INSERT INTO community_masters (type, value, label_en, label_hi, is_mithila, sort_order, is_active) VALUES ('mool', 'other', 'Not listed / Other', 'अन्य', true, 999, true) ON CONFLICT (type, value) DO UPDATE SET label_en = EXCLUDED.label_en, sort_order = 999, is_active = true;
 
 -- ── 5. Mool → gotra. Selecting a mool narrows or fixes the gotra, which is
 --    how a Maithil family actually reads a biodata: the mool is known and
