@@ -8,6 +8,7 @@ import { FestivalHeroArt } from '@/components/festivals/FestivalHeroArt'
 import { SongsPlayer } from '@/components/festivals/SongsPlayer'
 import { festivalsWithSongs, getFestival, getRelatedFestivals } from '@/lib/festivals'
 import { SITE_URL } from '@/lib/constants'
+import { clamp } from '@/lib/seo'
 
 /** One page per festival that has songs — statically generated. */
 export function generateStaticParams() {
@@ -25,10 +26,21 @@ export async function generateMetadata(
 
   const short = festival.name.split('—')[0].trim()
   const canonical = `${SITE_URL}/festival-songs/${festival.slug}`
-  const title = `${short} Songs — Maithili ${short} Geet to Listen Online`
-  const description =
-    `Listen to ${festival.songs.length} Maithili ${short} songs on Mithila Jodi — ` +
-    `${festival.songs.slice(0, 3).map((s) => s.title).join(', ')} and more. Plays here, no app needed.`
+
+  // The festival name appeared twice ("Diwali & Kali Puja Songs — Maithili
+  // Diwali & Kali Puja Geet to Listen Online"), which pushed this to 91
+  // characters against a ~60 character display limit, so the tail was never
+  // shown. Once is enough for the keyword.
+  const title = `${short} Songs — Maithili Geet`
+
+  // Built from data whose length varies by festival, so it is capped at a word
+  // boundary rather than trusting every festival to come out short enough.
+  const description = clamp(
+    `Listen to ${festival.songs.length} Maithili ${short} geet — ` +
+    `${festival.songs.slice(0, 2).map((s) => s.title).join(', ')} and more. ` +
+    'Plays in your browser, no app needed.',
+    158,
+  )
 
   return {
     title,

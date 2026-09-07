@@ -24,7 +24,7 @@ export const metadata = pageMetadata({
   path: '/pricing',
   title: 'Pricing — Free for Every Member',
   description:
-    'Mithila Jodi is currently free for every member. Registration, profile creation, marriage biodata in four languages, search, interests and messaging are all included at no charge.',
+    'Mithila Jodi is free for every member. Registration, profiles, marriage biodata in four languages, search, interests and messaging cost nothing.',
   socialTitle: 'Mithila Jodi Pricing — Currently Free for Every Member',
 })
 

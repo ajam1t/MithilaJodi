@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic'
 const SITE = SITE_URL
 
 export const metadata: Metadata = {
-  title: 'About Us — Why We Built Mithila Jodi',
+  title: 'About Us — Our Story & Mission',
   description:
     'Why Mithila Jodi exists, how the platform works for Maithil families, and who is behind it. Our story, our approach to matches, and our founder.',
   alternates: { canonical: `${SITE}/about` },

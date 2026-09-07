@@ -157,9 +157,9 @@ export const FESTIVALS: Festival[] = [
     ],
     related: ['kojagara', 'diwali', 'sama-chakeva'],
     seo: {
-      title: 'Chhath Puja in Mithila — Rituals, Four Days, Songs & Significance',
+      title: 'Chhath Puja in Mithila — Rituals & Songs',
       description:
-        'A complete guide to Chhath Puja in Mithila: the four days from Nahay Khay to Usha Arghya, the thirty-six hour nirjala fast, thekua prasad, ghat rituals and the best-loved Chhath geet.',
+        'A guide to Chhath Puja in Mithila: the four days from Nahay Khay to Usha Arghya, the nirjala fast, thekua prasad, ghat rituals and Chhath geet.',
       keywords: [
         'Chhath Puja', 'Chhath Puja Mithila', 'Chhath Puja rituals', 'Chhath geet',
         'Nahay Khay', 'Kharna', 'Sandhya Arghya', 'Usha Arghya', 'thekua',
@@ -257,9 +257,9 @@ export const FESTIVALS: Festival[] = [
     ],
     related: ['chhath-puja', 'madhushravani', 'kojagara'],
     seo: {
-      title: 'Sama Chakeva — Mithila’s Festival of Sisters, Clay Birds & Folk Songs',
+      title: 'Sama Chakeva — Mithila’s Sisters’ Festival',
       description:
-        'Sama Chakeva is celebrated almost only in Mithila. Learn the story of Sama and Chakeva, how sisters make and sing to the clay birds, the punishment of Chugla, and the vidai on Kartik Purnima.',
+        'Celebrated almost only in Mithila. The story of Sama and Chakeva, how sisters make and sing to the clay birds, and the vidai on Kartik Purnima.',
       keywords: [
         'Sama Chakeva', 'Sama Chakeva festival', 'Mithila festival', 'Maithili folk festival',
         'Sama Chakeva geet', 'Sama Chakeva story', 'brother sister festival Mithila',
@@ -354,9 +354,9 @@ export const FESTIVALS: Festival[] = [
     ],
     related: ['madhushravani', 'durga-puja', 'chhath-puja'],
     seo: {
-      title: 'Vivah Panchami in Mithila — Sita & Ram’s Marriage, Rituals and Songs',
+      title: 'Vivah Panchami — Sita & Ram’s Marriage',
       description:
-        'Vivah Panchami marks the marriage of Sita and Ram. Understand why Mithila observes it as a wedding in the family, how temples enact the ceremony, and the vivah geet sung on the day.',
+        'Vivah Panchami marks the marriage of Sita and Ram. Why Mithila keeps it as a wedding in the family, how temples enact it, and the vivah geet sung.',
       keywords: [
         'Vivah Panchami', 'Vivah Panchami Mithila', 'Sita Ram marriage', 'Janak Nandini',
         'Sita birthplace Sitamarhi', 'Punaura Dham', 'Maithil vivah', 'vivah geet Maithili',
@@ -453,9 +453,9 @@ export const FESTIVALS: Festival[] = [
     ],
     related: ['durga-puja', 'diwali', 'madhushravani'],
     seo: {
-      title: 'Holi in Mithila (Phaguwa) — Jogira Songs, Samat, Malpua & Traditions',
+      title: 'Holi in Mithila (Phaguwa) — Jogira & Samat',
       description:
-        'Holi in Mithila is Phaguwa: Samat on Phalgun Purnima, abir at the elders’ feet, malpua and dahi-bara, and the improvised Jogira couplets that give the day its sound.',
+        'Holi in Mithila is Phaguwa: Samat on Phalgun Purnima, abir at the elders’ feet, malpua and dahi-bara, and the improvised Jogira couplets.',
       keywords: [
         'Holi Mithila', 'Phaguwa', 'Jogira', 'Jogira sa ra ra ra', 'Maithili Holi songs',
         'Holika Dahan Samat', 'malpua Holi', 'Phagua geet', 'Bihar Holi traditions',
@@ -558,9 +558,9 @@ export const FESTIVALS: Festival[] = [
     ],
     related: ['kojagara', 'diwali', 'vivah-panchami'],
     seo: {
-      title: 'Durga Puja in Mithila — Navratri Rituals, Devi Geet & Shakta Tradition',
+      title: 'Durga Puja in Mithila — Devi Geet & Rituals',
       description:
-        'Durga Puja in Mithila, from Kalash Sthapana to Vijayadashami: Bel Nimantran, Sandhi puja, the nine nights of Devi geet, and the Shakta tradition that shapes Maithil religious life.',
+        'Durga Puja in Mithila, from Kalash Sthapana to Vijayadashami: Bel Nimantran, Sandhi puja, nine nights of Devi geet and the Shakta tradition.',
       keywords: [
         'Durga Puja Mithila', 'Navratri Mithila', 'Maithili Devi geet', 'Jai Jai Bhairavi',
         'Vijayadashami', 'Durga Puja Darbhanga', 'Shakta tradition Mithila',
@@ -651,9 +651,9 @@ export const FESTIVALS: Festival[] = [
     ],
     related: ['kojagara', 'durga-puja', 'chhath-puja'],
     seo: {
-      title: 'Diwali & Kali Puja in Mithila — Aripan, Rituals, Five Days & Songs',
+      title: 'Diwali & Kali Puja in Mithila — Aripan',
       description:
-        'How Mithila keeps Diwali: aripan drawn in rice paste at the threshold, Lakshmi Puja at dusk and Kali Puja through the Kartik Amavasya night, across all five days from Dhanteras to Bhai Dooj.',
+        'How Mithila keeps Diwali: aripan in rice paste at the threshold, Lakshmi Puja at dusk, Kali Puja through Kartik Amavasya, across all five days.',
       keywords: [
         'Diwali Mithila', 'Kali Puja Mithila', 'aripan', 'Maithili Diwali geet',
         'Diwali rituals Bihar', 'Dhanteras', 'Bhai Dooj', 'Kartik Amavasya',
@@ -751,9 +751,9 @@ export const FESTIVALS: Festival[] = [
     ],
     related: ['vivah-panchami', 'kojagara', 'sama-chakeva'],
     seo: {
-      title: 'Madhushravani — Mithila’s Fortnight Festival for a New Bride',
+      title: 'Madhushravani — Mithila’s Bride Festival',
       description:
-        'Madhushravani is kept only in Mithila, by a woman in her first Shravan after marriage: daily Gauri and Naag puja, a fortnight of katha and Maithili songs, and the closing Temi Dagana ritual.',
+        'Kept only in Mithila, by a woman in her first Shravan after marriage: daily Gauri and Naag puja, a fortnight of katha, and the Temi Dagana rite.',
       keywords: [
         'Madhushravani', 'Madhushravani festival', 'Mithila festival newly married',
         'Temi Dagana', 'Maithili Madhushravani geet', 'Bihula Vishahari',
@@ -842,9 +842,9 @@ export const FESTIVALS: Festival[] = [
     ],
     related: ['durga-puja', 'diwali', 'madhushravani'],
     seo: {
-      title: 'Kojagara — Mithila’s Sharad Purnima Festival for the New Groom',
+      title: 'Kojagara — Mithila’s Sharad Purnima Rite',
       description:
-        'Kojagara is kept on Sharad Purnima in Mithila: bhar sent from the bride’s family, makhan and paan distributed, the new son-in-law honoured, and a night-long vigil for Lakshmi.',
+        'Kojagara on Sharad Purnima in Mithila: bhar sent from the bride’s family, makhan and paan distributed, the new son-in-law honoured, a night vigil.',
       keywords: [
         'Kojagara', 'Kojagara festival Mithila', 'Sharad Purnima Mithila', 'makhan festival',
         'Maithil newly married groom festival', 'Kojagara geet', 'bhar Mithila',

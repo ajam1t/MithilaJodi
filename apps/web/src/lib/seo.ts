@@ -157,3 +157,19 @@ export function faqJsonLd(items: Array<{ q: string; a: string }>) {
 export function jsonLdScript(...blocks: object[]): { __html: string } {
   return { __html: JSON.stringify(blocks.length === 1 ? blocks[0] : blocks) }
 }
+
+/**
+ * Trim a string to `max` characters at a word boundary.
+ *
+ * For meta descriptions that are composed from data whose length varies — a
+ * festival name, a list of song titles — where the result must still fit what
+ * Google displays (~155-160 characters) no matter what the data is. Cutting at
+ * a space avoids ending mid-word, which reads like a bug in the SERP.
+ */
+export function clamp(text: string, max = 158): string {
+  const t = text.trim()
+  if (t.length <= max) return t
+  const cut = t.slice(0, max)
+  const lastSpace = cut.lastIndexOf(' ')
+  return (lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).replace(/[\s,;:—-]+$/, '') + '…'
+}

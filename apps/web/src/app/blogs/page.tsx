@@ -12,7 +12,7 @@ export const metadata = pageMetadata({
   path: '/blogs',
   title: 'Blog — Mithila & Maithili Marriage Guides',
   description:
-    'Thoughtful articles on Maithili marriage traditions, Mithila culture, Madhubani heritage, and practical guidance for creating a marriage biodata. Explore the Mithila Jodi Journal.',
+    'Articles on Maithili marriage traditions, Mithila culture and Madhubani heritage, plus practical guidance for creating a marriage biodata.',
 })
 
 const breadcrumbJsonLd = {

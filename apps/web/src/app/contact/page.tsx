@@ -11,9 +11,9 @@ const PHONE_DISPLAY = '+91 8898372628'
 const EMAIL       = 'contact@mithilajodi.com'
 
 export const metadata: Metadata = {
-  title: 'Contact Us — Mithila Jodi Support',
+  title: 'Contact Us & Support',
   description:
-    'Get in touch with the Mithila Jodi team. Call or WhatsApp us at +91 8898372628, email us at contact@mithilajodi.com, or send a message using the contact form. We are here to help.',
+    'Get in touch with the Mithila Jodi team — call or WhatsApp us, email us, or send a message using the contact form. We are happy to help.',
   alternates: { canonical: `${SITE}/contact` },
   openGraph: {
     type: 'website',
