@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import {
+  GRIEVANCE_OFFICER_NAME,
   LEGAL_EFFECTIVE_DATE,
   LEGAL_VERSION,
   SUPPORT_EMAIL,
@@ -173,11 +174,11 @@ export default function PrivacyPage() {
         discoverability or deactivates their account.
       </P>
       <P>
-        A publicly featured profile shows a reduced set of information: first name with the family
-        name shortened, age, gender, community and location details, education and profession, and
-        the main photograph. It never includes your date of birth, your contact mobile number, your
-        email address, your postal address or your free-text descriptions. If you would prefer not to
-        be featured publicly, tell us using the contact details in section 12 and we will remove you.
+        A publicly featured profile shows a reduced set of information: name, age, gender, community
+        and location details, education and profession, and the main photograph. It never includes
+        your date of birth, your contact mobile number, your email address, your postal address or
+        your free-text descriptions. If you would prefer not to be featured publicly, tell us using the
+        contact details in section 12 and we will remove you.
       </P>
 
       <H2 n={5}>Your contact details</H2>
@@ -376,6 +377,34 @@ export default function PrivacyPage() {
         We aim to acknowledge privacy complaints promptly and to resolve them as quickly as we
         reasonably can. If you are not satisfied with our response, you may escalate the matter to the
         appropriate authority under Indian law.
+      </P>
+
+      <H2 n={15}>Grievance Officer</H2>
+      <P>
+        As required by the Digital Personal Data Protection Act, 2023, and by the Information
+        Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021, the person you
+        can contact about your personal data and about any grievance is:
+      </P>
+      <UL>
+        <li>Name: {GRIEVANCE_OFFICER_NAME}</li>
+        <li>Designation: Grievance Officer, Mithila Jodi</li>
+        <li>
+          Email:{' '}
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="text-maroon underline underline-offset-2">
+            {SUPPORT_EMAIL}
+          </a>
+        </li>
+        <li>
+          Phone or WhatsApp:{' '}
+          <a href={`tel:+${SUPPORT_PHONE_E164}`} className="text-maroon underline underline-offset-2">
+            {SUPPORT_PHONE_DISPLAY}
+          </a>
+        </li>
+      </UL>
+      <P>
+        Please mark your message for the attention of the Grievance Officer. We will acknowledge it
+        within 24 hours and work to resolve it within 15 days, in line with the timelines set out in
+        the Rules above.
       </P>
 
       <div className="mt-10 pt-5 border-t border-paper-3 flex flex-wrap gap-x-5 gap-y-2 text-[13px]">

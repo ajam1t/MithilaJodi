@@ -90,3 +90,11 @@ export const SUPPORT_PHONE_DISPLAY = '+91 8898372628'
 export const SUPPORT_PHONE_E164 = '918898372628'
 export const LEGAL_VERSION = '1.0'
 export const LEGAL_EFFECTIVE_DATE = '5 September 2026'
+
+/* Grievance Officer — published to satisfy Rule 3(2) of the Information
+   Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules,
+   2021, and to name a point of contact for grievances under the Digital
+   Personal Data Protection Act, 2023. The officer is reachable at the same
+   verified support address and number above, so there is no separate mailbox
+   to bounce; only the name is specific to the role. */
+export const GRIEVANCE_OFFICER_NAME = 'Amit Jha'

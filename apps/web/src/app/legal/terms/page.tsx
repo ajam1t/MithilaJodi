@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import {
+  GRIEVANCE_OFFICER_NAME,
   LEGAL_EFFECTIVE_DATE,
   LEGAL_VERSION,
   SUPPORT_EMAIL,
@@ -181,12 +182,11 @@ export default function TermsPage() {
         Jodi. A profile is featured only where the member has agreed to it.
       </P>
       <P>
-        A featured profile shows a reduced set of details — first name with the family name shortened,
-        age, gender, community and location, education and profession, and the main approved
-        photograph. It does not show date of birth, contact number, email address, postal address or
-        free-text descriptions. Turning off discoverability, or deactivating your account, removes your
-        profile from public featuring. You can also ask us to stop featuring you at any time using the
-        contact details in section 14.
+        A featured profile shows a reduced set of details — name, age, gender, community and location,
+        education and profession, and the main approved photograph. It does not show date of birth,
+        contact number, email address, postal address or free-text descriptions. Turning off
+        discoverability, or deactivating your account, removes your profile from public featuring. You
+        can also ask us to stop featuring you at any time using the contact details in section 14.
       </P>
 
       <H2 n={9}>Safety — and what we do not do</H2>
@@ -326,6 +326,42 @@ export default function TermsPage() {
           <Link href="/contact" className="text-maroon underline underline-offset-2">contact form</Link>.
         </li>
       </UL>
+
+      <H2 n={17}>Grievance Officer</H2>
+      <P>
+        In accordance with the Information Technology (Intermediary Guidelines and Digital Media Ethics
+        Code) Rules, 2021, and with the Digital Personal Data Protection Act, 2023, the Grievance
+        Officer for Mithila Jodi is:
+      </P>
+      <UL>
+        <li>Name: {GRIEVANCE_OFFICER_NAME}</li>
+        <li>Designation: Grievance Officer, Mithila Jodi</li>
+        <li>
+          Email:{' '}
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="text-maroon underline underline-offset-2">
+            {SUPPORT_EMAIL}
+          </a>
+        </li>
+        <li>
+          Phone or WhatsApp:{' '}
+          <a href={`tel:+${SUPPORT_PHONE_E164}`} className="text-maroon underline underline-offset-2">
+            {SUPPORT_PHONE_DISPLAY}
+          </a>
+        </li>
+      </UL>
+      <P>
+        You can contact the Grievance Officer about anything on this platform — a profile you believe
+        is fraudulent or abusive, a photograph or content that breaches these terms, a request to
+        remove your own profile, or a complaint about how a grievance has been handled. Please mark
+        your message for the attention of the Grievance Officer and describe the issue, with links or
+        screenshots where you can.
+      </P>
+      <P>
+        We will acknowledge your complaint within 24 hours of receiving it and work to resolve it
+        within 15 days, in line with the timelines set out in the Rules above. Where a matter concerns
+        another member&rsquo;s safety, or content that must come down urgently, we act as soon as we
+        reasonably can rather than waiting out that period.
+      </P>
 
       <div className="mt-10 pt-5 border-t border-paper-3 flex flex-wrap gap-x-5 gap-y-2 text-[13px]">
         <Link href="/legal/privacy" className="text-maroon underline underline-offset-2">Privacy Policy</Link>
