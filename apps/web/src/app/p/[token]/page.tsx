@@ -1,7 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/server'
+import { getSessionAccount } from '@/lib/auth'
 import { loadSharedProfile, type SharedProfile } from '@/lib/profileShare'
+import { SharedPhotoCarousel } from '@/components/SharedPhotoCarousel'
+import ProfileCardGallery3D from '@/components/ProfileCardGallery3D'
+import type { SearchCard } from '@/types/profile'
 
 export const dynamic = 'force-dynamic'
 
@@ -68,7 +72,89 @@ function heightLabel(cm: number | null): string | null {
   return `${Math.floor(inches / 12)}'${inches % 12}" · ${cm} cm`
 }
 
-function ProfileView({ profile }: { profile: SharedProfile }) {
+/**
+ * The shared projection, shaped for the rotating profile card.
+ *
+ * Built from `SharedProfile` rather than from the database row on purpose: that
+ * projection has already had the owner's per-section choices applied, so a
+ * section they chose not to share cannot reappear here. Anything absent stays
+ * null and the card simply omits that face.
+ *
+ * `match` is left null — a score needs a viewer to compare against, and this
+ * page is designed to work with no account at all.
+ */
+function toCard(p: SharedProfile, id: string): SearchCard {
+  return {
+    id,
+    display_name: p.displayName,
+    gender: p.gender ?? '',
+    age: p.age ?? 0,
+    religion: p.community?.religion ?? null,
+    caste: p.community?.caste ?? null,
+    self_gotra: p.community?.selfGotra ?? null,
+    maternal_gotra: p.community?.maternalGotra ?? null,
+    mool: p.community?.mool ?? null,
+    gram: p.community?.gram ?? null,
+    height_cm: p.heightCm,
+    diet: p.lifestyle?.diet ?? null,
+    about_snippet: p.about ? p.about.slice(0, 200) : null,
+    profile_complete: 100,
+    profile_status: 'active',
+    native_place_name: p.location?.native ?? null,
+    current_loc_name: p.location?.current ?? null,
+    job_loc_name: p.location?.work ?? null,
+    has_photo: p.photos.length > 0,
+    primary_photo_url: p.photos[0] ?? null,
+    employer: p.career?.employer ?? null,
+    profession_detail: p.career?.detail ?? null,
+    job_title: p.career?.jobTitle ?? null,
+    education_detail: p.education?.detail ?? null,
+    degree: p.education?.degree ?? null,
+    specialization: p.education?.specialization ?? null,
+    institution: p.education?.institution ?? null,
+    smoking: p.lifestyle?.smoking ?? null,
+    drinking: p.lifestyle?.drinking ?? null,
+    marital_status: p.maritalStatus,
+    marriage_timeline: p.lifestyle?.marriageTimeline ?? null,
+    family_type: p.family?.type ?? null,
+    preferences: p.preferences ?? null,
+    match: null,
+  }
+}
+
+/**
+ * The opening panel.
+ *
+ * Whoever opens this link may never have heard of Mithila Jodi — it arrives on
+ * WhatsApp from a relative with no context. Leading straight into a stranger's
+ * biodata is disorienting, so the page says what this is and where it came from
+ * before showing anyone's details.
+ */
+function WelcomeIntro({ name }: { name: string }) {
+  return (
+    <section className="rounded-mj-lg border border-gold/40 bg-cream/70 px-5 py-5 text-center shadow-mj-xs">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-terra">Welcome to Mithila Jodi</p>
+      <h2 className="mt-2 font-serif text-[21px] leading-snug text-maroon sm:text-[23px]">
+        A marriage biodata has been shared with you
+      </h2>
+      <div className="ornament-line mx-auto my-3 w-16" />
+      <p className="mx-auto max-w-md text-[13.5px] leading-relaxed text-ink-soft">
+        Mithila Jodi is a matrimonial platform for the Maithil community, where families
+        look for an alliance the way Mithila reads a profile — gotra, mool and native
+        place first. <span className="text-ink">{name}&rsquo;s</span> family has sent you this
+        page directly. You do not need an account to read it.
+      </p>
+    </section>
+  )
+}
+
+function ProfileView({
+  profile, profileId, viewerIsMember,
+}: {
+  profile: SharedProfile
+  profileId: string
+  viewerIsMember: boolean
+}) {
   const p = profile
   const metaLine = [
     p.age ? `${p.age} yrs` : null,
@@ -79,6 +165,24 @@ function ProfileView({ profile }: { profile: SharedProfile }) {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+      <WelcomeIntro name={p.displayName.split(' ')[0]} />
+
+      {/* A signed-in visitor is already a member, so the shared projection is
+          strictly less than what they are entitled to see. Point them at the
+          real profile — which enforces its own access rules — instead of
+          leaving them on a cut-down copy and asking them to register again. */}
+      {viewerIsMember && (
+        <section className="rounded-mj border border-maroon/30 bg-maroon/[0.05] px-4 py-3 text-center">
+          <p className="text-[13.5px] leading-snug text-ink">
+            You&rsquo;re signed in to Mithila Jodi — open the full profile to shortlist or send an interest.
+          </p>
+          <Link href={`/profile/${profileId}`}
+            className="btn-primary mt-2.5 inline-flex px-5 py-2 text-[14px]">
+            View on Mithila Jodi
+          </Link>
+        </section>
+      )}
+
       {/* Header card */}
       <section className="rounded-mj-lg border border-gold/40 bg-cream shadow-mj overflow-hidden">
         <div className="h-1.5 bg-gradient-to-r from-maroon via-gold to-maroon" aria-hidden="true" />
@@ -86,7 +190,7 @@ function ProfileView({ profile }: { profile: SharedProfile }) {
           {p.photos[0] ? (
             <div className="mx-auto mb-3 h-28 w-28 rounded-full overflow-hidden border-[3px] border-gold/60 shadow-mj-xs">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.photos[0]} alt={p.displayName} className="h-full w-full object-cover object-[center_22%]" />
+              <img src={p.photos[0]} alt={p.displayName} className="h-full w-full object-cover object-[center_35%]" />
             </div>
           ) : (
             <div className="mx-auto mb-3 h-28 w-28 rounded-full grid place-items-center bg-paper-2 border-[3px] border-gold/40">
@@ -105,22 +209,22 @@ function ProfileView({ profile }: { profile: SharedProfile }) {
         </div>
       </section>
 
-      {/* Extra photos. The column count follows the number of photos — a fixed
-          3-column grid left a single extra photo sitting at a third of the
-          width, which reads as a broken layout rather than a gallery. */}
+      {/* More than one photograph gets the rotating deck. This replaced a strip
+          of small thumbnails: the photographs are the first thing a family
+          looks at, and a thumbnail row makes them work for it. */}
       {p.photos.length > 1 && (
-        <div
-          className="grid gap-2"
-          style={{ gridTemplateColumns: `repeat(${Math.min(p.photos.length - 1, 3)}, minmax(0, 1fr))` }}
-        >
-          {p.photos.slice(1, 4).map((src, i) => (
-            <div key={src} className="aspect-[3/4] rounded-mj-sm overflow-hidden border border-gold/30">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src} alt={`${p.displayName}, photo ${i + 2}`} className="h-full w-full object-cover object-[center_22%]" />
-            </div>
-          ))}
-        </div>
+        <SharedPhotoCarousel photos={p.photos} name={p.displayName} />
       )}
+
+      {/* The same rotating card the platform uses, so a shared link feels like
+          the product rather than a print-out of it. Built from the shared
+          projection, so the owner's section choices still apply. */}
+      <section aria-label="Profile at a glance"
+        className="rounded-mj border border-gold/30 bg-cream px-4 py-4 shadow-mj-xs">
+        <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-soft">At a glance</p>
+        <p className="mb-3 text-xs text-ink-soft">The details families read first — swipe or use the arrows.</p>
+        <ProfileCardGallery3D profile={toCard(p, profileId)} />
+      </section>
 
       {p.about && (
         <Panel title="About">
@@ -321,9 +425,23 @@ export default async function SharedProfilePage({
     )
   }
 
+  // Whether the visitor is already a member. Only used to offer a link to the
+  // full profile — the shared projection itself is identical either way, so a
+  // failure to read the session degrades to the no-account experience.
+  let viewerIsMember = false
+  try {
+    viewerIsMember = (await getSessionAccount()) !== null
+  } catch (err) {
+    console.error('[p/token] session probe failed:', err)
+  }
+
   return (
     <main id="main-content" className="min-h-screen bg-paper">
-      <ProfileView profile={result.profile} />
+      <ProfileView
+        profile={result.profile}
+        profileId={result.profileId}
+        viewerIsMember={viewerIsMember}
+      />
     </main>
   )
 }

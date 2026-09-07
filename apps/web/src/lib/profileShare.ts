@@ -1,5 +1,6 @@
 import 'server-only'
 import { randomBytes } from 'crypto'
+import { getCommunityLabels, labelFor } from '@/lib/communityLabels'
 import { formatPartnerPreferences } from '@/lib/partnerPreferences'
 import type { PartnerPreferencesDisplay } from '@/types/profile'
 
@@ -100,7 +101,13 @@ export type SharedProfile = {
 }
 
 export type ShareLoadResult =
-  | { status: 'ok'; profile: SharedProfile }
+  /**
+   * `profileId` is returned alongside the projection so the page can offer a
+   * signed-in visitor the full member view. It is an opaque uuid and the page
+   * only ever puts it in a link to /profile/<id>, which enforces its own access
+   * rules — the shared projection itself stays the same for everyone.
+   */
+  | { status: 'ok'; profile: SharedProfile; profileId: string }
   | { status: 'expired' }
   | { status: 'revoked' }
   | { status: 'missing' }
@@ -229,6 +236,10 @@ export async function loadSharedProfile(admin: any, token: string): Promise<Shar
     priv = data ?? null
   }
 
+  // Community values are stored as option keys; the shared page is display-only,
+  // so they are resolved to labels here.
+  const labels = await getCommunityLabels(admin)
+
   const profile: SharedProfile = {
     displayName: [p.first_name, p.last_name].filter(Boolean).join(' '),
     age: p.dob ? computeAge(p.dob) : null,
@@ -241,12 +252,12 @@ export async function loadSharedProfile(admin: any, token: string): Promise<Shar
     photos,
 
     community: gate(granted.has('community'), {
-      religion: p.religion ?? null,
-      caste: p.caste ?? null,
+      religion: labelFor(labels, 'religion', p.religion),
+      caste: labelFor(labels, 'caste', p.caste),
       subCaste: p.sub_caste ?? null,
-      selfGotra: p.self_gotra ?? null,
+      selfGotra: labelFor(labels, 'gotra', p.self_gotra),
       maternalGotra: p.maternal_gotra ?? null,
-      mool: p.mool ?? null,
+      mool: labelFor(labels, 'mool', p.mool),
       gram: p.gram ?? null,
     }),
 
@@ -321,5 +332,5 @@ export async function loadSharedProfile(admin: any, token: string): Promise<Shar
     .eq('id', share.id)
     .then(null, (err: unknown) => console.error('[profileShare] view count:', err))
 
-  return { status: 'ok', profile }
+  return { status: 'ok', profile, profileId: p.id as string }
 }

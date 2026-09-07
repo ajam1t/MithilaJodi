@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { getSessionAccount } from '@/lib/auth'
 import { canViewPhotos } from '@/lib/photoAccess'
 import { createAdminClient } from '@/lib/supabase/server'
+import { getCommunityLabels, labelFor } from '@/lib/communityLabels'
 import { getLocationIndex } from '@/lib/locationIndex'
 import { scoreMatch, topReasons, type ScoreProfile, type ScorePreferences } from '@/lib/matchScore'
 import { formatPartnerPreferences } from '@/lib/partnerPreferences'
@@ -142,6 +143,8 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const toScoreProfile = (row: any): ScoreProfile => ({
     id: row.id, gender: row.gender, dob: row.dob,
+    // Raw option keys: scoring compares these between two profiles (sagotra is
+    // an equality check on self_gotra), so labels must not be substituted here.
     religion: row.religion, caste: row.caste, sub_caste: row.sub_caste,
     self_gotra: row.self_gotra, maternal_gotra: row.maternal_gotra,
     mool: row.mool, gram: row.gram,
@@ -213,16 +216,20 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
   const jobLocName = p.job_loc_id ? locMap[p.job_loc_id] ?? null : null
   const displayAge = age ?? 0
 
+  // Display labels for the stored option keys. Scoring above deliberately uses
+  // the raw keys instead.
+  const labels = await getCommunityLabels(admin)
+
   return {
     id: profileId,
     display_name: displayName,
     gender: p.gender,
     age,
     height_cm: p.height_cm,
-    religion: p.religion,
-    caste: p.caste,
-    sub_caste: p.sub_caste ?? null,
-    self_gotra: p.self_gotra,
+    religion: labelFor(labels, 'religion', p.religion),
+    caste: labelFor(labels, 'caste', p.caste),
+    sub_caste: labelFor(labels, 'sub_caste', p.sub_caste ?? null),
+    self_gotra: labelFor(labels, 'gotra', p.self_gotra),
     maternal_gotra: p.maternal_gotra ?? null,
     mool: p.mool,
     gram: p.gram,

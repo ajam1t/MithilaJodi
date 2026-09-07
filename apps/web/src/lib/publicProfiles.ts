@@ -1,6 +1,7 @@
 import 'server-only'
 import { filterPhotoViewable } from '@/lib/photoAccess'
 import { createAdminClient } from '@/lib/supabase/server'
+import { getCommunityLabels, labelFor } from '@/lib/communityLabels'
 import type { SearchCard } from '@/types/profile'
 
 // Maximum number of curated profiles shown to logged-out visitors.
@@ -310,6 +311,11 @@ export async function getPublicShowcaseProfiles(): Promise<SearchCard[]> {
     }
   }
 
+  // Community values are stored as option keys ('maithil_brahmin'), so they are
+  // resolved to their labels before display — printing the key made cards read
+  // "maithil_brahmin" and "Gotra: shandilya".
+  const labels = await getCommunityLabels(admin)
+
   // Build response cards (strict allowlist).
   return profiles.map((p) => {
     const hasPhoto = photoByProfile.has(p.id as string)
@@ -318,13 +324,13 @@ export async function getPublicShowcaseProfiles(): Promise<SearchCard[]> {
       display_name: toPublicName(p.first_name as string, (p.last_name as string | null) ?? null),
       gender: p.gender as string,
       age: p.dob ? computeAge(p.dob as string) : 0,
-      religion: (p.religion as string | null) ?? null,
-      caste: (p.caste as string | null) ?? null,
-      self_gotra: (p.self_gotra as string | null) ?? null,
-      mool: (p.mool as string | null) ?? null,
+      religion: labelFor(labels, 'religion', p.religion as string | null),
+      caste: labelFor(labels, 'caste', p.caste as string | null),
+      self_gotra: labelFor(labels, 'gotra', p.self_gotra as string | null),
+      mool: labelFor(labels, 'mool', p.mool as string | null),
       gram: (p.gram as string | null) ?? null,
       height_cm: (p.height_cm as number | null) ?? null,
-      diet: (p.diet as string | null) ?? null,
+      diet: labelFor(labels, 'diet', p.diet as string | null),
       // Free-text "about me" is intentionally omitted from the public projection.
       about_snippet: null,
       profile_complete: (p.profile_complete as number) ?? 0,

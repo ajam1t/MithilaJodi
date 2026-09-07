@@ -85,7 +85,7 @@ function Face({ card, profile }: { card: string; profile: SearchCard }) {
         <p className="mb-2 text-[10px] uppercase tracking-widest text-terra">Profile</p>
         <div className="relative mx-auto mb-3 h-24 w-24 overflow-hidden rounded-full border-2 border-gold/60 bg-cream">
           {profile.primary_photo_url ? (
-            <Image src={profile.primary_photo_url} alt={profile.display_name} fill sizes="96px" className="object-cover object-[center_22%]" />
+            <Image src={profile.primary_photo_url} alt={profile.display_name} fill sizes="96px" className="object-cover object-[center_35%]" />
           ) : (
             <div className="flex h-full items-center justify-center font-serif text-4xl text-maroon">{profile.display_name.charAt(0).toUpperCase()}</div>
           )}

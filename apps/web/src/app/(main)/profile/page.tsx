@@ -380,7 +380,7 @@ export default function ProfilePage() {
           <div className="shrink-0 w-10 h-10 rounded-full overflow-hidden border border-ink/10 bg-paper flex items-center justify-center">
             {primaryPhoto?.signed_url ? (
               /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={primaryPhoto.signed_url} alt="" className="w-full h-full object-cover object-[center_22%]" />
+              <img src={primaryPhoto.signed_url} alt="" className="w-full h-full object-cover object-[center_35%]" />
             ) : (
               <span className="text-base font-serif text-ink-soft">
                 {profile?.first_name?.[0]?.toUpperCase() ?? '?'}
@@ -415,7 +415,7 @@ export default function ProfilePage() {
             <div className="shrink-0 w-20 h-20 rounded-full overflow-hidden border-2 border-ink/10 bg-paper flex items-center justify-center">
               {primaryPhoto?.signed_url ? (
                 <img src={primaryPhoto.signed_url} alt={displayName ?? 'Profile'}
-                  className="w-full h-full object-cover object-[center_22%]" />
+                  className="w-full h-full object-cover object-[center_35%]" />
               ) : (
                 <span className="text-3xl font-serif text-ink-soft">
                   {profile?.first_name?.[0]?.toUpperCase() ?? '?'}
@@ -691,7 +691,7 @@ export default function ProfilePage() {
                       className="aspect-square rounded-mj-sm overflow-hidden border border-ink/10 bg-cream relative">
                       {photo.signed_url ? (
                         <img src={photo.signed_url} alt="Profile photo"
-                          className="w-full h-full object-cover object-[center_22%]" loading="lazy" decoding="async" />
+                          className="w-full h-full object-cover object-[center_35%]" loading="lazy" decoding="async" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-ink-soft text-xs">
                           No preview

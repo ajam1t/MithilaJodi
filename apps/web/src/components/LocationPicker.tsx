@@ -32,7 +32,7 @@ export function LocationPicker({
   onChange,
   initialName = '',
   hint,
-  placeholder = 'Type a city or district…',
+  placeholder = 'Type a city, district or PIN code…',
   levels = 'state,district,city,town,village',
   compact = false,
 }: {
@@ -58,6 +58,8 @@ export function LocationPicker({
   const [searching, setSearching] = useState(false)
   const [noMatch, setNoMatch] = useState(false)
   const [active, setActive] = useState(-1)
+  /** Set when the query was a PIN code, to say what it resolved to. */
+  const [pinNote, setPinNote] = useState<string | null>(null)
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null)
   const seeded = useRef(false)
 
@@ -73,11 +75,38 @@ export function LocationPicker({
 
   const search = useCallback((query: string) => {
     if (debounce.current) clearTimeout(debounce.current)
-    if (query.trim().length < 2) { setResults([]); setNoMatch(false); setSearching(false); return }
+    const q = query.trim()
+    if (q.length < 2) { setResults([]); setNoMatch(false); setSearching(false); setPinNote(null); return }
     setSearching(true)
     debounce.current = setTimeout(async () => {
       try {
-        const r = await fetch(`/api/locations?q=${encodeURIComponent(query.trim())}&level=${levels}`)
+        // A six-digit entry is a PIN code, not a place name — searching
+        // india_locations for "847211" can only ever return nothing. People know
+        // their PIN, so it is treated as a first-class way to answer this field.
+        if (/^[1-9][0-9]{5}$/.test(q)) {
+          const r = await fetch(`/api/pincode?pin=${q}`)
+          const j = await r.json()
+          if (j.ok && j.location) {
+            setResults([{ id: j.location.id, name_en: j.location.name, level: j.location.level, parent_name: j.state ?? null } as LocationResult])
+            setNoMatch(false)
+            setPinNote(`PIN ${q} — ${[j.district, j.state].filter(Boolean).join(', ')}`)
+            setActive(0)
+          } else {
+            setResults([])
+            setNoMatch(false)
+            setPinNote(
+              j.district
+                ? `PIN ${q} is ${[j.district, j.state].filter(Boolean).join(', ')}, which is not in our list yet — please type the nearest town.`
+                : (j.message ?? 'No such PIN code.'),
+            )
+            setActive(-1)
+          }
+          setOpen(true)
+          return
+        }
+
+        setPinNote(null)
+        const r = await fetch(`/api/locations?q=${encodeURIComponent(q)}&level=${levels}`)
         const j = await r.json()
         const rows: LocationResult[] = j.results ?? []
         setResults(rows)
@@ -85,7 +114,7 @@ export function LocationPicker({
         setOpen(true)
         setActive(rows.length > 0 ? 0 : -1)
       } catch {
-        setResults([]); setNoMatch(false)
+        setResults([]); setNoMatch(false); setPinNote(null)
       } finally {
         setSearching(false)
       }
@@ -160,14 +189,19 @@ export function LocationPicker({
         )}
       </div>
 
-      {unresolved && !searching && (
+      {/* What the PIN resolved to, shown whether or not it matched a row, so a
+          member never has to guess why nothing appeared. */}
+      {pinNote && !searching && (
+        <p className={`text-[11.5px] mt-1 ${results.length > 0 ? 'text-ink-soft' : 'text-terra'}`}>{pinNote}</p>
+      )}
+      {!pinNote && unresolved && !searching && (
         <p className="text-[11.5px] text-terra mt-1">
           {noMatch
             ? `No place called “${text.trim()}” yet — try the nearest larger city or district.`
             : 'Pick a place from the list.'}
         </p>
       )}
-      {!unresolved && hint && <p className="text-[11.5px] text-ink-soft mt-1">{hint}</p>}
+      {!pinNote && !unresolved && hint && <p className="text-[11.5px] text-ink-soft mt-1">{hint}</p>}
 
       {open && (results.length > 0 || noMatch) && (
         <ul

@@ -1,6 +1,7 @@
 import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
+import { getCommunityLabels, labelFor } from '@/lib/communityLabels'
 import { filterPhotoViewable } from '@/lib/photoAccess'
 import { getSessionAccount } from '@/lib/auth'
 import { getLocationIndex, idsWithin, idsInSameState } from '@/lib/locationIndex'
@@ -184,6 +185,9 @@ const PROFILE_COLUMNS = [
 function toScoreProfile(row: any): ScoreProfile {
   return {
     id: row.id, gender: row.gender, dob: row.dob,
+    // Raw option keys on purpose. Scoring compares these values between two
+    // profiles — sagotra detection is an equality check on self_gotra — so they
+    // must stay keys. Labels are applied only in the display projection below.
     religion: row.religion, caste: row.caste, sub_caste: row.sub_caste,
     self_gotra: row.self_gotra, maternal_gotra: row.maternal_gotra,
     mool: row.mool, gram: row.gram,
@@ -787,6 +791,10 @@ export async function GET(request: NextRequest) {
   //   - family_values, sub_caste, degree (used for scoring only — the score's
   //     `reasons` already say whatever needs saying about them)
 
+  // Community values are stored as option keys; resolved to labels for the card
+  // only. Cached per server process, so this is not a per-request query.
+  const labels = await getCommunityLabels(admin)
+
   const results: SearchCard[] = validProfiles.map((p) => {
     const firstName = (p.first_name ?? '') as string
     const lastName  = p.last_name as string | null
@@ -827,13 +835,14 @@ export async function GET(request: NextRequest) {
       display_name:     displayName,
       gender:           p.gender as string,
       age,
-      religion:         (p.religion as string | null) ?? null,
-      caste:            (p.caste    as string | null) ?? null,
-      self_gotra:       (p.self_gotra as string | null) ?? null,
-      mool:             (p.mool     as string | null) ?? null,
+      // Display only — keys resolved to labels here, never in toScoreProfile.
+      religion:         labelFor(labels, 'religion', p.religion as string | null),
+      caste:            labelFor(labels, 'caste', p.caste as string | null),
+      self_gotra:       labelFor(labels, 'gotra', p.self_gotra as string | null),
+      mool:             labelFor(labels, 'mool', p.mool as string | null),
       gram:             (p.gram     as string | null) ?? null,
       height_cm:        (p.height_cm as number | null) ?? null,
-      diet:             (p.diet     as string | null) ?? null,
+      diet:             labelFor(labels, 'diet', p.diet as string | null),
       about_snippet:    aboutSnippet,
       profile_complete: (p.profile_complete as number) ?? 0,
       profile_status:   p.profile_status as string,
