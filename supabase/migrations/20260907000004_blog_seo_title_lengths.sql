@@ -43,10 +43,10 @@ UPDATE blog_posts SET seo_description =
   'The conversations families should have before finalising a match — lineage, living arrangements, finances and values.'
   WHERE slug = 'family-questions-before-marriage';
 
-COMMIT;
-
 -- One blog *category* title was also over the display limit (64 chars). Dropping
 -- the redundant "Families" leaves the keyword phrase intact at 55.
 UPDATE blog_categories
    SET seo_title = 'Matrimonial & Marriage Guide for Mithila | Mithila Jodi'
  WHERE slug = 'matrimonial-marriage-guide';
+
+COMMIT;
