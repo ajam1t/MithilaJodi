@@ -7,7 +7,7 @@ export const metadata = pageMetadata({
   path: '/help',
   title: 'Help & Support — Your Questions Answered',
   description:
-    'How Mithila Jodi works: creating an account, building a Mithila marriage biodata in your language, who can see your profile, sharing it with families, and what it costs.',
+    'How Mithila Jodi works — creating an account, building a marriage biodata in your language, who can see your profile, and what it costs.',
   keywords: ['Mithila Jodi help', 'Mithila matrimony questions', 'Mithila biodata help'],
 })
 

@@ -15,7 +15,7 @@ export const metadata = pageMetadata({
   path: '/explore',
   title: 'Maithil Brides & Grooms — Profiles',
   description:
-    'Browse Maithil brides and grooms featured on Mithila Jodi. Profiles show gotra, mool and native place. Create a free account to search the full community and send an interest.',
+    'Browse Maithil brides and grooms, with gotra, mool and native place shown. Create a free account to search the full community and send an interest.',
   keywords: [
     'Mithila matrimonial profiles', 'Maithil bride', 'Maithil groom',
     'Mithila bride', 'Mithila groom', 'Mithila matrimony', 'Maithil matrimony',
