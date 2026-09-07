@@ -527,6 +527,24 @@ export default function ProfileEditPage() {
   const set = (key: keyof FormData, val: unknown) =>
     setForm(f => ({ ...f, [key]: val }))
 
+  // Deep-link support: /profile/edit#community opens that section and scrolls to
+  // it once the form has loaded. The profile-completion checklist on /profile
+  // links straight to the section a member still needs to fill, so without this
+  // they would land at the top of a long form with that section collapsed. Runs
+  // once, after loading clears, reusing the same jump machinery as the top chips.
+  useEffect(() => {
+    if (loading) return
+    const id = window.location.hash.replace(/^#/, '').replace(/-section$/, '')
+    if (!id) return
+    jumpTargetRef.current = id
+    setOpenSections(prev => {
+      const next = new Set(prev)
+      next.add(id)
+      return next
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading])
+
   useEffect(() => {
     const id = jumpTargetRef.current
     if (!id) return

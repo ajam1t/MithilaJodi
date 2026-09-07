@@ -131,6 +131,121 @@ function CompletionRing({ pct }: { pct: number }) {
   )
 }
 
+/**
+ * The profile-completion checklist shown on the member's own profile.
+ *
+ * The percentage and ring already existed, but they were passive: a number in a
+ * corner tells a member they are "60%" without telling them which 40% is
+ * missing or how to add it. Members were landing here straight after the
+ * four-field onboarding gate and stopping, because nothing pointed them at the
+ * next thing to fill.
+ *
+ * Each row mirrors exactly one of the twelve checks in computeCompletion()
+ * (app/api/profile/route.ts), so the bar here always agrees with the stored
+ * profile_complete used to rank search results. Missing rows deep-link into the
+ * matching section of the editor via its URL hash.
+ */
+const CHECKLIST: { label: string; section: string; has: (p: Profile) => boolean }[] = [
+  { label: 'Name',             section: 'basic',     has: p => !!p.first_name },
+  { label: 'Bride or groom',   section: 'basic',     has: p => !!p.gender },
+  { label: 'Date of birth',    section: 'basic',     has: p => !!p.dob },
+  { label: 'Height',           section: 'basic',     has: p => p.height_cm != null },
+  { label: 'Marital status',   section: 'basic',     has: p => !!p.marital_status },
+  { label: 'Mother tongue',    section: 'basic',     has: p => !!p.mother_tongue },
+  { label: 'Diet',             section: 'basic',     has: p => !!p.diet },
+  { label: 'Caste / community', section: 'community', has: p => !!p.caste },
+  { label: 'Gotra',            section: 'community', has: p => !!p.self_gotra },
+  { label: 'Native place',     section: 'location',  has: p => p.native_place_id != null },
+  { label: 'Current location', section: 'location',  has: p => p.current_loc_id != null },
+  { label: 'About you',        section: 'about',     has: p => !!p.about_me },
+]
+
+function TickIcon() {
+  return (
+    <svg viewBox="0 0 20 20" className="w-4 h-4 shrink-0 text-green-600" fill="currentColor" aria-hidden="true">
+      <path fillRule="evenodd" d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.42 0L3.3 9.7a1 1 0 011.4-1.4l3.1 3.1 6.8-6.8a1 1 0 011.4 0z" clipRule="evenodd" />
+    </svg>
+  )
+}
+
+function CompletionChecklist({ profile, photoCount }: { profile: Profile; photoCount: number }) {
+  const rows = CHECKLIST.map(c => ({ ...c, done: c.has(profile) }))
+  const done = rows.filter(r => r.done).length
+  const pct = Math.round((done / rows.length) * 100)
+  const missing = rows.filter(r => !r.done)
+  const firstMissing = missing[0]
+
+  // Everything counted is filled. Either applaud, or — because a photo is not
+  // one of the twelve scored fields yet strongly drives interest — nudge for a
+  // richer gallery.
+  if (missing.length === 0) {
+    if (photoCount >= 3) {
+      return (
+        <div className="mt-4 flex items-center gap-2 rounded-mj border border-green-200 bg-green-50/70 px-4 py-2.5">
+          <TickIcon />
+          <p className="text-[13px] font-medium text-green-800">Your profile is complete — you&rsquo;re all set to be seen by the community.</p>
+        </div>
+      )
+    }
+    return (
+      <div className="mt-4 rounded-mj border border-gold/40 bg-paper/70 px-4 py-3">
+        <div className="flex items-center gap-2">
+          <TickIcon />
+          <p className="text-[13px] font-medium text-ink">All details added. One more thing to stand out:</p>
+        </div>
+        <Link href="/profile/edit#photos" className="mt-1.5 inline-block text-[13px] font-medium text-maroon underline underline-offset-2">
+          Add more photos ({photoCount}/3) — profiles with three photos get noticed more
+        </Link>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-4 rounded-mj border border-gold/40 bg-paper/70 p-4">
+      <div className="flex items-baseline justify-between gap-2">
+        <h2 className="font-serif text-[15px] text-maroon">Complete your profile</h2>
+        <span className="text-xs font-semibold text-maroon">{pct}%</span>
+      </div>
+
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-ink/10"
+        role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Profile completion">
+        <div className="h-full rounded-full bg-maroon transition-all duration-500" style={{ width: `${pct}%` }} />
+      </div>
+
+      <p className="mt-2 text-xs leading-relaxed text-ink-soft">
+        Completed profiles appear higher in search and receive more interests.{' '}
+        {missing.length === 1 ? 'Just one detail left.' : `${missing.length} details left.`}
+      </p>
+
+      <ul className="mt-3 grid grid-cols-1 gap-x-4 gap-y-1.5 sm:grid-cols-2">
+        {rows.map(r => (
+          <li key={r.label}>
+            {r.done ? (
+              <span className="flex items-center gap-2 text-[13px] text-ink-soft/60">
+                <TickIcon />
+                <span className="line-through">{r.label}</span>
+              </span>
+            ) : (
+              <Link href={`/profile/edit#${r.section}`}
+                className="group flex items-center gap-2 text-[13px] text-ink hover:text-maroon">
+                <span className="h-4 w-4 shrink-0 rounded-full border border-ink/30 group-hover:border-maroon" aria-hidden="true" />
+                <span className="underline-offset-2 group-hover:underline">{r.label}</span>
+              </Link>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      {firstMissing && (
+        <Link href={`/profile/edit#${firstMissing.section}`}
+          className="mt-3.5 inline-flex w-full items-center justify-center rounded-mj bg-maroon px-4 py-2 text-sm font-medium text-gold-lt transition-colors hover:bg-maroon/90 sm:w-auto">
+          Finish my profile →
+        </Link>
+      )}
+    </div>
+  )
+}
+
 export default function ProfilePage() {
   const router = useRouter()
   const [account, setAccount] = useState<AccountInfo | null>(null)
@@ -342,14 +457,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {pct < 100 && profile && (
-            <p className="mt-3 text-xs text-ink-soft bg-paper/60 rounded-mj-sm px-3 py-2">
-              {pct < 40
-                ? 'Your profile is just getting started. Add more details to get better matches.'
-                : 'Almost there! Complete the remaining details to strengthen your profile.'}
-            </p>
-          )}
-
           {/* Action buttons */}
           <div className="flex gap-2 mt-4">
             <Link href="/profile/edit"
@@ -361,6 +468,8 @@ export default function ProfilePage() {
               {logoutLoading ? '…' : 'Log Out'}
             </button>
           </div>
+
+          {profile && <CompletionChecklist profile={profile} photoCount={photos.length} />}
         </div>
 
         {/* Tab bar */}
