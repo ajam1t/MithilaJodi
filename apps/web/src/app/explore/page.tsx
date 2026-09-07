@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic'
 
 export const metadata = pageMetadata({
   path: '/explore',
-  title: 'Mithila Matrimonial Profiles — Maithil Brides & Grooms',
+  title: 'Maithil Brides & Grooms — Profiles',
   description:
     'Browse Maithil brides and grooms featured on Mithila Jodi. Profiles show gotra, mool and native place. Create a free account to search the full community and send an interest.',
   keywords: [

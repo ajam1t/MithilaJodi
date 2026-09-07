@@ -11,9 +11,9 @@ import { SITE_URL } from '@/lib/constants'
 const CANONICAL = `${SITE_URL}/marriage-invitation`
 
 export const metadata: Metadata = {
-  title: 'Free Wedding Invitation Card Maker — Mithila & Madhubani Designs',
+  title: 'Free Wedding Invitation Card Maker',
   description:
-    'Create a beautiful wedding invitation card free, in your browser. Choose a Mithila or Madhubani-inspired design, add your details, and download or share the invitation instantly. No login needed.',
+    'Make a wedding invitation card free in your browser. Pick a Mithila or Madhubani design, add your details, then download or share it. No login needed.',
   keywords: [
     'wedding invitation card maker', 'free wedding invitation card',
     'Mithila wedding invitation', 'Madhubani wedding invitation',

@@ -12,9 +12,9 @@ export const dynamic = 'force-dynamic'
 const SITE = SITE_URL
 
 export const metadata: Metadata = {
-  title: 'About Mithila Jodi — Maithili Matrimonial Platform',
+  title: 'About Us — Why We Built Mithila Jodi',
   description:
-    'Learn about Mithila Jodi — a dedicated online matrimony platform helping individuals and families from the Mithila and Maithili community discover meaningful and compatible matrimonial matches. Our story, how the platform works, and our founder.',
+    'Why Mithila Jodi exists, how the platform works for Maithil families, and who is behind it. Our story, our approach to matches, and our founder.',
   alternates: { canonical: `${SITE}/about` },
   openGraph: {
     type: 'website',

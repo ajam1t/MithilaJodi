@@ -10,9 +10,9 @@ import { breadcrumbJsonLd } from '@/lib/seo'
 const CANONICAL = `${SITE_URL}/marriage-biodata`
 
 export const metadata: Metadata = {
-  title: 'Free Marriage Biodata Maker — Maithili, Hindi, English & Sanskrit',
+  title: 'Free Marriage Biodata Maker — 4 Languages',
   description:
-    'Create a marriage biodata free, in your browser. Gotra, mool and gram included, in Maithili, Hindi, English or Sanskrit. Download as PDF instantly — no login, and nothing you type is stored.',
+    'Build a marriage biodata free in your browser — gotra, mool and gram included, in Maithili, Hindi, English or Sanskrit. Download a PDF, no login needed.',
   keywords: [
     'marriage biodata maker', 'free biodata for marriage', 'biodata format for marriage',
     'shadi biodata maker', 'marriage biodata pdf download', 'Maithili biodata',

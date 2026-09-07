@@ -24,6 +24,38 @@ const breadcrumbJsonLd = {
   ],
 }
 
+/**
+ * CollectionPage + ItemList for the article index.
+ *
+ * This page carried only a BreadcrumbList, while /explore and /festivals — which
+ * are the same shape of page, a list of things — both describe themselves as a
+ * CollectionPage. The ItemList is built from the posts actually rendered below,
+ * so it never claims an article that is not on the page.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function collectionJsonLd(posts: any[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': `${SITE_URL}/blogs#collection`,
+    url: `${SITE_URL}/blogs`,
+    name: 'Mithila Jodi Journal',
+    description:
+      'Articles on Maithili marriage traditions, Mithila culture and practical matrimonial guidance.',
+    isPartOf: { '@id': `${SITE_URL}/#website` },
+    mainEntity: {
+      '@type': 'ItemList',
+      numberOfItems: posts.length,
+      itemListElement: posts.map((p, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: `${SITE_URL}/blogs/${p.blog_categories?.slug}/${p.slug}`,
+        name: p.title,
+      })),
+    },
+  }
+}
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-IN', {
     day: 'numeric',
@@ -87,6 +119,10 @@ export default async function BlogIndexPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd(posts)) }}
       />
 
       <main id="main-content" className="flex-1">

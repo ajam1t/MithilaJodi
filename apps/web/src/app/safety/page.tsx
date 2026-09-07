@@ -7,9 +7,13 @@ import { SITE_URL } from '@/lib/constants'
 const SITE = SITE_URL
 
 export const metadata: Metadata = {
-  title: 'Safety & Verification — Mithila Jodi',
+  // No brand here: the root layout's title template appends "| Mithila Jodi",
+  // so including it produced "Safety & Verification — Mithila Jodi | Mithila
+  // Jodi" in the SERP. The OG/Twitter titles below keep the brand on purpose —
+  // those are not run through the template.
+  title: 'Safety, Verification & Privacy',
   description:
-    'How Mithila Jodi approaches safety, verification, and privacy for matrimonial members and families. Learn how to stay safe, report suspicious profiles, and protect your personal information.',
+    'How Mithila Jodi handles safety and privacy: what verification does and does not check, how to report a profile, and how to stay safe with a match.',
   alternates: { canonical: `${SITE}/safety` },
   openGraph: {
     type: 'website',

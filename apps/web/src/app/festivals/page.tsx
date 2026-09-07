@@ -11,9 +11,9 @@ import { SITE_URL } from '@/lib/constants'
 const CANONICAL = `${SITE_URL}/festivals`
 
 export const metadata: Metadata = {
-  title: 'Mithila Festivals — Chhath, Sama Chakeva, Madhushravani & More',
+  title: 'Mithila Festivals — Stories, Rituals & Songs',
   description:
-    'A guide to the festivals of Mithila: Chhath Puja, Sama Chakeva, Vivah Panchami, Phaguwa, Durga Puja, Diwali, Madhushravani and Kojagara — their stories, rituals and Maithili songs.',
+    'A guide to the festivals of Mithila — Chhath, Sama Chakeva, Vivah Panchami, Madhushravani and more, with their stories, rituals and Maithili songs.',
   keywords: [
     'Mithila festivals', 'Maithili festivals', 'Maithil festivals', 'festivals of Mithila',
     'Chhath Puja', 'Sama Chakeva', 'Madhushravani', 'Kojagara', 'Vivah Panchami',

@@ -22,9 +22,9 @@ const SITE = SITE_URL
 export const revalidate = 900
 
 export const metadata: Metadata = {
-  title: 'Mithila Jodi — Mithila & Maithili Matrimonial | Bride & Groom Profiles',
+  title: 'Mithila Jodi — Maithili & Mithila Matrimonial',
   description:
-    'Mithila Jodi is a trusted Mithila & Maithili matrimonial platform for the Maithil community of India. Find verified Mithila bride and groom profiles, create a marriage biodata in Maithili, Hindi, English & Sanskrit, and connect families rooted in Mithila heritage.',
+    'A matrimonial platform for the Maithil community. Browse Mithila bride and groom profiles and build a marriage biodata in Maithili, Hindi, English or Sanskrit.',
   keywords: [
     'Mithila matrimonial', 'Maithili matrimonial', 'Maithil matrimonial',
     'Mithila marriage', 'Maithili marriage', 'Maithil marriage',

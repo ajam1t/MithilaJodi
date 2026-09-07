@@ -11,9 +11,9 @@ import { SITE_URL } from '@/lib/constants'
 const CANONICAL = `${SITE_URL}/festival-songs`
 
 export const metadata: Metadata = {
-  title: 'Mithila Festival Songs — Maithili Geet for Chhath, Sama Chakeva & More',
+  title: 'Maithili Festival Songs — Geet to Listen',
   description:
-    'Listen to Maithili festival songs on Mithila Jodi — Chhath geet, Sama Chakeva geet, Vivah Panchami vivah geet, Jogira, Devi geet, Madhushravani and Kojagara songs. Plays right here, no app needed.',
+    'Listen to Maithili festival songs — Chhath geet, Sama Chakeva geet, vivah geet, Jogira and Devi geet. Plays in your browser, no app needed.',
   keywords: [
     'Maithili festival songs', 'Mithila festival songs', 'Maithili geet',
     'Chhath geet', 'Sama Chakeva geet', 'Madhushravani geet', 'Kojagara geet',
