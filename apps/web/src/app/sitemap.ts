@@ -13,7 +13,39 @@ const SITE = SITE_URL
 // silently emitted a sitemap containing no blog URLs.)
 export const revalidate = 3600
 
+/**
+ * When these hand-written pages last actually changed.
+ *
+ * This used to be `new Date()`. Combined with `revalidate = 3600` that made 30
+ * of the 61 entries claim a fresh modification date every hour and on every
+ * deploy, whether or not a single word had changed. Google treats a lastmod
+ * that is always "now" as noise and stops using it to decide what to re-crawl,
+ * which removes the one signal that tells it which pages are worth its limited
+ * crawl budget — and unindexed pages showed up in Search Console as
+ * "Discovered – currently not indexed".
+ *
+ * So these are real dates, edited by hand when a page's content changes. A
+ * slightly stale date is honest and useful; a date that is always current is
+ * neither. The blog entries below already do the right thing by reading
+ * `updated_at` from the database.
+ */
+const CONTENT_UPDATED = {
+  // Legal documents gained the published Grievance Officer section.
+  '/legal/terms': '2026-09-07',
+  '/legal/privacy': '2026-09-07',
+  // Everything else last had a substantive content change with the content
+  // build on this date. Bump a path here when you actually edit that page.
+  DEFAULT: '2026-08-23',
+} as const
+
+function contentDate(path: string): Date {
+  const map = CONTENT_UPDATED as Record<string, string>
+  return new Date(map[path] ?? CONTENT_UPDATED.DEFAULT)
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Fallback only, for a database row with no updated_at of its own. Never used
+  // as the lastmod of a hand-written page — see CONTENT_UPDATED above.
   const now = new Date()
 
   // Only genuinely public, indexable, content-bearing pages belong here.
@@ -44,7 +76,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // canonicalUrl, not string concatenation: `${SITE}/` for the homepage does
     // not match the bare-origin canonical the page itself emits.
     url: canonicalUrl(r.path),
-    lastModified: now,
+    lastModified: contentDate(r.path),
     changeFrequency: r.changeFrequency,
     priority: r.priority,
   }))
@@ -54,20 +86,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const festivalEntries: MetadataRoute.Sitemap = [
     ...FESTIVALS.map((f) => ({
       url: `${SITE}/festivals/${f.slug}`,
-      lastModified: now,
+      lastModified: contentDate(`/festivals/${f.slug}`),
       changeFrequency: 'monthly' as const,
       priority: 0.7,
     })),
     // Festival Songs hub + one page per festival that has recordings.
     {
       url: `${SITE}/festival-songs`,
-      lastModified: now,
+      lastModified: contentDate('/festival-songs'),
       changeFrequency: 'monthly' as const,
       priority: 0.8,
     },
     ...FESTIVALS.filter((f) => f.songs.length > 0).map((f) => ({
       url: `${SITE}/festival-songs/${f.slug}`,
-      lastModified: now,
+      lastModified: contentDate(`/festival-songs/${f.slug}`),
       changeFrequency: 'monthly' as const,
       priority: 0.7,
     })),

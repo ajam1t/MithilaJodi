@@ -54,10 +54,31 @@ export default async function BlogIndexPage() {
     .eq('is_active', true)
     .order('sort_order', { ascending: true })
 
+  // Which categories actually have something published in them. The `limit(20)`
+  // above is a display list, not the full corpus, so this is counted separately
+  // rather than derived from `posts`.
+  const { data: categorisedData } = await supabase
+    .from('blog_posts')
+    .select('blog_categories(slug)')
+    .eq('status', 'published')
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const nonEmpty = new Set<string>(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ((categorisedData ?? []) as any[])
+      .map((r) => r.blog_categories?.slug as string | undefined)
+      .filter((s): s is string => !!s),
+  )
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const posts: any[] = postsData ?? []
+  // Empty categories are not listed. Two of them were being linked from here
+  // while the sitemap deliberately left them out, so search engines discovered
+  // a page with no articles on it, spent crawl budget on it and filed it under
+  // "Discovered – currently not indexed". A category reappears here by itself
+  // as soon as it has a published post.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const categories: any[] = catsData ?? []
+  const categories: any[] = ((catsData ?? []) as any[]).filter((c) => nonEmpty.has(c.slug as string))
 
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">

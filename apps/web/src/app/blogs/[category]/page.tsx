@@ -29,7 +29,7 @@ export async function generateMetadata(
 
   const { data: cat } = await supabase
     .from('blog_categories')
-    .select('name, slug, seo_title, seo_description')
+    .select('id, name, slug, seo_title, seo_description')
     .eq('slug', categorySlug)
     .eq('is_active', true)
     .single()
@@ -40,8 +40,22 @@ export async function generateMetadata(
     return { title: 'Category Not Found', robots: { index: false, follow: true } }
   }
 
+  // A category with nothing published in it is an empty listing — there is
+  // nothing on the page for a search engine to rank, so asking for it to be
+  // indexed only spends crawl budget and lands the URL in Search Console under
+  // "Discovered – currently not indexed". `follow` stays on so any links the
+  // page does carry are still traversed, and the page becomes indexable again
+  // by itself the moment it has a post.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const c = cat as any
+
+  const { count: publishedCount } = await supabase
+    .from('blog_posts')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'published')
+    .eq('category_id', c.id)
+
+  const isEmpty = (publishedCount ?? 0) === 0
   const canonical = `${BASE}/blogs/${c.slug}`
   const title = stripBrandSuffix(c.seo_title ?? `${c.name} — Blog`)
   const description = c.seo_description ?? `Articles about ${c.name} on the Mithila Jodi Journal.`
@@ -50,6 +64,7 @@ export async function generateMetadata(
     title,
     description,
     alternates: { canonical },
+    ...(isEmpty ? { robots: { index: false, follow: true } } : {}),
     openGraph: {
       type: 'website',
       images: ['/og-card.png'],
