@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { WhatsAppIcon } from '@/components/whatsapp/JoinCommunity'
 
 /**
  * Create and manage shareable links to your own profile.
@@ -67,14 +68,6 @@ function shareUrl(token: string): string {
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-}
-
-function WhatsAppIcon({ size = 15 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm5.8 14.03c-.24.68-1.4 1.3-1.93 1.35-.53.05-1.02.24-3.44-.72-2.9-1.15-4.7-4.15-4.84-4.34-.14-.2-1.13-1.5-1.13-2.87 0-1.36.71-2.03.97-2.31.24-.27.53-.34.7-.34.17 0 .34 0 .49.01.16.01.37-.06.58.44.2.5.7 1.72.76 1.84.06.12.1.27.02.44-.09.17-.17.27-.34.46-.17.19-.26.29-.38.48-.12.19-.26.4-.11.68.14.29.63 1.16 1.35 1.88.93.93 1.71 1.22 1.99 1.36.27.14.44.12.6-.07.17-.19.7-.82.89-1.1.19-.29.38-.24.63-.14.25.09 1.6.76 1.87.9.27.14.46.2.53.32.06.12.06.68-.18 1.36z" />
-    </svg>
-  )
 }
 
 export function ShareProfileLinks({ hasProfile }: { hasProfile: boolean }) {

@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { LocationPicker } from '@/components/LocationPicker'
+import { JoinCommunityButton } from '@/components/whatsapp/JoinCommunity'
 import type { OnboardingState } from '@/lib/onboarding'
 
 /**
@@ -285,6 +286,19 @@ export function WelcomeFlow({ initial }: { initial: OnboardingState }) {
               <Link href="/profile/edit" className="btn-ghost w-full justify-center py-2.5 text-sm mt-2">
                 Complete the rest of my profile
               </Link>
+
+              {/* Optional, and deliberately last. Onboarding is already complete
+                  by the time this renders — the two buttons above are the way
+                  forward — so this can be ignored entirely and nothing is
+                  blocked. It is an external link, not a step. */}
+              <div className="mt-5 border-t border-paper-3 pt-4 text-left">
+                <p className="font-serif text-[16px] text-maroon">🎉 Welcome to Mithila Jodi!</p>
+                <p className="mt-1 text-[12.5px] leading-relaxed text-ink-soft">
+                  Join our WhatsApp Community to stay updated with Mithila Jodi announcements
+                  and community activities.
+                </p>
+                <JoinCommunityButton size="sm" className="mt-3 w-full" />
+              </div>
             </div>
           ) : (
             <>

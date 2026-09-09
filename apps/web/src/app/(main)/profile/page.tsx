@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ProfileCardGallery3D, { galleryFaceCount } from '@/components/ProfileCardGallery3D'
 import { ShareProfileLinks } from '@/components/ShareProfileLinks'
+import { JoinCommunityCard } from '@/components/whatsapp/JoinCommunity'
 import { Spinner } from '@/components/ui'
 import type { SearchCard, PartnerPreferencesDisplay } from '@/types/profile'
 
@@ -502,6 +503,11 @@ export default function ProfilePage() {
         <div className="border-b border-ink/10">
           <div className="max-w-2xl mx-auto px-4 py-5">
             <ShareProfileLinks hasProfile={!!profile} />
+
+            {/* Below the share card, not above it: sharing a biodata is what a
+                member came here to do, and the completion checklist higher up is
+                what we actually want them to finish. This is a quiet extra. */}
+            <JoinCommunityCard className="mt-4" />
           </div>
         </div>
       )}

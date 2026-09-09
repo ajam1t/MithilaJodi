@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { INSTAGRAM_URL, WHATSAPP_COMMUNITY_URL } from '@/lib/constants'
+import { WhatsAppIcon } from '@/components/whatsapp/JoinCommunity'
 
 const GROUPS = [
   {
@@ -50,11 +52,13 @@ export function MithilaFooter({ className = '' }: { className?: string }) {
 
       {/* Compact main area */}
       <div className="wrap py-4">
-        {/* Instagram. `target="_blank"` with `rel="noopener noreferrer"` so the
-            new tab cannot reach back into this one via window.opener. */}
-        <div className="flex justify-center mb-3.5">
+        {/* Community channels. `target="_blank"` with `rel="noopener noreferrer"`
+            so the new tab cannot reach back into this one via window.opener.
+            The WhatsApp pill sits beside Instagram in the same treatment rather
+            than as a separate block — they are the same kind of link. */}
+        <div className="flex flex-wrap justify-center gap-2 mb-3.5">
           <a
-            href="https://www.instagram.com/MithilaJodiOfficial/"
+            href={INSTAGRAM_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-pill border border-gold/40 bg-maroon/40 px-4 py-1.5
@@ -67,6 +71,19 @@ export function MithilaFooter({ className = '' }: { className?: string }) {
               <circle cx="18.41" cy="5.59" r="1.44" />
             </svg>
             Join us on Instagram
+          </a>
+
+          <a
+            href={WHATSAPP_COMMUNITY_URL}
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            aria-label="Join Mithila Jodi WhatsApp Community"
+            className="inline-flex items-center gap-2 rounded-pill border border-gold/40 bg-maroon/40 px-4 py-1.5
+                       text-[12.5px] font-medium text-paper-3 hover:text-cream hover:border-gold transition-colors
+                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-lt"
+          >
+            <WhatsAppIcon size={15} />
+            WhatsApp Community
           </a>
         </div>
         {/* Top: brand + nav groups */}

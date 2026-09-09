@@ -98,3 +98,13 @@ export const LEGAL_EFFECTIVE_DATE = '5 September 2026'
    verified support address and number above, so there is no separate mailbox
    to bounce; only the name is specific to the role. */
 export const GRIEVANCE_OFFICER_NAME = 'Amit Jha'
+
+/* ── Community channels ────────────────────────────────────────────────────
+   External destinations, kept here rather than inline so the invite can be
+   rotated in one place — a WhatsApp group link is revocable and does change.
+   Both are opened in a new tab with rel="noopener noreferrer nofollow": the
+   first two so the new tab cannot reach back through window.opener, nofollow
+   because an invite link is not an endorsement we want to pass equity to. */
+export const WHATSAPP_COMMUNITY_URL =
+  'https://chat.whatsapp.com/BoiwAQZf5VMKEKtSXFfpe0?s=hd&p=i&mlu=4&ilr=4'
+export const INSTAGRAM_URL = 'https://www.instagram.com/MithilaJodiOfficial/'

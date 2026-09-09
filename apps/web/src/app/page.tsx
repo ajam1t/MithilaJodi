@@ -9,6 +9,7 @@ import { WhyMithilaJodi } from '@/components/home/FeatureStrip'
 import { CommunityStories } from '@/components/home/CommunityStories'
 import { BiodataSection } from '@/components/home/BiodataSection'
 import { FinalCTA } from '@/components/home/FinalCTA'
+import { JoinCommunityBand } from '@/components/whatsapp/JoinCommunity'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { SITE_URL } from '@/lib/constants'
@@ -173,6 +174,12 @@ export default function HomePage() {
         <FeaturedProfiles />
         <WhyMithilaJodi />
         <CommunityStories />
+        {/* Placed here, straight after the community stories, because the page is
+            already talking about the community at this point. Putting it beside
+            FinalCTA would have set two calls to action against each other and
+            weakened the one that matters — creating a profile. bg-cream also
+            separates the bg-paper section above from bg-paper-2 below. */}
+        <JoinCommunityBand />
         <BiodataSection />
 
         {/* ── Frequently asked questions (SEO + genuine help) ── */}
