@@ -68,10 +68,21 @@ export const metadata: Metadata = {
     'Bihar matrimony',
   ],
   applicationName: 'Mithila Jodi',
+  // Sizes are declared explicitly so a client picks the right file instead of
+  // downscaling one large image: Google reads the SERP favicon from these and
+  // wants a square whose side is a multiple of 48. All of these are the MJ
+  // monogram rather than the full badge — everywhere an icon appears it is
+  // 16-58px, where the badge's wordmark and tagline are illegible, and every
+  // one of those places already prints "Mithila Jodi" beside it as live text.
   icons: {
-    icon: '/favicon.png',
+    icon: [
+      { url: '/favicon.png', sizes: '48x48', type: 'image/png' },
+      { url: '/favicon-96.png', sizes: '96x96', type: 'image/png' },
+      { url: '/favicon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/favicon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
     shortcut: '/favicon.png',
-    apple: '/apple-touch-icon.png',
+    apple: { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
   },
   openGraph: {
     type: 'website',
