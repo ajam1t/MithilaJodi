@@ -4,6 +4,7 @@ import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { ContactForm } from './ContactForm'
 import { SITE_URL } from '@/lib/constants'
+import { organizationJsonLd } from '@/lib/seo'
 
 const SITE = SITE_URL
 const PHONE_RAW   = '918898372628'
@@ -51,20 +52,7 @@ const jsonLd = {
       ],
     },
     {
-      '@type': 'Organization',
-      '@id': `${SITE}/#organization`,
-      name: 'Mithila Jodi',
-      url: SITE,
-      telephone: `+${PHONE_RAW}`,
-      email: EMAIL,
-      contactPoint: {
-        '@type': 'ContactPoint',
-        telephone: `+${PHONE_RAW}`,
-        email: EMAIL,
-        contactType: 'customer support',
-        availableLanguage: ['English', 'Hindi'],
-        areaServed: 'IN',
-      },
+      ...organizationJsonLd(),
     },
   ],
 }

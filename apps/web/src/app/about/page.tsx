@@ -6,6 +6,7 @@ import { MithilaBorder } from '@/components/home/MithilaBorder'
 import { TeamSection, type TeamMemberData } from './TeamSection'
 import { createAdminClient } from '@/lib/supabase/server'
 import { SITE_URL } from '@/lib/constants'
+import { organizationJsonLd } from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
 
@@ -110,17 +111,7 @@ const jsonLd = {
         { '@type': 'ListItem', position: 2, name: 'About', item: `${SITE}/about` },
       ],
     },
-    {
-      '@type': 'Organization',
-      '@id': `${SITE}/#organization`,
-      name: 'Mithila Jodi',
-      url: SITE,
-      logo: { '@type': 'ImageObject', url: `${SITE}/logo.png` },
-      slogan: 'जहाँ परम्परा मिले, प्रेम से | Where tradition meets love.',
-      description:
-        'A matrimonial platform for the Mithila (Maithili) community of India, offering marriage biodata creation in English, Hindi, Maithili and Sanskrit.',
-      areaServed: { '@type': 'Country', name: 'India' },
-    },
+    organizationJsonLd(),
   ],
 }
 

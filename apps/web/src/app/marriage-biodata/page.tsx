@@ -5,7 +5,8 @@ import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { BiodataBuilder } from './BiodataBuilder'
 import { SITE_URL } from '@/lib/constants'
-import { breadcrumbJsonLd } from '@/lib/seo'
+import { breadcrumbJsonLd, organizationJsonLd } from '@/lib/seo'
+import { organizationRef } from '@/lib/seo'
 
 const CANONICAL = `${SITE_URL}/marriage-biodata`
 
@@ -89,7 +90,7 @@ export default function MarriageBiodataPage() {
     operatingSystem: 'Any',
     inLanguage: ['en', 'hi', 'mai', 'sa'],
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
-    publisher: { '@type': 'Organization', name: 'Mithila Jodi', url: SITE_URL },
+    publisher: organizationRef(),
   }
 
   const breadcrumb = breadcrumbJsonLd([
@@ -101,7 +102,7 @@ export default function MarriageBiodataPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify([appJsonLd, faqJsonLd, breadcrumb]) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([organizationJsonLd(), appJsonLd, faqJsonLd, breadcrumb]) }}
       />
 
       <MithilaHeader />

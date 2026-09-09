@@ -7,6 +7,7 @@ import { MithilaBorder } from '@/components/home/MithilaBorder'
 import { InvitationMaker } from './InvitationMaker'
 import { TEMPLATES } from '@/lib/invitation'
 import { SITE_URL } from '@/lib/constants'
+import { organizationJsonLd, organizationRef } from '@/lib/seo'
 
 const CANONICAL = `${SITE_URL}/marriage-invitation`
 
@@ -70,6 +71,7 @@ const FAQS = [
 const jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
+    organizationJsonLd(),
     {
       '@type': 'WebApplication',
       '@id': `${CANONICAL}#app`,
@@ -82,7 +84,7 @@ const jsonLd = {
         'A free browser-based tool for creating Mithila and Madhubani-inspired wedding invitation cards.',
       isAccessibleForFree: true,
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
-      publisher: { '@type': 'Organization', name: 'Mithila Jodi', url: SITE_URL },
+      publisher: organizationRef(),
     },
     {
       '@type': 'HowTo',

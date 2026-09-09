@@ -1,5 +1,10 @@
 import type { Metadata } from 'next'
-import { SITE_URL } from '@/lib/constants'
+import {
+  SITE_URL,
+  SUPPORT_EMAIL,
+  SUPPORT_PHONE_E164,
+  INSTAGRAM_URL,
+} from '@/lib/constants'
 
 /**
  * Metadata builders.
@@ -172,4 +177,81 @@ export function clamp(text: string, max = 158): string {
   const cut = t.slice(0, max)
   const lastSpace = cut.lastIndexOf(' ')
   return (lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).replace(/[\s,;:—-]+$/, '') + '…'
+}
+
+/** The canonical node id for the organisation, referenced from every page. */
+export const ORGANIZATION_ID = `${SITE_URL}/#organization`
+
+/**
+ * The one authoritative Organization node.
+ *
+ * Eight pages each declared their own Organization. Several did so as an
+ * anonymous `publisher: { '@type': 'Organization', name: 'Mithila Jodi' }` with
+ * no `@id`, so instead of one richly described entity a crawler saw a handful of
+ * thin, unlinked ones. Others shared the `@id` but disagreed on which
+ * properties they carried. Both fragment the entity at exactly the point where
+ * we want it consolidated.
+ *
+ * That fragmentation is the on-site half of a real problem: searching the brand
+ * returns an AI Overview describing "Mithila Jodi" as devotional Madhubani
+ * paintings of divine couples, because nothing authoritative tied the phrase to
+ * this organisation. Every page now emits this identical node, and anything
+ * needing a publisher or author references ORGANIZATION_ID instead of
+ * describing the organisation again.
+ *
+ * Everything asserted here is already published on the site — the founder is
+ * named on /about, the contact details on /contact, the Instagram account in the
+ * footer. Nothing is invented to pad the entity out.
+ */
+export function organizationJsonLd() {
+  return {
+    '@type': 'Organization',
+    '@id': ORGANIZATION_ID,
+    name: 'Mithila Jodi',
+    // Spellings people and other sites actually use.
+    alternateName: ['MithilaJodi', 'Mithila Jodi Matrimony', 'Mithila Jodi Matrimonial'],
+    url: SITE_URL,
+    logo: {
+      '@type': 'ImageObject',
+      url: `${SITE_URL}/favicon-512.png`,
+      width: 512,
+      height: 512,
+    },
+    image: `${SITE_URL}/og-card.png`,
+    slogan: 'जहाँ परम्परा मिले, प्रेम से | Where tradition meets love.',
+    description:
+      'A matrimonial platform for the Mithila (Maithili) community of India, offering marriage biodata creation in English, Hindi, Maithili and Sanskrit.',
+    // schema.org provides this property specifically to separate an entity from
+    // similarly named ones, which is the whole difficulty with this brand name.
+    disambiguatingDescription:
+      'Mithila Jodi is an online matrimonial and matchmaking platform for Maithil families. It is a company and website, not a style of Madhubani painting or a depiction of a divine couple.',
+    foundingDate: '2026',
+    founder: { '@type': 'Person', name: 'Sandeep Jha' },
+    // Official accounts. sameAs is the strongest on-site signal for tying a name
+    // to a specific organisation, and it was missing entirely.
+    sameAs: [INSTAGRAM_URL],
+    areaServed: { '@type': 'Country', name: 'India' },
+    knowsAbout: [
+      'Maithil matrimony',
+      'Mithila marriage traditions',
+      'Gotra and mool in Mithila',
+      'Marriage biodata in Maithili',
+      'Maithili culture',
+    ],
+    telephone: `+${SUPPORT_PHONE_E164}`,
+    email: SUPPORT_EMAIL,
+    contactPoint: {
+      '@type': 'ContactPoint',
+      telephone: `+${SUPPORT_PHONE_E164}`,
+      email: SUPPORT_EMAIL,
+      contactType: 'customer support',
+      availableLanguage: ['English', 'Hindi', 'Maithili'],
+      areaServed: 'IN',
+    },
+  }
+}
+
+/** A reference to the organisation, for publisher / author slots. */
+export function organizationRef() {
+  return { '@id': ORGANIZATION_ID }
 }

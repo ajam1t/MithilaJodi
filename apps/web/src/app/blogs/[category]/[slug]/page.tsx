@@ -8,6 +8,7 @@ import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { createAdminClient } from '@/lib/supabase/server'
 import { SITE_URL, stripBrandSuffix } from '@/lib/constants'
+import { organizationJsonLd, organizationRef } from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
 
@@ -128,18 +129,15 @@ export default async function ArticlePage(
     '@type': 'Article',
     headline: post.title,
     description: post.seo_description ?? post.excerpt ?? '',
-    author: {
-      '@type': 'Organization',
-      name: post.author_name ?? 'Mithila Jodi Team',
-    },
+    // An anonymous Organization here created a second, thinly described
+    // "Mithila Jodi" entity competing with the real one. A brand byline now
+    // references the canonical organisation; a named human is a Person.
+    author:
+      !post.author_name || /^Mithila Jodi/i.test(post.author_name)
+        ? organizationRef()
+        : { '@type': 'Person', name: post.author_name },
     publisher: {
-      '@type': 'Organization',
-      name: 'Mithila Jodi',
-      url: BASE,
-      logo: {
-        '@type': 'ImageObject',
-        url: `${BASE}/logo.png`,
-      },
+      ...organizationJsonLd(),
     },
     datePublished: post.published_at ?? post.created_at,
     dateModified: post.updated_at ?? post.published_at ?? post.created_at,

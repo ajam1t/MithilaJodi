@@ -13,6 +13,7 @@ import { JoinCommunityBand } from '@/components/whatsapp/JoinCommunity'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { SITE_URL } from '@/lib/constants'
+import { organizationJsonLd } from '@/lib/seo'
 
 const SITE = SITE_URL
 
@@ -125,20 +126,7 @@ const FAQ_ITEMS: { q: string; a: React.ReactNode; text: string }[] = [
 const jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
-    {
-      '@type': 'Organization',
-      '@id': `${SITE}/#organization`,
-      name: 'Mithila Jodi',
-      url: SITE,
-      logo: {
-        '@type': 'ImageObject',
-        url: `${SITE}/logo.png`,
-      },
-      slogan: 'जहाँ परम्परा मिले, प्रेम से | Where tradition meets love.',
-      description:
-        'A matrimonial platform for the Mithila (Maithili) community of India, offering marriage biodata creation in English, Hindi, Maithili and Sanskrit.',
-      areaServed: { '@type': 'Country', name: 'India' },
-    },
+    organizationJsonLd(),
     {
       '@type': 'WebSite',
       '@id': `${SITE}/#website`,

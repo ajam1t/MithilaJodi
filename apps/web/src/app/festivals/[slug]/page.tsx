@@ -9,6 +9,7 @@ import { FestivalSongsTeaser } from '@/components/festivals/FestivalSongsTeaser'
 import { FestivalCard } from '@/components/festivals/FestivalCard'
 import { FESTIVALS, getFestival, getRelatedFestivals } from '@/lib/festivals'
 import { SITE_URL } from '@/lib/constants'
+import { organizationJsonLd, organizationRef } from '@/lib/seo'
 
 /** Statically generate all 8 festival routes at build time. */
 export function generateStaticParams() {
@@ -80,6 +81,7 @@ export default async function FestivalPage(
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
+      organizationJsonLd(),
       {
         '@type': 'Article',
         '@id': `${canonical}#article`,
@@ -90,13 +92,8 @@ export default async function FestivalPage(
         articleSection: 'Mithila Festivals',
         keywords: festival.seo.keywords.join(', '),
         image: festival.heroImage ? `${SITE_URL}${festival.heroImage}` : `${SITE_URL}/og-card.png`,
-        author: { '@type': 'Organization', name: 'Mithila Jodi', url: SITE_URL },
-        publisher: {
-          '@type': 'Organization',
-          name: 'Mithila Jodi',
-          url: SITE_URL,
-          logo: { '@type': 'ImageObject', url: `${SITE_URL}/logo.png` },
-        },
+        author: organizationRef(),
+        publisher: organizationRef(),
         mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
       },
       {

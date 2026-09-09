@@ -52,6 +52,21 @@ export function HeroSection() {
             </p>
           </div>
 
+          {/* One plain sentence saying what this actually is.
+              Everything above it is a headline, a tagline and a mood — none of
+              which tells a first-time visitor arriving from a search result what
+              the site does, and the only plain definition on the page sat in the
+              FAQ near the bottom. It also matters for how the brand is
+              understood off-site: searching "Mithila Jodi" returned an AI
+              summary describing devotional Madhubani paintings of divine
+              couples, because no prominent, unambiguous sentence tied the name
+              to this platform. */}
+          <p className="text-[14px] sm:text-[15px] leading-relaxed text-ink-soft max-w-xl">
+            <strong className="font-semibold text-ink">Mithila Jodi</strong> is a matrimonial
+            platform for Maithil families — search profiles by gotra, mool and native place, and
+            create a marriage biodata in Maithili, Hindi, English or Sanskrit.
+          </p>
+
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-2.5 pt-0.5 w-full sm:w-auto">
             <Link href="/register" className="btn-primary text-[15px] px-6 py-3 justify-center">
