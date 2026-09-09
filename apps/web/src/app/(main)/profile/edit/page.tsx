@@ -392,6 +392,7 @@ function MultiLocation({
  */
 function MasterCombo({
   label, value, onChange, opts, hint, placeholder = 'Type to search…', allowOther = true,
+  allowCustom = false,
 }: {
   label: string
   value: string
@@ -400,6 +401,16 @@ function MasterCombo({
   hint?: string
   placeholder?: string
   allowOther?: boolean
+  /**
+   * Let the member keep what they typed when it is not in the list.
+   *
+   * For Mool specifically: the Panji records far more mools than any list we
+   * hold, and spellings vary between families, so a closed list means some
+   * people simply cannot state theirs. A typed value is stored verbatim —
+   * their spelling of their own mool is not ours to normalise — and read paths
+   * fall back to title-casing an unknown value, so it still displays properly.
+   */
+  allowCustom?: boolean
 }) {
   const inputId = useId()
   const [query, setQuery] = useState('')
@@ -412,6 +423,13 @@ function MasterCombo({
 
   const q = query.trim().toLowerCase()
   const matches = (q ? opts.filter(o => o.label.toLowerCase().includes(q)) : opts).slice(0, 60)
+
+  const typed = query.trim()
+  // Offer the typed text only when it is not already an option, so the list
+  // never shows "Use Sarisab" next to the real Sarisab entry.
+  const canUseTyped =
+    allowCustom && typed.length > 1 && !opts.some(o => o.label.toLowerCase() === typed.toLowerCase())
+  const commitTyped = () => { onChange(typed); setOpen(false) }
 
   return (
     <div className="relative">
@@ -429,6 +447,12 @@ function MasterCombo({
         onFocus={() => { setQuery(''); setOpen(true) }}
         onChange={e => { setQuery(e.target.value); setOpen(true) }}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onKeyDown={e => {
+          // Enter keeps what was typed, so a member entering a mool by hand does
+          // not have to reach for the mouse to confirm it.
+          if (e.key === 'Enter' && canUseTyped) { e.preventDefault(); commitTyped() }
+          if (e.key === 'Escape') setOpen(false)
+        }}
       />
       {value && !open && (
         <button type="button" onClick={() => onChange('')}
@@ -438,7 +462,16 @@ function MasterCombo({
       {open && (
         <ul id={`${inputId}-list`} role="listbox"
           className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-mj-sm border border-ink/20 bg-white shadow-mj-xs">
-          {matches.length === 0 && (
+          {/* Keeping what was typed comes first when nothing matched — that is
+              the only useful action at that point. */}
+          {canUseTyped && matches.length === 0 && (
+            <li role="option" aria-selected={false}
+              className="cursor-pointer px-3 py-2 text-sm text-ink hover:bg-cream"
+              onMouseDown={commitTyped}>
+              Use &ldquo;<span className="font-medium text-maroon">{typed}</span>&rdquo;
+            </li>
+          )}
+          {matches.length === 0 && !canUseTyped && (
             <li className="px-3 py-2 text-sm text-ink-soft">No match in the list.</li>
           )}
           {matches.map(o => (
@@ -448,6 +481,15 @@ function MasterCombo({
               {o.label}
             </li>
           ))}
+          {/* Also offered below the matches, so a member whose mool merely
+              resembles a listed one can still enter their own spelling. */}
+          {canUseTyped && matches.length > 0 && (
+            <li role="option" aria-selected={false}
+              className="cursor-pointer border-t border-paper-3 px-3 py-2 text-sm text-ink hover:bg-cream"
+              onMouseDown={commitTyped}>
+              Use &ldquo;<span className="font-medium text-maroon">{typed}</span>&rdquo; instead
+            </li>
+          )}
           {allowOther && !opts.some(o => o.value === 'other') && (
             <li role="option" aria-selected={value === 'other'}
               className="cursor-pointer border-t border-paper-3 px-3 py-2 text-sm text-ink-soft hover:bg-cream"
@@ -1120,8 +1162,13 @@ export default function ProfileEditPage() {
       : allGotras
 
   const moolGotraHint = (() => {
-    if (!form.mool || form.mool === 'other') return undefined
-    if (linkedGotras.length === 0) return 'No gotra recorded for this mool — please pick it yourself.'
+    if (!form.mool) return 'Not in the list? Type your mool and choose “Use …”.'
+    if (form.mool === 'other') return undefined
+    if (linkedGotras.length === 0) {
+      // Either a mool we hold no gotra link for, or one the member typed in
+      // themselves. Both need the gotra chosen by hand.
+      return 'No gotra recorded for this mool — please pick your gotra below.'
+    }
     const names = linkedGotras
       .map(g => allGotras.find(o => o.value === g)?.label ?? g)
       .join(', ')
@@ -1310,6 +1357,11 @@ export default function ProfileEditPage() {
                   value={form.mool}
                   opts={options.mool ?? []}
                   hint={moolGotraHint}
+                  placeholder="Search the list, or type your mool…"
+                  // The Panji records far more mools than the list holds, and
+                  // spellings differ between families, so a closed list left some
+                  // members unable to state theirs at all.
+                  allowCustom
                   onChange={v => {
                     // Choosing a mool settles the gotra in most cases, so fill it
                     // in rather than asking the same question twice. Only when the

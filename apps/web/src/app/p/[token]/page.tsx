@@ -331,7 +331,13 @@ function ProfileView({
 
       {hasAny(p.contact) && p.contact ? (
         <Panel title="Contact">
-          <Fact label="Mobile" value={p.contact.mobile} />
+          {/* Whose number this is, when the member said. "Mobile (Father)"
+              rather than a possessive, so it reads correctly for every option
+              including "Guardian" and "Other relative". */}
+          <Fact
+            label={p.contact.relation ? `Mobile (${p.contact.relation})` : 'Mobile'}
+            value={p.contact.mobile}
+          />
           <Fact label="Email" value={p.contact.email} />
           <Fact label="Address" value={p.contact.address} />
         </Panel>

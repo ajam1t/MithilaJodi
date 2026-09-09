@@ -96,7 +96,7 @@ export type SharedProfile = {
   family: { type: string | null; values: string | null; parents: string | null; siblings: string | null; about: string | null; introduction: string | null } | null
   about: string | null
   horoscope: { rashi: string | null; nakshatra: string | null; manglik: string | null; birthTime: string | null; birthPlace: string | null } | null
-  contact: { mobile: string | null; email: string | null; address: string | null } | null
+  contact: { mobile: string | null; relation: string | null; email: string | null; address: string | null } | null
   preferences: PartnerPreferencesDisplay | null
 }
 
@@ -230,7 +230,7 @@ export async function loadSharedProfile(admin: any, token: string): Promise<Shar
   if (granted.has('horoscope') || granted.has('contact')) {
     const { data } = await admin
       .from('profile_private')
-      .select('rashi, nakshatra, mangalik, birth_time, birth_place, contact_mobile, contact_email, address')
+      .select('rashi, nakshatra, mangalik, birth_time, birth_place, contact_mobile, contact_relation, contact_email, address')
       .eq('profile_id', p.id)
       .maybeSingle()
     priv = data ?? null
@@ -313,8 +313,17 @@ export async function loadSharedProfile(admin: any, token: string): Promise<Shar
 
     // The registered mobile is the fallback only when the member has not given a
     // separate contact number — and only ever on a link that granted contact.
+    //
+    // `relation` says whose number it is. In a Maithil match the number given is
+    // very often the father's or a brother's, and a bare "Mobile" left the
+    // recipient to guess who would answer. It is only meaningful for a number the
+    // member actually entered: when we fall back to the registered mobile that is
+    // the member's own line, so the relation is dropped rather than mislabelled.
     contact: gate(granted.has('contact'), {
       mobile: priv?.contact_mobile ?? account.mobile ?? null,
+      relation: priv?.contact_mobile
+        ? labelFor(labels, 'contact_relation', priv.contact_relation)
+        : null,
       email: priv?.contact_email ?? null,
       address: priv?.address ?? null,
     }),
