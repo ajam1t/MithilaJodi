@@ -15,7 +15,7 @@ type Message = {
 type ConvData = {
   ok: boolean
   conversation_id: string
-  partner: { id: string; display_name: string; photo_url: string | null }
+  partner: { id: string; display_name: string; photo_url: string | null; is_official?: boolean }
   messages: Message[]
   has_more: boolean
   message?: string
@@ -162,22 +162,43 @@ export default function ThreadContent() {
         <Link href="/messages" className="text-ink-soft hover:text-ink text-lg leading-none">
           ←
         </Link>
-        {partner && (
-          <>
-            <Link href={`/profile/${partner.id}`}>
-              <div className="w-9 h-9 rounded-full overflow-hidden bg-paper-3 border border-paper-3 flex items-center justify-center shrink-0">
-                {partner.photo_url ? (
-                  <img src={partner.photo_url} alt={partner.display_name} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-sm text-ink-soft">{partner.display_name[0]?.toUpperCase()}</span>
-                )}
-              </div>
-            </Link>
-            <Link href={`/profile/${partner.id}`} className="font-semibold text-ink text-sm hover:text-maroon">
-              {partner.display_name}
-            </Link>
-          </>
-        )}
+        {partner && (() => {
+          const avatar = (
+            <div className="w-9 h-9 rounded-full overflow-hidden bg-paper-3 border border-paper-3 flex items-center justify-center shrink-0">
+              {partner.photo_url ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={partner.photo_url} alt={partner.display_name} className="w-full h-full object-cover object-[center_35%]" />
+              ) : (
+                <span className="text-sm text-ink-soft">{partner.display_name[0]?.toUpperCase()}</span>
+              )}
+            </div>
+          )
+
+          // Mithila Jodi itself is not a match. Linking it to /profile/[id]
+          // would open a deliberately empty profile and ask the matcher to
+          // score the member against the platform, so the official sender is
+          // plain text with a badge instead.
+          if (partner.is_official) {
+            return (
+              <>
+                {avatar}
+                <span className="font-semibold text-ink text-sm">{partner.display_name}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-maroon bg-maroon/10 border border-maroon/25 rounded-full px-2 py-0.5">
+                  Official
+                </span>
+              </>
+            )
+          }
+
+          return (
+            <>
+              <Link href={`/profile/${partner.id}`}>{avatar}</Link>
+              <Link href={`/profile/${partner.id}`} className="font-semibold text-ink text-sm hover:text-maroon">
+                {partner.display_name}
+              </Link>
+            </>
+          )
+        })()}
       </div>
 
       {/* Messages */}

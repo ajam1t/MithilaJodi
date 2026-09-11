@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
+import { getSystemProfileId } from '@/lib/systemProfile'
 
 const PROFILE_FIELDS = [
   'profile_for', 'first_name', 'last_name', 'gender', 'dob', 'religion', 'caste', 'sub_caste',
@@ -43,6 +44,15 @@ export async function GET(request: NextRequest) {
 
   if (status && status !== 'all') {
     query = query.eq('profile_status', status)
+  }
+
+  // The platform's own "Mithila Jodi" profile is infrastructure, not a member.
+  // Listing it here put a Suspend and a Delete button next to the identity that
+  // official messaging depends on — deleting it would break the feature quietly
+  // — and offered a Message button for messaging ourselves.
+  const systemProfileId = await getSystemProfileId(admin)
+  if (systemProfileId) {
+    query = query.neq('id', systemProfileId)
   }
 
   const { data: profiles, error } = await query

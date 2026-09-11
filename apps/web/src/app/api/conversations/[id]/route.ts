@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
+import { isSystemProfile } from '@/lib/systemProfile'
 
 export async function GET(
   request: NextRequest,
@@ -130,7 +131,15 @@ export async function GET(
   return NextResponse.json({
     ok: true,
     conversation_id: id,
-    partner: { id: partnerId, display_name: partnerName, photo_url: partnerPhotoUrl },
+    // is_official lets the client render the platform's own identity as plain
+    // text with a badge rather than a link to a matrimonial profile — there is
+    // nothing to look at there, and /profile/[id] would try to score a match.
+    partner: {
+      id: partnerId,
+      display_name: partnerName,
+      photo_url: partnerPhotoUrl,
+      is_official: await isSystemProfile(admin, partnerId),
+    },
     messages: ascending.map((m) => ({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       id: (m as any).id as string,
