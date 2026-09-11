@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
+import { OFFICIAL_AVATAR_SRC } from '@/lib/constants'
 
 type Message = {
   id: string
@@ -165,7 +166,14 @@ export default function ThreadContent() {
         {partner && (() => {
           const avatar = (
             <div className="w-9 h-9 rounded-full overflow-hidden bg-paper-3 border border-paper-3 flex items-center justify-center shrink-0">
-              {partner.photo_url ? (
+              {partner.is_official ? (
+                /* The brand mark, on cream and contained rather than cropped:
+                   the monogram already fills its own square, and the
+                   object-[center_35%] framing used for member photographs
+                   (which biases towards faces) would cut into it. */
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={OFFICIAL_AVATAR_SRC} alt={partner.display_name} className="w-full h-full object-contain bg-cream" />
+              ) : partner.photo_url ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img src={partner.photo_url} alt={partner.display_name} className="w-full h-full object-cover object-[center_35%]" />
               ) : (

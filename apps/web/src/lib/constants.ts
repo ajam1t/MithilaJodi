@@ -85,6 +85,18 @@ export function stripBrandSuffix(title: string): string {
    (TERMS_VERSION / PRIVACY_POLICY_VERSION, both default '1.0' — see
    lib/authFlow.ts). Bumping a policy version here without bumping those means
    stored consent records would point at the wrong document version. */
+/* Avatar for the platform's own profile — the "Mithila Jodi" identity an admin
+   messages members from (see lib/systemProfile).
+
+   The site icon, referenced as a static asset, rather than a photo uploaded
+   into the profile-photos bucket. The platform's face is brand artwork, not
+   member data: a storage object would need a signed URL on every render, could
+   fall out of sync between environments, would sit in the moderation queue
+   alongside real members' photographs, and would count against that profile's
+   five-photo limit. This is already served, immutable and cached, and it looks
+   right in every environment including a fresh local database. */
+export const OFFICIAL_AVATAR_SRC = '/favicon-512.png'
+
 export const SUPPORT_EMAIL = 'contact@mithilajodi.com'
 export const SUPPORT_PHONE_DISPLAY = '+91 8898372628'
 export const SUPPORT_PHONE_E164 = '918898372628'

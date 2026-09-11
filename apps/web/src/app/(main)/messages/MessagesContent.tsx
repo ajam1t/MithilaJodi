@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { OFFICIAL_AVATAR_SRC } from '@/lib/constants'
 
 type ConversationItem = {
   id: string
@@ -9,6 +10,7 @@ type ConversationItem = {
     id: string
     display_name: string
     photo_url: string | null
+    is_official?: boolean
   }
   last_message: {
     body: string
@@ -92,7 +94,19 @@ export default function MessagesContent() {
                   {/* Avatar */}
                   <div className="relative shrink-0">
                     <div className="w-12 h-12 rounded-full overflow-hidden bg-cream border border-paper-3 flex items-center justify-center">
-                      {conv.partner.photo_url ? (
+                      {conv.partner.is_official ? (
+                        /* The brand mark, contained rather than cropped — the
+                           monogram is drawn to fill its own square, so
+                           object-cover would shave the gold ring off it. */
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={OFFICIAL_AVATAR_SRC}
+                          alt={conv.partner.display_name}
+                          className="w-full h-full object-contain"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      ) : conv.partner.photo_url ? (
                         <img
                           src={conv.partner.photo_url}
                           alt={conv.partner.display_name}

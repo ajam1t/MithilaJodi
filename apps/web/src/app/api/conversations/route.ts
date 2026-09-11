@@ -2,6 +2,7 @@ import 'server-only'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
+import { getSystemProfileId } from '@/lib/systemProfile'
 
 function toDisplayName(firstName: string, lastName: string | null): string {
   if (lastName) return `${firstName} ${lastName}`
@@ -177,6 +178,10 @@ export async function GET() {
     unreadCountMap.set(cid, (unreadCountMap.get(cid) ?? 0) + 1)
   }
 
+  // Resolved once for the whole list rather than per conversation — it is a
+  // process-cached lookup, but the id is the same for every row regardless.
+  const systemProfileId = await getSystemProfileId(admin)
+
   // Step 10: assemble response
   const conversations = convs.map((conv, idx) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -193,6 +198,9 @@ export async function GET() {
           ? toDisplayName(profileInfo.first_name, profileInfo.last_name)
           : null,
         photo_url: photoUrlMap.get(partnerId) ?? null,
+        // Matches the single-thread endpoint, so the list and the thread it
+        // opens agree on how the platform's own identity is presented.
+        is_official: systemProfileId !== null && partnerId === systemProfileId,
       },
       last_message: lastMsg
         ? {
