@@ -10,9 +10,9 @@ export function FestivalCard({ festival, priority = false }: { festival: Festiva
   return (
     <Link
       href={`/festivals/${festival.slug}`}
-      className="group card card-hover overflow-hidden flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+      className="group card mj-lift overflow-hidden flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
     >
-      <div className="relative">
+      <div className="mj-zoom relative overflow-hidden">
         <FestivalHeroArt festival={festival} className="h-40 sm:h-44" priority={priority} />
 
         {/* Devanagari name sits on the art */}

@@ -173,12 +173,12 @@ export default function HomePage() {
         {/* ── Frequently asked questions (SEO + genuine help) ── */}
         <section id="faq" className="bg-cream py-9 sm:py-12" aria-label="Frequently asked questions">
           <div className="wrap max-w-3xl">
-            <div className="text-center mb-6">
+            <div data-mj-reveal className="text-center mb-6">
               <p className="eyebrow mb-1.5">Common Questions</p>
               <h2 className="section-heading">Mithila Marriage &amp; Gotra — FAQ</h2>
               <div className="ornament-line w-16 mx-auto mt-2" />
             </div>
-            <div className="space-y-3">
+            <div data-mj-stagger className="space-y-3">
               {FAQ_ITEMS.map((item) => (
                 <details key={item.q} className="card p-5 group">
                   <summary className="font-serif text-maroon text-[17px] sm:text-[18px] cursor-pointer list-none flex items-start justify-between gap-3">

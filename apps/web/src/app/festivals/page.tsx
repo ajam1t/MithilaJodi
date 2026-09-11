@@ -110,8 +110,16 @@ export default function FestivalsIndexPage() {
             </nav>
 
             <p className="eyebrow !text-marigold mb-3">The Mithila Year</p>
+            {/* Word-by-word entrance. Safe to do here, unlike the homepage
+                hero, because this heading has no entrance animation of its own
+                to fight with. The words are separate spans in the markup
+                rather than split by JavaScript, so the h1 text is intact in
+                the HTML for crawlers and for a reader with JS disabled. */}
             <h1 className="font-serif text-[32px] sm:text-[46px] leading-[1.1] text-paper">
-              Mithila Festivals
+              <span className="mj-word">Mithila</span>{' '}
+              <span className="mj-word" style={{ '--mj-word-delay': '110ms' } as React.CSSProperties}>
+                Festivals
+              </span>
             </h1>
             <p className="font-deva text-[17px] sm:text-[21px] text-gold-lt mt-3" lang="hi">
               मिथिलाक पाबनि-तिहार
@@ -134,7 +142,7 @@ export default function FestivalsIndexPage() {
 
         {/* ── Grid ─────────────────────────────────────────── */}
         <section className="wrap py-10 sm:py-14" aria-label="All Mithila festivals">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          <div data-mj-stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
             {FESTIVALS.map((f, i) => (
               <FestivalCard key={f.slug} festival={f} priority={i < 2} />
             ))}

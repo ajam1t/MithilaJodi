@@ -194,14 +194,14 @@ export default async function CategoryPage(
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div data-mj-stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {posts.map((post) => {
                 const catInfo = post.blog_categories
                 const href = catInfo ? `/blogs/${catInfo.slug}/${post.slug}` : `/blogs`
                 return (
-                  <article key={post.id} className="card card-hover flex flex-col overflow-hidden">
+                  <article key={post.id} className="card mj-lift flex flex-col overflow-hidden">
                     {post.cover_url && (
-                      <div className="aspect-[16/9] overflow-hidden bg-paper-2">
+                      <div className="mj-zoom aspect-[16/9] overflow-hidden bg-paper-2">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={post.cover_url}

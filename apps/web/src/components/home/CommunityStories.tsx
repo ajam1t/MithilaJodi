@@ -58,17 +58,21 @@ export function CommunityStories() {
   return (
     <section className="bg-paper py-9 sm:py-12" aria-label="Community stories">
       <div className="wrap">
-        <SectionHeading
-          eyebrow="From Mithila Families"
-          title="Stories From Our Community"
-          subtitle="How families are using Mithila Jodi to begin the conversation."
-        />
+        {/* Wrapper rather than a prop on SectionHeading: it takes a fixed set
+            of props and does not spread the rest onto its root element. */}
+        <div data-mj-reveal>
+          <SectionHeading
+            eyebrow="From Mithila Families"
+            title="Stories From Our Community"
+            subtitle="How families are using Mithila Jodi to begin the conversation."
+          />
+        </div>
 
         {/* Four cards: 2×2 on tablet, 4 across on desktop, so the row never
             leaves a single orphaned card on its own line. */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <div data-mj-stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {STORIES.map((s) => (
-            <figure key={s.family} className="card relative p-5 flex flex-col h-full">
+            <figure key={s.family} className="card mj-lift relative p-5 flex flex-col h-full">
               <span className="text-gold text-2xl leading-none font-serif" aria-hidden="true">&ldquo;</span>
 
               <blockquote className="text-ink-soft text-[14.5px] leading-relaxed mt-1 mb-4 flex-1">

@@ -166,7 +166,7 @@ export default async function BlogIndexPage() {
           ) : (
             <>
               {posts[0]?.featured && <FeaturedArticle post={posts[0]} />}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div data-mj-stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {(posts[0]?.featured ? posts.slice(1) : posts).map((post) => (
                   <ArticleCard key={post.id} post={post} />
                 ))}
@@ -187,9 +187,13 @@ function FeaturedArticle({ post }: { post: any }) {
   const category = post.blog_categories
   const href = category ? `/blogs/${category.slug}/${post.slug}` : `/blogs`
 
+  // mj-lift replaces card-hover rather than stacking on it: both set
+  // `transform` on :hover, so keeping both would leave the winner to
+  // stylesheet order. mj-lift is also confined to real hover devices, so a tap
+  // on a phone no longer leaves the card stuck in its hovered state.
   return (
-    <article className="card card-hover overflow-hidden mb-8 grid md:grid-cols-2">
-      <div className="relative aspect-[16/10] md:aspect-auto md:min-h-[280px] bg-paper-2">
+    <article className="card mj-lift overflow-hidden mb-8 grid md:grid-cols-2">
+      <div className="mj-zoom relative aspect-[16/10] md:aspect-auto md:min-h-[280px] overflow-hidden bg-paper-2">
         {post.cover_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={post.cover_url} alt={post.title} className="w-full h-full object-cover" />
@@ -232,9 +236,9 @@ function ArticleCard({ post }: { post: any }) {
   const href = category ? `/blogs/${category.slug}/${post.slug}` : `/blogs`
 
   return (
-    <article className="card card-hover flex flex-col overflow-hidden">
+    <article className="card mj-lift flex flex-col overflow-hidden">
       {post.cover_url && (
-        <div className="aspect-[16/9] overflow-hidden bg-paper-2">
+        <div className="mj-zoom aspect-[16/9] overflow-hidden bg-paper-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={post.cover_url}

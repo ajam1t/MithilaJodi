@@ -453,3 +453,217 @@ footer :focus-visible {
 .mj-skip-link:focus {
   transform: translate(-50%, 0);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Motion primitives
+   ───────────────────────────────────────────────────────────────────────────
+   Scroll reveals are driven by one shared IntersectionObserver, mounted once
+   per page by components/motion/RevealOnScroll.tsx.
+
+   The first implementation used CSS scroll-driven animations
+   (`animation-timeline: view()`) precisely to avoid any JavaScript. That was
+   abandoned after testing: the Chromium used for verification here reports
+   `CSS.supports('animation-timeline', 'view()') === true`, attaches a real
+   ViewTimeline to the animation, computes every property correctly — and never
+   applies the effect, at any scroll position, on screen or in getComputedStyle.
+   A `new ViewTimeline({subject})` built from script ticks normally in the same
+   page, so the timeline machinery works and only the declarative path is dead.
+   An effect that cannot be demonstrated to run anywhere is not worth shipping,
+   however elegant, so this is now an observer.
+
+   What is kept from that design is the degradation guarantee, which is the part
+   that actually matters. The hidden state is scoped to `html.mj-reveal-ready`,
+   a class only ever added by script, so:
+
+   - the server-rendered HTML contains no hidden content: a crawler and a reader
+     with broken JavaScript both get the finished page, not blank sections;
+   - reduced-motion readers never get the class at all, so they get the static
+     page rather than a 0.01ms flicker of the global reduced-motion override;
+   - elements already on screen when the observer starts are marked revealed
+     synchronously, before the class is added, so nothing flashes out and back.
+
+   Keyframes rather than a transition, for one concrete reason: `transition` is
+   a shorthand, and `.mj-lift` further down declares its own. A card that is
+   both a stagger child and a lift target — every blog, festival and story card
+   is — would have had its reveal transition silently replaced by whichever
+   rule came second, and the reveal would snap instead of easing. Animations
+   are a separate property, so the two never meet.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* The reveal moves `translate` and `scale`, never `transform`. `.mj-lift`
+   animates `transform` on hover and Tailwind's scale-* utilities compile to
+   `transform` too; these are separate properties that compose, so a revealed
+   card still lifts and a `scale-[1.02]` button still scales. Written as
+   `transform`, the filling animation would win and the hover would do nothing.
+
+   Both keyframes are also safe to leave filling forwards for the same reason —
+   holding `translate: none` costs nothing and blocks nothing. */
+@keyframes mjRevealUp {
+  from { opacity: 0; translate: 0 18px; }
+  to   { opacity: 1; translate: none; }
+}
+
+@keyframes mjRevealScale {
+  from { opacity: 0; scale: 0.96; }
+  to   { opacity: 1; scale: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Hidden only once script is running and has confirmed it can reveal.
+
+     `transition: none` is a guard, not a style. An element with Tailwind's
+     `transition-all` transitions opacity and translate too, so hiding it
+     starts a transition on the same two properties the reveal animates, and
+     the fade-in never resolves cleanly — which is exactly what happened to the
+     Why-Mithila-Jodi buttons before they were switched to a block reveal.
+     Suppressing transitions only while the element is hidden means the hook is
+     safe to drop on anything; the element's own transitions come back the
+     moment .mj-in lands and the rule stops matching. */
+  .mj-reveal-ready [data-mj-reveal]:not(.mj-in),
+  .mj-reveal-ready [data-mj-stagger] > *:not(.mj-in) {
+    opacity: 0;
+    translate: 0 18px;
+    transition: none;
+  }
+  .mj-reveal-ready [data-mj-reveal='scale']:not(.mj-in) {
+    translate: none;
+    scale: 0.96;
+  }
+
+  .mj-reveal-ready [data-mj-reveal].mj-in,
+  .mj-reveal-ready [data-mj-stagger] > *.mj-in {
+    animation: mjRevealUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .mj-reveal-ready [data-mj-reveal='scale'].mj-in {
+    animation-name: mjRevealScale;
+  }
+
+  /* Row cascade. Each child is observed separately, so on a phone — where the
+     grids stack — they already arrive one at a time; this is what produces the
+     sideways sweep on wider screens, where a whole row crosses the threshold
+     in the same frame. */
+  .mj-reveal-ready [data-mj-stagger] > *:nth-child(2).mj-in   { animation-delay: 70ms; }
+  .mj-reveal-ready [data-mj-stagger] > *:nth-child(3).mj-in   { animation-delay: 140ms; }
+  .mj-reveal-ready [data-mj-stagger] > *:nth-child(4).mj-in   { animation-delay: 210ms; }
+  .mj-reveal-ready [data-mj-stagger] > *:nth-child(n+5).mj-in { animation-delay: 260ms; }
+}
+
+/* ── Hover: a slight 3D lift ──────────────────────────────────────────────
+   Fixed rotation rather than pointer-tracked tilt: it needs no JavaScript, no
+   pointermove listener and no rAF loop, and at this size the difference is not
+   perceptible. Restricted to devices that genuinely hover, so a tap on Android
+   never leaves a card stuck mid-rotation. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .mj-lift {
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+  .mj-lift:hover {
+    transform: perspective(900px) translateY(-5px) rotateX(2.2deg) scale(1.012);
+    box-shadow: var(--shadow), var(--sheen);
+  }
+
+  /* Media inside a hovered card drifts in a little. Put .mj-zoom on the media
+     box only — never on a whole card — because it matches any descendant img
+     or svg, and a card body full of icons would animate them all. The wrapper
+     needs overflow-hidden for this to read as a crop rather than a bulge.
+
+     svg is included alongside img so festival cards behave the same either
+     way: about half have a photograph and the rest a generated Mithila motif
+     drawn inline, and a zoom that only worked on the photographed ones would
+     read as a bug. */
+  .mj-zoom :is(img, svg) {
+    transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+  }
+  .mj-lift:hover .mj-zoom :is(img, svg),
+  .mj-zoom:hover :is(img, svg) {
+    transform: scale(1.05);
+  }
+}
+
+/* ── Pointer-tracked glow ─────────────────────────────────────────────────
+   Driven by components/motion/PointerGlow.tsx, which writes --mj-gx/--mj-gy.
+   Both the gradient and the fade-in live inside the hover media query, so on a
+   touch device the layer renders as a transparent, inert div. The fallback
+   centre position matters for the moment between hover starting and the first
+   pointermove frame landing. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .mj-glow {
+    background: radial-gradient(
+      230px circle at var(--mj-gx, 50%) var(--mj-gy, 50%),
+      rgba(185, 138, 46, 0.20),
+      transparent 72%
+    );
+    opacity: 0;
+    transition: opacity 320ms ease;
+  }
+  .mj-glow-host:hover .mj-glow { opacity: 1; }
+}
+
+/* ── Page transition ──────────────────────────────────────────────────────
+   Driven by app/template.tsx, which Next remounts on navigation.
+
+   Opacity ONLY, no transform. A transformed element becomes the containing
+   block for its `position: fixed` descendants, and this wraps every page — so
+   a translate here would shift the mobile bottom nav and the sticky profile
+   header by a few pixels for the duration of every navigation. That reads as a
+   glitch, on the platform where it would be most noticed. */
+@media (prefers-reduced-motion: no-preference) {
+  .mj-page-enter {
+    animation: mjPageIn 220ms ease-out both;
+  }
+}
+@keyframes mjPageIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Hero headline, word by word ──────────────────────────────────────────
+   On load, not on scroll — the hero is above the fold, so a scroll timeline
+   would never run. Delays are per word via an inline custom property. */
+@media (prefers-reduced-motion: no-preference) {
+  .mj-word {
+    display: inline-block;
+    animation: mjRevealUp 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--mj-word-delay, 0ms);
+  }
+}
+
+/* ── Gold sweep across a heading ──────────────────────────────────────────
+   Reuses the brand gold. Opt-in per heading; .section-heading is used in
+   dozens of places and is not touched.
+
+   Three passes, not infinite. `background-clip: text` cannot be promoted to
+   the compositor, so every frame of this repaints the glyphs — cheap for a few
+   seconds on one heading, wasteful forever on a 52px hero line on a phone. It
+   also simply looks better: it draws the eye on arrival and then leaves the
+   headline alone. At rest the gold band sits outside the box and the text
+   renders as plain maroon, so the end state needs no fill mode. */
+@media (prefers-reduced-motion: no-preference) {
+  .mj-shine {
+    background: linear-gradient(
+      100deg,
+      var(--maroon) 0%, var(--maroon) 42%,
+      #d8b45a 50%,
+      var(--maroon) 58%, var(--maroon) 100%
+    );
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: mjShineSweep 7s ease-in-out 1.2s 3;
+  }
+}
+@keyframes mjShineSweep {
+  0%, 70%, 100% { background-position: 120% 0; }
+  85%           { background-position: -20% 0; }
+}
+
+/* The reading-progress bar needs no CSS of its own: components/motion/
+   ReadingProgress writes scaleX directly to the element. It used to have a
+   pure-CSS path here driven by `animation-timeline: scroll(root block)`, which
+   was removed along with the scroll reveals — see the note at the top of the
+   motion section. */

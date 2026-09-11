@@ -171,14 +171,22 @@ export function WhyMithilaJodi() {
     <section id="how" className="relative bg-cream py-9 sm:py-12" aria-label="Why choose Mithila Jodi">
       <div className="wrap">
         {/* Section header */}
-        <div className="text-center mb-7 sm:mb-9">
+        <div data-mj-reveal className="text-center mb-7 sm:mb-9">
           <p className="eyebrow mb-1.5">The Mithila Jodi Difference</p>
           <h2 className="section-heading">Why Mithila Jodi</h2>
           <div className="ornament-line w-16 mx-auto mt-2" />
         </div>
 
-        {/* 3 × 2 card grid */}
-        <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
+        {/* 3 × 2 card grid.
+            Revealed as one block (data-mj-reveal), not per card
+            (data-mj-stagger). The buttons carry `transition-all duration-200`
+            for their own active/hover states, which means they also transition
+            opacity and translate — the two properties the reveal drives — so a
+            per-card reveal put two mechanisms on the same properties and the
+            cards never faded in cleanly. The grid wrapper has no transitions
+            of its own, so revealing that instead leaves the buttons' existing
+            interaction states completely untouched. */}
+        <div data-mj-reveal className="grid grid-cols-3 gap-2.5 sm:gap-4">
           {FEATURES.map(({ id, icon, title }) => {
             const isActive = activeId === id
             return (

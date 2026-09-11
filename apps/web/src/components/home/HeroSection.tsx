@@ -34,7 +34,12 @@ export function HeroSection() {
 
           {/* Headline — "Find Your Life Partner" is the dominant line */}
           <h1 className="font-serif text-maroon">
-            <span className="block text-[26px] sm:text-[38px] md:text-[52px] leading-[1.1]">
+            {/* mj-shine sweeps brand gold through the line a few times on
+                arrival, then stops. The block already slides in via
+                hero-text-enter, so a second entrance animation here (a
+                per-word stagger, say) would fight it; a sweep animates only
+                the background position and layers cleanly on top. */}
+            <span className="mj-shine block text-[26px] sm:text-[38px] md:text-[52px] leading-[1.1]">
               Find Your Life Partner,
             </span>
             <span className="block text-[16px] sm:text-[21px] md:text-[26px] text-terra mt-0.5 leading-snug">

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { PointerGlow } from '@/components/motion/PointerGlow'
 
 /**
  * Closing call to action.
@@ -53,7 +54,8 @@ export function FinalCTA() {
       />
 
       <div className="wrap">
-        <div className="card relative overflow-hidden mx-auto max-w-xl text-center px-5 py-5 sm:px-9 sm:py-6">
+        <div data-mj-reveal="scale" className="card mj-glow-host relative overflow-hidden mx-auto max-w-xl text-center px-5 py-5 sm:px-9 sm:py-6">
+          <PointerGlow />
           <CornerMotif position="tl" />
           <CornerMotif position="br" />
 

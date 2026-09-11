@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
+import { ReadingProgress } from '@/components/motion/ReadingProgress'
 import { createAdminClient } from '@/lib/supabase/server'
 import { SITE_URL, stripBrandSuffix } from '@/lib/constants'
 import { organizationJsonLd, organizationRef } from '@/lib/seo'
@@ -164,6 +165,9 @@ export default async function ArticlePage(
 
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
+      {/* Only on the long-form pages, where there is genuinely something to
+          indicate progress through. */}
+      <ReadingProgress />
       <MithilaHeader />
 
       <script
