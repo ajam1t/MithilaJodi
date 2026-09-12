@@ -98,8 +98,8 @@ export function stripBrandSuffix(title: string): string {
 export const OFFICIAL_AVATAR_SRC = '/favicon-512.png'
 
 export const SUPPORT_EMAIL = 'contact@mithilajodi.com'
-export const SUPPORT_PHONE_DISPLAY = '+91 8898372628'
-export const SUPPORT_PHONE_E164 = '918898372628'
+export const SUPPORT_PHONE_DISPLAY = '+91 9307449339'
+export const SUPPORT_PHONE_E164 = '919307449339'
 export const LEGAL_VERSION = '1.0'
 export const LEGAL_EFFECTIVE_DATE = '5 September 2026'
 

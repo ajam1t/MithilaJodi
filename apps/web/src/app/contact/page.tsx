@@ -3,13 +3,24 @@ import Link from 'next/link'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { ContactForm } from './ContactForm'
-import { SITE_URL } from '@/lib/constants'
+import {
+  SITE_URL,
+  SUPPORT_EMAIL,
+  SUPPORT_PHONE_DISPLAY,
+  SUPPORT_PHONE_E164,
+} from '@/lib/constants'
 import { organizationJsonLd } from '@/lib/seo'
 
 const SITE = SITE_URL
-const PHONE_RAW   = '918898372628'
-const PHONE_DISPLAY = '+91 8898372628'
-const EMAIL       = 'contact@mithilajodi.com'
+
+/* Read from lib/constants rather than repeated here. This page previously kept
+   its own copies of the support number and address, which meant the published
+   contact details lived in two places and the legal pages, the grievance
+   officer notice and the Organization JSON-LD could silently disagree with the
+   Contact page about how to reach us. */
+const PHONE_RAW = SUPPORT_PHONE_E164
+const PHONE_DISPLAY = SUPPORT_PHONE_DISPLAY
+const EMAIL = SUPPORT_EMAIL
 
 export const metadata: Metadata = {
   title: 'Contact Us & Support',
