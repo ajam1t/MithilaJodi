@@ -469,18 +469,23 @@ footer :focus-visible {
    A `new ViewTimeline({subject})` built from script ticks normally in the same
    page, so the timeline machinery works and only the declarative path is dead.
    An effect that cannot be demonstrated to run anywhere is not worth shipping,
-   however elegant, so this is now an observer.
+   however elegant, so positions are now read directly.
 
    What is kept from that design is the degradation guarantee, which is the part
-   that actually matters. The hidden state is scoped to `html.mj-reveal-ready`,
-   a class only ever added by script, so:
+   that actually matters. The hidden state lives on `data-mj-armed`, set on each
+   individual element the script is tracking, so:
 
    - the server-rendered HTML contains no hidden content: a crawler and a reader
      with broken JavaScript both get the finished page, not blank sections;
-   - reduced-motion readers never get the class at all, so they get the static
-     page rather than a 0.01ms flicker of the global reduced-motion override;
-   - elements already on screen when the observer starts are marked revealed
-     synchronously, before the class is added, so nothing flashes out and back.
+   - reduced-motion readers are never armed, so they get the static page rather
+     than a 0.01ms flicker of the global reduced-motion override;
+   - elements already on screen are marked revealed without ever being armed, so
+     nothing flashes out and back;
+   - nothing can be hidden that the script is not tracking. An earlier version
+     put one class on <html> that enabled the hidden rule document-wide, and it
+     blanked every blog category page: the class outlived a client-side
+     navigation that the script did not re-run for, leaving the new page's cards
+     at opacity 0 with nothing able to reveal them.
 
    Keyframes rather than a transition, for one concrete reason: `transition` is
    a shorthand, and `.mj-lift` further down declares its own. A card that is
@@ -509,7 +514,21 @@ footer :focus-visible {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  /* Hidden only once script is running and has confirmed it can reveal.
+  /* An element is hidden only while it carries data-mj-armed, which
+     RevealOnScroll sets on the individual elements it is actively tracking and
+     removes when it stops.
+
+     This replaced a class on <html> that switched the hidden rule on for the
+     whole document, and the difference is not cosmetic — that version shipped a
+     bug that blanked every blog category page. The class survived a client-side
+     navigation while the script's one-shot effect did not re-run, so the
+     incoming page's cards matched "hidden" with nothing left in the page that
+     knew how to reveal them, and scrolling could not recover it.
+
+     Arming per element makes that failure unreachable. Anything the script has
+     not personally armed is simply visible, so the worst outcome of a missed
+     navigation, a dead effect or a crash is an un-animated section rather than
+     a blank page.
 
      `transition: none` is a guard, not a style. An element with Tailwind's
      `transition-all` transitions opacity and translate too, so hiding it
@@ -519,33 +538,35 @@ footer :focus-visible {
      Suppressing transitions only while the element is hidden means the hook is
      safe to drop on anything; the element's own transitions come back the
      moment .mj-in lands and the rule stops matching. */
-  .mj-reveal-ready [data-mj-reveal]:not(.mj-in),
-  .mj-reveal-ready [data-mj-stagger] > *:not(.mj-in) {
+  [data-mj-armed]:not(.mj-in) {
     opacity: 0;
     translate: 0 18px;
     transition: none;
   }
-  .mj-reveal-ready [data-mj-reveal='scale']:not(.mj-in) {
+  [data-mj-reveal='scale'][data-mj-armed]:not(.mj-in) {
     translate: none;
     scale: 0.96;
   }
 
-  .mj-reveal-ready [data-mj-reveal].mj-in,
-  .mj-reveal-ready [data-mj-stagger] > *.mj-in {
+  /* Animate only what was actually armed. An element revealed without ever
+     being armed — one that was already on screen when the script first looked —
+     matches .mj-in but not this, so it simply stays put instead of playing an
+     entrance it does not need. */
+  [data-mj-armed].mj-in {
     animation: mjRevealUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
-  .mj-reveal-ready [data-mj-reveal='scale'].mj-in {
+  [data-mj-reveal='scale'][data-mj-armed].mj-in {
     animation-name: mjRevealScale;
   }
 
-  /* Row cascade. Each child is observed separately, so on a phone — where the
+  /* Row cascade. Each child is tracked separately, so on a phone — where the
      grids stack — they already arrive one at a time; this is what produces the
      sideways sweep on wider screens, where a whole row crosses the threshold
      in the same frame. */
-  .mj-reveal-ready [data-mj-stagger] > *:nth-child(2).mj-in   { animation-delay: 70ms; }
-  .mj-reveal-ready [data-mj-stagger] > *:nth-child(3).mj-in   { animation-delay: 140ms; }
-  .mj-reveal-ready [data-mj-stagger] > *:nth-child(4).mj-in   { animation-delay: 210ms; }
-  .mj-reveal-ready [data-mj-stagger] > *:nth-child(n+5).mj-in { animation-delay: 260ms; }
+  [data-mj-stagger] > *:nth-child(2)[data-mj-armed].mj-in   { animation-delay: 70ms; }
+  [data-mj-stagger] > *:nth-child(3)[data-mj-armed].mj-in   { animation-delay: 140ms; }
+  [data-mj-stagger] > *:nth-child(4)[data-mj-armed].mj-in   { animation-delay: 210ms; }
+  [data-mj-stagger] > *:nth-child(n+5)[data-mj-armed].mj-in { animation-delay: 260ms; }
 }
 
 /* ── Hover: a slight 3D lift ──────────────────────────────────────────────

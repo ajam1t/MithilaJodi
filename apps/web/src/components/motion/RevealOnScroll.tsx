@@ -1,5 +1,6 @@
 'use client'
 import { useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 
 /**
  * Drives every scroll reveal on the site.
@@ -11,57 +12,46 @@ import { useEffect } from 'react'
  * alternative turns a dozen static sections into client components and ships
  * their markup twice.
  *
- * Why a rect sweep and not IntersectionObserver
- * ---------------------------------------------
- * IntersectionObserver is the textbook answer and was the first two
- * implementations here. It was replaced because its one weakness happens to be
- * this feature's worst failure mode. An observer is only obliged to deliver
- * records "at some point" after an intersection changes, and if that delivery
- * never comes, an element that has been hidden in anticipation of being
- * revealed simply stays invisible. That is not theoretical: in the browser used
- * to verify this work, observer callbacks were not delivered at all, and the
- * entire blog index stayed blank. The same browser also never applied CSS
- * scroll-driven animations (`animation-timeline: view()`) despite reporting
- * support for them, which ruled out the JavaScript-free approach as well.
+ * Two rules here exist because breaking either one blanked real pages.
  *
- * Those are automation artefacts and a normal browser does neither. But a
- * reveal that hides content up front should not depend on a delivery guarantee
- * that does not exist, so this reads the truth for itself:
+ * 1. Nothing is hidden unless this component is actively tracking it.
  *
- *   - `sweep()` reveals everything at or above the trigger line, and drops it
- *     from the pending list, so the work shrinks to nothing as the reader
- *     scrolls;
- *   - scroll and resize schedule a sweep, coalesced to roughly one per frame by
- *     a short timer. Deliberately a timer and not requestAnimationFrame, which
- *     is throttled whenever the page is not being painted — the same class of
- *     dependency this is trying to avoid;
- *   - a slow interval sweeps anyway, which covers the cases scrolling does not:
- *     lazy-loaded cover images on the blog and festival indexes pushing cards
- *     down after first paint, fonts reflowing, a details element opening;
- *   - everything detaches itself the moment the last element is revealed, so a
- *     reader who reaches the bottom of the page leaves no timers running.
+ *    The hidden state lives on `data-mj-armed`, set per element here and
+ *    removed on teardown. The first version instead put one class on <html>
+ *    that turned the hidden rule on document-wide, which meant CSS could hide
+ *    an element the script knew nothing about. On a client-side navigation the
+ *    class survived while the effect did not re-run, so every blog category
+ *    page rendered its cards at opacity 0 with nothing left that could reveal
+ *    them — and scrolling could not recover it. Arming per element makes that
+ *    unreachable: an element this code has not personally armed is visible, so
+ *    the worst case is a section that does not animate.
  *
- * At most ~20 rect reads per frame of active scrolling, falling to zero, with
- * no interleaved writes — reads during scroll happen when layout is already
- * clean, so nothing is forced to re-layout.
+ * 2. It re-runs on navigation, and never trusts a stale list.
  *
- * Degradation
- * -----------
- * The CSS that hides an un-revealed element is scoped to `html.mj-reveal-ready`,
- * a class only ever added by this component. The server-rendered HTML therefore
- * contains no hidden content: a crawler, and a reader whose JavaScript failed,
- * both get the finished page rather than blank sections. Readers who prefer
- * reduced motion never get the class either.
+ *    The effect is keyed to the pathname, and each sweep re-queries the DOM
+ *    rather than walking elements captured at mount. A list captured once is
+ *    wrong the moment the route changes or content streams in late.
  *
- * The first sweep runs before the class is added, so anything already on screen
- * is marked revealed without animating. That ordering is what stops
- * above-the-fold content being hidden for a frame and faded back in — a visible
- * flash on the most important content on the page, and one that would land
- * squarely on Largest Contentful Paint.
+ * A rect sweep rather than IntersectionObserver, and a timer rather than
+ * requestAnimationFrame: an observer is only obliged to deliver records "at
+ * some point", and rAF does not run when the page is not being painted. Both
+ * were tried; in the browser used to verify this, observer callbacks were never
+ * delivered at all and the blog index stayed blank. CSS scroll-driven
+ * animations (`animation-timeline: view()`) were tried first and never applied
+ * despite the browser reporting support. Reading positions directly is the one
+ * approach that cannot be starved.
+ *
+ * The cost is small and self-limiting: at most ~20 rect reads per frame of
+ * active scrolling, shrinking as elements reveal, and every listener and timer
+ * detaches once the last element is done. Reads happen during scroll, when
+ * layout is already clean, with no interleaved writes.
+ *
+ * Readers who prefer reduced motion get no arming at all, so the page is
+ * exactly as rendered.
  */
 
 const SELECTOR = '[data-mj-reveal], [data-mj-stagger] > *'
-const READY_CLASS = 'mj-reveal-ready'
+const ARMED_ATTR = 'data-mj-armed'
 const IN_CLASS = 'mj-in'
 
 /** Reveal once the element's top is this far down the viewport. */
@@ -74,9 +64,9 @@ const COALESCE_MS = 16
 const BACKSTOP_MS = 300
 
 export function RevealOnScroll() {
-  useEffect(() => {
-    const root = document.documentElement
+  const pathname = usePathname()
 
+  useEffect(() => {
     if (
       typeof window.matchMedia === 'function' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -84,27 +74,33 @@ export function RevealOnScroll() {
       return
     }
 
-    let pending = Array.from(document.querySelectorAll<HTMLElement>(SELECTOR))
-    if (pending.length === 0) return
-
     let timer: ReturnType<typeof setTimeout> | null = null
     let backstop: ReturnType<typeof setInterval> | null = null
     let listening = false
 
-    const sweep = () => {
+    /**
+     * Reveal what has reached the trigger line, arm what has not yet.
+     * Returns how many are still waiting.
+     */
+    const sweep = (): number => {
       const line = window.innerHeight * TRIGGER_FRACTION
-      const remaining: HTMLElement[] = []
-      for (const el of pending) {
+      const elements = document.querySelectorAll<HTMLElement>(SELECTOR)
+      let waiting = 0
+
+      for (const el of elements) {
+        if (el.classList.contains(IN_CLASS)) continue
+
         if (el.getBoundingClientRect().top < line) {
-          // Adding the class both drops the hidden state and starts the
-          // keyframes. On the first sweep nothing is hidden yet, so this just
-          // leaves the element exactly as rendered.
+          // Already in view. If it was armed it animates in; if it was never
+          // armed — the common case on the first sweep — it was visible all
+          // along and stays exactly where it is.
           el.classList.add(IN_CLASS)
         } else {
-          remaining.push(el)
+          el.setAttribute(ARMED_ATTR, '')
+          waiting++
         }
       }
-      pending = remaining
+      return waiting
     }
 
     const teardown = () => {
@@ -125,19 +121,14 @@ export function RevealOnScroll() {
 
     const run = () => {
       timer = null
-      sweep()
-      if (pending.length === 0) teardown()
+      if (sweep() === 0) teardown()
     }
 
     function schedule() {
       if (timer === null) timer = setTimeout(run, COALESCE_MS)
     }
 
-    // First sweep, then the class — see the note above on ordering.
-    sweep()
-    root.classList.add(READY_CLASS)
-
-    if (pending.length > 0) {
+    if (sweep() > 0) {
       listening = true
       window.addEventListener('scroll', schedule, { passive: true })
       window.addEventListener('resize', schedule, { passive: true })
@@ -146,12 +137,14 @@ export function RevealOnScroll() {
 
     return () => {
       teardown()
-      // Dropped on unmount so that during a navigation — old template gone,
-      // new one not yet mounted — the incoming page's elements cannot be
-      // caught by the hidden-state rule with nothing running to reveal them.
-      root.classList.remove(READY_CLASS)
+      // Disarm anything still waiting. Without this, an element left armed by a
+      // route change would stay at opacity 0 with no sweep running — exactly
+      // the blank-page failure this component is built to prevent.
+      document.querySelectorAll<HTMLElement>(`[${ARMED_ATTR}]`).forEach((el) => {
+        if (!el.classList.contains(IN_CLASS)) el.removeAttribute(ARMED_ATTR)
+      })
     }
-  }, [])
+  }, [pathname])
 
   return null
 }
