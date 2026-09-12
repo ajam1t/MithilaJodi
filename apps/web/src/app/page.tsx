@@ -12,6 +12,7 @@ import { FinalCTA } from '@/components/home/FinalCTA'
 import { JoinCommunityBand } from '@/components/whatsapp/JoinCommunity'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
+import { InstallBanner } from '@/components/pwa/InstallBanner'
 import { SITE_URL } from '@/lib/constants'
 import { organizationJsonLd } from '@/lib/seo'
 
@@ -154,6 +155,12 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {/* Above the ticker and the sticky header, in normal flow: it is the
+          first thing seen on arrival and then scrolls away, so it costs no
+          standing viewport and cannot overlap the sticky header or the fixed
+          bottom navigation. Renders nothing at all unless the browser has
+          confirmed the site is installable. */}
+      <InstallBanner />
       <AnnouncementTicker />
       <MithilaHeader />
       <FestivalAnnouncementStrip />

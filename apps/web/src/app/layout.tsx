@@ -4,6 +4,7 @@ import { SITE_URL } from '@/lib/constants'
 import { ToastProvider } from '@/components/ui'
 import { MusicPlayerProvider } from '@/components/music/MusicPlayerContext'
 import { PersistentPlayer } from '@/components/music/PersistentPlayer'
+import { ServiceWorkerRegistrar } from '@/components/pwa/ServiceWorkerRegistrar'
 import '@/styles/globals.css'
 
 const marcellus = Marcellus({
@@ -68,6 +69,24 @@ export const metadata: Metadata = {
     'Bihar matrimony',
   ],
   applicationName: 'Mithila Jodi',
+  manifest: '/manifest.webmanifest',
+  // Safari ignores the manifest's display mode. These are what make an iOS
+  // home-screen launch open without browser chrome and carry the right title
+  // under the icon. `statusBarStyle: default` keeps the status bar legible on
+  // the cream background rather than overlaying it.
+  appleWebApp: {
+    capable: true,
+    title: 'Mithila Jodi',
+    statusBarStyle: 'default',
+  },
+  other: {
+    // `appleWebApp.capable` makes Next emit only the standardised
+    // `mobile-web-app-capable`. Older iOS reads Apple's original name and
+    // nothing else, and if it reads neither, a home-screen launch opens in a
+    // browser tab with the address bar — on the one platform where this whole
+    // feature is a set of manual instructions. Both tags is the cheap answer.
+    'apple-mobile-web-app-capable': 'yes',
+  },
   // Sizes are declared explicitly so a client picks the right file instead of
   // downscaling one large image: Google reads the SERP favicon from these and
   // wants a square whose side is a multiple of 48. All of these are the MJ
@@ -136,6 +155,10 @@ export default function RootLayout({
             bypass the header navigation. Targets the #main-content id that
             each page puts on its <main id="main-content">. */}
         <a href="#main-content" className="mj-skip-link">Skip to main content</a>
+        {/* Makes the site installable. Must be site-wide, not only on the page
+            that shows the install banner — Chrome needs the worker registered
+            before it will consider offering an install at all. */}
+        <ServiceWorkerRegistrar />
         <ToastProvider>
           {/* Global music state + the persistent player live above the page
               tree, so playback survives client-side navigation. */}

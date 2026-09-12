@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>You are offline — Mithila Jodi</title>
+<!--
+  Shown only when a navigation fails because the device has no connection.
+  Everything is inline and self-contained: a page served while the network is
+  down cannot fetch a stylesheet or a font, so it must not try. The colours are
+  the site's own paper, maroon and gold.
+-->
+<style>
+  :root { --paper:#FCF5E7; --maroon:#7A1220; --gold:#B98A2E; --ink:#2B211C; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center;
+    padding: 24px; background: var(--paper); color: var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    text-align: center;
+  }
+  .card {
+    max-width: 26rem; background: #FFFAF0; border: 1px solid rgba(185,138,46,.4);
+    border-radius: 14px; padding: 32px 24px; box-shadow: 0 8px 28px -12px rgba(58,20,12,.25);
+  }
+  h1 { font-family: Georgia, "Times New Roman", serif; color: var(--maroon);
+       font-size: 22px; line-height: 1.25; margin: 16px 0 8px; }
+  p { font-size: 15px; line-height: 1.6; color: #5b4a42; margin: 0 0 20px; }
+  .rule { height: 2px; width: 64px; margin: 0 auto;
+          background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+  button {
+    font: inherit; font-weight: 600; font-size: 15px; cursor: pointer;
+    background: var(--maroon); color: #E4C572; border: 0; border-radius: 8px;
+    padding: 12px 26px;
+  }
+  button:active { transform: translateY(1px); }
+</style>
+</head>
+<body>
+  <div class="card">
+    <!-- Precached by the service worker (see OFFLINE_LOGO in sw.js). Any other
+         image here would render as a broken icon, since this page is shown
+         precisely when the network is unavailable. -->
+    <img src="/favicon-96.png" alt="" width="64" height="64" style="border-radius:12px">
+    <h1>You are offline</h1>
+    <div class="rule"></div>
+    <p style="margin-top:14px">
+      Mithila Jodi needs a connection to show profiles. Your saved biodata is safe —
+      reconnect and try again.
+    </p>
+    <button type="button" onclick="location.reload()">Try again</button>
+  </div>
+</body>
+</html>
