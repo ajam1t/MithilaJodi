@@ -88,9 +88,45 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // How often each member's shared links have actually been opened. Batched for
+  // the whole page in one query, like the photos above — a per-profile lookup
+  // here would reintroduce the round trip per row that the photo map exists to
+  // avoid. Summed across a member's links because the question an admin is
+  // asking is "is this profile getting looked at", not "which token".
+  const shareStats = new Map<string, { views: number; links: number; lastViewedAt: string | null }>()
+  if (profileIds.length) {
+    const { data: shareRows, error: shareErr } = await admin
+      .from('profile_shares')
+      .select('profile_id, view_count, last_viewed_at')
+      .in('profile_id', profileIds)
+    if (shareErr) {
+      console.error('[admin/profiles GET] share stats error:', shareErr.message)
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      for (const row of (shareRows ?? []) as any[]) {
+        const cur = shareStats.get(row.profile_id) ?? { views: 0, links: 0, lastViewedAt: null }
+        cur.views += row.view_count ?? 0
+        cur.links += 1
+        if (row.last_viewed_at && (!cur.lastViewedAt || row.last_viewed_at > cur.lastViewedAt)) {
+          cur.lastViewedAt = row.last_viewed_at
+        }
+        shareStats.set(row.profile_id, cur)
+      }
+    }
+  }
+
   return NextResponse.json({
     ok: true,
-    profiles: profileRows.map((profile) => ({ ...profile, primary_photo_url: photoMap.get(profile.id) ?? null })),
+    profiles: profileRows.map((profile) => {
+      const stats = shareStats.get(profile.id)
+      return {
+        ...profile,
+        primary_photo_url: photoMap.get(profile.id) ?? null,
+        share_views: stats?.views ?? 0,
+        share_links: stats?.links ?? 0,
+        share_last_viewed_at: stats?.lastViewedAt ?? null,
+      }
+    }),
   })
 }
 

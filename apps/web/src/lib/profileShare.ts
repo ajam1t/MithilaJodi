@@ -148,7 +148,7 @@ export async function loadSharedProfile(admin: any, token: string): Promise<Shar
 
   const { data: share } = await admin
     .from('profile_shares')
-    .select('id, profile_id, fields, expires_at, revoked_at, view_count')
+    .select('id, profile_id, fields, expires_at, revoked_at')
     .eq('token', token)
     .maybeSingle()
 
@@ -335,10 +335,14 @@ export async function loadSharedProfile(admin: any, token: string): Promise<Shar
 
   // Best-effort view counting. Never blocks the render, and a failure here must
   // not cost the visitor the page.
+  //
+  // Counted by a database function rather than writing back the value read
+  // above. A link sent to a family WhatsApp group gets opened by several people
+  // within the same second, and read-modify-write loses those: each request
+  // writes "what I read, plus one", so simultaneous opens collapse into a
+  // single increment. `view_count + 1` evaluated inside the UPDATE is atomic.
   void admin
-    .from('profile_shares')
-    .update({ view_count: (share.view_count ?? 0) + 1, last_viewed_at: new Date().toISOString() })
-    .eq('id', share.id)
+    .rpc('record_share_view', { p_token: token })
     .then(null, (err: unknown) => console.error('[profileShare] view count:', err))
 
   return { status: 'ok', profile, profileId: p.id as string }

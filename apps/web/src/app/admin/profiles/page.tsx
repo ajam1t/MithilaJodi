@@ -16,6 +16,10 @@ type Profile = {
   accounts: { mobile: string } | null
   discoverable: boolean
   primary_photo_url: string | null
+  /** Opens of this member's shared profile links, summed across their links. */
+  share_views: number
+  share_links: number
+  share_last_viewed_at: string | null
 }
 
 const STATUS_TABS = [
@@ -213,6 +217,24 @@ export default function AdminProfilesPage() {
                     Joined {new Date(p.created_at).toLocaleDateString('en-IN')}
                   </p>
                   <p className="text-xs text-ink-soft">{p.discoverable ? 'Discoverable in Search' : 'Hidden from Search'}</p>
+                  {/* How often this member's shared link has actually been
+                      opened. Zero is worth showing rather than hiding: a
+                      profile whose link nobody opens is exactly the one worth
+                      following up on. */}
+                  <p className="text-xs text-ink-soft">
+                    {p.share_links === 0 ? (
+                      'No share link'
+                    ) : (
+                      <>
+                        <span className={p.share_views > 0 ? 'text-maroon font-medium' : undefined}>
+                          Link opened {p.share_views}&times;
+                        </span>
+                        {p.share_last_viewed_at && (
+                          <> &middot; last {new Date(p.share_last_viewed_at).toLocaleDateString('en-IN')}</>
+                        )}
+                      </>
+                    )}
+                  </p>
                   </div>
                 </div>
 

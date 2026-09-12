@@ -19,6 +19,16 @@ const CreateSchema = z.object({
   fields: z.array(z.string()).optional(),
   /** Days from now. Defaults to a year. */
   expires_in_days: z.number().int().min(1).max(MAX_EXPIRY_DAYS).optional(),
+  /**
+   * "Give this member their first link if they have never had one."
+   *
+   * Sent by the profile page so a link is simply there, rather than something
+   * the member has to know to create. It is a no-op if the profile has ever
+   * had a share row — including revoked and expired ones, which is the point:
+   * a member who deliberately turned their link off must not have a new one
+   * minted behind them on the next page load.
+   */
+  ensure: z.boolean().optional(),
 })
 
 // ── GET: my links ───────────────────────────────────────────────────────────
@@ -70,6 +80,20 @@ export async function POST(request: NextRequest) {
   const myProfileId = await findOwnProfileId(admin, session.id)
   if (!myProfileId) {
     return NextResponse.json({ ok: false, message: 'Create your profile first.' }, { status: 422 })
+  }
+
+  // An "ensure" call only ever creates the very first link. Counting every row
+  // rather than the live ones is deliberate: a revoked or expired link is still
+  // evidence that this member has used the feature and made a decision about
+  // it, and silently replacing a link they turned off would undo that decision.
+  if (parsed.data.ensure) {
+    const { count: everCount } = await admin
+      .from('profile_shares')
+      .select('id', { count: 'exact', head: true })
+      .eq('profile_id', myProfileId)
+    if ((everCount ?? 0) > 0) {
+      return NextResponse.json({ ok: true, share: null, alreadyExists: true })
+    }
   }
 
   // Cap live links. Without this a script could mint tokens indefinitely, and
