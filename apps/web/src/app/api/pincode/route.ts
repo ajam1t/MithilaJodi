@@ -49,12 +49,23 @@ export type PincodeResult = {
 }
 
 /**
- * Match a PIN's district (or one of its places) to an india_locations row.
+ * Resolve a PIN's district to an india_locations row, creating it if we do not
+ * hold it yet, so that every Indian PIN yields a usable location id.
  *
- * Preference order is deliberate: a district row is the right granularity for
- * "where are you from", and only if there is no district row do we accept a
- * city of the same name. Nothing is inserted — inventing a location row with no
- * coordinates would quietly break distance-based matching.
+ * Preference order when a row already exists is deliberate: a district row is
+ * the right granularity for "where you live / are from", and only if there is
+ * no district row do we accept a city of the same name — a seeded city carries
+ * coordinates, so it gives better distance matching than a freshly-created row.
+ *
+ * When nothing matches, a district row is created rather than returning null.
+ * This is the difference between "PIN works everywhere in India" and "PIN works
+ * only where we pre-seeded the district" — districts were seeded for Bihar
+ * alone, so members anywhere else could not set a location by PIN at all. The
+ * created row has no coordinates (India Post does not return them), which means
+ * distance matching for that member falls back to state level; that is a real
+ * downgrade from the ~140 seeded cities that do have coordinates, but strictly
+ * better than the previous outcome of no location. The name and state come from
+ * India Post, never from user free text, so nothing arbitrary is inserted.
  */
 async function resolveLocation(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -82,7 +93,69 @@ async function resolveLocation(
     const row = byState ?? rows[0]
     return { id: row.id as number, name: row.name_en as string, level: row.level as string }
   }
-  return null
+
+  return createDistrict(admin, district, state)
+}
+
+/**
+ * Create a district row for a district India Post knows but we do not.
+ *
+ * Parented to its state (all 36 states/UTs are seeded), carrying the state's
+ * state_code so state-level match fallback still groups people correctly even
+ * without coordinates. If the state name cannot be resolved the row is still
+ * created parentless — a member being able to state their location at all
+ * matters more than the state link, and display and exact-id "same place"
+ * matching work regardless.
+ *
+ * A rare concurrent first-lookup of two different PINs in the same new district
+ * can create two rows for it; that is cosmetically harmless (both carry the same
+ * name and state, and match identically) and avoided in the common case because
+ * the SELECT above finds the row a previous PIN created, and each PIN's result
+ * is cached in pincode_lookups after the first lookup.
+ */
+async function createDistrict(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  admin: any,
+  district: string,
+  state: string | null,
+): Promise<{ id: number; name: string; level: string } | null> {
+  let parentId: number | null = null
+  let stateCode: string | null = null
+
+  if (state) {
+    const { data: stateRows } = await admin
+      .from('india_locations')
+      .select('id, state_code')
+      .eq('level', 'state')
+      .ilike('name_en', state)
+      .limit(1)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stateRow = (stateRows ?? [])[0] as any
+    if (stateRow) {
+      parentId = stateRow.id as number
+      stateCode = (stateRow.state_code as string | null) ?? null
+    }
+  }
+
+  const { data: inserted, error } = await admin
+    .from('india_locations')
+    .insert({
+      level: 'district',
+      name_en: district,
+      parent_id: parentId,
+      state_code: stateCode,
+      is_mithila_region: false,
+    })
+    .select('id, name_en, level')
+    .single()
+
+  if (error || !inserted) {
+    console.error('[pincode] could not create district row for', district, error?.message)
+    return null
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const row = inserted as any
+  return { id: row.id as number, name: row.name_en as string, level: row.level as string }
 }
 
 export async function GET(request: NextRequest) {
@@ -125,6 +198,19 @@ export async function GET(request: NextRequest) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (loc) location = { id: (loc as any).id, name: (loc as any).name_en, level: (loc as any).level }
     }
+
+    // Backfill. Entries cached before this route learned to create districts
+    // hold location_id = null for every district we had not seeded, and the
+    // block above would keep returning null for them forever. Resolve (and
+    // create) it now from the district India Post already gave us, and write it
+    // back so the next lookup is a plain cache hit.
+    if (!location && c.district) {
+      location = await resolveLocation(admin, c.district, c.state ?? null)
+      if (location) {
+        await admin.from('pincode_lookups').update({ location_id: location.id }).eq('pincode', pin)
+      }
+    }
+
     return NextResponse.json({
       ok: true, pincode: pin, state: c.state ?? null, district: c.district ?? null,
       places: (c.places ?? []) as string[], location, cached: true,

@@ -1398,8 +1398,8 @@ export default function ProfileEditPage() {
             onToggle={toggleSection}
           >
             <p className="text-xs text-ink-soft mb-4">
-              India only. Pick a place from the suggestions — matches are made on the place you select,
-              so free text is not stored.
+              India only. Type a city or district, or enter a 6-digit PIN code to fetch it, then pick
+              from the suggestions — matches are made on the place you select.
             </p>
             <div className="space-y-4">
               <LocationPicker
