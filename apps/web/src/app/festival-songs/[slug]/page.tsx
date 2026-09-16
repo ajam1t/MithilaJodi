@@ -163,6 +163,38 @@ export default async function FestivalSongsPage(
           </p>
         </section>
 
+        {/* ── Context: the festival in Mithila ──────────────────────────────
+            Reuses festival.mithilaConnection — prose already written for and
+            shown on /festivals/[slug]. These pages were otherwise a short intro
+            plus a player, which is thin enough to sit in "Discovered – currently
+            not indexed"; this gives each one a few paragraphs of unique,
+            genuinely relevant text (the songs are the oral half of exactly this
+            cultural thread) without inventing anything. */}
+        {festival.mithilaConnection.length > 0 && (
+          <section className="bg-cream border-t border-paper-3 py-8 sm:py-10" aria-label={`${short} in Mithila`}>
+            <div className="wrap max-w-3xl">
+              <h2 className="font-serif text-[20px] sm:text-[24px] text-maroon mb-4">
+                {short} in Mithila
+              </h2>
+              <ul className="space-y-3">
+                {festival.mithilaConnection.map((point, i) => (
+                  <li key={i} className="flex items-start gap-3 text-[14.5px] sm:text-[15px] text-ink leading-relaxed">
+                    <span className="text-marigold text-base leading-none mt-1 flex-shrink-0" aria-hidden="true">◆</span>
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-[13.5px] text-ink-soft mt-5">
+                Read the full story of{' '}
+                <Link href={`/festivals/${festival.slug}`} className="text-maroon font-semibold hover:text-terra transition-colors">
+                  {short} in Mithila
+                </Link>
+                .
+              </p>
+            </div>
+          </section>
+        )}
+
         {/* ── Other festivals ── */}
         {related.length > 0 && (
           <section className="bg-cream border-t border-paper-3 py-9 sm:py-12" aria-label="Songs from other festivals">

@@ -95,12 +95,18 @@ export const metadata: Metadata = {
   // one of those places already prints "Mithila Jodi" beside it as live text.
   icons: {
     icon: [
+      // A real /favicon.ico at the site root, listed first. Google's favicon
+      // crawler fetches /favicon.ico directly, and it was 404ing — the PNGs
+      // below were the only icons, which is a known reason Google is slow to
+      // pick up or refresh the SERP favicon. `sizes: 'any'` marks the .ico as
+      // the multi-resolution default (it embeds 48/96/192).
+      { url: '/favicon.ico', sizes: 'any' },
       { url: '/favicon.png', sizes: '48x48', type: 'image/png' },
       { url: '/favicon-96.png', sizes: '96x96', type: 'image/png' },
       { url: '/favicon-192.png', sizes: '192x192', type: 'image/png' },
       { url: '/favicon-512.png', sizes: '512x512', type: 'image/png' },
     ],
-    shortcut: '/favicon.png',
+    shortcut: '/favicon.ico',
     apple: { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
   },
   openGraph: {
