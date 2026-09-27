@@ -226,7 +226,10 @@ export function organizationJsonLd() {
     disambiguatingDescription:
       'Mithila Jodi is an online matrimonial and matchmaking platform for Maithil families. It is a company and website, not a style of Madhubani painting or a depiction of a divine couple.',
     foundingDate: '2026',
-    founder: { '@type': 'Person', name: 'Sandeep Jha' },
+    // Name only. She is a current MBA student rather than a graduate, so
+    // `alumniOf` would be an inaccurate claim, and the rule for this block is
+    // that nothing is asserted here which is not already published on /about.
+    founder: { '@type': 'Person', name: 'Resham Chaudhary' },
     // Official accounts. sameAs is the strongest on-site signal for tying a name
     // to a specific organisation, and it was missing entirely.
     sameAs: [INSTAGRAM_URL],

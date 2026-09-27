@@ -41,7 +41,7 @@ profile is what lets Google reconcile them into one entity. Do not reword per pl
 | Field | Value |
 |---|---|
 | Founded | 2026 |
-| Founder | Sandeep Jha |
+| Founder | Resham Chaudhary |
 | Website | https://mithilajodi.com |
 | Instagram | https://www.instagram.com/MithilaJodiOfficial/ |
 | Contact | contact@mithilajodi.com |
@@ -103,7 +103,7 @@ specific anchor text, and never send this at scale.
 >
 > Namaste,
 >
-> I am Sandeep Jha. I built Mithila Jodi, a matrimonial platform for the Maithil
+> I am Resham Chaudhary. I built Mithila Jodi, a matrimonial platform for the Maithil
 > community, because the mainstream matrimony sites treat gotra, mool and native gram as
 > afterthoughts — if they record them at all.
 >
@@ -123,7 +123,7 @@ specific anchor text, and never send this at scale.
 > you spot anything inaccurate about how we describe Maithil custom, I would genuinely
 > like to know and will correct it.
 >
-> Sandeep Jha
+> Resham Chaudhary
 > Founder, Mithila Jodi
 > https://mithilajodi.com · contact@mithilajodi.com
 
@@ -182,7 +182,7 @@ nominated for deletion, and a deleted item is worse than no item.
 | instance of (P31) | online dating service (Q1064796) | closest match for matchmaking |
 | country (P17) | India (Q668) | |
 | official website (P856) | https://mithilajodi.com | |
-| founded by (P112) | Sandeep Jha | create as a Person item only if independently notable, otherwise omit |
+| founded by (P112) | Resham Chaudhary | create as a Person item only if independently notable, otherwise omit |
 | inception (P571) | 2026 | |
 | Instagram username (P2003) | MithilaJodiOfficial | |
 | language of work (P407) | Maithili (Q36109), Hindi (Q1568), English (Q1860), Sanskrit (Q11059) | |

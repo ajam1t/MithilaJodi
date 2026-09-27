@@ -10,16 +10,25 @@ export type TeamMemberData = {
   bio: string | null
   responsibilities: string[]
   photo_storage_path: string | null
+  /** Short standing line under the role, e.g. a qualification. Optional. */
+  credential?: string | null
 }
 
 // Mithila Jodi has a single founder. This is defined in code (not database)
 // so the founder shown on the About page is always exactly one person and
 // cannot be contradicted by admin-entered team data.
+//
+// Only what has actually been stated about her is asserted here — her name,
+// her role, and that she is an MBA student at NMIMS. The rest of the copy
+// describes the platform's design intent, not her biography. Home town, prior
+// experience, specialisation and graduation year are deliberately absent
+// rather than guessed; they can be added once known.
 const FOUNDER: TeamMemberData = {
-  id: 'sandeep-jha',
-  display_name: 'Sandeep Jha',
+  id: 'resham-chaudhary',
+  display_name: 'Resham Chaudhary',
   role: 'Founder',
-  bio: 'Sandeep Jha founded Mithila Jodi to give the Mithila and Maithili community a matrimony platform built around how these families actually arrange marriage — with gotra, mool and native place treated as first-class details, biodata in the family’s own language, and elders involved from the start rather than as an afterthought.',
+  credential: 'MBA student · NMIMS',
+  bio: 'Resham Chaudhary is the founder of Mithila Jodi and an MBA student at NMIMS. She built the platform so that Mithila and Maithili families would have a matrimony service shaped around the way they actually arrange a marriage — with gotra, mool and native place treated as first-class details, biodata in the family’s own language, and elders involved from the start rather than as an afterthought.',
   responsibilities: [
     'Overall vision and direction of the platform',
     'Mithila and Maithili community relationships',
@@ -207,6 +216,11 @@ export function TeamSection({ dbMembers }: { dbMembers: TeamMemberData[] }) {
                   <p className="text-[10px] sm:text-[11px] text-gold uppercase tracking-[0.18em] font-medium mt-1">
                     {active.role}
                   </p>
+                  {active.credential && (
+                    <p className="text-[12px] sm:text-[13px] text-ink-soft mt-1.5">
+                      {active.credential}
+                    </p>
+                  )}
 
                   {active.bio && (
                     <p className="font-serif italic text-ink-soft text-[13px] sm:text-[14px] leading-relaxed mt-3">
