@@ -16,9 +16,9 @@ const config: Config = {
   ],
   // Safelist: guarantee custom classes always generated (for @apply in globals.css)
   safelist: [
-    { pattern: /^bg-(paper|cream|maroon|terra|marigold|turmeric|gold|green|indigo|ink|success|warning|error|info)/ },
-    { pattern: /^text-(paper|cream|maroon|terra|marigold|turmeric|gold|green|indigo|ink|success|warning|error|info)/ },
-    { pattern: /^border-(paper|cream|maroon|terra|gold|ink|success|warning|error|info)/ },
+    { pattern: /^bg-(paper|cream|maroon|terra|marigold|turmeric|gold|green|indigo|ink|cosmic|success|warning|error|info)/ },
+    { pattern: /^text-(paper|cream|maroon|terra|marigold|turmeric|gold|green|indigo|ink|cosmic|success|warning|error|info)/ },
+    { pattern: /^border-(paper|cream|maroon|terra|gold|ink|cosmic|success|warning|error|info)/ },
     { pattern: /^from-(maroon|gold|terra|green)/ },
     { pattern: /^via-(maroon|gold|terra|green)/ },
     { pattern: /^to-(maroon|gold|terra|green)/ },
@@ -57,6 +57,14 @@ const config: Config = {
         },
         indigo: {
           DEFAULT: '#2E3A6E',
+        },
+        // ── Cosmic dark-ground tokens (astrology tools) ────────────────
+        // These are separate from indigo (used for info semantic) — these
+        // are layout-ground colours for dark cosmic sections.
+        cosmic: {
+          DEFAULT: '#0D1228',  // main cosmic section background
+          deep: '#080B1A',     // darkest ground, starfield backdrop
+          mid: '#14193A',      // panel / card ground within cosmic sections
         },
         ink: {
           DEFAULT: '#2B211C',

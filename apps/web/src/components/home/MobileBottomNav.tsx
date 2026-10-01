@@ -157,15 +157,19 @@ export function MobileBottomNav() {
             <span className={`text-[10px] font-medium tracking-wide leading-tight text-center ${isActive('/explore') ? 'font-semibold' : ''}`}>Search Profiles</span>
           </Link>
 
-          {/* Blog */}
-          <Link href="/blogs" className={navCls('/blogs')}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M5 4h9a2 2 0 0 1 2 2v13H7a2 2 0 0 1-2-2z" />
-              <path d="M16 8h2a1 1 0 0 1 1 1v8a2 2 0 0 1-2 2" />
-              <line x1="8" y1="8" x2="12" y2="8" />
-              <line x1="8" y1="12" x2="12" y2="12" />
-            </svg>
-            <span className={`text-[10px] font-medium tracking-wide leading-tight text-center ${isActive('/blogs') ? 'font-semibold' : ''}`}>Blog</span>
+          {/* Astrology — replaces Blog in the public bottom nav.
+              Blog remains in the hamburger via NAV_LINKS, so it is not lost. */}
+          <Link href="/astrology" className={navCls('/astrology')}>
+            {isActive('/astrology') ? (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+            )}
+            <span className={`text-[10px] font-medium tracking-wide leading-tight text-center ${isActive('/astrology') ? 'font-semibold' : ''}`}>Astrology</span>
           </Link>
         </div>
       )}

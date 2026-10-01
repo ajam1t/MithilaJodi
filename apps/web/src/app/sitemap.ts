@@ -33,6 +33,16 @@ const CONTENT_UPDATED = {
   // Legal documents gained the published Grievance Officer section.
   '/legal/terms': '2026-09-07',
   '/legal/privacy': '2026-09-07',
+  // Astrology tools — Phase 1 launch date.
+  '/astrology': '2026-10-02',
+  '/astrology/kundli-match': '2026-10-02',
+  '/astrology/nakshatra': '2026-10-02',
+  '/astrology/manglik': '2026-10-02',
+  '/astrology/janam-kundli': '2026-10-02',
+  '/astrology/rashi': '2026-10-02',
+  '/astrology/vivah-muhurat': '2026-10-02',
+  '/astrology/baby-names': '2026-10-02',
+  '/astrology/compatibility': '2026-10-02',
   // Everything else last had a substantive content change with the content
   // build on this date. Bump a path here when you actually edit that page.
   DEFAULT: '2026-08-23',
@@ -70,6 +80,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/pricing', priority: 0.5, changeFrequency: 'monthly' },
     { path: '/legal/terms', priority: 0.3, changeFrequency: 'yearly' },
     { path: '/legal/privacy', priority: 0.3, changeFrequency: 'yearly' },
+    // ── Astrology tools hub + 8 individual tool pages ─────────────────────────
+    // All are public, indexable, content-bearing pages. Individual tools have
+    // substantial explanatory content even while the calculator is coming soon.
+    { path: '/astrology', priority: 0.9, changeFrequency: 'monthly' },
+    { path: '/astrology/kundli-match', priority: 0.9, changeFrequency: 'monthly' },
+    { path: '/astrology/nakshatra', priority: 0.8, changeFrequency: 'monthly' },
+    { path: '/astrology/manglik', priority: 0.8, changeFrequency: 'monthly' },
+    { path: '/astrology/janam-kundli', priority: 0.8, changeFrequency: 'monthly' },
+    { path: '/astrology/rashi', priority: 0.8, changeFrequency: 'monthly' },
+    { path: '/astrology/vivah-muhurat', priority: 0.7, changeFrequency: 'monthly' },
+    { path: '/astrology/baby-names', priority: 0.7, changeFrequency: 'monthly' },
+    { path: '/astrology/compatibility', priority: 0.7, changeFrequency: 'monthly' },
   ]
 
   const staticEntries: MetadataRoute.Sitemap = staticRoutes.map((r) => ({

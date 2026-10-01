@@ -17,6 +17,10 @@ const NAV_LINKS: NavLink[] = [
   { href: '/festivals', label: 'Festivals', mobileLabel: 'Mithila Festivals' },
   { href: '/festival-songs', label: 'Songs', mobileLabel: 'Festival Songs' },
   { href: '/marriage-invitation', label: 'Invitation', mobileLabel: 'Marriage Invitation Card' },
+  { href: '/astrology', label: 'Astrology' },
+  // /blogs is intentionally kept here so it appears in the hamburger menu.
+  // The mobile bottom nav replaces the blog slot with /astrology — blog is
+  // reachable via this hamburger, not a dead link.
   { href: '/blogs', label: 'Blogs' },
   // Safety is deliberately not in the top nav: reporting is available directly
   // on every profile, which is where someone actually needs it. The page is
@@ -34,6 +38,7 @@ const MEMBER_CONTENT_LINKS: NavLink[] = [
   { href: '/festivals', label: 'Festivals', mobileLabel: 'Mithila Festivals' },
   { href: '/festival-songs', label: 'Songs', mobileLabel: 'Festival Songs' },
   { href: '/marriage-invitation', label: 'Invitation', mobileLabel: 'Marriage Invitation Card' },
+  { href: '/astrology', label: 'Astrology' },
   { href: '/blogs', label: 'Blogs' },
   { href: '/help', label: 'Help' },
 ]
