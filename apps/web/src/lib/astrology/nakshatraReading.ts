@@ -5,37 +5,16 @@
  */
 import { METHODOLOGY } from './methodology'
 import { prepareChart, type PreparedChart } from './birthChart'
-import { angularDelta, siderealMoonAt } from './vedic/chart'
+import { moonArcWindow } from './vedic/moonTransit'
 import { navamsaRashiIndex } from './vedic/divisions'
 import { nakshatraBounds, navatara } from './vedic/nakshatraInfo'
 import { NAKSHATRA_SPAN } from './vedic/zodiac'
 import type { NakshatraReading, NakshatraResponse, SinglePersonRequest } from './types'
 
-const DAY = 86_400_000
-
-/**
- * The instant in [from, to] at which the sidereal Moon crosses `boundary`,
- * given that it is before the boundary at `from` and past it at `to`. The Moon
- * never moves backwards, so a plain bisection to one second is exact enough.
- */
-function crossing(boundary: number, from: number, to: number): number {
-  let lo = from
-  let hi = to
-  while (hi - lo > 1000) {
-    const mid = Math.floor((lo + hi) / 2)
-    if (angularDelta(boundary, siderealMoonAt(mid)) < 0) lo = mid
-    else hi = mid
-  }
-  return hi
-}
-
 /** The Moon covers a nakshatra in 21–28 hours, so 1.5 days either side always brackets both ends. */
 export function nakshatraWindow(utcMs: number, nakshatraIndex: number) {
   const { start, end } = nakshatraBounds(nakshatraIndex)
-  return {
-    start: new Date(crossing(start, utcMs - 1.5 * DAY, utcMs)).toISOString(),
-    end: new Date(crossing(end % 360, utcMs, utcMs + 1.5 * DAY)).toISOString(),
-  }
+  return moonArcWindow(utcMs, start, end, 1.5)
 }
 
 function assemble(p: PreparedChart, now: Date): NakshatraReading {

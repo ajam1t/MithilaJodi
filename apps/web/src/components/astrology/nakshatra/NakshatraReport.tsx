@@ -2,13 +2,13 @@
 
 import Link from 'next/link'
 import { METHODOLOGY } from '@/lib/astrology/methodology'
-import type { NakshatraReading, Role } from '@/lib/astrology/types'
+import type { NakshatraReading } from '@/lib/astrology/types'
 import { GANA_LABEL, NADI_LABEL, YONI_LABEL } from '@/lib/astrology/rules/tables'
 import { NAKSHATRA_INFO, nakshatraBounds } from '@/lib/astrology/vedic/nakshatraInfo'
 import { RASHIS, formatDegree, rashiIndexOf } from '@/lib/astrology/vedic/zodiac'
 import { Disclaimer, SectionTitle } from '../kundli/ReportSections'
-import { PREFILL_KEY } from '../kundli/BirthDetailsCard'
-import { SINGLE_PREFILL_KEY, type SingleReportProps } from '../single/SingleChartExperience'
+import type { SingleReportProps } from '../single/SingleChartExperience'
+import { carryTo, type CarryTarget } from '../single/carry'
 import { formatDateLong, formatTime12, grahaShort, nakshatraOf, rashiOf } from '../kundli/format'
 import { NakshatraWheel } from './NakshatraWheel'
 import { ordinal } from '@/lib/astrology/rules/manglik'
@@ -23,15 +23,7 @@ export function NakshatraReport({ result, person, scenarioKey, onEdit, onNew }: 
   const bounds = nakshatraBounds(moon.nakshatraIndex)
   const tz = chart.birth.timezone
   const when = (iso: string) => new Date(iso).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: tz })
-  const draft = { name: person.name, dateOfBirth: person.dateOfBirth, timeOfBirth: person.timeOfBirth ?? '', timeUnknown: person.timeOfBirth == null, place: person.place }
-
-  function carry(to: 'janam' | Role) {
-    try {
-      if (to === 'janam') sessionStorage.setItem(SINGLE_PREFILL_KEY, JSON.stringify(draft))
-      else sessionStorage.setItem(PREFILL_KEY, JSON.stringify({ role: to, draft }))
-    } catch { /* storage unavailable — the next form simply starts empty */ }
-    window.location.assign(to === 'janam' ? '/astrology/janam-kundli#janam-form' : '/astrology/kundli-match#kundli-form')
-  }
+  const carry = (to: CarryTarget) => carryTo(to, person)
 
   const tiles: Array<[string, string]> = [
     ['Nakshatra lord', grahaShort(moon.nakshatraLord)],
@@ -195,6 +187,7 @@ export function NakshatraReport({ result, person, scenarioKey, onEdit, onNew }: 
           <p className="text-[14px] text-ink-soft">These carry the birth details over within this browser tab — nothing is saved on our side.</p>
           <div className="mt-4 flex flex-wrap gap-2">
             <button type="button" className="btn-primary" onClick={() => carry('janam')}>Make the full Janam Kundli</button>
+            <button type="button" className="btn-ghost" onClick={() => carry('rashi')}>See the Rashi reading</button>
             <button type="button" className="btn-ghost" onClick={() => carry('bride')}>Kundli Match as the bride</button>
             <button type="button" className="btn-ghost" onClick={() => carry('groom')}>Kundli Match as the groom</button>
           </div>

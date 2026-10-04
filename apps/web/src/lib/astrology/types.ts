@@ -96,6 +96,8 @@ export type MoonSegmentChoice = {
   rashi: RashiSlug
   nakshatra: NakshatraSlug
   vashya: Vashya
+  /** Set when several parts of the day were merged because only the rashi matters. */
+  nakshatraVaries?: boolean
 }
 
 export type ChartData = {
@@ -267,6 +269,26 @@ export type NakshatraResponse =
   | { kind: 'result'; result: NakshatraReading }
   | { kind: 'needs_moon_choice'; choices: MoonSegmentChoice[] }
   | { kind: 'scenarios'; scenarios: Array<{ segment: number; result: NakshatraReading }> }
+
+// ─── Rashi ───────────────────────────────────────────────────────────────────
+
+export type RashiReading = {
+  methodologyVersion: string
+  computedAt: string
+  chart: ChartData
+  /** When the Moon entered and left this rashi around the birth (ISO UTC). */
+  window: { start: string; end: string }
+  /** false when the birth time is unknown and the Moon changed nakshatra (but not rashi) that day. */
+  nakshatraCertain: boolean
+  sun: { siderealRashiIndex: number; tropicalRashiIndex: number }
+  compatibility: Array<{ rashiIndex: number; slug: RashiSlug; relation: string; bhakootPoints: number; grahaMaitriPoints: number }>
+  warnings: string[]
+}
+
+export type RashiResponse =
+  | { kind: 'result'; result: RashiReading }
+  | { kind: 'needs_moon_choice'; choices: MoonSegmentChoice[] }
+  | { kind: 'scenarios'; scenarios: Array<{ segment: number; result: RashiReading }> }
 
 /** What a share link stores and shows — deliberately no dates, times, places or planet degrees. */
 export type SharedMatchSummary = {

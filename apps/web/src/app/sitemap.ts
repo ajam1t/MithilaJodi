@@ -39,7 +39,7 @@ const CONTENT_UPDATED = {
   '/astrology/nakshatra': '2026-10-05',
   '/astrology/manglik': '2026-10-02',
   '/astrology/janam-kundli': '2026-10-05',
-  '/astrology/rashi': '2026-10-02',
+  '/astrology/rashi': '2026-10-05',
   '/astrology/vivah-muhurat': '2026-10-02',
   '/astrology/baby-names': '2026-10-02',
   '/astrology/compatibility': '2026-10-02',

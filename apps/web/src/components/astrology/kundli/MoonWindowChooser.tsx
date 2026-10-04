@@ -40,15 +40,15 @@ export function MoonWindowChooser({ entries, busy, onSubmit, onBack }: Props) {
             <legend className="font-serif text-[19px] text-maroon mb-1">{name}</legend>
             <p className="text-[13px] text-ink-soft mb-3">Born on {formatDateLong(date)}</p>
             <div className="space-y-2">
-              {list.map(c => (
+              {list.map((c, i) => (
                 <label key={c.index} className={`flex items-start gap-3 rounded-mj-sm border px-3.5 py-3 cursor-pointer transition-colors ${picked[key] === c.index ? 'border-maroon bg-paper-2' : 'border-gold/30 hover:border-gold'}`}>
                   <input type="radio" className="mt-1 accent-maroon h-[18px] w-[18px]" name={`moon-${key}`} checked={picked[key] === c.index} onChange={() => setPicked(p => ({ ...p, [key]: c.index }))} />
                   <span>
                     <span className="block text-[15px] text-ink">
-                      {c.index === 0 ? `Before about ${formatTime12(c.toLocal)}` : c.index === list.length - 1 ? `After about ${formatTime12(c.fromLocal)}` : `Between about ${formatTime12(c.fromLocal)} and ${formatTime12(c.toLocal)}`}
+                      {i === 0 ? `Before about ${formatTime12(c.toLocal)}` : i === list.length - 1 ? `After about ${formatTime12(c.fromLocal)}` : `Between about ${formatTime12(c.fromLocal)} and ${formatTime12(c.toLocal)}`}
                     </span>
                     <span className="block text-[13px] text-ink-soft">
-                      Moon in {rashiOf(c.rashi).name}, {nakshatraOf(c.nakshatra).name} nakshatra
+                      Moon in {rashiOf(c.rashi).name}{c.nakshatraVaries ? '' : `, ${nakshatraOf(c.nakshatra).name} nakshatra`}
                     </span>
                   </span>
                 </label>

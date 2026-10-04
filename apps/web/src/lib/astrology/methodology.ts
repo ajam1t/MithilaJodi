@@ -12,8 +12,9 @@
 
 // 1.1.0 — adds the Janam Kundli rules (navamsa, dignity, dasha, panchang).
 // 1.2.0 — adds the Nakshatra rules (window, syllables, navatara).
-// Neither changes any earlier output.
-export const METHODOLOGY_VERSION = '1.2.0'
+// 1.3.0 — adds the Rashi rules (Western sign comparison, Moon-sign compatibility).
+// None changes any earlier output.
+export const METHODOLOGY_VERSION = '1.3.0'
 
 export const METHODOLOGY = {
   version: METHODOLOGY_VERSION,
@@ -128,6 +129,20 @@ export const METHODOLOGY = {
     navatara:
       'Navatara counts the nakshatras from the Janma nakshatra in nine taras of three: Janma, Sampat, Vipat, Kshema, ' +
       'Pratyari, Sadhaka, Vadha, Mitra, Ati-Mitra. Vipat, Pratyari and Vadha are the unfavourable ones.',
+  },
+
+  rashi: {
+    janma:
+      'The Janma rashi is the sidereal sign (one of twelve 30° signs from 0° Mesha) holding the Moon at birth; its ' +
+      'start and end are the instants the Moon crosses the sign’s edges, found from the ephemeris to the second.',
+    western:
+      'The Western (tropical) Sun sign is the Sun’s sidereal position plus the Lahiri ayanamsha — about 24° today — ' +
+      'which is why it is usually one sign later than the Vedic Sun sign.',
+    compatibility:
+      'The Moon-sign table uses the two kootas that depend only on the Moon signs, Bhakoot (7) and Graha Maitri (5), ' +
+      'with exactly the Kundli Match rules. It is a partial reading: the other six kootas need both nakshatras.',
+    attributes:
+      'Element (Agni, Prithvi, Vayu, Jala) and quality (Chara, Sthira, Dvisvabhava) follow the sign order from Mesha.',
   },
 
   scoreBands: [

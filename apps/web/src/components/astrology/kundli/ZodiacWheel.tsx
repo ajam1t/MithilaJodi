@@ -21,6 +21,8 @@ type Props = {
   theme?: 'dark' | 'light'
   /** Markers appear one after another (CSS only; off under reduced motion). */
   animateMarkers?: boolean
+  /** Shade one rashi (0 = Mesha) in the sign band. */
+  highlightRashi?: number
 }
 
 const TAU = Math.PI * 2
@@ -31,7 +33,7 @@ const TAU = Math.PI * 2
  * its calculated sidereal longitude — the only geometric claim this drawing
  * makes. Marker sizes and ring spacing are schematic.
  */
-export function ZodiacWheel({ size = 320, markers = [], connect = false, className = '', decorative = false, label, theme = 'dark', animateMarkers = false }: Props) {
+export function ZodiacWheel({ size = 320, markers = [], connect = false, className = '', decorative = false, label, theme = 'dark', animateMarkers = false, highlightRashi }: Props) {
   const c = size / 2
   const rOuter = c - 4
   const rSign = c * 0.86
@@ -60,6 +62,13 @@ export function ZodiacWheel({ size = 320, markers = [], connect = false, classNa
       className={className}
       {...(decorative ? { 'aria-hidden': true } : { role: 'img', 'aria-label': label ?? 'Sidereal zodiac wheel' })}
     >
+      {highlightRashi != null && (() => {
+        const r1 = rSign * 0.93
+        const a = at(highlightRashi * 30, rOuter), b = at(highlightRashi * 30 + 30, rOuter)
+        const d = at(highlightRashi * 30 + 30, r1), e = at(highlightRashi * 30, r1)
+        // Counter-clockwise on screen is sweep 0, because screen y points down.
+        return <path d={`M ${a.x} ${a.y} A ${rOuter} ${rOuter} 0 0 0 ${b.x} ${b.y} L ${d.x} ${d.y} A ${r1} ${r1} 0 0 1 ${e.x} ${e.y} Z`} fill="#7A1220" fillOpacity={0.85} stroke={gold} strokeWidth={1.2} />
+      })()}
       <circle cx={c} cy={c} r={rOuter} fill="none" stroke={gold} strokeOpacity={0.55} strokeWidth={1} />
       <circle cx={c} cy={c} r={rSign * 0.93} fill="none" stroke={faint} strokeWidth={1} />
       <circle cx={c} cy={c} r={rNak - c * 0.04} fill="none" stroke={faint} strokeWidth={0.75} />

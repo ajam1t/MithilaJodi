@@ -111,7 +111,7 @@ const TOOLS = [
     description:
       'Determine your Janma Rashi — the Moon\'s sign at the moment of birth — from your date, time, and place of birth.',
     primary: false,
-    status: 'coming-soon' as const,
+    status: 'live' as const,
     relatedPost: { href: '/blogs/horoscope-marriage/what-is-rashi', label: 'What is Rashi?' },
   },
   {

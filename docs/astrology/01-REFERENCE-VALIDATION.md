@@ -79,7 +79,13 @@ the engine gives Punarvasu 18:34 → 20:28 IST; Drik Panchang prints Ardra endin
 20:29 — the same one-minute convention difference as §3. Unit tests check every window boundary lands on
 the nakshatra edge to 0.001°, including the Revati → Ashwini wrap at 360°.
 
-## 6. Not yet done
+## 6. Rashi tool (methodology v1.3.0, 2026-10-05)
+
+The Moon entered Karka at 14:03:34 IST on 12 Mar 1995 by the engine; Drik Panchang prints "Moonsign
+Mithuna upto 02:04 PM". The Moon-sign compatibility table is unit-tested to equal the Kundli Match
+Bhakoot and Graha Maitri scores for all 144 sign pairs.
+
+## 7. Not yet done
 
 - Side-by-side Ashtakoota totals against Drik Panchang / AstroSage for real pairs (their matchers are
   form/JS driven; needs a manual or browser-driven check). Koota tables follow the common North
