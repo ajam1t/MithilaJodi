@@ -1,5 +1,6 @@
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/server'
+import { lookupPincode, type PinLookup } from '@/lib/pincode'
 import type { BirthPlace } from '../types'
 
 /**
@@ -107,19 +108,14 @@ const OSM_KIND: Record<string, string> = {
 
 const USER_AGENT ='MithilaJodi-KundliMatch/1.0 (+https://mithilajodi.com/contact)'
 
-export async function searchOpenStreetMap(q: string): Promise<PlaceSuggestion[]> {
-  const key = q.trim().toLowerCase().replace(/\s+/g, ' ')
-  if (key.length < 2) return []
-  const hit = osmCache.get(key)
-  if (hit && Date.now() - hit.at < OSM_TTL_MS) return hit.results
-
-  // Serialise and space calls at ≥1.1 s, per Nominatim's usage policy.
+/** One Nominatim search, serialised and spaced at ≥1.1 s per its usage policy. */
+async function nominatim(params: Record<string, string>) {
   const run = osmQueue.then(async () => {
     const wait = lastOsmCall + 1100 - Date.now()
     if (wait > 0) await new Promise(r => setTimeout(r, wait))
     lastOsmCall = Date.now()
     const url = new URL('https://nominatim.openstreetmap.org/search')
-    url.searchParams.set('q', key)
+    for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v)
     url.searchParams.set('countrycodes', 'in')
     url.searchParams.set('format', 'jsonv2')
     url.searchParams.set('addressdetails', '1')
@@ -131,7 +127,15 @@ export async function searchOpenStreetMap(q: string): Promise<PlaceSuggestion[]>
     return (await res.json()) as any[]
   })
   osmQueue = run.catch(() => undefined)
-  const raw = await run
+  return run
+}
+
+export async function searchOpenStreetMap(q: string): Promise<PlaceSuggestion[]> {
+  const key = q.trim().toLowerCase().replace(/\s+/g, ' ')
+  if (key.length < 2) return []
+  const hit = osmCache.get(key)
+  if (hit && Date.now() - hit.at < OSM_TTL_MS) return hit.results
+  const raw = await nominatim({ q: key })
 
   const seen = new Set<string>()
   const results: PlaceSuggestion[] = []
@@ -157,4 +161,74 @@ export async function searchOpenStreetMap(q: string): Promise<PlaceSuggestion[]>
   if (osmCache.size > 500) osmCache.delete(osmCache.keys().next().value as string)
   osmCache.set(key, { at: Date.now(), results })
   return results
+}
+
+// ─── PIN codes ───────────────────────────────────────────────────────────────
+
+export type PinSearch = {
+  results: PlaceSuggestion[]
+  /** What India Post says the PIN serves, when it answered. */
+  pin: { district: string | null; state: string | null; postOffices: string[] } | null
+  notFound: boolean
+}
+
+/**
+ * A six-digit Indian PIN code → birthplace. Coordinates come from
+ * OpenStreetMap's centre of the PIN area (typically within a few kilometres of
+ * any address in it — under a minute of Lagna). India Post, through the same
+ * lookup and cache the profile editor uses, adds the district and the post
+ * offices (villages) it serves; if OpenStreetMap has no centre for the PIN,
+ * the district centre from Mithila Jodi's own list is offered instead.
+ */
+export async function searchByPincode(pin: string): Promise<PinSearch> {
+  const cacheKey = `pin:${pin}`
+  const osm = (async (): Promise<PlaceSuggestion[]> => {
+    const hit = osmCache.get(cacheKey)
+    if (hit && Date.now() - hit.at < OSM_TTL_MS) return hit.results
+    const raw = await nominatim({ postalcode: pin })
+    const results: PlaceSuggestion[] = []
+    for (const r of raw) {
+      const lat = Number(r?.lat)
+      const lng = Number(r?.lon)
+      if (r?.address?.country_code !== 'in' || !Number.isFinite(lat) || !Number.isFinite(lng)) continue
+      const area = String(r.display_name ?? '').replace(/,\s*India$/, '').replace(/^\d{6},\s*/, '')
+      results.push({
+        label: `PIN ${pin}${area ? ` — ${area}` : ''}`,
+        detail: 'PIN code area (centre)',
+        latitude: Math.round(lat * 1e5) / 1e5,
+        longitude: Math.round(lng * 1e5) / 1e5,
+        timezone: 'Asia/Kolkata',
+        source: 'openstreetmap',
+      })
+      break
+    }
+    osmCache.set(cacheKey, { at: Date.now(), results })
+    return results
+  })().catch((e): PlaceSuggestion[] => { console.error('[astrology/places] PIN centre failed:', e instanceof Error ? e.message : e); return [] })
+
+  // Public route: an unknown PIN is not written to the shared cache from here.
+  const post = (async () => lookupPincode(await createAdminClient(), pin, { cacheNotFound: false }))()
+    .catch((): PinLookup => ({ status: 'unavailable' }))
+
+  const [results, found] = await Promise.all([osm, post])
+  const pinInfo = found.status === 'ok' ? { district: found.district, state: found.state, postOffices: found.places } : null
+
+  if (results.length === 0 && pinInfo?.district) {
+    const { rows, byId } = await index()
+    const name = pinInfo.district.toLowerCase()
+    const row = rows
+      .filter(r => (r.level === 'district' || r.level === 'city') && r.name.toLowerCase() === name)
+      .sort((a, b) => (a.level === 'district' ? 0 : 1) - (b.level === 'district' ? 0 : 1))[0]
+    if (row) {
+      results.push({
+        label: `PIN ${pin} — ${[row.name, ...ancestry(row, byId)].join(', ')}`,
+        detail: 'District (centre)',
+        latitude: row.lat,
+        longitude: row.lng,
+        timezone: 'Asia/Kolkata',
+        source: 'mithila-jodi',
+      })
+    }
+  }
+  return { results, pin: pinInfo, notFound: results.length === 0 && found.status === 'not_found' }
 }

@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
+import { PIN_RE, lookupPincode } from '@/lib/pincode'
 
 /**
  * Resolve an Indian PIN code to its district, state and the villages / post
@@ -20,19 +21,10 @@ import { getSessionAccount } from '@/lib/auth'
  *    name instead" rather than a hanging input.
  *
  * Signed-in only. This is a convenience inside the profile editor, and leaving
- * it open would make the app a free proxy for the India Post API.
+ * it open would make the app a free proxy for the India Post API. (The public
+ * astrology birthplace field also resolves PINs, through its own rate-limited
+ * route; the lookup and cache are shared in lib/pincode.ts.)
  */
-
-const PIN_RE = /^[1-9][0-9]{5}$/
-const UPSTREAM = 'https://api.postalpincode.in/pincode/'
-const UPSTREAM_TIMEOUT_MS = 4000
-
-type PostOffice = {
-  Name?: string
-  District?: string
-  State?: string
-  Block?: string
-}
 
 export type PincodeResult = {
   ok: boolean
@@ -172,106 +164,39 @@ export async function GET(request: NextRequest) {
   }
 
   const admin = await createAdminClient()
+  const found = await lookupPincode(admin, pin)
 
-  // ── Cache first. A PIN code's district does not change, and a previously
-  //    failed lookup is cached too so a mistyped PIN is not retried upstream on
-  //    every keystroke.
-  const { data: cached } = await admin
-    .from('pincode_lookups')
-    .select('pincode, state, district, places, location_id, status')
-    .eq('pincode', pin)
-    .maybeSingle()
-
-  if (cached) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const c = cached as any
-    if (c.status === 'not_found') {
-      return NextResponse.json({
-        ok: false, pincode: pin, state: null, district: null, places: [], location: null,
-        cached: true, message: 'No such PIN code.',
-      } satisfies PincodeResult)
-    }
-    let location: PincodeResult['location'] = null
-    if (c.location_id) {
-      const { data: loc } = await admin
-        .from('india_locations').select('id, name_en, level').eq('id', c.location_id).maybeSingle()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (loc) location = { id: (loc as any).id, name: (loc as any).name_en, level: (loc as any).level }
-    }
-
-    // Backfill. Entries cached before this route learned to create districts
-    // hold location_id = null for every district we had not seeded, and the
-    // block above would keep returning null for them forever. Resolve (and
-    // create) it now from the district India Post already gave us, and write it
-    // back so the next lookup is a plain cache hit.
-    if (!location && c.district) {
-      location = await resolveLocation(admin, c.district, c.state ?? null)
-      if (location) {
-        await admin.from('pincode_lookups').update({ location_id: location.id }).eq('pincode', pin)
-      }
-    }
-
-    return NextResponse.json({
-      ok: true, pincode: pin, state: c.state ?? null, district: c.district ?? null,
-      places: (c.places ?? []) as string[], location, cached: true,
-    } satisfies PincodeResult)
-  }
-
-  // ── Miss: ask India Post, with a timeout so a slow upstream cannot hold the
-  //    member's input hostage.
-  let offices: PostOffice[] = []
-  try {
-    const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS)
-    const res = await fetch(`${UPSTREAM}${pin}`, {
-      signal: controller.signal,
-      headers: { Accept: 'application/json' },
-      cache: 'no-store',
-    })
-    clearTimeout(timer)
-
-    if (!res.ok) throw new Error(`upstream ${res.status}`)
-    const body = await res.json()
-    const first = Array.isArray(body) ? body[0] : null
-    if (first?.Status === 'Success' && Array.isArray(first.PostOffice)) {
-      offices = first.PostOffice as PostOffice[]
-    }
-  } catch (err) {
-    console.error('[pincode] upstream lookup failed for', pin, err)
-    // Not cached: this is our failure, not a statement about the PIN.
+  if (found.status === 'unavailable') {
     return NextResponse.json({
       ok: false, pincode: pin, state: null, district: null, places: [], location: null,
       message: 'Could not look up that PIN code just now — please type the name instead.',
     } satisfies PincodeResult, { status: 503 })
   }
-
-  if (offices.length === 0) {
-    await admin.from('pincode_lookups').upsert({ pincode: pin, status: 'not_found', places: [] })
+  if (found.status === 'not_found') {
     return NextResponse.json({
       ok: false, pincode: pin, state: null, district: null, places: [], location: null,
-      message: 'No such PIN code.',
+      cached: found.cached, message: 'No such PIN code.',
     } satisfies PincodeResult)
   }
 
-  const district = offices[0].District?.trim() || null
-  const state = offices[0].State?.trim() || null
-  const places = [...new Set(
-    offices.map(o => o.Name?.trim()).filter((n): n is string => !!n),
-  )].sort()
+  let location: PincodeResult['location'] = null
+  if (found.locationId) {
+    const { data: loc } = await admin
+      .from('india_locations').select('id, name_en, level').eq('id', found.locationId).maybeSingle()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (loc) location = { id: (loc as any).id, name: (loc as any).name_en, level: (loc as any).level }
+  }
 
-  const location = await resolveLocation(admin, district, state)
-
-  await admin.from('pincode_lookups').upsert({
-    pincode: pin,
-    state,
-    district,
-    places,
-    location_id: location?.id ?? null,
-    status: 'ok',
-    fetched_at: new Date().toISOString(),
-  })
+  // A fresh lookup, or an entry cached before this route learned to create
+  // districts, has no location yet: resolve (and create) it from the district
+  // India Post gave us, and write it back so the next lookup is a plain hit.
+  if (!location && found.district) {
+    location = await resolveLocation(admin, found.district, found.state)
+    if (location) await admin.from('pincode_lookups').update({ location_id: location.id }).eq('pincode', pin)
+  }
 
   return NextResponse.json({
-    ok: true, pincode: pin, state, district, places, location, cached: false,
+    ok: true, pincode: pin, state: found.state, district: found.district,
+    places: found.places, location, cached: found.cached,
   } satisfies PincodeResult)
 }

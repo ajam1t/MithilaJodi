@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { rateLimit } from '@/lib/astrology/server/rateLimit'
-import { searchKnownPlaces, searchOpenStreetMap } from '@/lib/astrology/server/places'
+import { searchByPincode, searchKnownPlaces, searchOpenStreetMap } from '@/lib/astrology/server/places'
+import { PIN_RE } from '@/lib/pincode'
 
 /**
  * Public, read-only birthplace lookup for the astrology tools.
@@ -12,6 +13,30 @@ import { searchKnownPlaces, searchOpenStreetMap } from '@/lib/astrology/server/p
 export async function GET(request: NextRequest) {
   const q = (request.nextUrl.searchParams.get('q') ?? '').trim().slice(0, 80)
   const provider = request.nextUrl.searchParams.get('provider') === 'osm' ? 'osm' : 'known'
+
+  // A six-digit entry is an Indian PIN code, not a place name.
+  if (PIN_RE.test(q)) {
+    const pinLimited = rateLimit(request, 'places-pin', { limit: 20, windowMs: 5 * 60_000 })
+    if (!pinLimited.ok) {
+      return NextResponse.json(
+        { ok: false, message: 'Too many PIN lookups — please wait a moment and try again.' },
+        { status: 429, headers: { 'Retry-After': String(pinLimited.retryAfterSeconds) } },
+      )
+    }
+    try {
+      const found = await searchByPincode(q)
+      return NextResponse.json(
+        { ok: true, ...found, attribution: '© OpenStreetMap contributors; India Post' },
+        { headers: { 'Cache-Control': 'public, max-age=3600' } },
+      )
+    } catch (e) {
+      console.error('[astrology/places] PIN lookup failed:', e instanceof Error ? e.message : 'unknown')
+      return NextResponse.json(
+        { ok: false, message: 'Could not look up that PIN code right now. Type the town or district name instead.' },
+        { status: 502 },
+      )
+    }
+  }
 
   const limited = provider === 'osm'
     ? rateLimit(request, 'places-osm', { limit: 15, windowMs: 5 * 60_000 })
