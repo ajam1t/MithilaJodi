@@ -5,6 +5,7 @@ import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { MithilaBorder } from '@/components/home/MithilaBorder'
 import { InvitationMaker } from './InvitationMaker'
+import { PremiumShowcase } from '@/components/wedding/PremiumShowcase'
 import { TEMPLATES } from '@/lib/invitation'
 import { SITE_URL } from '@/lib/constants'
 import { organizationJsonLd, organizationRef } from '@/lib/seo'
@@ -172,6 +173,9 @@ export default function MarriageInvitationPage() {
 
         {/* ── The maker (client) ── */}
         <InvitationMaker />
+
+        {/* ── Premium wedding website (free, link-based) ── */}
+        <PremiumShowcase compact />
 
         {/* ── How it works (server-rendered) ── */}
         <section className="bg-cream border-y border-paper-3 py-11 sm:py-14" aria-labelledby="how-heading">
