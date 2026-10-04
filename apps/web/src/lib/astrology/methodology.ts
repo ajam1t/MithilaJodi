@@ -15,8 +15,9 @@
 // 1.3.0 — adds the Rashi rules (Western sign comparison, Moon-sign compatibility).
 // 1.4.0 — Manglik tool: Venus-based count and Mars dignity shown as context only.
 // 1.5.0 — Baby Names: rashi letters and the name first-sound check.
+// 1.6.0 — Compatibility: Lagna, 7th lord, Navamsa, cross-chart placements and aspects.
 // None changes any earlier output.
-export const METHODOLOGY_VERSION = '1.5.0'
+export const METHODOLOGY_VERSION = '1.6.0'
 
 export const METHODOLOGY = {
   version: METHODOLOGY_VERSION,
@@ -161,6 +162,28 @@ export const METHODOLOGY = {
       'with exactly the Kundli Match rules. It is a partial reading: the other six kootas need both nakshatras.',
     attributes:
       'Element (Agni, Prithvi, Vayu, Jala) and quality (Chara, Sthira, Dvisvabhava) follow the sign order from Mesha.',
+  },
+
+  compatibility: {
+    basis:
+      'The Ashtakoota and Manglik results are exactly those of Kundli Match. The factors below are shown beside them ' +
+      'and are never combined into a score.',
+    signRelation:
+      'Two signs are described by how far each is from the other, counted inclusively (same, 2/12, 3/11, 4/10, 5/9, ' +
+      '6/8, 7/7) — the same counting as Bhakoot — together with the natural friendship of their lords.',
+    seventhLord:
+      'The 7th house (whole-sign) is the house of marriage; its lord is the lord of the 7th sign from the Lagna. Its ' +
+      'house is grouped as kendra (1, 4, 7, 10), trikona (1, 5, 9), dusthana (6, 8, 12) or upachaya (3, 6, 10, 11). ' +
+      'Needs the birth time.',
+    navamsa:
+      'Navamsa (D9) Lagna, Moon and Venus of each person, by the Janam Kundli rule. The D9 Moon is shown only when the ' +
+      'Moon’s pada is certain.',
+    cross:
+      'Where each person’s Moon, Venus and Jupiter fall in the other’s chart, counted from the other’s Lagna (whole-sign).',
+    aspects:
+      'Whole-sign graha drishti of each person’s Jupiter and Venus (benefic) and Saturn and Mars (malefic) onto the ' +
+      'other’s Moon, Lagna and 7th house. All aspect the 7th sign; Mars also the 4th and 8th, Jupiter the 5th and 9th, ' +
+      'Saturn the 3rd and 10th. The same sign is a conjunction. Rahu and Ketu aspects are disputed and not used.',
   },
 
   scoreBands: [

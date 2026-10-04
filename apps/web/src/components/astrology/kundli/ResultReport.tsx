@@ -10,6 +10,7 @@ import { MatchReveal } from './MatchReveal'
 import { PrintReport } from './PrintReport'
 import { Disclaimer, KootaBreakdown, ManglikCards, MoonProfiles, PlanetTable, RelationshipMap, SectionTitle } from './ReportSections'
 import { ResultActions } from './ResultActions'
+import { carryPair } from '../single/carry'
 import { ZodiacWheel } from './ZodiacWheel'
 import { formatAyanamsha, formatCoords, formatDateLong, formatTime12, grahaOf, grahaShort, nakshatraOf, points, rashiOf } from './format'
 
@@ -177,6 +178,11 @@ export function ResultReport({ result, request, scenario, onEdit, onNew }: Props
           In Mithila practice the Guna total is a starting point, not a verdict. A family pandit will usually weigh
           the doshas and their cancellations, the strength of Mars and the Moon, the Lagna of each chart and the
           families’ own judgement before giving advice.
+        </p>
+        <p className="mt-3 max-w-3xl text-[15px]">
+          <button type="button" className="text-maroon underline underline-offset-2" onClick={() => carryPair('compatibility', { bride: request.bride, groom: request.groom })}>
+            See the Lagna, 7th house, Navamsa and cross-chart factors in Compatibility
+          </button>
         </p>
       </section>
 

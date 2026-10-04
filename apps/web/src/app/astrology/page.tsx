@@ -137,11 +137,11 @@ const TOOLS = [
   {
     href: '/astrology/compatibility',
     label: 'Compatibility',
-    tagline: 'Broader Vedic compatibility analysis',
+    tagline: 'Beyond the 36 Guna',
     description:
-      'A wider compatibility reading — Rashi compatibility, Guna Milan principles, and other Vedic factors considered alongside Ashtakoota matching.',
+      'The Ashtakoota and Manglik result, plus the Lagna and 7th house, the Navamsa, each partner’s planets in the other’s chart and the aspects between them — no made-up percentage.',
     primary: false,
-    status: 'coming-soon' as const,
+    status: 'live' as const,
     relatedPost: null,
   },
 ]

@@ -331,6 +331,21 @@ export type BabyNamesResponse =
   | { kind: 'needs_moon_choice'; choices: MoonSegmentChoice[] }
   | { kind: 'scenarios'; scenarios: Array<{ segment: number; result: BabyNamesReading }> }
 
+// ─── Compatibility ───────────────────────────────────────────────────────────
+
+export type CompatibilityResult = {
+  methodologyVersion: string
+  computedAt: string
+  /** The Kundli Match result, exactly as that tool computes it. */
+  match: MatchResult
+  comparison: import('./rules/compatibility').ChartComparison
+}
+
+export type CompatibilityResponse =
+  | { kind: 'result'; result: CompatibilityResult }
+  | { kind: 'needs_moon_choice'; choices: Partial<Record<Role, MoonSegmentChoice[]>> }
+  | { kind: 'scenarios'; scenarios: Array<{ brideSegment: number | null; groomSegment: number | null; result: CompatibilityResult }> }
+
 /** What a share link stores and shows — deliberately no dates, times, places or planet degrees. */
 export type SharedMatchSummary = {
   methodologyVersion: string
