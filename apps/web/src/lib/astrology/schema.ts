@@ -47,6 +47,8 @@ export const personSchema = z.object({
 
 export const kundliMatchRequestSchema = z.object({ bride: personSchema, groom: personSchema })
 
+export const janamKundliRequestSchema = z.object({ person: personSchema })
+
 export const shareRequestSchema = z.object({
   request: kundliMatchRequestSchema,
   includeNames: z.boolean(),

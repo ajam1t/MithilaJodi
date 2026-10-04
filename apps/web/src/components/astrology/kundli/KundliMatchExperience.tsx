@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 import '@/styles/kundli.css'
 import { fieldErrors, kundliMatchRequestSchema, type FieldErrors } from '@/lib/astrology/schema'
 import type { KundliMatchRequest, KundliMatchResponse, MoonSegmentChoice, PersonInput, Role } from '@/lib/astrology/types'
-import { BirthDetailsCard, EMPTY_DRAFT, type PersonDraft } from './BirthDetailsCard'
+import { BirthDetailsCard, EMPTY_DRAFT, PREFILL_KEY, type PersonDraft } from './BirthDetailsCard'
 import { MoonWindowChooser } from './MoonWindowChooser'
 import { points } from './format'
 
@@ -49,6 +49,20 @@ export function KundliMatchExperience() {
   const topRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => setMaxDate(todayIso()), [])
+
+  // Details carried over from Janam Kundli ("Use for Kundli Match"). Kept in
+  // sessionStorage only — never sent anywhere until the user calculates.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(PREFILL_KEY)
+      if (!raw) return
+      sessionStorage.removeItem(PREFILL_KEY)
+      const { role, draft } = JSON.parse(raw) as { role: Role; draft: PersonDraft }
+      if ((role === 'bride' || role === 'groom') && draft && typeof draft.name === 'string') {
+        setDrafts(d => ({ ...d, [role]: { ...EMPTY_DRAFT, ...draft } }))
+      }
+    } catch { /* storage unavailable or malformed — start with an empty form */ }
+  }, [])
 
   // Move focus to the new content once React has rendered it. The report is
   // code-split, so its heading can arrive a moment after the phase changes.
@@ -158,8 +172,8 @@ export function KundliMatchExperience() {
     void run(segments)
   }
 
-  const onChoose = (picked: Partial<Record<Role, number | 'all'>>) => {
-    const next = { ...segments, ...picked }
+  const onChoose = (picked: Record<string, number | 'all'>) => {
+    const next: Segments = { ...segments, ...picked }
     setSegments(next)
     void run(next)
   }
@@ -228,9 +242,7 @@ export function KundliMatchExperience() {
 
       {phase === 'choose' && (
         <MoonWindowChooser
-          choices={choices}
-          names={names}
-          dates={{ bride: drafts.bride.dateOfBirth, groom: drafts.groom.dateOfBirth }}
+          entries={(['bride', 'groom'] as const).filter(r => choices[r]).map(r => ({ key: r, name: names[r], date: drafts[r].dateOfBirth, choices: choices[r]! }))}
           busy={false}
           onSubmit={onChoose}
           onBack={backToForm}
@@ -238,7 +250,7 @@ export function KundliMatchExperience() {
       )}
 
       {phase === 'done' && active && lastRequest && (
-        <div className="rounded-mj-lg bg-paper p-3 sm:p-6 lg:p-8">
+        <div className="rounded-mj-lg bg-paper text-ink p-3 sm:p-6 lg:p-8">
           {scenarios && (
             <div className="mb-6 rounded-mj border border-gold/40 bg-cream p-4 sm:p-5">
               <p className="text-[12px] uppercase tracking-[0.16em] text-terra font-semibold">This result depends on the birth time</p>

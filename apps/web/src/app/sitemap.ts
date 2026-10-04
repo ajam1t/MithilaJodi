@@ -34,11 +34,11 @@ const CONTENT_UPDATED = {
   '/legal/terms': '2026-09-07',
   '/legal/privacy': '2026-09-07',
   // Astrology tools — Phase 1 launch date; Kundli Match went live 2026-10-04.
-  '/astrology': '2026-10-04',
+  '/astrology': '2026-10-05',
   '/astrology/kundli-match': '2026-10-04',
   '/astrology/nakshatra': '2026-10-02',
   '/astrology/manglik': '2026-10-02',
-  '/astrology/janam-kundli': '2026-10-02',
+  '/astrology/janam-kundli': '2026-10-05',
   '/astrology/rashi': '2026-10-02',
   '/astrology/vivah-muhurat': '2026-10-02',
   '/astrology/baby-names': '2026-10-02',

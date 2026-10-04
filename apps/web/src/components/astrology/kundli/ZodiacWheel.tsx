@@ -19,6 +19,8 @@ type Props = {
   decorative?: boolean
   label?: string
   theme?: 'dark' | 'light'
+  /** Markers appear one after another (CSS only; off under reduced motion). */
+  animateMarkers?: boolean
 }
 
 const TAU = Math.PI * 2
@@ -29,7 +31,7 @@ const TAU = Math.PI * 2
  * its calculated sidereal longitude — the only geometric claim this drawing
  * makes. Marker sizes and ring spacing are schematic.
  */
-export function ZodiacWheel({ size = 320, markers = [], connect = false, className = '', decorative = false, label, theme = 'dark' }: Props) {
+export function ZodiacWheel({ size = 320, markers = [], connect = false, className = '', decorative = false, label, theme = 'dark', animateMarkers = false }: Props) {
   const c = size / 2
   const rOuter = c - 4
   const rSign = c * 0.86
@@ -98,7 +100,7 @@ export function ZodiacWheel({ size = 320, markers = [], connect = false, classNa
         const rad = m.emphasis ? size * 0.042 : size * 0.032
         const fill = m.ring === 'inner' ? '#7A1220' : '#B98A2E'
         return (
-          <g key={`${m.label}-${m.ring}-${i}`}>
+          <g key={`${m.label}-${m.ring}-${i}`} className={animateMarkers ? 'kd-marker-in' : undefined} style={animateMarkers ? { animationDelay: `${200 + i * 140}ms` } : undefined}>
             <title>{m.title}</title>
             <circle cx={p.x} cy={p.y} r={rad} fill={fill} stroke={m.emphasis ? '#FFFAF0' : gold} strokeWidth={m.emphasis ? 1.6 : 0.8} />
             <text x={p.x} y={p.y} fill="#FFFAF0" fontSize={size * 0.03} fontWeight={600} textAnchor="middle" dominantBaseline="central">

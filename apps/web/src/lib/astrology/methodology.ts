@@ -10,7 +10,9 @@
  * Client-safe: no astronomy imports.
  */
 
-export const METHODOLOGY_VERSION = '1.0.0'
+// 1.1.0 — adds the Janam Kundli rules (navamsa, dignity, dasha, panchang).
+// No change to any Kundli Match output.
+export const METHODOLOGY_VERSION = '1.1.0'
 
 export const METHODOLOGY = {
   version: METHODOLOGY_VERSION,
@@ -86,6 +88,30 @@ export const METHODOLOGY = {
       'Reported, never applied automatically: Mars in its own sign (Mesh, Vrishchik), Mars exalted (Makar), ' +
       'and both partners being Manglik (mutual balance).',
     houseVariantNote: 'Some North Indian authorities omit the 2nd house; Mithila Jodi includes it, as most published calculators do.',
+  },
+
+  janamKundli: {
+    navamsa:
+      'Navamsa (D9): each rashi is divided into nine parts of 3°20′, and the 108 parts run through the twelve signs ' +
+      'in order from Mesha — the classical rule (movable signs start from themselves, fixed from the 9th, dual from ' +
+      'the 5th) written as one formula. A planet in the same sign in the Rashi and Navamsa charts is Vargottama.',
+    dignity:
+      'Exaltation: Sun in Mesha, Moon in Vrishabha, Mars in Makara, Mercury in Kanya, Jupiter in Karka, Venus in ' +
+      'Meena, Saturn in Tula; debilitation in the opposite sign. Otherwise own sign, then the natural (Parashari) ' +
+      'friendship of the planet with the sign’s lord. Rahu and Ketu are not given a dignity, as traditions disagree.',
+    dasha:
+      'Vimshottari: the Mahadasha at birth is ruled by the lord of the Moon’s nakshatra, and its unexpired balance is ' +
+      'proportional to the part of the nakshatra the Moon has still to cross. Periods: Ketu 7, Venus 20, Sun 6, Moon ' +
+      '10, Mars 7, Rahu 18, Jupiter 16, Saturn 19, Mercury 17 years (120 in all); Antardashas are proportional. ' +
+      'Years are 365.25 days. Not calculated when the birth time is unknown.',
+    panchang:
+      'Tithi from the Moon’s elongation from the Sun (12° each), yoga from the sum of the sidereal Sun and Moon ' +
+      '(13°20′ each), karana from half-tithis. The vara runs sunrise to sunrise: a birth before local sunrise belongs ' +
+      'to the previous weekday. Sunrise is when the Sun’s upper limb clears the horizon, with standard refraction.',
+    disclaimer:
+      'A Janam Kundli is a traditional reading of the sky at the moment of birth. The positions here are calculated ' +
+      'astronomically; what they mean is a matter of tradition, not science. Nothing in it predicts events, and it ' +
+      'should not be relied on for medical, financial or other important decisions.',
   },
 
   scoreBands: [

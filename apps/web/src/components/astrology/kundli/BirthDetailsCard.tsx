@@ -1,9 +1,14 @@
 'use client'
 
-import type { BirthPlace, Role } from '@/lib/astrology/types'
+import type { BirthPlace, Subject } from '@/lib/astrology/types'
 import type { FieldErrors } from '@/lib/astrology/schema'
 import { BirthPlaceSelector } from './BirthPlaceSelector'
-import { ROLE_HI, ROLE_LABEL } from './format'
+/** Labels and field-key prefix for each kind of card. */
+const CARD: Record<Subject, { prefix: string; eyebrow: string; title: string; legend: string; hi: string; accent: string; placeholder: string }> = {
+  bride: { prefix: 'bride', eyebrow: 'Person A', title: 'Bride’s details', legend: 'Bride’s birth details', hi: 'कन्या', accent: 'text-maroon', placeholder: 'e.g. Priya' },
+  groom: { prefix: 'groom', eyebrow: 'Person B', title: 'Groom’s details', legend: 'Groom’s birth details', hi: 'वर', accent: 'text-gold', placeholder: 'e.g. Aditya' },
+  native: { prefix: 'person', eyebrow: 'Janam Kundli', title: 'Birth details', legend: 'Birth details', hi: 'जन्म', accent: 'text-maroon', placeholder: 'e.g. Priya' },
+}
 
 export type PersonDraft = {
   name: string
@@ -13,10 +18,13 @@ export type PersonDraft = {
   place: BirthPlace | null
 }
 
-export const EMPTY_DRAFT: PersonDraft = { name: '', dateOfBirth: '', timeOfBirth: '', timeUnknown: false, place: null }
+/** sessionStorage key used to carry one person's details from Janam Kundli to Kundli Match. */
+export const PREFILL_KEY = 'mj-kundli-prefill'
+
+export const EMPTY_DRAFT: PersonDraft ={ name: '', dateOfBirth: '', timeOfBirth: '', timeUnknown: false, place: null }
 
 type Props = {
-  role: Role
+  role: Subject
   draft: PersonDraft
   onChange: (patch: Partial<PersonDraft>) => void
   errors: FieldErrors
@@ -30,24 +38,24 @@ function errorFor(errors: FieldErrors, key: string): string | undefined {
 }
 
 export function BirthDetailsCard({ role, draft, onChange, errors, maxDate }: Props) {
+  const card = CARD[role]
   const e = {
-    name: errorFor(errors, `${role}.name`),
-    dob: errorFor(errors, `${role}.dateOfBirth`),
-    tob: errorFor(errors, `${role}.timeOfBirth`),
-    place: errorFor(errors, `${role}.place`),
+    name: errorFor(errors, `${card.prefix}.name`),
+    dob: errorFor(errors, `${card.prefix}.dateOfBirth`),
+    tob: errorFor(errors, `${card.prefix}.timeOfBirth`),
+    place: errorFor(errors, `${card.prefix}.place`),
   }
-  const id = (f: string) => `${role}-${f}`
-  const accent = role === 'bride' ? 'text-maroon' : 'text-gold'
+  const id = (f: string) => `${card.prefix}-${f}`
 
   return (
-    <fieldset className={`kd-person kd-person-${role} p-5 sm:p-6`}>
-      <legend className="sr-only">{ROLE_LABEL[role]}’s birth details</legend>
+    <fieldset className={`kd-person kd-person-${role === 'groom' ? 'groom' : 'bride'} p-5 sm:p-6`}>
+      <legend className="sr-only">{card.legend}</legend>
       <div className="flex items-center justify-between gap-3 mb-5" aria-hidden="true">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.24em] text-ink-soft">{role === 'bride' ? 'Person A' : 'Person B'}</p>
-          <p className="font-serif text-[24px] text-maroon leading-tight">{ROLE_LABEL[role]}’s details</p>
+          <p className="text-[11px] uppercase tracking-[0.24em] text-ink-soft">{card.eyebrow}</p>
+          <p className="font-serif text-[24px] text-maroon leading-tight">{card.title}</p>
         </div>
-        <span className={`font-deva text-[30px] leading-none ${accent}`}>{ROLE_HI[role]}</span>
+        <span className={`font-deva text-[30px] leading-none ${card.accent}`}>{card.hi}</span>
       </div>
 
       <div className="space-y-4">
@@ -62,7 +70,7 @@ export function BirthDetailsCard({ role, draft, onChange, errors, maxDate }: Pro
             aria-invalid={!!e.name}
             aria-describedby={e.name ? id('name-error') : undefined}
             onChange={ev => onChange({ name: ev.target.value })}
-            placeholder={role === 'bride' ? 'e.g. Priya' : 'e.g. Aditya'}
+            placeholder={card.placeholder}
           />
           {e.name && <p id={id('name-error')} className="field-error" role="alert">{e.name}</p>}
         </div>

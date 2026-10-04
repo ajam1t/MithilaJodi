@@ -76,6 +76,17 @@ export function meanNodeLongitude(ttDays: number): number {
 }
 
 /**
+ * First sunrise at or after `fromUtcMs` within a day — the instant the Sun's
+ * upper limb crosses the horizon, with standard atmospheric refraction (the
+ * convention of most Indian panchangs). null in polar day or night.
+ */
+export function sunriseAfter(fromUtcMs: number, latitudeDeg: number, longitudeDeg: number): number | null {
+  const observer = new Astronomy.Observer(latitudeDeg, longitudeDeg, 0)
+  const t = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, +1, Astronomy.MakeTime(new Date(fromUtcMs)), 1)
+  return t ? t.date.getTime() : null
+}
+
+/**
  * Tropical ascendant (mean equinox of date) for a geographic position.
  * The rising point of the ecliptic on the eastern horizon.
  */

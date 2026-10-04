@@ -51,7 +51,28 @@ Effect: 5″–41″ over the 18.6-year nutation cycle — at most ~80 s of Moon
 and Guna can differ from Drik only for a birth within about a minute of a boundary; the result page
 already warns when the Moon is within 45 minutes of a boundary.
 
-## 4. Not yet done
+## 4. Janam Kundli panchang vs Drik Panchang (methodology v1.1.0, 2026-10-05)
+
+New Delhi, 23 Apr 2024 (drikpanchang.com day panchang) — engine transition times, IST:
+
+| Event | Drik | Engine |
+|---|---|---|
+| Sunrise | 05:47 | 05:47 |
+| Purnima ends | 05:18 (24 Apr) | 05:18 |
+| Chitra nakshatra ends | 22:32 | 22:32 |
+| Vajra yoga ends | 04:57 (24 Apr) | 04:56 |
+| Vishti karana ends | 16:25 | 16:25 |
+
+Tithi and karana do not depend on the ayanamsha and match exactly; the 1-minute yoga difference is the
+ayanamsha convention of §3 counted twice (yoga sums two sidereal longitudes).
+
+12 Mar 1995, 14:20 IST: engine and Drik both give Shukla Ekadashi, Punarvasu, Shobhana yoga, Vanija karana,
+Ravivara; Drik's Punarvasu→Pushya change 20:29, engine 20:28.
+
+Unit-tested: 108 navamsa boundaries against the classical starting-sign rule, dignity table, dasha sequence/
+balance/contiguity (120 years), tithi at the 23 Apr 2024 Purnima and the 8 Apr 2024 Amavasya, vara across sunrise.
+
+## 5. Not yet done
 
 - Side-by-side Ashtakoota totals against Drik Panchang / AstroSage for real pairs (their matchers are
   form/JS driven; needs a manual or browser-driven check). Koota tables follow the common North

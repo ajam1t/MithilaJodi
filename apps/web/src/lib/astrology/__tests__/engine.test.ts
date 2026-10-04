@@ -6,6 +6,7 @@ import { lahiriAyanamsha } from '../vedic/ayanamsha'
 import { siderealLongitudesAt } from '../vedic/chart'
 import { kundliMatchRequestSchema } from '../schema'
 import { toSharedSummary } from '../share'
+import { METHODOLOGY_VERSION } from '../methodology'
 import type { KundliMatchRequest, PersonInput } from '../types'
 
 const NOW = new Date('2026-10-04T06:00:00Z')
@@ -74,7 +75,7 @@ test('a full match: 8 kootas, consistent totals, charts and Manglik', () => {
   assert.equal(r.maxTotal, 36)
   assert.equal(r.total, r.kootas.reduce((s, k) => s + k.score, 0))
   assert.ok(r.total >= 0 && r.total <= 36)
-  assert.equal(r.methodologyVersion, '1.0.0')
+  assert.equal(r.methodologyVersion, METHODOLOGY_VERSION)
   for (const c of [r.bride, r.groom]) {
     assert.equal(c.planets.length, 9)
     assert.ok(c.lagna)

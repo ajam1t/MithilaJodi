@@ -1,18 +1,26 @@
 import type { ChartData } from '@/lib/astrology/types'
-import { RASHIS } from '@/lib/astrology/vedic/zodiac'
-import { grahaOf, grahaShort, rashiOf } from './format'
+import { RASHIS, type GrahaId } from '@/lib/astrology/vedic/zodiac'
+import { grahaOf, grahaShort } from './format'
 
-type Props = { chart: ChartData; size?: number; theme?: 'paper' | 'print' }
+export type ChartPlacement = { id: GrahaId; rashiIndex: number; retrograde?: boolean }
+
+type NorthIndianProps = {
+  firstRashiIndex: number
+  placements: ChartPlacement[]
+  /** Small caption inside the 1st house, e.g. LAGNA, MOON, D9 LAGNA. */
+  firstHouseLabel: string
+  /** Opening phrase of the accessible description, e.g. "North Indian chart, Lagna Karka". */
+  description: string
+  size?: number
+  theme?: 'paper' | 'print'
+}
 
 /**
- * North Indian (diamond) Kundli. Houses are fixed — the top diamond is always
+ * North Indian (diamond) chart. Houses are fixed — the top diamond is always
  * the 1st house, running counter-clockwise — and the rashi numbers rotate with
- * the 1st house's sign. Drawn entirely from the engine's chart data.
- *
- * With a known birth time the 1st house is the Lagna. Without one, the chart is
- * drawn as a Chandra Kundli (the Moon's rashi as the 1st house), and says so.
+ * the 1st house's sign. Purely presentational: placements come from the engine.
  */
-export function KundliChart({ chart, size = 320, theme = 'paper' }: Props) {
+export function NorthIndianChart({ firstRashiIndex, placements, firstHouseLabel, description, size = 320, theme = 'paper' }: NorthIndianProps) {
   const S = size
   const c = S / 2
   const q = S / 4
@@ -37,13 +45,10 @@ export function KundliChart({ chart, size = 320, theme = 'paper' }: Props) {
     { poly: ['TR', 'q2', 'T'], content: [S * 0.75, S * 0.085], num: [S * 0.75, S * 0.2] },
   ]
 
-  const lagnaMode = chart.lagna != null
-  const firstRashi = lagnaMode ? chart.lagna!.rashiIndex : chart.moon.rashiIndex
-  const houseOf = (rashiIndex: number) => ((rashiIndex - firstRashi + 12) % 12) + 1
-
+  const houseOf = (rashiIndex: number) => ((rashiIndex - firstRashiIndex + 12) % 12) + 1
   const byHouse = new Map<number, string[]>()
   const spoken = new Map<number, string[]>()
-  for (const p of chart.planets) {
+  for (const p of placements) {
     const h = houseOf(p.rashiIndex)
     // Rahu and Ketu are always retrograde by definition; marking them adds noise.
     const retro = p.retrograde && p.id !== 'rahu' && p.id !== 'ketu'
@@ -52,17 +57,15 @@ export function KundliChart({ chart, size = 320, theme = 'paper' }: Props) {
   }
 
   const stroke = theme === 'print' ? '#7A1220' : '#B98A2E'
-  const ink = '#2B211C'
   const fs = S * 0.043
-
-  const description =
-    `North Indian chart, ${lagnaMode ? `Lagna ${rashiOf(chart.lagna!.rashi).name}` : `Chandra Kundli with the Moon's rashi ${rashiOf(chart.moon.rashi).name} as the first house`}. ` +
+  const label =
+    `${description}. ` +
     Array.from({ length: 12 }, (_, i) => i + 1)
-      .map(h => `House ${h} (${RASHIS[(firstRashi + h - 1) % 12].name}): ${(spoken.get(h) ?? ['empty']).join(', ')}`)
+      .map(h => `House ${h} (${RASHIS[(firstRashiIndex + h - 1) % 12].name}): ${(spoken.get(h) ?? ['empty']).join(', ')}`)
       .join('. ')
 
   return (
-    <svg viewBox={`-2 -2 ${S + 4} ${S + 4}`} width="100%" className="kd-chart" role="img" aria-label={description}>
+    <svg viewBox={`-2 -2 ${S + 4} ${S + 4}`} width="100%" className="kd-chart" role="img" aria-label={label}>
       <rect x={0} y={0} width={S} height={S} fill={theme === 'print' ? '#fff' : '#FFFAF0'} stroke={stroke} strokeWidth={1.6} />
       {HOUSES.map((h, i) => (
         <polygon
@@ -76,7 +79,6 @@ export function KundliChart({ chart, size = 320, theme = 'paper' }: Props) {
       ))}
       {HOUSES.map((h, i) => {
         const house = i + 1
-        const rashiNumber = ((firstRashi + i) % 12) + 1
         const labels = byHouse.get(house) ?? []
         const lines: string[] = []
         for (let k = 0; k < labels.length; k += 3) lines.push(labels.slice(k, k + 3).join(' '))
@@ -84,15 +86,15 @@ export function KundliChart({ chart, size = 320, theme = 'paper' }: Props) {
         return (
           <g key={`t${i}`}>
             <text x={h.num[0]} y={h.num[1]} fontSize={fs * 0.82} fill="#9B2233" textAnchor="middle" dominantBaseline="central" fontWeight={600}>
-              {rashiNumber}
+              {((firstRashiIndex + i) % 12) + 1}
             </text>
             {house === 1 && (
               <text x={c} y={S * 0.06} fontSize={fs * 0.72} fill="#6A5A4E" textAnchor="middle" dominantBaseline="central" letterSpacing="0.08em">
-                {lagnaMode ? 'LAGNA' : 'MOON'}
+                {firstHouseLabel}
               </text>
             )}
             {lines.map((line, k) => (
-              <text key={k} x={h.content[0]} y={first + k * fs * 1.15 + (house === 1 ? S * 0.025 : 0)} fontSize={fs} fill={ink} textAnchor="middle" dominantBaseline="central" fontWeight={600}>
+              <text key={k} x={h.content[0]} y={first + k * fs * 1.15 + (house === 1 ? S * 0.025 : 0)} fontSize={fs} fill="#2B211C" textAnchor="middle" dominantBaseline="central" fontWeight={600}>
                 {line}
               </text>
             ))}
@@ -100,5 +102,29 @@ export function KundliChart({ chart, size = 320, theme = 'paper' }: Props) {
         )
       })}
     </svg>
+  )
+}
+
+/**
+ * The birth chart (D1). With a known birth time the 1st house is the Lagna;
+ * otherwise — or when asked — it is drawn as a Chandra Kundli (the Moon's
+ * rashi as the 1st house), and says so.
+ */
+export function KundliChart({ chart, mode, size, theme }: { chart: ChartData; mode?: 'lagna' | 'chandra'; size?: number; theme?: 'paper' | 'print' }) {
+  const lagnaMode = (mode ?? 'lagna') === 'lagna' && chart.lagna != null
+  const first = lagnaMode ? chart.lagna!.rashiIndex : chart.moon.rashiIndex
+  return (
+    <NorthIndianChart
+      firstRashiIndex={first}
+      placements={chart.planets.map(p => ({ id: p.id, rashiIndex: p.rashiIndex, retrograde: p.retrograde }))}
+      firstHouseLabel={lagnaMode ? 'LAGNA' : 'MOON'}
+      description={
+        lagnaMode
+          ? `North Indian chart, Lagna ${RASHIS[first].name}`
+          : `Chandra Kundli with the Moon's rashi ${RASHIS[first].name} as the first house`
+      }
+      size={size}
+      theme={theme}
+    />
   )
 }

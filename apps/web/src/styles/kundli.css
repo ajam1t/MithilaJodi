@@ -80,6 +80,11 @@
 @keyframes kdSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .kd-wheel-spin { animation: kdSpin 240s linear infinite; transform-origin: 50% 50%; }
 
+/* Planet markers settling onto the wheel, one by one. */
+@keyframes kdMarkerIn { from { opacity: 0; transform: scale(0.3); } to { opacity: 1; transform: none; } }
+.kd-marker-in { transform-box: fill-box; transform-origin: center; animation: kdMarkerIn 600ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+@media (prefers-reduced-motion: reduce) { .kd-marker-in { animation: none; } }
+
 /* ── Primary CTA ───────────────────────────────────────────────────────── */
 .kd-cta {
   position: relative;

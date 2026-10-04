@@ -110,30 +110,33 @@ const MANGLIK_BADGE: Record<ManglikPerson['status'], string> = {
   incomplete: 'bg-info-soft text-info-fg border-info/30',
 }
 
+export function ManglikCard({ person: p, heading }: { person: ManglikView; heading: React.ReactNode }) {
+  return (
+    <div className="card p-5 kd-avoid-break">
+      <p className="text-[11px] uppercase tracking-[0.18em] text-ink-soft">{heading}</p>
+      <p className={`mt-2 inline-flex rounded-pill border px-3 py-1 text-[13px] font-semibold ${MANGLIK_BADGE[p.status]}`}>{p.label}</p>
+      <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
+        <div className="rounded-mj-sm bg-paper px-2 py-2"><dt className="text-[10px] uppercase tracking-[0.12em] text-terra">Mars in</dt><dd className="text-[14px] text-ink">{rashiOf(p.marsRashi).name}</dd></div>
+        <div className="rounded-mj-sm bg-paper px-2 py-2"><dt className="text-[10px] uppercase tracking-[0.12em] text-terra">From Lagna</dt><dd className="text-[14px] text-ink">{p.marsHouseFromLagna ? `House ${p.marsHouseFromLagna}` : 'Needs time'}</dd></div>
+        <div className="rounded-mj-sm bg-paper px-2 py-2"><dt className="text-[10px] uppercase tracking-[0.12em] text-terra">From Moon</dt><dd className="text-[14px] text-ink">House {p.marsHouseFromMoon}</dd></div>
+      </dl>
+      <p className="mt-3 text-[14px] text-ink leading-relaxed">{p.explanation}</p>
+      {p.exceptions.length > 0 && (
+        <ul className="mt-3 space-y-1 rounded-mj-sm bg-paper-2 px-3 py-2.5 text-[13px] text-ink">
+          {p.exceptions.map(e => <li key={e}>• {e}</li>)}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 export function ManglikCards({ people, names, pair }: { people: Record<Role, ManglikView>; names: Record<Role, string>; pair: { summary: string } }) {
   return (
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
-        {(['bride', 'groom'] as const).map(role => {
-          const p = people[role]
-          return (
-            <div key={role} className="card p-5 kd-avoid-break">
-              <p className="text-[11px] uppercase tracking-[0.18em] text-ink-soft">{ROLE_LABEL[role]} · <span className="normal-case tracking-normal">{names[role]}</span></p>
-              <p className={`mt-2 inline-flex rounded-pill border px-3 py-1 text-[13px] font-semibold ${MANGLIK_BADGE[p.status]}`}>{p.label}</p>
-              <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
-                <div className="rounded-mj-sm bg-paper px-2 py-2"><dt className="text-[10px] uppercase tracking-[0.12em] text-terra">Mars in</dt><dd className="text-[14px] text-ink">{rashiOf(p.marsRashi).name}</dd></div>
-                <div className="rounded-mj-sm bg-paper px-2 py-2"><dt className="text-[10px] uppercase tracking-[0.12em] text-terra">From Lagna</dt><dd className="text-[14px] text-ink">{p.marsHouseFromLagna ? `House ${p.marsHouseFromLagna}` : 'Needs time'}</dd></div>
-                <div className="rounded-mj-sm bg-paper px-2 py-2"><dt className="text-[10px] uppercase tracking-[0.12em] text-terra">From Moon</dt><dd className="text-[14px] text-ink">House {p.marsHouseFromMoon}</dd></div>
-              </dl>
-              <p className="mt-3 text-[14px] text-ink leading-relaxed">{p.explanation}</p>
-              {p.exceptions.length > 0 && (
-                <ul className="mt-3 space-y-1 rounded-mj-sm bg-paper-2 px-3 py-2.5 text-[13px] text-ink">
-                  {p.exceptions.map(e => <li key={e}>• {e}</li>)}
-                </ul>
-              )}
-            </div>
-          )
-        })}
+        {(['bride', 'groom'] as const).map(role => (
+          <ManglikCard key={role} person={people[role]} heading={<>{ROLE_LABEL[role]} · <span className="normal-case tracking-normal">{names[role]}</span></>} />
+        ))}
       </div>
       <div className="rounded-mj border border-gold/30 bg-paper-2/60 px-5 py-4">
         <p className="text-[11px] uppercase tracking-[0.18em] text-terra mb-1">Both charts together</p>

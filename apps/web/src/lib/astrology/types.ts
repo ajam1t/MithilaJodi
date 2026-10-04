@@ -7,6 +7,8 @@ import type { GrahaId, NakshatraSlug, RashiSlug } from './vedic/zodiac'
 import type { Gana, Nadi, Varna, Vashya, Yoni } from './rules/tables'
 
 export type Role = 'bride' | 'groom'
+/** Whose chart: one side of a match, or a single person (Janam Kundli). */
+export type Subject = Role | 'native'
 
 export type PlaceSource = 'mithila-jodi' | 'openstreetmap' | 'manual'
 
@@ -97,7 +99,7 @@ export type MoonSegmentChoice = {
 }
 
 export type ChartData = {
-  role: Role
+  role: Subject
   name: string
   birth: {
     localDate: string
@@ -188,6 +190,61 @@ export type KundliMatchResponse =
       kind: 'scenarios'
       scenarios: Array<{ brideSegment: number | null; groomSegment: number | null; result: MatchResult }>
     }
+
+// ─── Janam Kundli ────────────────────────────────────────────────────────────
+
+export type Dignity = 'exalted' | 'debilitated' | 'own' | 'friendly' | 'neutral' | 'enemy'
+
+export type DashaPeriod = {
+  lord: GrahaId
+  /** ISO UTC instants. The first Mahadasha starts before birth (the balance runs from birth). */
+  start: string
+  end: string
+  years: number
+  antardashas?: Array<{ lord: GrahaId; start: string; end: string }>
+}
+
+export type VimshottariDasha = {
+  /** Mahadasha running at birth and how much of it was left. */
+  balanceAtBirth: { lord: GrahaId; years: number; months: number; days: number }
+  mahadashas: DashaPeriod[]
+}
+
+export type BirthPanchang = {
+  tithi: { number: number; name: string; paksha: 'shukla' | 'krishna' }
+  yoga: { number: number; name: string }
+  karana: { name: string }
+  vara: { name: string; lord: GrahaId; beforeSunrise: boolean }
+  /** Local sunrise on the birth date at the birthplace, ISO UTC; null in polar day/night. */
+  sunrise: string | null
+}
+
+export type JanamKundliRequest = { person: PersonInput }
+
+export type JanamKundliResult = {
+  methodologyVersion: string
+  engine: MatchResult['engine']
+  computedAt: string
+  chart: ChartData
+  navamsa: {
+    lagnaRashiIndex: number | null
+    /** rashiIndex is null only for a Moon whose navamsa is uncertain without a birth time. */
+    planets: Array<{ id: GrahaId; rashiIndex: number | null; vargottama: boolean }>
+  }
+  /** null for Rahu and Ketu, whose dignities are disputed between traditions. */
+  dignities: Array<{ id: GrahaId; dignity: Dignity | null }>
+  /** Needs an exact Moon position, so null when the birth time is unknown. */
+  dasha: VimshottariDasha | null
+  /** Tithi, yoga, karana and vara change through the day, so null when the birth time is unknown. */
+  panchang: BirthPanchang | null
+  manglik: ManglikPerson
+  warnings: string[]
+}
+
+export type JanamKundliResponse =
+  | { kind: 'result'; result: JanamKundliResult }
+  | { kind: 'needs_moon_choice'; choices: MoonSegmentChoice[] }
+  | { kind: 'scenarios'; scenarios: Array<{ segment: number; result: JanamKundliResult }> }
 
 /** What a share link stores and shows — deliberately no dates, times, places or planet degrees. */
 export type SharedMatchSummary = {

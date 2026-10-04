@@ -76,8 +76,8 @@ export function PrintReport({ result, includeBirthDetails }: { result: MatchResu
 
       <section className="kd-avoid-break">
         <h3 style={{ fontFamily: 'Marcellus, serif', color: '#7A1220', fontSize: '13pt', margin: '12px 0 4px' }}>Manglik</h3>
-        {people.map(c => {
-          const m = result.manglik[c.role]
+        {people.map((c, i) => {
+          const m = i === 0 ? result.manglik.bride : result.manglik.groom
           return <p key={c.role} style={{ margin: '2px 0', fontSize: '9.5pt' }}><strong>{c.name}: {m.label}.</strong> {m.explanation} {m.exceptions.join(' ')}</p>
         })}
       </section>

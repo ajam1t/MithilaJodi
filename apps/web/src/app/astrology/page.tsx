@@ -99,9 +99,9 @@ const TOOLS = [
     label: 'Janam Kundli',
     tagline: 'Your birth chart in the Vedic tradition',
     description:
-      'Generate planetary positions across the 12 rashis, ascendant (Lagna), and key kundli information using a proper astronomical ephemeris.',
+      'Your birth chart from a real ephemeris: Lagna, Chandra and Navamsa charts, all nine grahas, Vimshottari dasha and the panchang at birth.',
     primary: false,
-    status: 'coming-soon' as const,
+    status: 'live' as const,
     relatedPost: { href: '/blogs/horoscope-marriage/kundli-matching-explained', label: 'How kundli matching works' },
   },
   {
@@ -277,9 +277,15 @@ export default function AstrologyHubPage() {
                     <div>
                       <div className="flex items-center gap-2 flex-wrap mb-0.5">
                         <h3 className="font-serif text-maroon text-[16px] group-hover:text-terra transition-colors">{tool.label}</h3>
-                        <span className="text-[9px] uppercase tracking-[0.1em] text-ink-soft/60 font-medium border border-ink-soft/20 rounded-sm px-1.5 py-0.5">
-                          Coming Soon
-                        </span>
+                        {tool.status === 'live' ? (
+                          <span className="text-[9px] uppercase tracking-[0.1em] text-success-fg font-semibold border border-success/30 bg-success-soft rounded-sm px-1.5 py-0.5">
+                            Live
+                          </span>
+                        ) : (
+                          <span className="text-[9px] uppercase tracking-[0.1em] text-ink-soft/60 font-medium border border-ink-soft/20 rounded-sm px-1.5 py-0.5">
+                            Coming Soon
+                          </span>
+                        )}
                       </div>
                       <p className="font-serif italic text-terra text-[12px]">{tool.tagline}</p>
                     </div>
