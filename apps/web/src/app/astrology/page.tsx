@@ -131,7 +131,7 @@ const TOOLS = [
     description:
       'Find traditional name-starting syllables (Aksharas) for a newborn based on their Janma Nakshatra and Pada, as per authentic Jyotish tradition.',
     primary: false,
-    status: 'coming-soon' as const,
+    status: 'live' as const,
     relatedPost: null,
   },
   {

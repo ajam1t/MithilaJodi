@@ -311,6 +311,26 @@ export type ManglikResponse =
   | { kind: 'needs_moon_choice'; choices: MoonSegmentChoice[] }
   | { kind: 'scenarios'; scenarios: Array<{ segment: number; result: ManglikReading }> }
 
+// ─── Baby names ──────────────────────────────────────────────────────────────
+
+export type NameSyllable = { nakshatraIndex: number; pada: number; hi: string; en: string }
+
+export type BabyNamesReading = {
+  methodologyVersion: string
+  computedAt: string
+  chart: ChartData
+  /** One syllable when the pada is known; every pada the Moon crossed in the possible window otherwise. */
+  candidates: NameSyllable[]
+  /** The nine pada syllables of the Moon's rashi. */
+  rashiSyllables: NameSyllable[]
+  warnings: string[]
+}
+
+export type BabyNamesResponse =
+  | { kind: 'result'; result: BabyNamesReading }
+  | { kind: 'needs_moon_choice'; choices: MoonSegmentChoice[] }
+  | { kind: 'scenarios'; scenarios: Array<{ segment: number; result: BabyNamesReading }> }
+
 /** What a share link stores and shows — deliberately no dates, times, places or planet degrees. */
 export type SharedMatchSummary = {
   methodologyVersion: string

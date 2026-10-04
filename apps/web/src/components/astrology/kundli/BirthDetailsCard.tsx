@@ -29,6 +29,9 @@ type Props = {
   onChange: (patch: Partial<PersonDraft>) => void
   errors: FieldErrors
   maxDate: string
+  /** Overrides for tools where the person may not have a name yet. */
+  nameLabel?: string
+  namePlaceholder?: string
 }
 
 function errorFor(errors: FieldErrors, key: string): string | undefined {
@@ -37,7 +40,7 @@ function errorFor(errors: FieldErrors, key: string): string | undefined {
   return nested ? errors[nested] : undefined
 }
 
-export function BirthDetailsCard({ role, draft, onChange, errors, maxDate }: Props) {
+export function BirthDetailsCard({ role, draft, onChange, errors, maxDate, nameLabel, namePlaceholder }: Props) {
   const card = CARD[role]
   const e = {
     name: errorFor(errors, `${card.prefix}.name`),
@@ -60,7 +63,7 @@ export function BirthDetailsCard({ role, draft, onChange, errors, maxDate }: Pro
 
       <div className="space-y-4">
         <div>
-          <label className="field-label" htmlFor={id('name')}>Name</label>
+          <label className="field-label" htmlFor={id('name')}>{nameLabel ?? 'Name'}</label>
           <input
             id={id('name')}
             className={`input kd-input ${e.name ? 'input-error' : ''}`}
@@ -70,7 +73,7 @@ export function BirthDetailsCard({ role, draft, onChange, errors, maxDate }: Pro
             aria-invalid={!!e.name}
             aria-describedby={e.name ? id('name-error') : undefined}
             onChange={ev => onChange({ name: ev.target.value })}
-            placeholder={card.placeholder}
+            placeholder={namePlaceholder ?? card.placeholder}
           />
           {e.name && <p id={id('name-error')} className="field-error" role="alert">{e.name}</p>}
         </div>

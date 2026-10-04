@@ -4,7 +4,7 @@ import { METHODOLOGY } from '@/lib/astrology/methodology'
  * The published methodology — one source for every astrology page. `show`
  * picks which tool-specific rule sets follow the shared astronomical basis.
  */
-export function AstrologyMethodology({ show }: { show: Array<'match' | 'janam' | 'nakshatra' | 'rashi'> }) {
+export function AstrologyMethodology({ show }: { show: Array<'match' | 'janam' | 'nakshatra' | 'rashi' | 'baby'> }) {
   return (
     <section id="methodology" className="bg-cream py-14 sm:py-16 scroll-mt-20" aria-labelledby="methodology-title">
       <div className="wrap max-w-3xl">
@@ -33,6 +33,25 @@ export function AstrologyMethodology({ show }: { show: Array<'match' | 'janam' |
             </div>
           ))}
         </dl>
+
+        {show.includes('baby') && (
+          <>
+            <h3 className="mt-10 font-serif text-maroon text-[22px]">Baby name rules</h3>
+            <dl className="mt-4 space-y-3">
+              {([
+                ['First syllable', METHODOLOGY.babyNames.syllable],
+                ['Rashi letters', METHODOLOGY.babyNames.rashiLetters],
+                ['Name check', METHODOLOGY.babyNames.nameCheck],
+                ['Syllable table', METHODOLOGY.nakshatra.syllables],
+              ] as const).map(([k, v]) => (
+                <div key={k} className="rounded-mj-sm bg-paper px-4 py-3">
+                  <dt className="font-semibold text-ink">{k}</dt>
+                  <dd className="mt-0.5 text-[14px] text-ink leading-relaxed">{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </>
+        )}
 
         {show.includes('rashi') && (
           <>

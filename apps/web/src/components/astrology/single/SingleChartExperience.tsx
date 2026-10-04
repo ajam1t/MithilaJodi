@@ -26,6 +26,8 @@ type Props<R extends WithChart> = {
   /** What the screen reader hears when the result arrives. */
   announceResult: (r: R) => string
   Report: ComponentType<SingleReportProps<R>>
+  /** For tools where the person may not have a name yet (Baby Names). */
+  nameField?: { label: string; placeholder: string; initial: string }
 }
 
 function todayIso(): string {
@@ -37,8 +39,9 @@ function todayIso(): string {
  * Form → calculation → (which part of the day?) → report, for every tool that
  * reads one person's chart. Each tool supplies only its endpoint and report.
  */
-export function SingleChartExperience<R extends WithChart>({ endpoint, ctaLabel, announceResult, Report }: Props<R>) {
-  const [draft, setDraft] = useState<PersonDraft>(EMPTY_DRAFT)
+export function SingleChartExperience<R extends WithChart>({ endpoint, ctaLabel, announceResult, Report, nameField }: Props<R>) {
+  const initialDraft = nameField ? { ...EMPTY_DRAFT, name: nameField.initial } : EMPTY_DRAFT
+  const [draft, setDraft] = useState<PersonDraft>(initialDraft)
   const [segment, setSegment] = useState<number | 'all' | undefined>(undefined)
   const [phase, setPhase] = useState<'form' | 'loading' | 'choose' | 'done'>('form')
   const [errors, setErrors] = useState<FieldErrors>({})
@@ -146,7 +149,7 @@ export function SingleChartExperience<R extends WithChart>({ endpoint, ctaLabel,
   }
 
   const reset = () => {
-    setDraft(EMPTY_DRAFT)
+    setDraft(initialDraft)
     setSegment(undefined)
     setResponse(null)
     setErrors({})
@@ -178,7 +181,7 @@ export function SingleChartExperience<R extends WithChart>({ endpoint, ctaLabel,
               {!Object.keys(errors).length && <button type="submit" className="btn-ghost btn-sm">Try again</button>}
             </div>
           )}
-          <BirthDetailsCard role="native" draft={draft} onChange={update} errors={errors} maxDate={maxDate} />
+          <BirthDetailsCard role="native" draft={draft} onChange={update} errors={errors} maxDate={maxDate} nameLabel={nameField?.label} namePlaceholder={nameField?.placeholder} />
           <p className="mt-4 text-[13px] text-paper-3/80 text-center">Details are used for this calculation only and are not stored.</p>
           <div className="mt-6 flex flex-col items-center gap-3">
             <button type="submit" className="kd-cta" disabled={phase === 'loading'}>

@@ -14,8 +14,9 @@
 // 1.2.0 — adds the Nakshatra rules (window, syllables, navatara).
 // 1.3.0 — adds the Rashi rules (Western sign comparison, Moon-sign compatibility).
 // 1.4.0 — Manglik tool: Venus-based count and Mars dignity shown as context only.
+// 1.5.0 — Baby Names: rashi letters and the name first-sound check.
 // None changes any earlier output.
-export const METHODOLOGY_VERSION = '1.4.0'
+export const METHODOLOGY_VERSION = '1.5.0'
 
 export const METHODOLOGY = {
   version: METHODOLOGY_VERSION,
@@ -133,6 +134,19 @@ export const METHODOLOGY = {
     navatara:
       'Navatara counts the nakshatras from the Janma nakshatra in nine taras of three: Janma, Sampat, Vipat, Kshema, ' +
       'Pratyari, Sadhaka, Vadha, Mitra, Ati-Mitra. Vipat, Pratyari and Vadha are the unfavourable ones.',
+  },
+
+  babyNames: {
+    syllable:
+      'The first syllable is the one for the pada of the child’s Janma nakshatra (Avakahada Chakra). Without a birth ' +
+      'time, every pada the Moon crossed in the possible part of the day is listed.',
+    rashiLetters:
+      'Rashi letters are the syllables of the nine nakshatra padas that make up the Moon’s rashi — the wider set many ' +
+      'families also accept.',
+    nameCheck:
+      'The name check compares first sounds only. Long and short vowels count as the same (हि/ही, Hi/Hee), a syllable ' +
+      'ending in “a” matches the consonant with its inherent vowel (ला matches लक्ष्मी), and Roman spellings are ' +
+      'normalised (aa→a, ee→i, oo→u, w→v). No names are generated.',
   },
 
   rashi: {
