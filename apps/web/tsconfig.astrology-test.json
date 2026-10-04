@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": ".astrology-test",
+    "rootDir": "src/lib/astrology",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "types": ["node"],
+    "noEmit": false,
+    "incremental": false
+  },
+  "include": ["src/lib/astrology/**/*.ts"],
+  "exclude": ["src/lib/astrology/server/**"]
+}

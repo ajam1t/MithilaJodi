@@ -1,0 +1,244 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Kundli Match — cosmic ground, staged reveal, score ring, charts, print.
+
+   Same rules as hero-cinematic.css: the reveal is driven by a `data-stage`
+   attribute, every animation ENDS in its resting position, and the global
+   prefers-reduced-motion rule in globals.css collapses durations so reduced-
+   motion users land on the finished composition. Canvas work is handled in JS.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Cosmic ground ─────────────────────────────────────────────────────── */
+.kd-cosmic {
+  position: relative;
+  isolation: isolate;
+  color: #FFFAF0;
+  background:
+    radial-gradient(ellipse 85% 55% at 50% -5%, rgba(122, 18, 32, 0.62), transparent 68%),
+    radial-gradient(ellipse 55% 45% at 88% 85%, rgba(185, 138, 46, 0.16), transparent 62%),
+    radial-gradient(ellipse 50% 40% at 6% 75%, rgba(46, 58, 110, 0.38), transparent 62%),
+    linear-gradient(180deg, #080B1A 0%, #0D1228 58%, #14193A 100%);
+}
+
+/* Static starfield — the no-JS / reduced-data fallback beneath the canvas. */
+.kd-stars {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.7;
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(255, 240, 210, 0.9), transparent 60%),
+    radial-gradient(1px 1px at 72% 12%, rgba(255, 240, 210, 0.7), transparent 60%),
+    radial-gradient(1.4px 1.4px at 38% 64%, rgba(228, 197, 114, 0.8), transparent 60%),
+    radial-gradient(1px 1px at 86% 48%, rgba(255, 240, 210, 0.6), transparent 60%),
+    radial-gradient(1px 1px at 22% 82%, rgba(255, 240, 210, 0.7), transparent 60%),
+    radial-gradient(1.2px 1.2px at 58% 36%, rgba(255, 240, 210, 0.8), transparent 60%),
+    radial-gradient(1px 1px at 92% 78%, rgba(228, 197, 114, 0.7), transparent 60%),
+    radial-gradient(1px 1px at 6% 42%, rgba(255, 240, 210, 0.6), transparent 60%);
+  background-size: 420px 420px;
+}
+
+.kd-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.kd-hairline { border-color: rgba(228, 197, 114, 0.22); }
+
+/* Fine gold rule with a lotus at its centre. */
+.kd-lotus-rule {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #E4C572;
+}
+.kd-lotus-rule::before,
+.kd-lotus-rule::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(228, 197, 114, 0.55), transparent);
+}
+
+/* Madhubani-style triangle border, used sparingly at cosmic/paper seams. */
+.kd-mithila-strip {
+  height: 10px;
+  background:
+    linear-gradient(135deg, #7A1220 25%, transparent 25%) -5px 0 / 10px 10px,
+    linear-gradient(225deg, #7A1220 25%, transparent 25%) -5px 0 / 10px 10px,
+    linear-gradient(315deg, #B98A2E 25%, transparent 25%) 0 0 / 10px 10px,
+    linear-gradient(45deg, #B98A2E 25%, transparent 25%) 0 0 / 10px 10px,
+    #5A0E19;
+  opacity: 0.85;
+}
+
+/* ── Decorative hero wheel ─────────────────────────────────────────────── */
+@keyframes kdSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.kd-wheel-spin { animation: kdSpin 240s linear infinite; transform-origin: 50% 50%; }
+
+/* ── Primary CTA ───────────────────────────────────────────────────────── */
+.kd-cta {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 0 34px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  color: #FFFAF0;
+  background: linear-gradient(180deg, #9B2233, #7A1220 60%, #5A0E19);
+  border: 1px solid rgba(228, 197, 114, 0.55);
+  box-shadow: 0 14px 30px -14px rgba(122, 18, 32, 0.7), inset 0 1px 0 rgba(255, 250, 240, 0.25);
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+.kd-cta:hover { transform: translateY(-2px); box-shadow: 0 20px 36px -16px rgba(122, 18, 32, 0.8), 0 0 0 4px rgba(228, 197, 114, 0.12), inset 0 1px 0 rgba(255, 250, 240, 0.25); }
+.kd-cta:active { transform: translateY(0); }
+.kd-cta:focus-visible { outline: 3px solid #E4C572; outline-offset: 3px; }
+.kd-cta::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 240, 210, 0.28) 48%, transparent 66%);
+  transform: translateX(-120%);
+  transition: transform 900ms ease;
+}
+.kd-cta:hover::after { transform: translateX(120%); }
+.kd-cta:disabled { opacity: 0.7; cursor: progress; transform: none; }
+
+/* ── Person cards ──────────────────────────────────────────────────────── */
+.kd-person {
+  position: relative;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #FFFAF0, #FCF5E7);
+  border: 1px solid rgba(185, 138, 46, 0.35);
+  box-shadow: 0 24px 48px -30px rgba(8, 11, 26, 0.75), inset 0 1px 0 #fff;
+  transition: box-shadow 250ms ease, transform 250ms ease;
+}
+.kd-person:focus-within { box-shadow: 0 28px 56px -30px rgba(8, 11, 26, 0.85), 0 0 0 3px rgba(228, 197, 114, 0.35); }
+.kd-person::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 17px;
+  border: 1px solid rgba(185, 138, 46, 0.22);
+  pointer-events: none;
+}
+.kd-person-bride { border-top: 4px solid #7A1220; }
+.kd-person-groom { border-top: 4px solid #B98A2E; }
+
+.kd-input {
+  font-size: 16px !important; /* below 16px iOS Safari zooms the page on focus */
+  min-height: 46px;
+}
+
+/* ── Reveal stage ──────────────────────────────────────────────────────── */
+.kd-reveal { position: relative; }
+
+.kd-medallion {
+  transition: transform 900ms cubic-bezier(0.2, 0.8, 0.3, 1), opacity 700ms ease;
+}
+.kd-reveal[data-stage='charts'] .kd-medallion-bride { transform: translateX(-24px); opacity: 1; }
+.kd-reveal[data-stage='charts'] .kd-medallion-groom { transform: translateX(24px); opacity: 1; }
+.kd-reveal[data-stage='intro'] .kd-medallion { opacity: 0; }
+.kd-reveal[data-stage='intro'] .kd-medallion-bride { transform: translateX(-60px); }
+.kd-reveal[data-stage='intro'] .kd-medallion-groom { transform: translateX(60px); }
+
+@keyframes kdWheelIn { from { transform: rotate(-120deg) scale(0.85); opacity: 0; } to { transform: rotate(0deg) scale(1); opacity: 1; } }
+.kd-reveal:not([data-stage='intro']) .kd-mini-wheel { animation: kdWheelIn 1100ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+
+/* Thread between the two charts, drawn when they align. */
+.kd-thread path {
+  stroke-dasharray: 600;
+  stroke-dashoffset: 600;
+  transition: stroke-dashoffset 1200ms ease;
+}
+.kd-reveal[data-stage='align'] .kd-thread path,
+.kd-reveal[data-stage='kootas'] .kd-thread path,
+.kd-reveal[data-stage='score'] .kd-thread path,
+.kd-reveal[data-stage='final'] .kd-thread path { stroke-dashoffset: 0; }
+
+.kd-stage-caption { transition: opacity 400ms ease; }
+
+/* ── Score ring ────────────────────────────────────────────────────────── */
+.kd-ring-arc { transition: stroke-dashoffset 260ms ease-out; }
+.kd-node {
+  transition: background-color 300ms ease, border-color 300ms ease, box-shadow 400ms ease, opacity 300ms ease, transform 300ms ease;
+}
+.kd-node[data-lit='false'] { opacity: 0.38; transform: scale(0.94); }
+.kd-node[data-lit='true'] { opacity: 1; transform: none; }
+.kd-node[data-lit='true'][data-tone='full'] { box-shadow: 0 0 0 1px rgba(228, 197, 114, 0.6), 0 0 18px rgba(228, 197, 114, 0.35); }
+
+@keyframes kdGlow { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+.kd-score-glow { animation: kdGlow 4s ease-in-out infinite; }
+
+/* Nodes sit on a circle around the ring from sm up; a 2×4 grid below on phones. */
+.kd-ring-wrap { position: relative; }
+@media (min-width: 640px) {
+  .kd-ring-orbit .kd-node-slot {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 112px;
+    margin-left: -56px;
+    margin-top: -28px;
+    transform: rotate(var(--a)) translateY(calc(var(--r) * -1)) rotate(calc(var(--a) * -1));
+  }
+}
+
+/* ── Charts ────────────────────────────────────────────────────────────── */
+.kd-chart text { font-family: var(--font-mukta), Mukta, system-ui, sans-serif; }
+.kd-chart .kd-house { transition: fill 200ms ease; }
+.kd-chart .kd-house:hover { fill: rgba(228, 197, 114, 0.12); }
+
+/* ── Relationship map connector ────────────────────────────────────────── */
+.kd-link { position: relative; }
+.kd-link::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(185, 138, 46, 0.1), rgba(185, 138, 46, 0.55), rgba(185, 138, 46, 0.1));
+  z-index: 0;
+}
+.kd-link > * { position: relative; z-index: 1; }
+
+/* ── Print / PDF ───────────────────────────────────────────────────────────
+   The report is portalled to a direct child of <body>. Only while
+   body.kd-printing is set (added by the Download PDF button, removed on
+   afterprint) does printing collapse the page to the report — so these rules
+   can never blank the print-out of another page this stylesheet lingers on. */
+#kundli-print { display: none; }
+
+@media print {
+  body.kd-printing, body.kd-printing-share { background: #fff !important; }
+  body.kd-printing::before, body.kd-printing-share::before { display: none !important; }
+  body.kd-printing > *:not(#kundli-print) { display: none !important; }
+  body.kd-printing #kundli-print {
+    display: block !important;
+    color: #2B211C;
+    font-size: 10.5pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .kd-page-break { break-before: page; }
+  .kd-avoid-break { break-inside: avoid; }
+
+  /* Shared result page: print the page itself, without the site chrome. */
+  body.kd-printing-share { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body.kd-printing-share > header,
+  body.kd-printing-share header.sticky,
+  body.kd-printing-share footer,
+  body.kd-printing-share nav[aria-label='Mobile quick navigation'],
+  body.kd-printing-share .kd-no-print { display: none !important; }
+}

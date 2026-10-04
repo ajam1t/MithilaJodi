@@ -7,11 +7,13 @@
         "build": "next build",
         "start": "next start",
         "lint": "next lint",
-        "type-check": "tsc --noEmit"
+        "type-check": "tsc --noEmit",
+        "test:astrology": "node -e \"require('fs').rmSync('.astrology-test',{recursive:true,force:true})\" && tsc -p tsconfig.astrology-test.json && node --test \".astrology-test/__tests__/*.test.js\""
     },
     "dependencies": {
         "@supabase/ssr": "^0.6.1",
         "@supabase/supabase-js": "^2.49.8",
+        "astronomy-engine": "2.1.19",
         "bcryptjs": "^2.4.3",
         "clsx": "^2.1.1",
         "nanoid": "^5.0.9",

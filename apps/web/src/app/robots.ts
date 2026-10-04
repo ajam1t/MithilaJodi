@@ -33,6 +33,8 @@ export default function robots(): MetadataRoute.Robots {
           // robots.txt only asks a crawler not to fetch, and a URL pasted into a
           // public group can still be indexed without the meta tag.
           '/p/',
+          // Shared Kundli Match results — unlisted, and noindex on the page too.
+          '/astrology/kundli-match/result/',
           '/legal/consent',
         ],
       },

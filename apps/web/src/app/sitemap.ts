@@ -33,9 +33,9 @@ const CONTENT_UPDATED = {
   // Legal documents gained the published Grievance Officer section.
   '/legal/terms': '2026-09-07',
   '/legal/privacy': '2026-09-07',
-  // Astrology tools — Phase 1 launch date.
-  '/astrology': '2026-10-02',
-  '/astrology/kundli-match': '2026-10-02',
+  // Astrology tools — Phase 1 launch date; Kundli Match went live 2026-10-04.
+  '/astrology': '2026-10-04',
+  '/astrology/kundli-match': '2026-10-04',
   '/astrology/nakshatra': '2026-10-02',
   '/astrology/manglik': '2026-10-02',
   '/astrology/janam-kundli': '2026-10-02',

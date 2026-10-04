@@ -1,265 +1,115 @@
 /**
- * Mithila Jodi — Astrology Engine Methodology
+ * Mithila Jodi Astrology Methodology — the single, frozen statement of every
+ * choice the engine makes. Nothing here computes; the engine reads it.
  *
- * Every decision that affects the calculation result is documented here as an
- * explicit constant or TODO. Nothing in this file computes anything — it is the
- * single authoritative source of which choices were made and which are still open.
+ * Bump `version` whenever any rule, table or astronomical choice changes in a
+ * way that could alter an output. Every result and every shared link records
+ * the version that produced it, so an old result is never silently
+ * reinterpreted under new rules.
  *
- * Versioning: bump METHODOLOGY_VERSION whenever a D-item is resolved. Stamp this
- * version on every MatchResult that is persisted or shared, so old results remain
- * interpretable even after a methodological change.
- *
- * Open decisions are marked TODO(Dn) where n matches the D-items in the project
- * handoff document. A decision is "open" if the exact value is not yet confirmed
- * by the Maithil pandit sign-off required before Phase 5 goes live.
+ * Client-safe: no astronomy imports.
  */
 
-// ─── Version ──────────────────────────────────────────────────────────────────
+export const METHODOLOGY_VERSION = '1.0.0'
 
-/**
- * Increment the patch for a clarification, minor for a resolved D-item,
- * major for a change that would alter scores already computed and shared.
- */
-export const METHODOLOGY_VERSION = '0.1.0-draft'
+export const METHODOLOGY = {
+  version: METHODOLOGY_VERSION,
+  name: 'Mithila Jodi Astrology Methodology',
 
-// ─── D1: Astronomical method ──────────────────────────────────────────────────
+  zodiac: 'Sidereal (Nirayana)',
 
-/**
- * Ayanamsha — the angular difference between the tropical and sidereal zodiacs.
- *
- * Lahiri (Chitrapaksha) is the Indian national standard, adopted by the
- * Government of India Panchanga Committee in 1955 and used by most North
- * Indian astrologers. Recommend pandit sign-off that Maithil tradition
- * uses Lahiri rather than a regional variant.
- *
- * TODO(D1): Confirm ayanamsha with Maithil pandit before Phase 5.
- */
-export const AYANAMSHA: 'lahiri' | 'raman' | 'krishnamurti' = 'lahiri'
+  ayanamsha: {
+    name: 'Lahiri (Chitrapaksha)',
+    // Calendar Reform Committee value for 21 March 1956 00:00 TT (JD 2435553.5)
+    // is 23°15′00.658″ including nutation; less that date's nutation in
+    // longitude (16.777″) it is the mean value below — the same anchor Swiss
+    // Ephemeris uses for SE_SIDM_LAHIRI. Carried to any other date with the
+    // IAU 2006 general precession in longitude (Capitaine et al. 2003).
+    epochJdTT: 2435553.5,
+    valueAtEpochDeg: 23.245522556,
+    precessionModel: 'IAU 2006 general precession in longitude (p_A)',
+    note:
+      'The mean ayanamsha is subtracted from longitudes referred to the mean equinox of date, ' +
+      'so nutation cancels exactly as in standard Indian practice.',
+  },
 
-/**
- * Node calculation: mean node vs true node for Rahu/Ketu.
- *
- * Mean node is standard in most traditional Vedic texts and panchanga usage.
- * True node oscillates around the mean by ±1.5°.
- *
- * TODO(D1): Confirm mean vs true node preference with Maithil pandit.
- */
-export const RAHU_KETU_NODE: 'mean' | 'true' = 'mean'
+  ephemeris: {
+    library: 'astronomy-engine',
+    libraryVersion: '2.1.19',
+    licence: 'MIT',
+    planets: 'VSOP87-based heliocentric theory, light-time and aberration corrected (apparent geocentric)',
+    moon: 'Improved Lunar Ephemeris (Brown / Montenbruck–Pfleger), geocentric',
+    statedAccuracy: 'within ±1 arcminute of NASA JPL Horizons for 1900–2100 (library documentation)',
+    whyNotSwissEphemeris:
+      'Swiss Ephemeris is dual-licensed AGPL-3.0 / paid commercial. AGPL would oblige the entire ' +
+      'hosted site to publish its source; the commercial licence is a separate legal decision. Its ' +
+      'native C build is also unreliable on Vercel serverless. astronomy-engine is MIT-licensed, pure ' +
+      'JavaScript, and accurate far beyond what rashi, nakshatra and pada boundaries require.',
+  },
 
-/**
- * House system.
- *
- * Whole-sign is the Vedic norm: each rashi occupies exactly one house,
- * Lagna's rashi = House 1, next rashi = House 2, etc. Placidus is Western
- * and is not appropriate here.
- *
- * TODO(D1): Confirm whole-sign is correct for Maithil kundli reading.
- */
-export const HOUSE_SYSTEM = 'whole-sign' as const
+  nodes: 'Mean lunar node (Rahu); Ketu exactly opposite. Meeus, Astronomical Algorithms ch. 47.',
+  houses: 'Whole-sign (the Lagna rashi is the 1st house; each following rashi is the next house)',
+  chartStyle: 'North Indian (diamond), houses fixed, rashi numbers rotate with the Lagna',
+  timezones:
+    'IANA time-zone database through the runtime Intl API, including historical offsets and ' +
+    'daylight-saving periods (e.g. Indian war time +06:30 in 1942–45). The browser time zone is never used.',
+  lagna:
+    'Ascendant from Greenwich apparent sidereal time, the birthplace longitude and latitude, and the ' +
+    'true obliquity of the ecliptic. Not computed when the birth time is unknown.',
 
-/**
- * Whether Lagna (Ascendant) is required for Kundli Match.
- *
- * false → Moon-only Ashtakoota matching (standard for most North Indian
- * Ashtakoota systems; does not require birth time).
- * true → Lagna required; birth time becomes mandatory.
- *
- * TODO(D1): Confirm with Maithil pandit. Currently assuming Moon-only
- * so that users without birth time can still use Kundli Match.
- */
-export const LAGNA_REQUIRED_FOR_MATCH = false
+  ashtakoota: {
+    basis: "Moon (Janma) rashi and nakshatra of each person. Roles matter: bride's and groom's values are not interchangeable.",
+    kootas: {
+      varna: 'Rashi → Varna (Brahmin: Kark, Vrishchik, Meen · Kshatriya: Mesh, Simha, Dhanu · Vaishya: Vrishabh, Kanya, Makar · Shudra: Mithun, Tula, Kumbh). 1 point if the groom’s Varna is equal to or higher than the bride’s.',
+      vashya: 'Rashi → Vashya group (Chatushpada, Manava, Jalachara, Vanachara, Keeta); Dhanu and Makar split at 15°. Scored with the groom × bride matrix in rules/tables.ts.',
+      tara: 'Count nakshatras from the bride’s to the groom’s and back (inclusive), reduced modulo 9. Taras 3 (Vipat), 5 (Pratyari) and 7 (Vadha) are inauspicious. 1½ points for each direction that is auspicious.',
+      yoni: 'Nakshatra → one of 14 Yoni animals; scored with the standard symmetric 14×14 matrix (same Yoni 4, sworn enemies 0).',
+      grahaMaitri: 'Natural (Parashari) friendship between the two Moon-rashi lords: friend/friend 5, friend/neutral 4, neutral/neutral 3, friend/enemy 1, neutral/enemy ½, enemy/enemy 0. Same lord 5.',
+      gana: 'Nakshatra → Deva, Manushya or Rakshasa; scored with the groom × bride matrix.',
+      bhakoot: 'Relative position of the two Moon rashis. 2/12, 5/9 and 6/8 are Bhakoot dosha (0); every other relationship scores 7.',
+      nadi: 'Nakshatra → Adi, Madhya or Antya Nadi. Same Nadi is Nadi dosha (0); different Nadi scores 8.',
+    },
+    cancellations:
+      'Koota scores are never altered by cancellation (parihara) rules. Where a classical text recognises a ' +
+      'cancellation for Bhakoot or Nadi dosha, the result names it beside the score so families can weigh it ' +
+      'with their own pandit.',
+  },
 
-// ─── D2: Ephemeris source ─────────────────────────────────────────────────────
+  manglik: {
+    houses: [1, 2, 4, 7, 8, 12] as const,
+    reckonedFrom: 'Lagna and the Moon',
+    status:
+      'Manglik — Mars in one of these houses from both the Lagna and the Moon. Anshik (partial) — from only ' +
+      'one of the two. Not Manglik — from neither. With an unknown birth time only the Moon-based check is ' +
+      'possible, so the status is reported as incomplete rather than guessed.',
+    notedExceptions:
+      'Reported, never applied automatically: Mars in its own sign (Mesh, Vrishchik), Mars exalted (Makar), ' +
+      'and both partners being Manglik (mutual balance).',
+    houseVariantNote: 'Some North Indian authorities omit the 2nd house; Mithila Jodi includes it, as most published calculators do.',
+  },
 
-/**
- * Which ephemeris library provides planetary positions.
- *
- * Options evaluated:
- *   - 'astronomy-engine': pure JS, MIT licence, zero native deps, works on
- *     Vercel Edge/Node. Accuracy: ~arc-second for modern dates. Preferred.
- *   - 'swiss-ephemeris-wasm': C → WASM port; AGPL-3.0 (or paid commercial
- *     licence). Won't build reliably on Vercel serverless.
- *   - 'external-api': latency, third-party dependency, privacy risk.
- *
- * null = Phase 1–4: no ephemeris. Phase 5 will implement.
- *
- * TODO(D2): Confirm ephemeris source before Phase 5.
- */
-export const EPHEMERIS_SOURCE: 'astronomy-engine' | 'swiss-ephemeris-wasm' | 'external-api' | null = null
+  scoreBands: [
+    { min: 0, max: 17, key: 'challenging', label: 'Traditionally considered challenging' },
+    { min: 18, max: 23, key: 'moderate', label: 'Moderate — meets the traditional minimum' },
+    { min: 24, max: 31, key: 'good', label: 'Good compatibility' },
+    { min: 32, max: 36, key: 'very-strong', label: 'Very strong compatibility' },
+  ] as const,
 
-// ─── D3: Accuracy target ──────────────────────────────────────────────────────
+  review:
+    'These tables follow the North Indian Ashtakoota convention as published in widely used Indian ' +
+    'panchang software. They have not yet been signed off by a Maithil pandit; where a family pandit ' +
+    'follows a different table, their reading should take precedence.',
 
-/**
- * Acceptable tolerance for planetary longitudes vs published ephemerides.
- *
- * Without a numeric target, "verified" is unfalsifiable.
- *
- * TODO(D3): Set a measurable accuracy target (e.g. ≤ 1 arc-minute) and
- * document the validation suite that checks it.
- */
-export const ACCURACY_TARGET_ARCMIN: number | null = null
+  disclaimer:
+    'Kundli matching is a traditional practice. These results describe what the selected Ashtakoota ' +
+    'methodology says about two birth charts; they are not a scientific measure, and they do not predict ' +
+    'or guarantee the success of a marriage. Please use them as one input among many, alongside family ' +
+    'discussion and your own judgement.',
+} as const
 
-// ─── D4: Geocoder ─────────────────────────────────────────────────────────────
+export type ScoreBand = (typeof METHODOLOGY.scoreBands)[number]
 
-/**
- * How birth-place strings are resolved to lat/lng/timezone.
- *
- * Three-tier resolver (proposed in architecture review):
- *   Tier 1 — /api/locations DB (238 rows, includes Mithila region coverage).
- *   Tier 2 — External geocoder (Nominatim/ODbL, or Google paid).
- *   Tier 3 — Manual lat/lng fallback entered by the user.
- *
- * Timezone: India is always IST = UTC+05:30. No tz library needed.
- * Caveat: pre-1955 births used Calcutta (+05:53:20) or Bombay (+04:51) time;
- * irrelevant for a marriage-age cohort.
- *
- * TODO(D4): Choose external geocoder licence (Nominatim ODbL attribution
- * required; Google requires paid plan and ToS compliance).
- * Server-side only — birth details never leave the server.
- */
-export const GEOCODER: 'nominatim' | 'google' | null = null
-
-/** IST is a fixed offset; India has never observed DST. */
-export const TIMEZONE_OFFSET_HOURS = 5.5
-export const TIMEZONE_IST = 'Asia/Kolkata' as const
-
-// ─── D5: Manglik rules ────────────────────────────────────────────────────────
-
-/**
- * Houses from Lagna in which Mars's presence triggers Manglik dosha.
- *
- * Most common North Indian rule set: houses 1, 2, 4, 7, 8, 12.
- * Some texts omit house 2 or add house 12 from Venus.
- *
- * TODO(D5): Confirm exact house list with Maithil pandit.
- */
-export const MANGLIK_HOUSES_FROM_LAGNA: readonly number[] = [1, 2, 4, 7, 8, 12]
-
-/**
- * Whether to also check Mars's position from the Moon chart.
- * TODO(D5): Confirm with pandit.
- */
-export const MANGLIK_CHECK_FROM_MOON = false
-
-/**
- * Whether to also check Mars's position from the Venus chart.
- * TODO(D5): Confirm with pandit.
- */
-export const MANGLIK_CHECK_FROM_VENUS = false
-
-/**
- * Dosha bhanga (cancellation) rules.
- *
- * Common cancellations: Mars in own sign, Mars exalted, Jupiter in Lagna, etc.
- * TODO(D5): Document the exact cancellation list approved by the Maithil pandit.
- * Until resolved, the engine will not apply cancellations.
- */
-export const MANGLIK_BHANGA_RULES: string[] = [] // TODO(D5): populate with approved rules
-
-/**
- * How 'anshik' (partial) Manglik is defined.
- *
- * One convention: Manglik from only one chart (Lagna vs Moon vs Venus) rather
- * than all checked charts. Another: specific weak-Mars conditions.
- *
- * TODO(D5): Confirm anshik definition with Maithil pandit.
- */
-export const ANSHIK_DEFINITION = '' // TODO(D5)
-
-// ─── D6: Ashtakoota scoring ───────────────────────────────────────────────────
-
-/**
- * Maximum score per koota. Standard weights; these are not debated.
- * Total = 36.
- */
-export const ASHTAKOOTA_WEIGHTS = {
-  Varna: 1,
-  Vashya: 2,
-  Tara: 3,
-  Yoni: 4,
-  GrahaMaitri: 5,
-  Gana: 6,
-  Bhakoot: 7,
-  Nadi: 8,
-} as const satisfies Record<string, number>
-
-/**
- * Score bands that map a total Ashtakoota score to a verdict string.
- *
- * TODO(D6): Confirm exact thresholds and wording with Maithil pandit.
- * The values below are placeholders — do not use them in production output.
- * D8 requires a disclaimer to accompany any verdict before publication.
- */
-export const SCORE_BANDS: ReadonlyArray<{ min: number; verdict: string }> = [
-  { min: 32, verdict: 'Excellent' },        // TODO(D6): confirm wording
-  { min: 28, verdict: 'Very Good' },         // TODO(D6): confirm wording
-  { min: 24, verdict: 'Good' },              // TODO(D6): confirm wording
-  { min: 18, verdict: 'Average' },           // TODO(D6): confirm wording
-  { min: 0,  verdict: 'Below threshold' },   // TODO(D6): confirm wording
-]
-
-/**
- * Bhakoot dosha exceptions (e.g. same rashi-group or certain lord relationships).
- * TODO(D6): Enumerate approved exceptions.
- */
-export const BHAKOOT_EXCEPTIONS: string[] = [] // TODO(D6)
-
-/**
- * Nadi dosha exceptions (e.g. same nakshatra but different pada).
- * TODO(D6): Enumerate approved exceptions.
- */
-export const NADI_EXCEPTIONS: string[] = [] // TODO(D6)
-
-/**
- * Whether Graha Maitri uses lord friendship tables or Moon-sign lords.
- * TODO(D6): Confirm with Maithil pandit.
- */
-export const GRAHA_MAITRI_METHOD: 'lord-friendship' | 'moon-sign-lords' = 'lord-friendship' // TODO(D6)
-
-// ─── D7: Share / persistence policy ──────────────────────────────────────────
-
-/**
- * Whether a shared Kundli result includes raw birth details (dob, birthTime,
- * birthPlace) or only computed output (chart positions, scores, verdict).
- *
- * Recommendation: computed output only, to minimise exposure of sensitive data.
- * TODO(D7): Confirm with legal/product before implementing sharing (Phase 6+).
- */
-export const SHARE_INCLUDES_BIRTH_DETAILS = false // TODO(D7): confirm
-
-/**
- * Default expiry for a shared result link (days).
- * TODO(D7): Confirm.
- */
-export const SHARE_DEFAULT_EXPIRY_DAYS: number | null = null // TODO(D7)
-
-// ─── D8: Disclaimer ───────────────────────────────────────────────────────────
-
-/**
- * Legal disclaimer text.
- *
- * Must appear on every tool result page before the tool goes live.
- * TODO(D8): Legal/editorial review required before Phase 5.
- *
- * Placeholder wording — do not publish without review:
- */
-export const DISCLAIMER =
-  'These results are provided as traditional astrological guidance only. ' +
-  'They are not a guarantee of compatibility or a prediction of marital outcomes. ' +
-  'Mithila Jodi recommends that families make matrimonial decisions based on their ' +
-  'own judgement, family discussions, and cultural traditions.'
-// TODO(D8): Replace with reviewed and approved wording before Phase 5.
-
-// ─── D9: Language ─────────────────────────────────────────────────────────────
-
-/**
- * Phase 1–4: English only.
- *
- * community_masters.label_hi and label_mai are NULL today for rashi and nakshatra.
- * Hindi/Maithili labels must be seeded in the DB before multi-language output
- * is possible.
- *
- * TODO(D9): Seed label_hi/label_mai for rashi (12 rows) and nakshatra (27 rows)
- * in community_masters before enabling multi-language output.
- */
-export const SUPPORTED_LANGUAGES = ['en'] as const
+export function scoreBandFor(total: number): ScoreBand {
+  const rounded = Math.floor(total)
+  return METHODOLOGY.scoreBands.find(b => rounded >= b.min && rounded <= b.max) ?? METHODOLOGY.scoreBands[0]
+}

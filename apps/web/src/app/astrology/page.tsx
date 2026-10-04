@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
+import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { SITE_URL } from '@/lib/constants'
 import {
   pageMetadata,
@@ -23,7 +24,8 @@ export const metadata = pageMetadata({
     'rashi calculator',
     'manglik check',
     'janam kundli online',
-    'vivah muhurat 2025',
+    'vivah muhurat',
+    'kundli milan 36 guna',
     'ashtakoota matching',
     'vedic astrology mithila',
     'horoscope matching maithili',
@@ -67,9 +69,9 @@ const TOOLS = [
     label: 'Kundli Match',
     tagline: 'Ashtakoota — 36 points across 8 kootas',
     description:
-      'Match two horoscopes using the Ashtakoota system. See Varna, Vashya, Tara, Yoni, Graha Maitri, Gana, Bhakoot, and Nadi scores individually — with a full Manglik analysis.',
+      'Match two horoscopes using the Ashtakoota system. See Varna, Vashya, Tara, Yoni, Graha Maitri, Gana, Bhakoot, and Nadi scores individually — with a full Manglik analysis and both North Indian birth charts.',
     primary: true,
-    status: 'coming-soon' as const,
+    status: 'live' as const,
     relatedPost: null,
   },
   {
@@ -234,7 +236,7 @@ export default function AstrologyHubPage() {
                     <svg width="9" height="9" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
                       <polygon points="6 0 7.6 4.2 12 4.6 8.8 7.4 9.8 12 6 9.6 2.2 12 3.2 7.4 0 4.6 4.4 4.2 6 0" />
                     </svg>
-                    Primary Tool · Coming Soon
+                    Live · Free
                   </span>
                 </div>
                 <div className="mb-4 flex items-center gap-3">
@@ -254,7 +256,7 @@ export default function AstrologyHubPage() {
                 </div>
                 <p className="text-paper-3/80 text-[15px] leading-relaxed max-w-2xl">{tool.description}</p>
                 <div className="mt-5 flex items-center gap-1.5 text-gold-lt text-[13px] font-medium group-hover:gap-2.5 transition-all">
-                  Learn more
+                  Match two Kundlis
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M3 8h10M8 3l5 5-5 5" />
                   </svg>
@@ -310,17 +312,18 @@ export default function AstrologyHubPage() {
                 and balanced, and whether the broader chart suggests a harmonious partnership.
               </p>
               <p>
-                Mithila Jodi approaches these tools with the same seriousness. Every calculation will
-                be documented, deterministic, and transparent. The methodology — which ayanamsha is
-                used, which house system, which Manglik rules — will be published on the site and
-                confirmed by a Maithil pandit before any result goes live. No result will be presented
-                as a guarantee; all are traditional guidance to inform family discussions, not replace them.
+                Mithila Jodi approaches these tools with the same seriousness. Every calculation is
+                documented, deterministic and transparent: the same birth details always give the same
+                result, and every score comes with the reason for it. No result is presented as a
+                guarantee — all are traditional guidance to inform family discussions, not replace them.
               </p>
               <p>
-                The tools use a documented Vedic method: Lahiri ayanamsha (the Indian national standard),
-                whole-sign houses, and the standard Ashtakoota weights (Varna 1, Vashya 2, Tara 3,
-                Yoni 4, Graha Maitri 5, Gana 6, Bhakoot 7, Nadi 8 — total 36 points). The exact
-                Manglik rules and score-band verdicts are being finalised before launch.
+                The tools share one engine and one published method: planetary positions from a real
+                astronomical ephemeris, the Lahiri ayanamsha (the Indian national standard), whole-sign
+                houses, and the standard Ashtakoota weights (Varna 1, Vashya 2, Tara 3, Yoni 4, Graha
+                Maitri 5, Gana 6, Bhakoot 7, Nadi 8 — total 36). The full rules, including Manglik and
+                the score bands, are published on the{' '}
+                <Link href="/astrology/kundli-match#methodology" className="text-maroon underline underline-offset-2">Kundli Match methodology</Link>.
               </p>
             </div>
           </div>
@@ -331,7 +334,7 @@ export default function AstrologyHubPage() {
           <div className="wrap max-w-3xl">
             <p className="eyebrow mb-2">From the blog</p>
             <h2 id="reading-heading" className="section-heading text-xl mb-6">
-              Understand the concepts before the tools launch
+              Understand the concepts behind the tools
             </h2>
             <ul className="flex flex-col gap-3" role="list">
               {BLOG_POSTS.map(({ href, label }) => (
@@ -360,11 +363,11 @@ export default function AstrologyHubPage() {
         {/* ── CTA ── */}
         <section className="bg-cream py-12 sm:py-16">
           <div className="wrap max-w-2xl text-center">
-            <p className="eyebrow mb-3">While the tools are being built</p>
+            <p className="eyebrow mb-3">Beyond the kundli</p>
             <h2 className="section-heading text-2xl mb-4">Start your matrimonial journey</h2>
             <p className="text-ink-soft text-[15px] leading-relaxed mb-8 max-w-lg mx-auto">
-              Create your profile on Mithila Jodi today. Your rashi, nakshatra, gotra, and family
-              details are all part of the profile — ready when the kundli tools go live.
+              Create your profile on Mithila Jodi today. Your rashi, nakshatra, gotra and family
+              details are all part of the profile, alongside everything else families look for.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/register" className="btn-primary">Create Your Profile Free</Link>
@@ -376,6 +379,7 @@ export default function AstrologyHubPage() {
       </main>
 
       <MithilaFooter className="pb-16 lg:pb-0" />
+      <MobileBottomNav />
     </div>
   )
 }

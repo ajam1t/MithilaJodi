@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
+import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { ComingSoon } from '@/components/astrology/ComingSoon'
 import { SITE_URL } from '@/lib/constants'
 import {
@@ -19,7 +20,7 @@ export const metadata = pageMetadata({
     'Find auspicious marriage dates based on the traditional Panchanga — Tithi, Vara, Nakshatra, Yoga, and Karana — with planetary considerations for the couple. Free Vivah Muhurat calculator.',
   keywords: [
     'vivah muhurat',
-    'shadi muhurat 2025',
+    'shadi muhurat',
     'marriage muhurat calculator',
     'auspicious marriage dates',
     'wedding muhurat vedic',
@@ -91,6 +92,7 @@ export default function VivahMuhuratPage() {
       </main>
 
       <MithilaFooter className="pb-16 lg:pb-0" />
+      <MobileBottomNav />
     </div>
   )
 }

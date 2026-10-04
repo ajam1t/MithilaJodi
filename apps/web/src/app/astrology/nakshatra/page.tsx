@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
+import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { ComingSoon } from '@/components/astrology/ComingSoon'
 import { SITE_URL } from '@/lib/constants'
 import {
@@ -91,6 +92,7 @@ export default function NakshatraPage() {
       </main>
 
       <MithilaFooter className="pb-16 lg:pb-0" />
+      <MobileBottomNav />
     </div>
   )
 }
