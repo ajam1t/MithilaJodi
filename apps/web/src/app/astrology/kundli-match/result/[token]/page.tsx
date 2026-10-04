@@ -51,10 +51,10 @@ export default async function SharedKundliResultPage({ params }: { params: Promi
           <section className="kd-cosmic py-20">
             <div className="kd-stars" aria-hidden="true" />
             <div className="wrap max-w-xl text-center">
-              <h1 className="font-serif text-cream text-[32px]">
+              <h1 className="font-serif text-maroon text-[32px]">
                 {loaded.state === 'gone' ? 'This shared result is no longer available' : 'Shared result not found'}
               </h1>
-              <p className="mt-4 text-paper-3/85 text-[16px] leading-relaxed">
+              <p className="mt-4 text-ink-soft text-[16px] leading-relaxed">
                 {loaded.state === 'gone'
                   ? 'The person who shared it has switched the link off, or it has expired. Shared Kundli Match links last 90 days.'
                   : 'Please check that the whole link was copied.'}
@@ -79,11 +79,11 @@ function SharedView({ summary, expiresAt }: { summary: SharedMatchSummary; expir
     <div className="wrap py-8 sm:py-12 space-y-12">
       <section className="kd-cosmic rounded-mj-lg overflow-hidden border border-gold/25 px-4 py-8 sm:px-8">
         <div className="kd-stars" aria-hidden="true" />
-        <p className="text-center text-[11px] uppercase tracking-[0.3em] text-marigold">Shared Kundli Match · Ashtakoota</p>
-        <h1 className="mt-2 text-center font-serif text-[28px] sm:text-[34px] text-cream">
-          {names.bride} <span className="text-gold-lt">&amp;</span> {names.groom}
+        <p className="text-center text-[11px] uppercase tracking-[0.3em] text-terra">Shared Kundli Match · Ashtakoota</p>
+        <h1 className="mt-2 text-center font-serif text-[28px] sm:text-[34px] text-maroon">
+          {names.bride} <span className="text-terra">&amp;</span> {names.groom}
         </h1>
-        <p className="mt-2 text-center text-[13px] text-paper-3/75">Calculated {computed} · Methodology v{summary.methodologyVersion}</p>
+        <p className="mt-2 text-center text-[13px] text-ink-soft">Calculated {computed} · Methodology v{summary.methodologyVersion}</p>
         <div className="mt-4">
           <ScoreRing kootas={summary.kootas} displayTotal={summary.total} litCount={8} bandLabel={summary.band.label} />
         </div>

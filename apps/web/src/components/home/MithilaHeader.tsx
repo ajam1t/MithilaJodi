@@ -71,6 +71,14 @@ function FloralEdge({ side }: { side: 'left' | 'right' }) {
   )
 }
 
+function SearchIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" /><path d="m20 20-3.6-3.6" />
+    </svg>
+  )
+}
+
 export function MithilaHeader() {
   const [open, setOpen] = useState(false)
   // Shared across header + bottom nav: one /api/auth/me per page load.
@@ -129,8 +137,16 @@ export function MithilaHeader() {
 
       {/* ── Mobile: centered brand ── */}
       <div className="lg:hidden relative px-12 py-2">
-        <FloralEdge side="left" />
         <FloralEdge side="right" />
+
+        {/* Search — members search, visitors browse profiles */}
+        <Link
+          href={auth.loggedIn ? '/search' : '/explore'}
+          className="absolute top-2 left-1.5 text-maroon p-2 rounded"
+          aria-label={auth.loggedIn ? 'Search profiles' : 'Browse profiles'}
+        >
+          <SearchIcon />
+        </Link>
 
         {/* Hamburger — corner, never overlaps the centered brand */}
         <button
@@ -172,7 +188,7 @@ export function MithilaHeader() {
         {Brand}
 
         {/* Desktop nav */}
-        <nav className="flex items-center gap-6" aria-label="Main navigation">
+        <nav className="flex items-center gap-[14px] xl:gap-6" aria-label="Main navigation">
           {auth.loggedIn ? (
             <>
               {AUTH_NAV_LINKS.map(({ href, label }) => (
@@ -204,14 +220,19 @@ export function MithilaHeader() {
               {/* Only show Login/Register once we know the user is not logged in */}
               {authLoaded && (
                 <>
+                  <Link href="/explore" className="text-ink hover:text-terra transition-colors p-1 -mx-1" aria-label="Browse profiles">
+                    <SearchIcon />
+                  </Link>
+                  <div className="h-4 w-px bg-gold opacity-40" />
                   <Link href="/login" className="text-[13px] text-maroon hover:text-terra transition-colors tracking-wide font-medium whitespace-nowrap">
                     Login
                   </Link>
                   <Link
                     href="/register"
-                    className="btn bg-maroon text-gold-lt text-[13px] py-2 px-5 font-semibold hover:bg-maroon-deep hover:-translate-y-px transition-all whitespace-nowrap rounded-mj-sm"
+                    className="btn bg-maroon text-gold-lt text-[13px] py-2 px-4 xl:px-5 font-semibold hover:bg-maroon-deep hover:-translate-y-px transition-all whitespace-nowrap rounded-mj-sm"
                   >
-                    Create Free Account
+                    <span className="xl:hidden">Join Free</span>
+                    <span className="hidden xl:inline">Create Free Account</span>
                   </Link>
                 </>
               )}

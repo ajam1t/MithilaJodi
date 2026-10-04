@@ -182,12 +182,12 @@ export function SingleChartExperience<R extends WithChart>({ endpoint, ctaLabel,
             </div>
           )}
           <BirthDetailsCard role="native" draft={draft} onChange={update} errors={errors} maxDate={maxDate} nameLabel={nameField?.label} namePlaceholder={nameField?.placeholder} />
-          <p className="mt-4 text-[13px] text-paper-3/80 text-center">Details are used for this calculation only and are not stored.</p>
+          <p className="mt-4 text-[13px] text-ink-soft text-center">Details are used for this calculation only and are not stored.</p>
           <div className="mt-6 flex flex-col items-center gap-3">
             <button type="submit" className="kd-cta" disabled={phase === 'loading'}>
               {phase === 'loading' ? 'Calculating…' : ctaLabel}
             </button>
-            <p className="text-[12px] text-paper-3/70">Free · No login · Calculated on our server in under a second</p>
+            <p className="text-[12px] text-ink-soft">Free · No login · Calculated on our server in under a second</p>
           </div>
         </form>
       )}

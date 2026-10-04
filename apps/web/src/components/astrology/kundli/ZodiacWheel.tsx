@@ -33,16 +33,16 @@ const TAU = Math.PI * 2
  * its calculated sidereal longitude — the only geometric claim this drawing
  * makes. Marker sizes and ring spacing are schematic.
  */
-export function ZodiacWheel({ size = 320, markers = [], connect = false, className = '', decorative = false, label, theme = 'dark', animateMarkers = false, highlightRashi }: Props) {
+export function ZodiacWheel({ size = 320, markers = [], connect = false, className = '', decorative = false, label, theme = 'light', animateMarkers = false, highlightRashi }: Props) {
   const c = size / 2
   const rOuter = c - 4
   const rSign = c * 0.86
   const rNak = c * 0.74
   const rOuterRing = c * 0.62
   const rInnerRing = c * 0.44
-  const gold = '#E4C572'
+  const gold = theme === 'dark' ? '#E4C572' : '#B98A2E'
   const ink = theme === 'dark' ? '#FFFAF0' : '#5A0E19'
-  const faint = theme === 'dark' ? 'rgba(228,197,114,0.28)' : 'rgba(185,138,46,0.45)'
+  const faint = theme === 'dark' ? 'rgba(228,197,114,0.28)' : 'rgba(185,138,46,0.4)'
 
   // Longitude 0 at 9 o'clock, increasing counter-clockwise (screen y is down).
   const at = (lon: number, r: number) => {

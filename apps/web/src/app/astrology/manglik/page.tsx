@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { ToolEmblem } from '@/components/astrology/ToolEmblem'
+import { MoreTools } from '@/components/astrology/MoreTools'
 import '@/styles/kundli.css'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
@@ -94,27 +96,28 @@ export default function ManglikPage() {
           <LazyCosmicBackdrop />
 
           <nav aria-label="Breadcrumb" className="relative border-b kd-hairline">
-            <ol className="wrap flex items-center gap-2 py-3 text-[12px] text-paper-3/60">
-              <li><Link href="/" className="hover:text-gold-lt transition-colors">Home</Link></li>
+            <ol className="wrap flex items-center gap-2 py-3 text-[12px] text-ink-soft">
+              <li><Link href="/" className="hover:text-maroon transition-colors">Home</Link></li>
               <li aria-hidden="true" className="text-gold/40">›</li>
-              <li><Link href="/astrology" className="hover:text-gold-lt transition-colors">Astrology Tools</Link></li>
+              <li><Link href="/astrology" className="hover:text-maroon transition-colors">Astrology Tools</Link></li>
               <li aria-hidden="true" className="text-gold/40">›</li>
-              <li className="text-gold-lt" aria-current="page">Manglik Check</li>
+              <li className="text-terra" aria-current="page">Manglik Check</li>
             </ol>
           </nav>
 
           <section className="relative wrap pt-10 pb-8 sm:pt-14 lg:pt-16 grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
             <div className="text-center lg:text-left">
-              <p className="text-[11px] uppercase tracking-[0.3em] text-marigold">Mangal dosha</p>
-              <h1 className="mt-3 font-serif text-cream text-[40px] sm:text-[52px] lg:text-[60px] leading-[1.04]">
+              <ToolEmblem tool="manglik" size={68} className="mx-auto lg:mx-0 mb-4 drop-shadow-md" />
+              <p className="text-[11px] uppercase tracking-[0.3em] text-terra font-semibold">Mangal dosha</p>
+              <h1 className="mt-3 font-serif text-maroon text-[40px] sm:text-[52px] lg:text-[60px] leading-[1.04]">
                 Manglik Check
-                <span className="block font-deva text-gold-lt text-[26px] sm:text-[32px] mt-2">मांगलिक विचार</span>
+                <span className="block font-deva text-terra text-[26px] sm:text-[32px] mt-2">मांगलिक विचार</span>
               </h1>
-              <p className="mt-5 text-[17px] sm:text-[18px] text-paper-3/90 leading-relaxed max-w-xl mx-auto lg:mx-0">
+              <p className="mt-5 text-[17px] sm:text-[18px] text-ink leading-relaxed max-w-xl mx-auto lg:mx-0">
                 See exactly where Mars falls — counted from the Lagna and from the Moon — whether the chart is Manglik,
                 Anshik or not, which traditional exceptions apply, and what it means when two charts are matched.
               </p>
-              <ul className="mt-5 flex flex-wrap justify-center lg:justify-start gap-x-5 gap-y-2 text-[13px] text-paper-3/80">
+              <ul className="mt-5 flex flex-wrap justify-center lg:justify-start gap-x-5 gap-y-2 text-[13px] text-ink-soft">
                 <li>✦ Both counts shown, rules published</li>
                 <li>✦ Same rule as Kundli Match</li>
                 <li>✦ Free · no login · nothing stored</li>
@@ -123,7 +126,7 @@ export default function ManglikPage() {
             </div>
             <div className="hidden lg:block mx-auto w-full max-w-[360px] opacity-90" aria-hidden="true">
               <NorthIndianChart firstRashiIndex={0} placements={[]} firstHouseLabel="1" shadeHouses={[...METHODOLOGY.manglik.houses]} description="" size={360} />
-              <p className="mt-2 text-center text-[12px] text-paper-3/70">The Manglik houses: {METHODOLOGY.manglik.houses.join(', ')}</p>
+              <p className="mt-2 text-center text-[12px] text-ink-soft">The Manglik houses: {METHODOLOGY.manglik.houses.join(', ')}</p>
             </div>
           </section>
 
@@ -177,7 +180,7 @@ export default function ManglikPage() {
                 </details>
               ))}
             </div>
-            <div className="mt-12 grid gap-6 sm:grid-cols-2">
+            <div className="mt-12">
               <div>
                 <h2 className="font-serif text-maroon text-[20px]">Read more</h2>
                 <ul className="mt-3 space-y-2">
@@ -185,17 +188,10 @@ export default function ManglikPage() {
                   <li><Link href="/blogs/horoscope-marriage/kundli-matching-explained" className={LINK}>Kundli Matching Explained</Link></li>
                 </ul>
               </div>
-              <div>
-                <h2 className="font-serif text-maroon text-[20px]">More astrology tools</h2>
-                <ul className="mt-3 space-y-2">
-                  <li><Link href="/astrology/kundli-match" className={LINK}>Kundli Match — 36 Guna</Link></li>
-                  <li><Link href="/astrology/janam-kundli" className={LINK}>Janam Kundli — full birth chart</Link></li>
-                  <li><Link href="/astrology" className={LINK}>All astrology tools</Link></li>
-                </ul>
-              </div>
             </div>
           </div>
         </section>
+        <MoreTools current="manglik" />
       </main>
 
       <MithilaFooter className="pb-16 lg:pb-0" />

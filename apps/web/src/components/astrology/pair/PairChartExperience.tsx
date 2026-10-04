@@ -247,7 +247,7 @@ export function PairChartExperience<R>({ endpoint, ctaLabel, note, Report, chart
             <BirthDetailsCard role="bride" draft={drafts.bride} onChange={update('bride')} errors={errors} maxDate={maxDate} />
             <BirthDetailsCard role="groom" draft={drafts.groom} onChange={update('groom')} errors={errors} maxDate={maxDate} />
           </div>
-          <p className="mt-4 text-[13px] text-paper-3/80 text-center max-w-2xl mx-auto">{note}</p>
+          <p className="mt-4 text-[13px] text-ink-soft text-center max-w-2xl mx-auto">{note}</p>
           <div className="mt-6 flex flex-col items-center gap-3">
             <button type="submit" className="kd-cta" disabled={phase === 'loading'} aria-describedby="kd-cta-note">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
@@ -255,7 +255,7 @@ export function PairChartExperience<R>({ endpoint, ctaLabel, note, Report, chart
               </svg>
               {phase === 'loading' ? 'Calculating planetary positions…' : ctaLabel}
             </button>
-            <p id="kd-cta-note" className="text-[12px] text-paper-3/70">Free · No login · Calculated on our server in under a second</p>
+            <p id="kd-cta-note" className="text-[12px] text-ink-soft">Free · No login · Calculated on our server in under a second</p>
           </div>
         </form>
       )}

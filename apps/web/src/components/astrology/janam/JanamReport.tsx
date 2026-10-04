@@ -69,9 +69,9 @@ export function JanamReport({ result, person, scenarioKey, onEdit, onNew }: Prop
         <div className="kd-stars" aria-hidden="true" />
         <div className="relative px-4 py-7 sm:px-8 sm:py-9 grid gap-7 lg:grid-cols-[1fr_minmax(0,340px)] lg:items-center">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.3em] text-marigold">Janam Kundli · जन्म कुण्डली</p>
-            <h2 id="kd-result-title" tabIndex={-1} className="mt-2 font-serif text-[30px] sm:text-[38px] text-cream leading-tight outline-none">{chart.name}</h2>
-            <p className="mt-1 text-[14px] text-paper-3/80">
+            <p className="text-[11px] uppercase tracking-[0.3em] text-terra">Janam Kundli · जन्म कुण्डली</p>
+            <h2 id="kd-result-title" tabIndex={-1} className="mt-2 font-serif text-[30px] sm:text-[38px] text-maroon leading-tight outline-none">{chart.name}</h2>
+            <p className="mt-1 text-[14px] text-ink-soft">
               {formatDateLong(chart.birth.localDate)}
               {chart.birth.localTime ? ` · ${formatTime12(chart.birth.localTime)}` : chart.moonWindow ? ` · time unknown (${chart.moonWindow.fromLocal}–${chart.moonWindow.toLocal} assumed window)` : ' · time unknown'}
               {' · '}{chart.birth.placeLabel}
@@ -86,7 +86,7 @@ export function JanamReport({ result, person, scenarioKey, onEdit, onNew }: Prop
               animateMarkers
               label={`Sidereal zodiac with ${chart.name}'s nine grahas${chart.lagna ? ' and Lagna' : ''} at their calculated longitudes`}
             />
-            <p className="mt-2 text-center text-[11px] text-paper-3/60">Planets at their calculated sidereal longitudes; spacing is illustrative.</p>
+            <p className="mt-2 text-center text-[11px] text-ink-soft">Planets at their calculated sidereal longitudes; spacing is illustrative.</p>
           </div>
         </div>
         <div className="kd-mithila-strip" aria-hidden="true" />

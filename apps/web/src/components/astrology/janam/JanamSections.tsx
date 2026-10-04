@@ -38,10 +38,10 @@ export function AtAGlance({ result, nowMs }: { result: JanamKundliResult; nowMs:
   return (
     <dl className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
       {tiles.map(([label, value, sub]) => (
-        <div key={label} className="rounded-mj-sm border border-gold/25 bg-cosmic-mid/80 px-3 py-2.5 text-center">
-          <dt className="text-[10px] uppercase tracking-[0.16em] text-gold-lt/80">{label}</dt>
-          <dd className="mt-1 font-serif text-[17px] leading-tight text-cream">{value}</dd>
-          {sub && <dd className="mt-0.5 text-[11px] text-paper-3/70">{sub}</dd>}
+        <div key={label} className="rounded-mj-sm border border-gold/25 bg-white/75 px-3 py-2.5 text-center">
+          <dt className="text-[10px] uppercase tracking-[0.16em] text-terra">{label}</dt>
+          <dd className="mt-1 font-serif text-[17px] leading-tight text-maroon">{value}</dd>
+          {sub && <dd className="mt-0.5 text-[11px] text-ink-soft">{sub}</dd>}
         </div>
       ))}
     </dl>
@@ -204,7 +204,7 @@ export function DashaTimeline({ result, nowMs }: { result: JanamKundliResult; no
             const from = Math.max(birth, Date.parse(m.start))
             const w = ((Date.parse(m.end) - from) / span) * 100
             return (
-              <div key={m.lord} className="flex items-center justify-center text-[11px] font-semibold text-cream border-r border-cream/40 last:border-0" style={{ width: `${w}%`, background: BAR[i] }} title={`${grahaShort(m.lord)}: ${dateFmt(m.start)} – ${dateFmt(m.end)}`}>
+              <div key={m.lord} className="flex items-center justify-center text-[11px] font-semibold text-maroon border-r border-cream/40 last:border-0" style={{ width: `${w}%`, background: BAR[i] }} title={`${grahaShort(m.lord)}: ${dateFmt(m.start)} – ${dateFmt(m.end)}`}>
                 {w > 4 ? grahaOf(m.lord).abbr : ''}
               </div>
             )

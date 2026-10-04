@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { ToolEmblem } from '@/components/astrology/ToolEmblem'
+import { MoreTools } from '@/components/astrology/MoreTools'
 import '@/styles/kundli.css'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
@@ -94,26 +96,27 @@ export default function BabyNamesPage() {
           <LazyCosmicBackdrop />
 
           <nav aria-label="Breadcrumb" className="relative border-b kd-hairline">
-            <ol className="wrap flex items-center gap-2 py-3 text-[12px] text-paper-3/60">
-              <li><Link href="/" className="hover:text-gold-lt transition-colors">Home</Link></li>
+            <ol className="wrap flex items-center gap-2 py-3 text-[12px] text-ink-soft">
+              <li><Link href="/" className="hover:text-maroon transition-colors">Home</Link></li>
               <li aria-hidden="true" className="text-gold/40">›</li>
-              <li><Link href="/astrology" className="hover:text-gold-lt transition-colors">Astrology Tools</Link></li>
+              <li><Link href="/astrology" className="hover:text-maroon transition-colors">Astrology Tools</Link></li>
               <li aria-hidden="true" className="text-gold/40">›</li>
-              <li className="text-gold-lt" aria-current="page">Baby Names</li>
+              <li className="text-terra" aria-current="page">Baby Names</li>
             </ol>
           </nav>
 
           <section className="relative wrap pt-10 pb-8 sm:pt-14 lg:pt-16 text-center">
-            <p className="text-[11px] uppercase tracking-[0.3em] text-marigold">Naamkaran</p>
-            <h1 className="mt-3 font-serif text-cream text-[40px] sm:text-[52px] lg:text-[60px] leading-[1.04]">
+            <ToolEmblem tool="baby-names" size={68} className="mx-auto mb-4 drop-shadow-md" />
+            <p className="text-[11px] uppercase tracking-[0.3em] text-terra font-semibold">Naamkaran</p>
+            <h1 className="mt-3 font-serif text-maroon text-[40px] sm:text-[52px] lg:text-[60px] leading-[1.04]">
               Baby Name Letters
-              <span className="block font-deva text-gold-lt text-[26px] sm:text-[32px] mt-2">नामाक्षर</span>
+              <span className="block font-deva text-terra text-[26px] sm:text-[32px] mt-2">नामाक्षर</span>
             </h1>
-            <p className="mt-5 text-[17px] sm:text-[18px] text-paper-3/90 leading-relaxed max-w-2xl mx-auto">
+            <p className="mt-5 text-[17px] sm:text-[18px] text-ink leading-relaxed max-w-2xl mx-auto">
               Find the syllable a child’s name traditionally begins with — from the nakshatra and pada of the Moon at
               birth — see the rashi letters, and check whether a name you are considering fits.
             </p>
-            <ul className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2 text-[13px] text-paper-3/80">
+            <ul className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2 text-[13px] text-ink-soft">
               <li>✦ Devanagari and English</li>
               <li>✦ Name checker</li>
               <li>✦ Free · no login · nothing stored</li>
@@ -185,16 +188,9 @@ export default function BabyNamesPage() {
                 </details>
               ))}
             </div>
-            <div className="mt-12">
-              <h2 className="font-serif text-maroon text-[20px]">More astrology tools</h2>
-              <ul className="mt-3 space-y-2">
-                <li><Link href="/astrology/janam-kundli" className={LINK}>Janam Kundli — the child’s birth chart</Link></li>
-                <li><Link href="/astrology/nakshatra" className={LINK}>Nakshatra — birth star and pada</Link></li>
-                <li><Link href="/astrology" className={LINK}>All astrology tools</Link></li>
-              </ul>
-            </div>
           </div>
         </section>
+        <MoreTools current="baby-names" />
       </main>
 
       <MithilaFooter className="pb-16 lg:pb-0" />

@@ -40,22 +40,22 @@ export function NakshatraReport({ result, person, scenarioKey, onEdit, onNew }: 
         <div className="kd-stars" aria-hidden="true" />
         <div className="relative px-4 py-7 sm:px-8 sm:py-9 grid gap-7 lg:grid-cols-[1fr_minmax(0,340px)] lg:items-center">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.3em] text-marigold">Janma nakshatra · {chart.name}</p>
-            <h2 id="kd-result-title" tabIndex={-1} className="mt-2 font-serif text-[34px] sm:text-[44px] text-cream leading-tight outline-none">
-              {nak.name} <span className="font-deva text-gold-lt text-[28px] sm:text-[34px]">{nak.hi}</span>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-terra">Janma nakshatra · {chart.name}</p>
+            <h2 id="kd-result-title" tabIndex={-1} className="mt-2 font-serif text-[34px] sm:text-[44px] text-maroon leading-tight outline-none">
+              {nak.name} <span className="font-deva text-terra text-[28px] sm:text-[34px]">{nak.hi}</span>
             </h2>
-            <p className="mt-1 text-[16px] text-paper-3/85">
+            <p className="mt-1 text-[16px] text-ink-soft">
               {moon.pada ? `Pada ${moon.pada}` : 'Pada uncertain without birth time'} · Moon in {rashiOf(moon.rashi).name} ({rashiOf(moon.rashi).western})
             </p>
-            <p className="mt-1 text-[13px] text-paper-3/65">
+            <p className="mt-1 text-[13px] text-ink-soft">
               {formatDateLong(chart.birth.localDate)}
               {chart.birth.localTime ? ` · ${formatTime12(chart.birth.localTime)}` : ' · time unknown'} · {chart.birth.placeLabel}
             </p>
             <dl className="mt-5 grid grid-cols-2 sm:grid-cols-3 gap-2.5">
               {tiles.map(([k, v]) => (
-                <div key={k} className="rounded-mj-sm border border-gold/25 bg-cosmic-mid/80 px-3 py-2.5">
-                  <dt className="text-[10px] uppercase tracking-[0.16em] text-gold-lt/80">{k}</dt>
-                  <dd className="mt-1 font-serif text-[16px] leading-tight text-cream">{v}</dd>
+                <div key={k} className="rounded-mj-sm border border-gold/25 bg-white/75 px-3 py-2.5">
+                  <dt className="text-[10px] uppercase tracking-[0.16em] text-terra">{k}</dt>
+                  <dd className="mt-1 font-serif text-[16px] leading-tight text-maroon">{v}</dd>
                 </div>
               ))}
             </dl>
@@ -92,10 +92,10 @@ export function NakshatraReport({ result, person, scenarioKey, onEdit, onNew }: 
               const [hi, en] = info.syllables[i]
               return (
                 <div key={i} className={`px-2 py-3 text-center border-r border-gold/20 last:border-0 ${mine ? 'bg-maroon text-cream' : 'bg-paper'}`}>
-                  <p className={`text-[10px] uppercase tracking-[0.14em] ${mine ? 'text-gold-lt' : 'text-terra'}`}>Pada {i + 1}</p>
+                  <p className={`text-[10px] uppercase tracking-[0.14em] ${mine ? 'text-terra' : 'text-terra'}`}>Pada {i + 1}</p>
                   <p className="font-deva text-[26px] leading-tight mt-1">{hi}</p>
                   <p className="text-[14px] font-semibold">{en}</p>
-                  <p className={`mt-1 text-[11px] ${mine ? 'text-paper-3/85' : 'text-ink-soft'}`}>{pos(p.start)}</p>
+                  <p className={`mt-1 text-[11px] ${mine ? 'text-ink-soft' : 'text-ink-soft'}`}>{pos(p.start)}</p>
                 </div>
               )
             })}

@@ -60,20 +60,20 @@ export function ManglikReport({ result, person, scenarioKey, onEdit, onNew }: Si
         <div className="kd-stars" aria-hidden="true" />
         <div className="relative px-4 py-7 sm:px-8 sm:py-9 grid gap-7 lg:grid-cols-[1fr_minmax(0,320px)] lg:items-center">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.3em] text-marigold">Manglik check · {chart.name}</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-terra">Manglik check · {chart.name}</p>
             <h2 id="kd-result-title" tabIndex={-1} className="mt-3 outline-none">
               <span className={`inline-flex rounded-pill border px-5 py-2 font-serif text-[26px] sm:text-[32px] leading-none ${TONE[m.status]}`}>{m.label}</span>
             </h2>
-            <p className="mt-3 text-[16px] text-paper-3/90 max-w-xl">{SUMMARY[m.status]}</p>
-            <p className="mt-1 text-[13px] text-paper-3/65">
+            <p className="mt-3 text-[16px] text-ink max-w-xl">{SUMMARY[m.status]}</p>
+            <p className="mt-1 text-[13px] text-ink-soft">
               {formatDateLong(chart.birth.localDate)}
               {chart.birth.localTime ? ` · ${formatTime12(chart.birth.localTime)}` : ' · time unknown'} · {chart.birth.placeLabel}
             </p>
             <dl className="mt-5 grid grid-cols-2 sm:grid-cols-3 gap-2.5">
               {tiles.map(([k, v]) => (
-                <div key={k} className="rounded-mj-sm border border-gold/25 bg-cosmic-mid/80 px-3 py-2.5">
-                  <dt className="text-[10px] uppercase tracking-[0.16em] text-gold-lt/80">{k}</dt>
-                  <dd className="mt-1 font-serif text-[16px] leading-tight text-cream">{v}</dd>
+                <div key={k} className="rounded-mj-sm border border-gold/25 bg-white/75 px-3 py-2.5">
+                  <dt className="text-[10px] uppercase tracking-[0.16em] text-terra">{k}</dt>
+                  <dd className="mt-1 font-serif text-[16px] leading-tight text-maroon">{v}</dd>
                 </div>
               ))}
             </dl>

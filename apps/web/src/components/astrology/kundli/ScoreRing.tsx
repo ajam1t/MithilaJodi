@@ -31,13 +31,13 @@ export function ScoreRing({ kootas, displayTotal, litCount, bandLabel, size = 26
         <svg viewBox={`0 0 ${size} ${size}`} width="100%" aria-hidden="true">
           <defs>
             <linearGradient id="kd-arc" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#E4C572" />
-              <stop offset="55%" stopColor="#D6A83C" />
-              <stop offset="100%" stopColor="#B98A2E" />
+              <stop offset="0%" stopColor="#D6A83C" />
+              <stop offset="55%" stopColor="#B98A2E" />
+              <stop offset="100%" stopColor="#9B2233" />
             </linearGradient>
             <radialGradient id="kd-core">
-              <stop offset="0%" stopColor="rgba(122,18,32,0.55)" />
-              <stop offset="100%" stopColor="rgba(122,18,32,0)" />
+              <stop offset="0%" stopColor="rgba(232,145,42,0.22)" />
+              <stop offset="100%" stopColor="rgba(232,145,42,0)" />
             </radialGradient>
           </defs>
           <circle className="kd-score-glow" cx={c} cy={c} r={r * 0.98} fill="url(#kd-core)" />
@@ -51,13 +51,13 @@ export function ScoreRing({ kootas, displayTotal, litCount, bandLabel, size = 26
                 key={i}
                 x1={c + r1 * Math.cos(a)} y1={c + r1 * Math.sin(a)}
                 x2={c + r2 * Math.cos(a)} y2={c + r2 * Math.sin(a)}
-                stroke={lit ? '#E4C572' : 'rgba(228,197,114,0.22)'}
+                stroke={lit ? '#B98A2E' : 'rgba(185,138,46,0.25)'}
                 strokeWidth={lit ? 2 : 1.2}
                 strokeLinecap="round"
               />
             )
           })}
-          <circle cx={c} cy={c} r={r} fill="none" stroke="rgba(228,197,114,0.18)" strokeWidth={size * 0.035} />
+          <circle cx={c} cy={c} r={r} fill="none" stroke="rgba(185,138,46,0.16)" strokeWidth={size * 0.035} />
           <circle
             className="kd-ring-arc"
             cx={c} cy={c} r={r}
@@ -71,11 +71,11 @@ export function ScoreRing({ kootas, displayTotal, litCount, bandLabel, size = 26
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="font-serif text-cream leading-none" style={{ fontSize: size * 0.24 }}>
+          <span className="font-serif text-maroon leading-none" style={{ fontSize: size * 0.24 }}>
             {points(displayTotal)}
           </span>
-          <span className="mt-1 text-[12px] sm:text-[13px] uppercase tracking-[0.24em] text-gold-lt">of 36 Guna</span>
-          {bandLabel && <span className="mt-2 px-3 text-[12px] leading-snug text-paper-3/85 max-w-[70%]">{bandLabel}</span>}
+          <span className="mt-1 text-[12px] sm:text-[13px] uppercase tracking-[0.24em] text-terra">of 36 Guna</span>
+          {bandLabel && <span className="mt-2 px-3 text-[12px] leading-snug text-ink-soft max-w-[70%]">{bandLabel}</span>}
         </div>
         </div>
 
@@ -90,15 +90,15 @@ export function ScoreRing({ kootas, displayTotal, litCount, bandLabel, size = 26
                 style={{ '--a': `${i * 45}deg`, '--r': `${orbit}px` } as React.CSSProperties}
               >
                 <div
-                  className="kd-node rounded-mj-sm border px-2.5 py-1.5 text-center bg-cosmic-mid/90 backdrop-blur-sm"
+                  className="kd-node rounded-mj-sm border px-2.5 py-1.5 text-center bg-white/90 backdrop-blur-sm"
                   data-lit={lit}
                   data-tone={tone(k.score, k.maxScore)}
-                  style={{ borderColor: lit ? (k.score >= k.maxScore ? 'rgba(228,197,114,0.75)' : k.score > 0 ? 'rgba(228,197,114,0.4)' : 'rgba(155,34,51,0.8)') : 'rgba(228,197,114,0.18)' }}
+                  style={{ borderColor: lit ? (k.score >= k.maxScore ? 'rgba(185,138,46,0.8)' : k.score > 0 ? 'rgba(185,138,46,0.4)' : 'rgba(155,34,51,0.7)') : 'rgba(185,138,46,0.2)' }}
                 >
-                  <span className="block text-[11px] uppercase tracking-[0.14em] text-paper-3/80">{k.name}</span>
-                  <span className={`block font-serif text-[17px] leading-tight ${k.score >= k.maxScore ? 'text-gold-lt' : k.score > 0 ? 'text-cream' : 'text-[#F2A7A0]'}`}>
+                  <span className="block text-[11px] uppercase tracking-[0.14em] text-ink-soft">{k.name}</span>
+                  <span className={`block font-serif text-[17px] leading-tight ${k.score >= k.maxScore ? 'text-success-fg' : k.score > 0 ? 'text-maroon' : 'text-error-fg'}`}>
                     {lit ? points(k.score) : '–'}
-                    <span className="text-[12px] text-paper-3/60"> / {k.maxScore}</span>
+                    <span className="text-[12px] text-ink-soft"> / {k.maxScore}</span>
                   </span>
                 </div>
               </li>

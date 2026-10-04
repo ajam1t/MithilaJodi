@@ -131,7 +131,7 @@ export function VivahMuhuratExperience({ initial }: { initial: VivahMuhuratResul
         </fieldset>
         <div className="mt-6 flex flex-col items-center gap-3">
           <button type="submit" className="kd-cta" disabled={busy}>{busy ? 'Reading the panchang…' : 'Find muhurats'}</button>
-          <p className="text-[12px] text-paper-3/70">Free · No login · Nothing stored</p>
+          <p className="text-[12px] text-ink-soft">Free · No login · Nothing stored</p>
         </div>
       </form>
 

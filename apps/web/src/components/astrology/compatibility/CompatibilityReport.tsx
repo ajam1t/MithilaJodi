@@ -67,10 +67,10 @@ export function CompatibilityReport({ result, request, onEdit, onNew }: PairRepo
       <section className="kd-cosmic rounded-mj-lg overflow-hidden border border-gold/25" aria-labelledby="kd-result-title">
         <div className="kd-stars" aria-hidden="true" />
         <div className="relative px-4 py-7 sm:px-8 sm:py-9">
-          <p className="text-[11px] uppercase tracking-[0.3em] text-marigold">Compatibility · {names.bride} &amp; {names.groom}</p>
-          <h2 id="kd-result-title" tabIndex={-1} className="mt-3 outline-none font-serif text-cream text-[30px] sm:text-[40px] leading-tight">
-            {points(m.total)} <span className="text-gold-lt">/ 36 Guna</span>
-            <span className="block text-[18px] sm:text-[20px] text-paper-3/90 mt-1">{m.band.label}</span>
+          <p className="text-[11px] uppercase tracking-[0.3em] text-terra">Compatibility · {names.bride} &amp; {names.groom}</p>
+          <h2 id="kd-result-title" tabIndex={-1} className="mt-3 outline-none font-serif text-maroon text-[30px] sm:text-[40px] leading-tight">
+            {points(m.total)} <span className="text-terra">/ 36 Guna</span>
+            <span className="block text-[18px] sm:text-[20px] text-ink mt-1">{m.band.label}</span>
           </h2>
           <dl className="mt-5 grid grid-cols-2 lg:grid-cols-4 gap-2.5">
             {([
@@ -79,27 +79,27 @@ export function CompatibilityReport({ result, request, onEdit, onNew }: PairRepo
               ['Moon signs', `${RASHIS[m.bride.moon.rashiIndex].name} · ${RASHIS[m.groom.moon.rashiIndex].name}`],
               ['Cross-chart contacts', `${c.contacts.length} found`],
             ] as const).map(([k, v]) => (
-              <div key={k} className="rounded-mj-sm border border-gold/25 bg-cosmic-mid/80 px-3 py-2.5">
-                <dt className="text-[10px] uppercase tracking-[0.16em] text-gold-lt/80">{k}</dt>
-                <dd className="mt-1 font-serif text-[15px] leading-tight text-cream">{v}</dd>
+              <div key={k} className="rounded-mj-sm border border-gold/25 bg-white/75 px-3 py-2.5">
+                <dt className="text-[10px] uppercase tracking-[0.16em] text-terra">{k}</dt>
+                <dd className="mt-1 font-serif text-[15px] leading-tight text-maroon">{v}</dd>
               </div>
             ))}
           </dl>
           <div className="mt-6 grid gap-4 md:grid-cols-2">
-            <div className="rounded-mj border border-success-soft/40 bg-cosmic-mid/70 px-4 py-3.5">
-              <h3 className="text-[12px] uppercase tracking-[0.16em] text-success-soft font-semibold">In the pair’s favour</h3>
-              <ul className="mt-2 space-y-1.5 text-[14px] text-paper-3/95 leading-relaxed">
+            <div className="rounded-mj border border-success/40 bg-white/75 px-4 py-3.5">
+              <h3 className="text-[12px] uppercase tracking-[0.16em] text-success-fg font-semibold">In the pair’s favour</h3>
+              <ul className="mt-2 space-y-1.5 text-[14px] text-ink leading-relaxed">
                 {supportive.length ? supportive.map(s => <li key={s}>✦ {s}</li>) : <li>Nothing the Ashtakoota and Manglik rules mark as favourable.</li>}
               </ul>
             </div>
-            <div className="rounded-mj border border-marigold/50 bg-cosmic-mid/70 px-4 py-3.5">
-              <h3 className="text-[12px] uppercase tracking-[0.16em] text-marigold font-semibold">To discuss with a pandit</h3>
-              <ul className="mt-2 space-y-1.5 text-[14px] text-paper-3/95 leading-relaxed">
+            <div className="rounded-mj border border-marigold/50 bg-white/75 px-4 py-3.5">
+              <h3 className="text-[12px] uppercase tracking-[0.16em] text-terra font-semibold">To discuss with a pandit</h3>
+              <ul className="mt-2 space-y-1.5 text-[14px] text-ink leading-relaxed">
                 {discuss.length ? discuss.map(s => <li key={s}>✦ {s}</li>) : <li>No dosha under the Ashtakoota and Manglik rules.</li>}
               </ul>
             </div>
           </div>
-          <p className="mt-4 text-[13px] text-paper-3/70 max-w-3xl">
+          <p className="mt-4 text-[13px] text-ink-soft max-w-3xl">
             This summary uses only the Ashtakoota and Manglik rules. The further factors below are shown for a pandit to
             weigh, and are never added into a score.
           </p>

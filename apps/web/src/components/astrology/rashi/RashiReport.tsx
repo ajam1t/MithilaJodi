@@ -41,23 +41,23 @@ export function RashiReport({ result, person, scenarioKey, onEdit, onNew }: Sing
         <div className="kd-stars" aria-hidden="true" />
         <div className="relative px-4 py-7 sm:px-8 sm:py-9 grid gap-7 lg:grid-cols-[1fr_minmax(0,340px)] lg:items-center">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.3em] text-marigold">Janma rashi · Moon sign · {chart.name}</p>
-            <h2 id="kd-result-title" tabIndex={-1} className="mt-2 font-serif text-[34px] sm:text-[44px] text-cream leading-tight outline-none">
-              {r.name} <span className="font-deva text-gold-lt text-[30px] sm:text-[36px]">{r.hi}</span>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-terra">Janma rashi · Moon sign · {chart.name}</p>
+            <h2 id="kd-result-title" tabIndex={-1} className="mt-2 font-serif text-[34px] sm:text-[44px] text-maroon leading-tight outline-none">
+              {r.name} <span className="font-deva text-terra text-[30px] sm:text-[36px]">{r.hi}</span>
             </h2>
-            <p className="mt-1 text-[16px] text-paper-3/85">
+            <p className="mt-1 text-[16px] text-ink-soft">
               {r.western} in Western terms · {exactMoon ? `Moon at ${formatDegree(moon.degreeInRashi)}` : 'Moon’s exact degree needs the birth time'}
               {nakshatraCertain ? ` · ${nakshatraOf(moon.nakshatra).name}${moon.pada ? ` pada ${moon.pada}` : ''}` : ''}
             </p>
-            <p className="mt-1 text-[13px] text-paper-3/65">
+            <p className="mt-1 text-[13px] text-ink-soft">
               {formatDateLong(chart.birth.localDate)}
               {chart.birth.localTime ? ` · ${formatTime12(chart.birth.localTime)}` : ' · time unknown'} · {chart.birth.placeLabel}
             </p>
             <dl className="mt-5 grid grid-cols-2 sm:grid-cols-3 gap-2.5">
               {tiles.map(([k, v]) => (
-                <div key={k} className="rounded-mj-sm border border-gold/25 bg-cosmic-mid/80 px-3 py-2.5">
-                  <dt className="text-[10px] uppercase tracking-[0.16em] text-gold-lt/80">{k}</dt>
-                  <dd className="mt-1 font-serif text-[16px] leading-tight text-cream">{v}</dd>
+                <div key={k} className="rounded-mj-sm border border-gold/25 bg-white/75 px-3 py-2.5">
+                  <dt className="text-[10px] uppercase tracking-[0.16em] text-terra">{k}</dt>
+                  <dd className="mt-1 font-serif text-[16px] leading-tight text-maroon">{v}</dd>
                 </div>
               ))}
             </dl>
@@ -131,7 +131,7 @@ export function RashiReport({ result, person, scenarioKey, onEdit, onNew }: Sing
                 return (
                   <li key={g.nakshatraIndex} className={`flex items-baseline justify-between gap-3 rounded-mj-sm px-3 py-1.5 ${mine ? 'bg-maroon text-cream' : 'bg-paper'}`}>
                     <span className="font-serif text-[16px]"><span className="font-deva">{NAKSHATRAS[g.nakshatraIndex].hi}</span> {NAKSHATRAS[g.nakshatraIndex].name}</span>
-                    <span className={`text-[13px] ${mine ? 'text-paper-3' : 'text-ink-soft'}`}>
+                    <span className={`text-[13px] ${mine ? 'text-ink-soft' : 'text-ink-soft'}`}>
                       {g.padas.length === 4 ? 'all 4 padas' : `pada ${g.padas.join(', ')}`}{mine && moon.pada ? ` · yours: ${moon.pada}` : ''}
                     </span>
                   </li>

@@ -62,24 +62,24 @@ export function BabyNamesReport({ result, person, scenarioKey, onEdit, onNew }: 
       <section className="kd-cosmic rounded-mj-lg overflow-hidden border border-gold/25" aria-labelledby="kd-result-title">
         <div className="kd-stars" aria-hidden="true" />
         <div className="relative px-4 py-8 sm:px-8 sm:py-10 text-center">
-          <p className="text-[11px] uppercase tracking-[0.3em] text-marigold">Name syllable · नामाक्षर · {chart.name}</p>
+          <p className="text-[11px] uppercase tracking-[0.3em] text-terra">Name syllable · नामाक्षर · {chart.name}</p>
           {primary ? (
             <h2 id="kd-result-title" tabIndex={-1} className="mt-4 outline-none">
-              <span className="block font-deva text-gold-lt text-[88px] sm:text-[110px] leading-none">{primary.hi}</span>
-              <span className="block mt-2 font-serif text-cream text-[30px] sm:text-[36px]">“{primary.en}”</span>
+              <span className="block font-deva text-terra text-[88px] sm:text-[110px] leading-none">{primary.hi}</span>
+              <span className="block mt-2 font-serif text-maroon text-[30px] sm:text-[36px]">“{primary.en}”</span>
             </h2>
           ) : (
-            <h2 id="kd-result-title" tabIndex={-1} className="mt-4 outline-none font-serif text-cream text-[28px] sm:text-[34px]">
+            <h2 id="kd-result-title" tabIndex={-1} className="mt-4 outline-none font-serif text-maroon text-[28px] sm:text-[34px]">
               {candidates.map(c => c.en).join(' · ')}
-              <span className="block mt-1 font-deva text-gold-lt text-[40px]">{candidates.map(c => c.hi).join(' · ')}</span>
+              <span className="block mt-1 font-deva text-terra text-[40px]">{candidates.map(c => c.hi).join(' · ')}</span>
             </h2>
           )}
-          <p className="mt-4 text-[16px] text-paper-3/90">
+          <p className="mt-4 text-[16px] text-ink">
             {primary
               ? `Pada ${primary.pada} of ${nak.name} nakshatra · Moon in ${RASHIS[moon.rashiIndex].name}`
               : `${nak.name} nakshatra — the pada needs the birth time, so each possible syllable is shown`}
           </p>
-          <p className="mt-1 text-[13px] text-paper-3/65">
+          <p className="mt-1 text-[13px] text-ink-soft">
             {formatDateLong(chart.birth.localDate)}
             {chart.birth.localTime ? ` · ${formatTime12(chart.birth.localTime)}` : ' · time unknown'} · {chart.birth.placeLabel}
           </p>
@@ -90,9 +90,9 @@ export function BabyNamesReport({ result, person, scenarioKey, onEdit, onNew }: 
               ['Rashi', RASHIS[moon.rashiIndex].name],
               ['Nakshatra lord', grahaShort(nak.lord)],
             ] as const).map(([k, v]) => (
-              <div key={k} className="rounded-mj-sm border border-gold/25 bg-cosmic-mid/80 px-3 py-2.5">
-                <dt className="text-[10px] uppercase tracking-[0.16em] text-gold-lt/80">{k}</dt>
-                <dd className="mt-1 font-serif text-[16px] leading-tight text-cream">{v}</dd>
+              <div key={k} className="rounded-mj-sm border border-gold/25 bg-white/75 px-3 py-2.5">
+                <dt className="text-[10px] uppercase tracking-[0.16em] text-terra">{k}</dt>
+                <dd className="mt-1 font-serif text-[16px] leading-tight text-maroon">{v}</dd>
               </div>
             ))}
           </dl>
@@ -123,7 +123,7 @@ export function BabyNamesReport({ result, person, scenarioKey, onEdit, onNew }: 
             const on = candidateKeys.has(`${moon.nakshatraIndex}-${i + 1}`)
             return (
               <div key={i} className={`px-2 py-4 text-center border-r border-gold/20 last:border-0 ${on ? 'bg-maroon text-cream' : 'bg-paper'}`}>
-                <p className={`text-[10px] uppercase tracking-[0.14em] ${on ? 'text-gold-lt' : 'text-terra'}`}>Pada {i + 1}</p>
+                <p className={`text-[10px] uppercase tracking-[0.14em] ${on ? 'text-terra' : 'text-terra'}`}>Pada {i + 1}</p>
                 <p className="font-deva text-[32px] leading-tight mt-1">{hi}</p>
                 <p className="text-[15px] font-semibold">{en}</p>
               </div>
@@ -144,7 +144,7 @@ export function BabyNamesReport({ result, person, scenarioKey, onEdit, onNew }: 
               <li key={key(s)} className={`rounded-mj-sm border px-3 py-2 text-center ${on ? 'border-maroon bg-maroon text-cream' : 'border-gold/30 bg-cream'}`}>
                 <span className="block font-deva text-[22px] leading-tight">{s.hi}</span>
                 <span className="block text-[13px] font-semibold">{s.en}</span>
-                <span className={`block text-[10px] ${on ? 'text-paper-3' : 'text-ink-soft'}`}>{NAKSHATRAS[s.nakshatraIndex].name} {s.pada}</span>
+                <span className={`block text-[10px] ${on ? 'text-ink-soft' : 'text-ink-soft'}`}>{NAKSHATRAS[s.nakshatraIndex].name} {s.pada}</span>
               </li>
             )
           })}

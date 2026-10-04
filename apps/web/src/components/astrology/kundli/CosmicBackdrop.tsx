@@ -77,9 +77,9 @@ export default function CosmicBackdrop({ intensity = 'calm' }: Props) {
 
       // Soft central glow — maroon to gold, the brand's "sun".
       const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 0.45)
-      g.addColorStop(0, `rgba(228,197,114,${active ? 0.16 : 0.1})`)
-      g.addColorStop(0.45, 'rgba(122,18,32,0.10)')
-      g.addColorStop(1, 'rgba(8,11,26,0)')
+      g.addColorStop(0, `rgba(232,145,42,${active ? 0.16 : 0.1})`)
+      g.addColorStop(0.5, 'rgba(214,168,60,0.06)')
+      g.addColorStop(1, 'rgba(252,245,231,0)')
       ctx.fillStyle = g
       ctx.fillRect(0, 0, w, h)
 
@@ -94,7 +94,7 @@ export default function CosmicBackdrop({ intensity = 'calm' }: Props) {
         if (sx < -4 || sx > w + 4 || sy < -4 || sy > h + 4) continue
         const twinkle = reduced ? 0.8 : 0.65 + 0.35 * Math.sin(t * 0.0012 + s.phase)
         const alpha = Math.min(1, (0.25 + (1 - (z + 1) / 2) * 0.75) * twinkle * (active ? 1.15 : 1))
-        ctx.fillStyle = s.warm ? `rgba(228,197,114,${alpha})` : `rgba(255,244,222,${alpha})`
+        ctx.fillStyle = s.warm ? `rgba(232,145,42,${alpha * 0.55})` : `rgba(185,138,46,${alpha * 0.6})`
         ctx.beginPath()
         ctx.arc(sx, sy, s.size * p * 1.4, 0, Math.PI * 2)
         ctx.fill()
@@ -103,7 +103,7 @@ export default function CosmicBackdrop({ intensity = 'calm' }: Props) {
       for (const ring of rings) {
         const ct = Math.cos(ring.tilt)
         const st = Math.sin(ring.tilt)
-        ctx.strokeStyle = `rgba(228,197,114,${active ? 0.26 : 0.16})`
+        ctx.strokeStyle = `rgba(185,138,46,${active ? 0.3 : 0.2})`
         ctx.lineWidth = 1
         ctx.beginPath()
         for (let i = 0; i <= 96; i += 1) {
@@ -128,8 +128,8 @@ export default function CosmicBackdrop({ intensity = 'calm' }: Props) {
         const x = x0 * cos - z0 * sin
         const z = x0 * sin + z0 * cos
         const p = 1.6 / (2.6 + z)
-        ctx.fillStyle = 'rgba(255,236,190,0.85)'
-        ctx.shadowColor = 'rgba(228,197,114,0.8)'
+        ctx.fillStyle = 'rgba(155,34,51,0.75)'
+        ctx.shadowColor = 'rgba(232,145,42,0.7)'
         ctx.shadowBlur = 8
         ctx.beginPath()
         ctx.arc(cx + x * R * p, cy + y0 * R * p, 2.2 * p * 1.6, 0, Math.PI * 2)

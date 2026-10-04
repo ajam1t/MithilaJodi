@@ -23,23 +23,23 @@ export function ComingSoon({ tool, tagline, description, whatItDoes, relatedLink
     <div className="min-h-[60vh] flex flex-col">
 
       {/* Cosmic header */}
-      <div className="bg-cosmic-deep border-b border-gold/20 py-16 sm:py-24">
+      <div className="bg-paper border-b border-gold/20 py-16 sm:py-24">
         <div className="wrap max-w-2xl text-center">
-          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-pill bg-gold/10 border border-gold/30 text-gold-lt text-[11px] font-semibold tracking-[0.15em] uppercase mb-6">
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-pill bg-gold/10 border border-gold/30 text-terra text-[11px] font-semibold tracking-[0.15em] uppercase mb-6">
             <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
               <polygon points="6 0 7.6 4.2 12 4.6 8.8 7.4 9.8 12 6 9.6 2.2 12 3.2 7.4 0 4.6 4.4 4.2 6 0" />
             </svg>
             Coming Soon
           </span>
 
-          <h1 className="font-serif text-cream text-3xl sm:text-4xl mb-4 leading-snug">{tool}</h1>
+          <h1 className="font-serif text-maroon text-3xl sm:text-4xl mb-4 leading-snug">{tool}</h1>
 
-          <p className="font-serif italic text-gold-lt text-[17px] mb-6 leading-relaxed">{tagline}</p>
+          <p className="font-serif italic text-terra text-[17px] mb-6 leading-relaxed">{tagline}</p>
 
           {/* Gold ornament line */}
           <div className="mx-auto w-16 h-px bg-gradient-to-r from-transparent via-gold to-transparent mb-6" aria-hidden="true" />
 
-          <p className="text-paper-3/80 text-[15px] sm:text-[16px] leading-relaxed max-w-xl mx-auto">{description}</p>
+          <p className="text-ink-soft text-[15px] sm:text-[16px] leading-relaxed max-w-xl mx-auto">{description}</p>
         </div>
       </div>
 

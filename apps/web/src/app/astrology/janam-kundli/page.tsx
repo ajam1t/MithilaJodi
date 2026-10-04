@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { ToolEmblem } from '@/components/astrology/ToolEmblem'
+import { MoreTools } from '@/components/astrology/MoreTools'
 import '@/styles/kundli.css'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
@@ -97,27 +99,28 @@ export default function JanamKundliPage() {
           <LazyCosmicBackdrop />
 
           <nav aria-label="Breadcrumb" className="relative border-b kd-hairline">
-            <ol className="wrap flex items-center gap-2 py-3 text-[12px] text-paper-3/60">
-              <li><Link href="/" className="hover:text-gold-lt transition-colors">Home</Link></li>
+            <ol className="wrap flex items-center gap-2 py-3 text-[12px] text-ink-soft">
+              <li><Link href="/" className="hover:text-maroon transition-colors">Home</Link></li>
               <li aria-hidden="true" className="text-gold/40">›</li>
-              <li><Link href="/astrology" className="hover:text-gold-lt transition-colors">Astrology Tools</Link></li>
+              <li><Link href="/astrology" className="hover:text-maroon transition-colors">Astrology Tools</Link></li>
               <li aria-hidden="true" className="text-gold/40">›</li>
-              <li className="text-gold-lt" aria-current="page">Janam Kundli</li>
+              <li className="text-terra" aria-current="page">Janam Kundli</li>
             </ol>
           </nav>
 
           <section className="relative wrap pt-10 pb-8 sm:pt-14 lg:pt-16 grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
             <div className="text-center lg:text-left">
-              <p className="text-[11px] uppercase tracking-[0.3em] text-marigold">Vedic birth chart</p>
-              <h1 className="mt-3 font-serif text-cream text-[40px] sm:text-[52px] lg:text-[60px] leading-[1.04]">
+              <ToolEmblem tool="janam-kundli" size={68} className="mx-auto lg:mx-0 mb-4 drop-shadow-md" />
+              <p className="text-[11px] uppercase tracking-[0.3em] text-terra font-semibold">Vedic birth chart</p>
+              <h1 className="mt-3 font-serif text-maroon text-[40px] sm:text-[52px] lg:text-[60px] leading-[1.04]">
                 Janam Kundli
-                <span className="block font-deva text-gold-lt text-[26px] sm:text-[32px] mt-2">जन्म कुण्डली</span>
+                <span className="block font-deva text-terra text-[26px] sm:text-[32px] mt-2">जन्म कुण्डली</span>
               </h1>
-              <p className="mt-5 text-[17px] sm:text-[18px] text-paper-3/90 leading-relaxed max-w-xl mx-auto lg:mx-0">
+              <p className="mt-5 text-[17px] sm:text-[18px] text-ink leading-relaxed max-w-xl mx-auto lg:mx-0">
                 Your birth chart as the sky actually stood: Lagna, Chandra and Navamsa charts, all nine grahas with
                 nakshatra and pada, the Vimshottari dasha and the panchang of the moment you were born.
               </p>
-              <ul className="mt-5 flex flex-wrap justify-center lg:justify-start gap-x-5 gap-y-2 text-[13px] text-paper-3/80">
+              <ul className="mt-5 flex flex-wrap justify-center lg:justify-start gap-x-5 gap-y-2 text-[13px] text-ink-soft">
                 <li>✦ Lahiri ayanamsha</li>
                 <li>✦ Real ephemeris, checked against NASA JPL</li>
                 <li>✦ Free · no login · nothing stored</li>
@@ -198,7 +201,7 @@ export default function JanamKundliPage() {
               ))}
             </div>
 
-            <div className="mt-12 grid gap-6 sm:grid-cols-2">
+            <div className="mt-12">
               <div>
                 <h2 className="font-serif text-maroon text-[20px]">Read more</h2>
                 <ul className="mt-3 space-y-2">
@@ -207,17 +210,10 @@ export default function JanamKundliPage() {
                   <li><Link href="/blogs/horoscope-marriage/what-is-manglik" className={LINK}>What is Manglik Dosha?</Link></li>
                 </ul>
               </div>
-              <div>
-                <h2 className="font-serif text-maroon text-[20px]">More astrology tools</h2>
-                <ul className="mt-3 space-y-2">
-                  <li><Link href="/astrology/kundli-match" className={LINK}>Kundli Match — 36 Guna</Link></li>
-                  <li><Link href="/astrology" className={LINK}>All astrology tools</Link></li>
-                  <li><Link href="/marriage-biodata" className={LINK}>Create a marriage biodata</Link></li>
-                </ul>
-              </div>
             </div>
           </div>
         </section>
+        <MoreTools current="janam-kundli" />
       </main>
 
       <MithilaFooter className="pb-16 lg:pb-0" />

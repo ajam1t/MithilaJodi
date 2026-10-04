@@ -115,7 +115,7 @@ export function MuhuratResults({ result }: { result: VivahMuhuratResult }) {
                   <li key={d.date} className="card p-4 flex gap-4 kd-avoid-break">
                     <div className="w-[64px] shrink-0 self-start text-center rounded-mj-sm bg-maroon text-cream py-2">
                       <p className="font-serif text-[28px] leading-none">{Number(d.date.slice(8))}</p>
-                      <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-gold-lt">{SHORT_MONTH[Number(d.date.slice(5, 7)) - 1]}</p>
+                      <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-terra">{SHORT_MONTH[Number(d.date.slice(5, 7)) - 1]}</p>
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-[15px] font-semibold text-ink">

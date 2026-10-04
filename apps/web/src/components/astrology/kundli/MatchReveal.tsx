@@ -36,14 +36,14 @@ function Medallion({ chart, side }: { chart: ChartData; side: 'bride' | 'groom' 
       <div className="kd-mini-wheel w-[132px] sm:w-[168px]">
         <ZodiacWheel size={200} markers={markers} label={`${chart.name}'s Moon in ${rashiOf(moon.rashi).name}`} />
       </div>
-      <p className="mt-2 text-[11px] uppercase tracking-[0.22em] text-gold-lt/80">
+      <p className="mt-2 text-[11px] uppercase tracking-[0.22em] text-terra">
         <span className="font-deva normal-case tracking-normal text-[14px] mr-1">{ROLE_HI[side]}</span>{ROLE_LABEL[side]}
       </p>
-      <p className="font-serif text-[20px] sm:text-[22px] text-cream leading-tight max-w-[12rem] truncate">{chart.name}</p>
-      <p className="mt-1 text-[13px] text-paper-3/85">
+      <p className="font-serif text-[20px] sm:text-[22px] text-maroon leading-tight max-w-[12rem] truncate">{chart.name}</p>
+      <p className="mt-1 text-[13px] text-ink-soft">
         <span className="font-deva">{rashiOf(moon.rashi).hi}</span> {rashiOf(moon.rashi).name} · {nakshatraOf(moon.nakshatra).name}
       </p>
-      <p className="text-[12px] text-paper-3/60">{chart.lagna ? `Lagna ${rashiOf(chart.lagna.rashi).name}` : 'Lagna needs birth time'}</p>
+      <p className="text-[12px] text-ink-soft">{chart.lagna ? `Lagna ${rashiOf(chart.lagna.rashi).name}` : 'Lagna needs birth time'}</p>
     </div>
   )
 }
@@ -91,16 +91,16 @@ export function MatchReveal({ result, onFinished }: { result: MatchResult; onFin
 
       <div className="relative px-4 pt-6 pb-7 sm:px-8 sm:pt-8">
         <div className="text-center">
-          <p className="text-[11px] uppercase tracking-[0.3em] text-marigold">Ashtakoota · Guna Milan</p>
-          <h2 id="kd-result-title" tabIndex={-1} className="mt-2 font-serif text-[26px] sm:text-[32px] text-cream leading-tight outline-none">
-            {result.bride.name} <span className="text-gold-lt">&amp;</span> {result.groom.name}
+          <p className="text-[11px] uppercase tracking-[0.3em] text-terra">Ashtakoota · Guna Milan</p>
+          <h2 id="kd-result-title" tabIndex={-1} className="mt-2 font-serif text-[26px] sm:text-[32px] text-maroon leading-tight outline-none">
+            {result.bride.name} <span className="text-terra">&amp;</span> {result.groom.name}
           </h2>
-          <p className="kd-stage-caption mt-2 min-h-[1.5em] text-[14px] text-paper-3/85" aria-hidden="true">{caption[stage]}</p>
+          <p className="kd-stage-caption mt-2 min-h-[1.5em] text-[14px] text-ink-soft" aria-hidden="true">{caption[stage]}</p>
         </div>
 
         <div className="relative mt-4 grid grid-cols-2 gap-y-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
           <svg className="kd-thread hidden md:block absolute inset-x-[12%] top-[34%] h-24 w-[76%] pointer-events-none" viewBox="0 0 600 100" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M0 50 C 150 -10, 450 110, 600 50" fill="none" stroke="#E4C572" strokeOpacity="0.55" strokeWidth="1.4" />
+            <path d="M0 50 C 150 -10, 450 110, 600 50" fill="none" stroke="#B98A2E" strokeOpacity="0.6" strokeWidth="1.4" />
           </svg>
           <div className="order-1 md:order-none"><Medallion chart={result.bride} side="bride" /></div>
           <div className="order-3 col-span-2 md:order-none md:col-span-1">
@@ -111,11 +111,11 @@ export function MatchReveal({ result, onFinished }: { result: MatchResult; onFin
 
         <div className="mt-6 flex flex-col items-center gap-2 text-center">
           {stage === 'final' ? (
-            <p className="text-[14px] text-paper-3/85 max-w-xl">
-              According to the traditional Ashtakoota methodology used here: <span className="text-gold-lt">{result.band.label}</span>. The full breakdown follows below.
+            <p className="text-[14px] text-ink-soft max-w-xl">
+              According to the traditional Ashtakoota methodology used here: <span className="text-terra">{result.band.label}</span>. The full breakdown follows below.
             </p>
           ) : (
-            <button type="button" onClick={skip} className="rounded-pill border border-gold/40 px-4 py-2 text-[13px] text-gold-lt hover:bg-gold/10 min-h-[40px]">
+            <button type="button" onClick={skip} className="rounded-pill border border-gold/40 px-4 py-2 text-[13px] text-terra hover:bg-gold/10 min-h-[40px]">
               Skip animation
             </button>
           )}

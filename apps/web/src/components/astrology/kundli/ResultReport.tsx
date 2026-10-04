@@ -149,14 +149,14 @@ export function ResultReport({ result, request, scenario, onEdit, onNew }: Props
               />
             </div>
             <div>
-              <h3 className="font-serif text-cream text-[22px]">Both charts on one sky</h3>
-              <p className="mt-2 text-[14px] text-paper-3/85 leading-relaxed">
+              <h3 className="font-serif text-maroon text-[22px]">Both charts on one sky</h3>
+              <p className="mt-2 text-[14px] text-ink-soft leading-relaxed">
                 The sidereal zodiac with {names.bride}’s planets on the inner ring (maroon) and {names.groom}’s on the
                 outer ring (gold). Each marker sits at its calculated longitude; the dashed line joins the two Moons,
                 whose relationship drives Bhakoot, Tara and Graha Maitri. Marker sizes and ring spacing are
                 illustrative only.
               </p>
-              <p className="mt-3 text-[13px] text-gold-lt">
+              <p className="mt-3 text-[13px] text-terra">
                 Moons: {rashiOf(result.bride.moon.rashi).name} and {rashiOf(result.groom.moon.rashi).name} —{' '}
                 {result.kootas.find(k => k.key === 'bhakoot')!.score === 7 ? 'not a Bhakoot dosha position' : 'a Bhakoot dosha position'}.
               </p>
