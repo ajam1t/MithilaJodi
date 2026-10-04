@@ -91,7 +91,7 @@ const TOOLS = [
     description:
       'See which house Mars occupies, what it signifies in traditional Mithila kundli practice, and how Manglik status is assessed — with full transparency.',
     primary: false,
-    status: 'coming-soon' as const,
+    status: 'live' as const,
     relatedPost: { href: '/blogs/horoscope-marriage/what-is-manglik', label: 'What is Manglik dosha?' },
   },
   {

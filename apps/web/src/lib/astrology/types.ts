@@ -290,6 +290,27 @@ export type RashiResponse =
   | { kind: 'needs_moon_choice'; choices: MoonSegmentChoice[] }
   | { kind: 'scenarios'; scenarios: Array<{ segment: number; result: RashiReading }> }
 
+// ─── Manglik ─────────────────────────────────────────────────────────────────
+
+export type ManglikReading = {
+  methodologyVersion: string
+  computedAt: string
+  chart: ChartData
+  manglik: ManglikPerson
+  /** Mars's sign dignity, shown as context (never changes the status). */
+  marsDignity: Dignity | null
+  /** House of Mars counted from Venus — some traditions also check this; shown for information only. */
+  marsHouseFromVenus: number
+  /** The Moon-based check depends only on the Moon's rashi, so a nakshatra change alone leaves it certain. */
+  nakshatraCertain: boolean
+  warnings: string[]
+}
+
+export type ManglikResponse =
+  | { kind: 'result'; result: ManglikReading }
+  | { kind: 'needs_moon_choice'; choices: MoonSegmentChoice[] }
+  | { kind: 'scenarios'; scenarios: Array<{ segment: number; result: ManglikReading }> }
+
 /** What a share link stores and shows — deliberately no dates, times, places or planet degrees. */
 export type SharedMatchSummary = {
   methodologyVersion: string

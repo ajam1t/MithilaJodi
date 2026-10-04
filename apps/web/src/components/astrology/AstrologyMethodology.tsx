@@ -110,7 +110,7 @@ export function AstrologyMethodology({ show }: { show: Array<'match' | 'janam' |
         <h3 className="mt-10 font-serif text-maroon text-[22px]">Manglik rules</h3>
         <p className="mt-2 text-[15px] text-ink leading-relaxed">
           Houses {METHODOLOGY.manglik.houses.join(', ')}, reckoned from {METHODOLOGY.manglik.reckonedFrom}. {METHODOLOGY.manglik.status}{' '}
-          {METHODOLOGY.manglik.notedExceptions} {METHODOLOGY.manglik.houseVariantNote}
+          {METHODOLOGY.manglik.notedExceptions} {METHODOLOGY.manglik.houseVariantNote} {METHODOLOGY.manglik.contextOnly}
         </p>
 
         {show.includes('match') && (

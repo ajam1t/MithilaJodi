@@ -13,6 +13,8 @@ type NorthIndianProps = {
   description: string
   size?: number
   theme?: 'paper' | 'print'
+  /** Houses (1–12) to tint, e.g. the Manglik houses. */
+  shadeHouses?: number[]
 }
 
 /**
@@ -20,7 +22,7 @@ type NorthIndianProps = {
  * the 1st house, running counter-clockwise — and the rashi numbers rotate with
  * the 1st house's sign. Purely presentational: placements come from the engine.
  */
-export function NorthIndianChart({ firstRashiIndex, placements, firstHouseLabel, description, size = 320, theme = 'paper' }: NorthIndianProps) {
+export function NorthIndianChart({ firstRashiIndex, placements, firstHouseLabel, description, size = 320, theme = 'paper', shadeHouses = [] }: NorthIndianProps) {
   const S = size
   const c = S / 2
   const q = S / 4
@@ -72,7 +74,7 @@ export function NorthIndianChart({ firstRashiIndex, placements, firstHouseLabel,
           key={i}
           className="kd-house"
           points={h.poly.map(k => P[k].join(',')).join(' ')}
-          fill={i === 0 ? 'rgba(228,197,114,0.14)' : 'transparent'}
+          fill={shadeHouses.includes(i + 1) ? 'rgba(155,34,51,0.13)' : i === 0 ? 'rgba(228,197,114,0.14)' : 'transparent'}
           stroke={stroke}
           strokeWidth={1}
         />

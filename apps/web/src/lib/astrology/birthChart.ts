@@ -218,6 +218,49 @@ function buildChart(
 
 export type PreparedChart = { chart: ChartData; warnings: string[]; segment: number | null; utcMs: number; window: MoonSegment | null }
 
+export type RashiResolved = { prepared: PreparedChart; nakshatraCertain: boolean; mergedTo?: string }
+
+/**
+ * Like prepareChart, for tools whose answer depends on the Moon's rashi but
+ * not its nakshatra (Rashi, Manglik). With an unknown time, consecutive parts
+ * of the day with the same Moon rashi are merged, so a nakshatra change alone
+ * never triggers a question.
+ */
+export function prepareChartByRashi(person: PersonInput, now: Date):
+  | { kind: 'one'; resolved: RashiResolved }
+  | { kind: 'many'; resolved: Array<RashiResolved & { segment: number }> }
+  | { kind: 'choose'; choices: MoonSegmentChoice[] } {
+  const base = prepareChart({ ...person, moonSegment: undefined }, 'native', now)
+  if (base.kind === 'charts') return { kind: 'one', resolved: { prepared: base.charts[0], nakshatraCertain: true } }
+
+  const groups: MoonSegmentChoice[][] = []
+  for (const c of base.choices) {
+    const last = groups[groups.length - 1]
+    if (last && last[0].rashi === c.rashi) last.push(c)
+    else groups.push([c])
+  }
+  const resolve = (group: MoonSegmentChoice[]): RashiResolved => {
+    const r = prepareChart({ ...person, moonSegment: group[0].index }, 'native', now)
+    if (r.kind !== 'charts') throw new Error('segment did not resolve')
+    const mergedTo = group.length > 1 ? group[group.length - 1].toLocal : undefined
+    const prepared = mergedTo && r.charts[0].chart.moonWindow
+      ? { ...r.charts[0], chart: { ...r.charts[0].chart, moonWindow: { ...r.charts[0].chart.moonWindow, toLocal: mergedTo } } }
+      : r.charts[0]
+    return { prepared, nakshatraCertain: group.length === 1 }
+  }
+
+  if (groups.length === 1) return { kind: 'one', resolved: resolve(groups[0]) }
+  if (person.moonSegment === 'all') return { kind: 'many', resolved: groups.map(g => ({ ...resolve(g), segment: g[0].index })) }
+  if (typeof person.moonSegment === 'number') {
+    const group = groups.find(g => g.some(c => c.index === person.moonSegment))
+    if (group) return { kind: 'one', resolved: resolve(group) }
+  }
+  return {
+    kind: 'choose',
+    choices: groups.map(g => ({ ...g[0], toLocal: g[g.length - 1].toLocal, ...(g.length > 1 ? { nakshatraVaries: true } : {}) })),
+  }
+}
+
 /**
  * Resolve the birth details into one chart, several (one per part of the day
  * when the time is unknown and 'all' was asked for), or a question.

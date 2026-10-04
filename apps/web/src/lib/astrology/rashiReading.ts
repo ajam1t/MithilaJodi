@@ -4,14 +4,14 @@
  * compatibility read. Server-only by convention (ephemeris for the window).
  */
 import { METHODOLOGY } from './methodology'
-import { prepareChart, type PreparedChart } from './birthChart'
+import { prepareChartByRashi, type RashiResolved } from './birthChart'
 import { moonArcWindow } from './vedic/moonTransit'
 import { moonSignCompatibility } from './vedic/rashiInfo'
 import { rashiIndexOf } from './vedic/zodiac'
-import type { MoonSegmentChoice, PersonInput, RashiReading, RashiResponse, SinglePersonRequest } from './types'
+import type { RashiReading, RashiResponse, SinglePersonRequest } from './types'
 
-function assemble(p: PreparedChart, now: Date, nakshatraCertain: boolean, mergedTo?: string): RashiReading {
-  const chart = mergedTo && p.chart.moonWindow ? { ...p.chart, moonWindow: { ...p.chart.moonWindow, toLocal: mergedTo } } : p.chart
+function assemble({ prepared: p, nakshatraCertain }: RashiResolved, now: Date): RashiReading {
+  const { chart } = p
   const r = chart.moon.rashiIndex
   const sun = chart.planets.find(x => x.id === 'sun')!
   return {
@@ -27,40 +27,9 @@ function assemble(p: PreparedChart, now: Date, nakshatraCertain: boolean, merged
   }
 }
 
-/** Consecutive parts of the day with the same Moon rashi. */
-function groupByRashi(choices: MoonSegmentChoice[]): MoonSegmentChoice[][] {
-  const groups: MoonSegmentChoice[][] = []
-  for (const c of choices) {
-    const last = groups[groups.length - 1]
-    if (last && last[0].rashi === c.rashi) last.push(c)
-    else groups.push([c])
-  }
-  return groups
-}
-
 export function computeRashi(request: SinglePersonRequest, now: Date): RashiResponse {
-  const person = request.person
-  const base = prepareChart({ ...person, moonSegment: undefined }, 'native', now)
-  if (base.kind === 'charts') return { kind: 'result', result: assemble(base.charts[0], now, true) }
-
-  // Unknown time, and the Moon changed rashi or nakshatra that day. Only rashi changes matter here.
-  const groups = groupByRashi(base.choices)
-  const chartFor = (group: MoonSegmentChoice[]) => {
-    const r = prepareChart({ ...person, moonSegment: group[0].index } as PersonInput, 'native', now)
-    if (r.kind !== 'charts') throw new Error('segment did not resolve')
-    return assemble(r.charts[0], now, group.length === 1, group.length > 1 ? group[group.length - 1].toLocal : undefined)
-  }
-
-  if (groups.length === 1) return { kind: 'result', result: chartFor(groups[0]) }
-  if (person.moonSegment === 'all') {
-    return { kind: 'scenarios', scenarios: groups.map(g => ({ segment: g[0].index, result: chartFor(g) })) }
-  }
-  if (typeof person.moonSegment === 'number') {
-    const group = groups.find(g => g.some(c => c.index === person.moonSegment))
-    if (group) return { kind: 'result', result: chartFor(group) }
-  }
-  return {
-    kind: 'needs_moon_choice',
-    choices: groups.map(g => ({ ...g[0], toLocal: g[g.length - 1].toLocal, ...(g.length > 1 ? { nakshatraVaries: true } : {}) })),
-  }
+  const r = prepareChartByRashi(request.person, now)
+  if (r.kind === 'choose') return { kind: 'needs_moon_choice', choices: r.choices }
+  if (r.kind === 'one') return { kind: 'result', result: assemble(r.resolved, now) }
+  return { kind: 'scenarios', scenarios: r.resolved.map(x => ({ segment: x.segment, result: assemble(x, now) })) }
 }

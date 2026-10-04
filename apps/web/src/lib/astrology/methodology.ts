@@ -13,8 +13,9 @@
 // 1.1.0 — adds the Janam Kundli rules (navamsa, dignity, dasha, panchang).
 // 1.2.0 — adds the Nakshatra rules (window, syllables, navatara).
 // 1.3.0 — adds the Rashi rules (Western sign comparison, Moon-sign compatibility).
+// 1.4.0 — Manglik tool: Venus-based count and Mars dignity shown as context only.
 // None changes any earlier output.
-export const METHODOLOGY_VERSION = '1.3.0'
+export const METHODOLOGY_VERSION = '1.4.0'
 
 export const METHODOLOGY = {
   version: METHODOLOGY_VERSION,
@@ -90,6 +91,9 @@ export const METHODOLOGY = {
       'Reported, never applied automatically: Mars in its own sign (Mesh, Vrishchik), Mars exalted (Makar), ' +
       'and both partners being Manglik (mutual balance).',
     houseVariantNote: 'Some North Indian authorities omit the 2nd house; Mithila Jodi includes it, as most published calculators do.',
+    contextOnly:
+      'Some traditions also count Mars from Venus, and many weigh Mars’s strength (exalted, own sign, debilitated). ' +
+      'The Manglik tool shows both for transparency, but neither changes the status, which uses the Lagna and the Moon only.',
   },
 
   janamKundli: {
