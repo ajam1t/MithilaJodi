@@ -47,7 +47,9 @@ export const personSchema = z.object({
 
 export const kundliMatchRequestSchema = z.object({ bride: personSchema, groom: personSchema })
 
-export const janamKundliRequestSchema = z.object({ person: personSchema })
+/** One person's birth details — Janam Kundli, Nakshatra and the other single-chart tools. */
+export const singlePersonRequestSchema = z.object({ person: personSchema })
+export const janamKundliRequestSchema = singlePersonRequestSchema
 
 export const shareRequestSchema = z.object({
   request: kundliMatchRequestSchema,

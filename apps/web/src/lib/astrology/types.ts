@@ -219,7 +219,8 @@ export type BirthPanchang = {
   sunrise: string | null
 }
 
-export type JanamKundliRequest = { person: PersonInput }
+export type SinglePersonRequest = { person: PersonInput }
+export type JanamKundliRequest = SinglePersonRequest
 
 export type JanamKundliResult = {
   methodologyVersion: string
@@ -245,6 +246,27 @@ export type JanamKundliResponse =
   | { kind: 'result'; result: JanamKundliResult }
   | { kind: 'needs_moon_choice'; choices: MoonSegmentChoice[] }
   | { kind: 'scenarios'; scenarios: Array<{ segment: number; result: JanamKundliResult }> }
+
+// ─── Nakshatra ───────────────────────────────────────────────────────────────
+
+export type NakshatraReading = {
+  methodologyVersion: string
+  computedAt: string
+  chart: ChartData
+  /** How far the Moon had travelled through its nakshatra, 0–1; null when the birth time is unknown. */
+  progress: number | null
+  /** When the Moon entered and left this nakshatra around the birth (ISO UTC). */
+  window: { start: string; end: string }
+  /** Navamsa sign of the Moon's pada; null when the pada is uncertain. */
+  padaNavamsaIndex: number | null
+  navatara: Array<{ tara: number; name: string; auspicious: boolean; nakshatras: NakshatraSlug[] }>
+  warnings: string[]
+}
+
+export type NakshatraResponse =
+  | { kind: 'result'; result: NakshatraReading }
+  | { kind: 'needs_moon_choice'; choices: MoonSegmentChoice[] }
+  | { kind: 'scenarios'; scenarios: Array<{ segment: number; result: NakshatraReading }> }
 
 /** What a share link stores and shows — deliberately no dates, times, places or planet degrees. */
 export type SharedMatchSummary = {

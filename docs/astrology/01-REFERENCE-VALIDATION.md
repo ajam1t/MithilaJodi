@@ -72,7 +72,14 @@ Ravivara; Drik's Punarvasu→Pushya change 20:29, engine 20:28.
 Unit-tested: 108 navamsa boundaries against the classical starting-sign rule, dignity table, dasha sequence/
 balance/contiguity (120 years), tithi at the 23 Apr 2024 Purnima and the 8 Apr 2024 Amavasya, vara across sunrise.
 
-## 5. Not yet done
+## 5. Nakshatra tool (methodology v1.2.0, 2026-10-05)
+
+Nakshatra start/end times are found by bisecting the sidereal Moon to one second. For 11–12 Mar 1995
+the engine gives Punarvasu 18:34 → 20:28 IST; Drik Panchang prints Ardra ending 18:35 and Punarvasu ending
+20:29 — the same one-minute convention difference as §3. Unit tests check every window boundary lands on
+the nakshatra edge to 0.001°, including the Revati → Ashwini wrap at 360°.
+
+## 6. Not yet done
 
 - Side-by-side Ashtakoota totals against Drik Panchang / AstroSage for real pairs (their matchers are
   form/JS driven; needs a manual or browser-driven check). Koota tables follow the common North

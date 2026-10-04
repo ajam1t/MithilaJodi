@@ -81,7 +81,7 @@ const TOOLS = [
     description:
       'Determine the birth star from date, time, and place. Understand its lord, characteristics, and significance in Mithila kundli tradition.',
     primary: false,
-    status: 'coming-soon' as const,
+    status: 'live' as const,
     relatedPost: { href: '/blogs/horoscope-marriage/what-is-nakshatra', label: 'What is Nakshatra?' },
   },
   {

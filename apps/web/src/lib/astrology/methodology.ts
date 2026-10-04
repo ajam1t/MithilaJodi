@@ -11,8 +11,9 @@
  */
 
 // 1.1.0 — adds the Janam Kundli rules (navamsa, dignity, dasha, panchang).
-// No change to any Kundli Match output.
-export const METHODOLOGY_VERSION = '1.1.0'
+// 1.2.0 — adds the Nakshatra rules (window, syllables, navatara).
+// Neither changes any earlier output.
+export const METHODOLOGY_VERSION = '1.2.0'
 
 export const METHODOLOGY = {
   version: METHODOLOGY_VERSION,
@@ -112,6 +113,21 @@ export const METHODOLOGY = {
       'A Janam Kundli is a traditional reading of the sky at the moment of birth. The positions here are calculated ' +
       'astronomically; what they mean is a matter of tradition, not science. Nothing in it predicts events, and it ' +
       'should not be relied on for medical, financial or other important decisions.',
+  },
+
+  nakshatra: {
+    janma:
+      'The Janma nakshatra is the one of the 27 equal 13°20′ divisions of the sidereal zodiac (from 0° Mesha) that ' +
+      'holds the Moon at birth; the pada is the quarter (3°20′) of it.',
+    window:
+      'The start and end of the nakshatra are the instants the Moon’s sidereal longitude crosses its boundaries, found ' +
+      'from the ephemeris to the second — the same moments a panchang prints.',
+    syllables:
+      'Name syllables follow the Avakahada Chakra as commonly printed in North Indian panchangs (one per pada). ' +
+      'Regional lists differ in a few places.',
+    navatara:
+      'Navatara counts the nakshatras from the Janma nakshatra in nine taras of three: Janma, Sampat, Vipat, Kshema, ' +
+      'Pratyari, Sadhaka, Vadha, Mitra, Ati-Mitra. Vipat, Pratyari and Vadha are the unfavourable ones.',
   },
 
   scoreBands: [
