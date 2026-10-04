@@ -34,6 +34,16 @@ export function siderealMoonAt(utcMs: number): number {
   return normalizeDeg(tropicalLongitude('moon', moment) - lahiriAyanamsha(moment.ttDays))
 }
 
+/** Sidereal Sun and Moon only — the panchang's inputs, cheap enough to scan a year with. */
+export function siderealSunMoonAt(utcMs: number): { sun: number; moon: number } {
+  const moment = astroMoment(utcMs)
+  const ayanamsha = lahiriAyanamsha(moment.ttDays)
+  return {
+    sun: normalizeDeg(tropicalLongitude('sun', moment) - ayanamsha),
+    moon: normalizeDeg(tropicalLongitude('moon', moment) - ayanamsha),
+  }
+}
+
 /** Signed shortest angular difference b − a, in (−180, 180]. */
 export function angularDelta(a: number, b: number): number {
   let d = normalizeDeg(b - a)

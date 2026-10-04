@@ -346,6 +346,63 @@ export type CompatibilityResponse =
   | { kind: 'needs_moon_choice'; choices: Partial<Record<Role, MoonSegmentChoice[]>> }
   | { kind: 'scenarios'; scenarios: Array<{ brideSegment: number | null; groomSegment: number | null; result: CompatibilityResult }> }
 
+// ─── Vivah Muhurat ───────────────────────────────────────────────────────────
+
+export type VivahMuhuratRequest = {
+  place: BirthPlace
+  /** First month, 'YYYY-MM', in the place's time zone. */
+  from: string
+  months: number
+  /** Optional Moon signs (0 = Mesha) for Guru, Surya and Chandra bal. */
+  brideRashi?: number | null
+  groomRashi?: number | null
+}
+
+export type MuhuratBal = import('./rules/vivah').Bal
+
+export type MuhuratWindow = {
+  start: string
+  end: string
+  /** Local wall-clock 'HH:MM' and date 'YYYY-MM-DD'; the start is rounded up and the end down to the minute. */
+  startLocal: string
+  endLocal: string
+  startDate: string
+  endDate: string
+  minutes: number
+  nakshatras: string[]
+  tithis: string[]
+  /** On a Rikta tithi (4, 9, 14): many pandits avoid these; some panchangs list them at lower priority. */
+  rikta: boolean
+  chandraBal?: { bride?: MuhuratBal; groom?: MuhuratBal }
+}
+
+export type MuhuratDay = {
+  /** Local date of the sunrise that starts this Vedic day. */
+  date: string
+  weekday: number
+  vara: string
+  preferredVara: boolean
+  sunrise: string
+  lunarMonth: string
+  windows: MuhuratWindow[]
+  guruBal?: MuhuratBal
+  suryaBal?: MuhuratBal
+}
+
+export type MuhuratClosedKey = 'sun' | 'kharmas' | 'chaturmas' | 'adhika' | 'holashtak' | 'guru-asta' | 'shukra-asta'
+
+export type MuhuratClosedPeriod = { key: MuhuratClosedKey; label: string; from: string; to: string }
+
+export type VivahMuhuratResult = {
+  methodologyVersion: string
+  computedAt: string
+  place: { label: string; latitude: number; longitude: number; timezone: string }
+  range: { from: string; to: string }
+  days: MuhuratDay[]
+  closed: MuhuratClosedPeriod[]
+  couple: { brideRashi: number | null; groomRashi: number | null }
+}
+
 /** What a share link stores and shows — deliberately no dates, times, places or planet degrees. */
 export type SharedMatchSummary = {
   methodologyVersion: string

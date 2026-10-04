@@ -119,9 +119,9 @@ const TOOLS = [
     label: 'Vivah Muhurat',
     tagline: 'Auspicious dates for marriage',
     description:
-      'Find marriage dates that align with the traditional Panchanga — Tithi, Vara, Nakshatra, Yoga, and Karana — combined with planetary considerations for the couple.',
+      'Every shubh vivah window in the coming months with exact times for your city — Kharmas, Chaturmas and Guru/Shukra asta excluded, with Guru bal for the couple.',
     primary: false,
-    status: 'coming-soon' as const,
+    status: 'live' as const,
     relatedPost: null,
   },
   {

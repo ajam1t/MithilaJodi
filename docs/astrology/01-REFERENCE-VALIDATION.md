@@ -91,3 +91,37 @@ Bhakoot and Graha Maitri scores for all 144 sign pairs.
   form/JS driven; needs a manual or browser-driven check). Koota tables follow the common North
   Indian published tables and are unit-tested, but Vashya and Gana tables vary between sources.
 - Sign-off of the tables by a Maithil pandit (methodology `review` note).
+
+## Vivah Muhurat (methodology 1.7.0)
+
+Compared with Drik Panchang's published marriage muhurats for its default location, Diu
+(20°42′50″ N, 70°58′56″ E), November–December 2026. Drik lists Rikta-tithi windows at lower
+priority; Mithila Jodi marks them and hides them by default, so they are included for this
+comparison. Encoded in `src/lib/astrology/__tests__/vivahMuhurat.test.ts`.
+
+| Drik Panchang | Mithila Jodi | Note |
+|---|---|---|
+| 21 Nov 06:59 – 22 Nov 00:08 | 06:59 – 00:13 | end = start of Revati's last pada (Gandanta) |
+| 24 Nov 23:25 – 25 Nov 07:02 | 23:25 – 07:02 | |
+| 25 Nov 07:02 – 26 Nov 07:03 | 07:02 – 07:03 | |
+| 26 Nov 07:03 – 17:47 | 07:03 – 17:47 | |
+| 2 Dec 10:32 – 3 Dec 07:07 | 10:32 – 07:07 | Navami part marked Rikta |
+| 3 Dec 07:07 – 10:53 | 07:07 – 10:54 | |
+| 3 Dec 23:03 – 4 Dec 07:08 | 23:04 – 07:08 | |
+| 4 Dec 07:08 – 10:22 | 07:08 – 10:23 | |
+| 5 Dec 11:48 – 6 Dec 07:09 | 11:49 – 07:09 | |
+| 6 Dec 07:09 – 07:42 | 07:09 – 07:42 | |
+| 12 Dec 03:04 – 07:13 | 03:05 – 07:13 | |
+| 12 Dec 07:13 – 13 Dec 03:27 | 07:13 – 03:28 | Chaturthi part marked Rikta |
+
+Every window matches. Moon-driven boundaries fall about a minute later than Drik's — the
+nutation-convention difference described above. The one larger gap (5 minutes, 21 November)
+is Drik's Gandanta: Mithila Jodi measures the last pada of Revati in arc (from 356°40′); Drik
+appears to use a slightly different measure. Not tuned.
+
+Two rules were adopted from this comparison because they are classical, not to force a match:
+Gandanta (Muhurta Chintamani avoids it for marriage), and judging Chaturmas by the tithi at
+sunrise, as observances are.
+
+The lunar calendar is also checked: Chaitra 2026 begins 19 March and 2026 has an Adhika
+Jyeshtha from 17 May to 15 June, as published.

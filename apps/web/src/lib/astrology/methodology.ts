@@ -16,8 +16,9 @@
 // 1.4.0 — Manglik tool: Venus-based count and Mars dignity shown as context only.
 // 1.5.0 — Baby Names: rashi letters and the name first-sound check.
 // 1.6.0 — Compatibility: Lagna, 7th lord, Navamsa, cross-chart placements and aspects.
+// 1.7.0 — Vivah Muhurat: panchang shuddhi, solar and lunar months, asta, Gandanta, bal.
 // None changes any earlier output.
-export const METHODOLOGY_VERSION = '1.6.0'
+export const METHODOLOGY_VERSION = '1.7.0'
 
 export const METHODOLOGY = {
   version: METHODOLOGY_VERSION,
@@ -184,6 +185,50 @@ export const METHODOLOGY = {
       'Whole-sign graha drishti of each person’s Jupiter and Venus (benefic) and Saturn and Mars (malefic) onto the ' +
       'other’s Moon, Lagna and 7th house. All aspect the 7th sign; Mars also the 4th and 8th, Jupiter the 5th and 9th, ' +
       'Saturn the 3rd and 10th. The same sign is a conjunction. Rahu and Ketu aspects are disputed and not used.',
+  },
+
+  vivahMuhurat: {
+    source:
+      'The marriage rules of Muhurta Chintamani as applied by published North Indian panchangs. A muhurat is every ' +
+      'stretch of time, for the chosen place, in which all of the conditions below hold at once.',
+    nakshatra:
+      'The Moon in Rohini, Mrigashira, Magha, Uttara Phalguni, Hasta, Swati, Anuradha, Mula, Uttara Ashadha, Uttara ' +
+      'Bhadrapada or Revati — and not in Gandanta: the last pada of Revati (and of Ashlesha and Jyeshtha) or the first ' +
+      'pada of Magha and Mula (and of Ashwini), measured in arc.',
+    tithi:
+      'Amavasya is excluded (its karanas always are). Rikta tithis — Chaturthi, Navami, Chaturdashi — are avoided by ' +
+      'most pandits and hidden by default; some panchangs list them at lower priority, so they can be shown, marked.',
+    yoga: 'Not Vishkumbha, Atiganda, Shula, Ganda, Vyaghata, Vyatipata or Vaidhriti (the whole yoga).',
+    karana: 'Not Vishti (Bhadra), Shakuni, Chatushpada or Naga.',
+    solarMonth:
+      'The Sun in Mesha, Vrishabha, Mithuna, Vrishchika, Makara or Kumbha (sidereal), from the exact moment of ' +
+      'sankranti. Dhanu and Meena are Kharmas; Karka to Tula are closed.',
+    lunarMonth:
+      'Amanta months, each named by the sankranti it contains; a month without one is Adhika and is excluded (as is a ' +
+      'Kshaya month). Chaturmas — Devshayani Ekadashi (Ashadha Shukla 11) to Prabodhini Ekadashi (Kartika Shukla 11) — ' +
+      'and Holashtak (Phalguna Shukla 8 to Purnima) are excluded, judged by the tithi at sunrise as observances are.',
+    asta:
+      'No marriages while Jupiter or Venus is set (asta): within 11° of the Sun for Jupiter, 10° for Venus (8° when ' +
+      'retrograde), checked at each day’s sunrise.',
+    day:
+      'Each Vedic day runs from local sunrise to the next sunrise, so a window after midnight belongs to the previous ' +
+      'date. Times are rounded to the nearest minute; windows shorter than 10 minutes are left out. Monday, Wednesday, ' +
+      'Thursday and Friday are marked as preferred but no weekday is excluded.',
+    bal:
+      'With Moon signs given: Guru bal for the bride (Jupiter in the 2nd, 5th, 7th, 9th or 11th from her Moon sign is ' +
+      'shubh; 1st, 3rd, 6th, 10th pujya — worship advised; 4th, 8th, 12th ashubh), Surya bal for the groom (Sun in the ' +
+      '3rd, 6th, 10th, 11th shubh; 1st, 2nd, 5th, 7th, 9th pujya; 4th, 8th, 12th ashubh) and Chandra bal for both (the ' +
+      'Moon in the 4th, 8th or 12th is weak). Shown beside each date; they never remove one.',
+    notApplied:
+      'Not applied: the Lagna and Navamsa of the ceremony itself, which the officiating pandit fixes within the window; ' +
+      'Simhastha Guru; and finer doshas (Lattadi, Ekargala, Upagraha and the like).',
+    validation:
+      'For Diu, November–December 2026, every window matches Drik Panchang’s published list to within one minute ' +
+      '(the same nutation-convention difference noted below), except that Drik ends the 21 November window five minutes ' +
+      'earlier, at Revati’s Gandanta.',
+    disclaimer:
+      'A muhurat is a traditional choice of an auspicious time. The panchang here is calculated astronomically; the ' +
+      'rules are tradition, not science. Please confirm the final date and Lagna with the family pandit.',
   },
 
   scoreBands: [

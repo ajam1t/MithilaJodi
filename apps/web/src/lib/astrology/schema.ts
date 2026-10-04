@@ -58,6 +58,16 @@ export const shareRequestSchema = z.object({
   scenario: z.object({ brideSegment: z.number().int().min(0).max(8).nullable(), groomSegment: z.number().int().min(0).max(8).nullable() }).optional(),
 })
 
+const rashiIndex = z.number().int().min(0).max(11).nullable().optional()
+
+export const vivahMuhuratRequestSchema = z.object({
+  place: z.object(placeSchema.shape, { required_error: 'Please choose the place of the wedding.', invalid_type_error: 'Please choose the place of the wedding.' }),
+  from: z.string().regex(/^(20[0-9]{2})-(0[1-9]|1[0-2])$/, 'Please choose a month between 2000 and 2099.'),
+  months: z.number().int().min(1).max(12),
+  brideRashi: rashiIndex,
+  groomRashi: rashiIndex,
+})
+
 export type FieldErrors = Record<string, string>
 
 /** Flatten zod issues to `bride.place.timezone` → message, first message wins. */

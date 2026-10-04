@@ -87,6 +87,23 @@ export function sunriseAfter(fromUtcMs: number, latitudeDeg: number, longitudeDe
 }
 
 /**
+ * Every new moon (Sun–Moon conjunction in ecliptic longitude) in
+ * [fromUtcMs, toUtcMs], as UTC milliseconds. The elongation is the same in the
+ * tropical and sidereal zodiacs, so these are the Amavasya endings of the
+ * panchang.
+ */
+export function newMoonsBetween(fromUtcMs: number, toUtcMs: number): number[] {
+  const out: number[] = []
+  let t = Astronomy.MakeTime(new Date(fromUtcMs))
+  for (;;) {
+    const found = Astronomy.SearchMoonPhase(0, t, 40)
+    if (!found || found.date.getTime() > toUtcMs) return out
+    out.push(found.date.getTime())
+    t = found.AddDays(1)
+  }
+}
+
+/**
  * Tropical ascendant (mean equinox of date) for a geographic position.
  * The rising point of the ecliptic on the eastern horizon.
  */

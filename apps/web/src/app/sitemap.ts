@@ -40,7 +40,7 @@ const CONTENT_UPDATED = {
   '/astrology/manglik': '2026-10-05',
   '/astrology/janam-kundli': '2026-10-05',
   '/astrology/rashi': '2026-10-05',
-  '/astrology/vivah-muhurat': '2026-10-02',
+  '/astrology/vivah-muhurat': '2026-10-05',
   '/astrology/baby-names': '2026-10-05',
   '/astrology/compatibility': '2026-10-05',
   // Everything else last had a substantive content change with the content
