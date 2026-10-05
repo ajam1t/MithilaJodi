@@ -120,3 +120,4 @@ export const GRIEVANCE_OFFICER_NAME = 'Amit Jha'
 export const WHATSAPP_COMMUNITY_URL =
   'https://chat.whatsapp.com/BoiwAQZf5VMKEKtSXFfpe0?s=hd&p=i&mlu=4&ilr=4'
 export const INSTAGRAM_URL = 'https://www.instagram.com/MithilaJodiOfficial/'
+export const YOUTUBE_URL = 'https://youtube.com/@mithilajodiofficial?si=BB2-kjGVc2qqHYEF'

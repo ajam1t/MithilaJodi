@@ -231,7 +231,7 @@ export function organizationJsonLd() {
     // assistants have a single source. See app/about/TeamSection.tsx.
     // Official accounts. sameAs is the strongest on-site signal for tying a name
     // to a specific organisation, and it was missing entirely.
-    sameAs: [INSTAGRAM_URL],
+    sameAs: [INSTAGRAM_URL, 'https://www.youtube.com/@mithilajodiofficial'],
     areaServed: { '@type': 'Country', name: 'India' },
     knowsAbout: [
       'Maithil matrimony',
