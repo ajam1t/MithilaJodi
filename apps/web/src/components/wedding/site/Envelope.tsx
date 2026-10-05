@@ -45,6 +45,9 @@ const GOLD = '#C89B45'
 const GOLD_LT = '#E7C877'
 const MAROON = '#6E1024'
 
+/** Server and browser trig can differ in the last digit — round so hydration matches. */
+const r2 = (n: number) => Math.round(n * 100) / 100
+
 /** Ivory handmade paper: a warm gradient and a fine fibre noise. */
 function PaperDefs({ id }: { id: string }) {
   return (
@@ -93,7 +96,7 @@ function Band({ x1, y1, x2, y2, n }: { x1: number; y1: number; x2: number; y2: n
     <g fill={GOLD} fillOpacity="0.5" stroke={GOLD} strokeWidth="0.7" strokeOpacity="0.8">
       {Array.from({ length: n }, (_, i) => {
         const ax = x1 + dx * i, ay = y1 + dy * i
-        return <path key={i} d={`M${ax} ${ay}L${ax + dx / 2 + nx} ${ay + dy / 2 + ny}L${ax + dx} ${ay + dy}Z`} fillOpacity={i % 2 ? 0.55 : 0.15} />
+        return <path key={i} d={`M${r2(ax)} ${r2(ay)}L${r2(ax + dx / 2 + nx)} ${r2(ay + dy / 2 + ny)}L${r2(ax + dx)} ${r2(ay + dy)}Z`} fillOpacity={i % 2 ? 0.55 : 0.15} />
       })}
     </g>
   )
@@ -143,7 +146,7 @@ function Flap({ u }: { u: string }) {
         {/* rays from the seal */}
         {Array.from({ length: 9 }, (_, i) => {
           const a = Math.PI * (1.15 + (i * 0.7) / 8)
-          return <path key={i} d={`M${300 + Math.cos(a) * 52} ${236 + Math.sin(a) * 52}L${300 + Math.cos(a) * 74} ${236 + Math.sin(a) * 74}`} stroke={GOLD} strokeOpacity="0.55" strokeWidth="1.2" strokeLinecap="round" />
+          return <path key={i} d={`M${r2(300 + Math.cos(a) * 86)} ${r2(236 + Math.sin(a) * 86)}L${r2(300 + Math.cos(a) * 104)} ${r2(236 + Math.sin(a) * 104)}`} stroke={GOLD} strokeOpacity="0.55" strokeWidth="1.2" strokeLinecap="round" />
         })}
       </svg>
       <svg viewBox="0 0 600 262" preserveAspectRatio="none" className="wd-env-face wd-env-face-back">
@@ -179,7 +182,7 @@ function Liner({ u }: { u: string }) {
   )
 }
 
-/** The wax seal with the pressed MJ monogram. */
+/** The wax seal pressed with "Mithila Jodi". */
 function Seal({ u }: { u: string }) {
   return (
     <svg viewBox="-60 -60 120 120" className="h-full w-full" aria-hidden="true">
@@ -206,15 +209,19 @@ function Seal({ u }: { u: string }) {
       <circle r="41" fill="none" stroke="#3E0812" strokeOpacity="0.6" strokeWidth="2" />
       <circle r="38.5" fill="none" stroke={`url(#${u}sl-gold)`} strokeWidth="1.6" />
       <circle r="34" fill="none" stroke={`url(#${u}sl-gold)`} strokeWidth="0.7" strokeDasharray="1.2 2.4" />
-      {/* a lotus over the monogram */}
-      <g transform="translate(0 -21) scale(0.62)" fill={`url(#${u}sl-gold)`}>
+      {/* a lotus over the name */}
+      <g transform="translate(0 -17) scale(0.5)" fill={`url(#${u}sl-gold)`}>
         <path d="M0 0C-4-5-4-12 0-17 4-12 4-5 0 0Z" />
         <path d="M0 0C-8-2-12-8-13-14-6-13-2-8 0 0ZM0 0C8-2 12-8 13-14 6-13 2-8 0 0Z" />
       </g>
-      {/* MJ, embossed: a dark offset beneath, gold on top, a light edge */}
-      <text x="0" y="13" textAnchor="middle" fontSize="30" fontFamily="var(--font-marcellus), Georgia, serif" fill="#3E0812" opacity="0.7" dx="0.8" dy="1.2">MJ</text>
-      <text x="0" y="13" textAnchor="middle" fontSize="30" fontFamily="var(--font-marcellus), Georgia, serif" fill={`url(#${u}sl-gold)`}>MJ</text>
-      <path d="M-16 22H16" stroke={`url(#${u}sl-gold)`} strokeWidth="1" />
+      {/* Mithila Jodi, embossed: a dark offset beneath, gold on top */}
+      {([['Mithila', 1], ['Jodi', 17]] as const).map(([word, y]) => (
+        <g key={word} fontSize="15" fontFamily="var(--font-marcellus), Georgia, serif" textAnchor="middle" letterSpacing="0.3">
+          <text x="0" y={y} fill="#3E0812" opacity="0.7" dx="0.6" dy="0.9">{word}</text>
+          <text x="0" y={y} fill={`url(#${u}sl-gold)`}>{word}</text>
+        </g>
+      ))}
+      <path d="M-11 23H11" stroke={`url(#${u}sl-gold)`} strokeWidth="0.9" />
       {/* the soft highlight of light on wax */}
       <ellipse cx="-20" cy="-30" rx="14" ry="6" fill="#fff" opacity="0.18" transform="rotate(-30 -20 -30)" />
     </svg>
