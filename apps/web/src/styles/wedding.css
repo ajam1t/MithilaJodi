@@ -56,6 +56,8 @@
 .wd-wrap { max-width: 760px; margin: 0 auto; }
 .wd-wide { max-width: 1040px; margin: 0 auto; }
 .wd-h2 { font-family: var(--w-deva); color: var(--w-accent); font-size: 30px; line-height: 1.15; text-align: center; }
+/* English invitations set their headings in the Latin display face. */
+.wd[data-lang='en'] .wd-h2 { font-family: var(--w-display); }
 @media (min-width: 768px) { .wd-h2 { font-size: 38px; } }
 .wd-sub { text-align: center; color: var(--w-soft); font-size: 13px; letter-spacing: 0.22em; text-transform: uppercase; margin-top: 6px; }
 .wd-card {
@@ -136,4 +138,246 @@
 @media (prefers-reduced-motion: reduce) {
   .wd-hero-art, .wd-rise, .wd-petal, .wd-scroll-cue, .wd-eq span { animation: none !important; }
   .wd-js [data-reveal] { opacity: 1; transform: none; transition: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   The opening envelope
+   No ancestor of .wd-env-card may have transform / filter / perspective /
+   will-change: the card is lifted out with position: fixed for the final
+   expansion. Layers sink with the individual `translate` property instead.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.wd-env-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: 24px 16px 56px;
+  transition: opacity 420ms ease;
+  /* The envelope sizes itself to this frame — the screen, or the builder's phone preview. */
+  container-type: size;
+}
+.wd-env-overlay[data-phase='leaving'] { opacity: 0; pointer-events: none; }
+
+/* A whisper of Madhubani lotus over the theme colour, and a soft vignette. */
+.wd-env-backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 48%, transparent 40%, rgba(20, 4, 8, 0.32) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23E7C877' stroke-width='1.1' opacity='.55'%3E%3Cpath d='M60 44c5 6 5 14 0 20-5-6-5-14 0-20Z'/%3E%3Cpath d='M60 64c-8-2-12-8-13-14 7 1 11 6 13 14Zm0 0c8-2 12-8 13-14-7 1-11 6-13 14Z'/%3E%3Cpath d='M48 67h24'/%3E%3C/g%3E%3Ccircle cx='0' cy='0' r='1.6' fill='%23E7C877' opacity='.5'/%3E%3Ccircle cx='120' cy='120' r='1.6' fill='%23E7C877' opacity='.5'/%3E%3C/svg%3E") center / 120px 120px;
+  opacity: 0.6;
+}
+.wd-env-backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 14px;
+  border: 1px solid rgba(231, 200, 119, 0.28);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 5px rgba(231, 200, 119, 0.06);
+}
+
+/* Warm diya light behind the envelope; it brightens as the envelope opens. */
+.wd-env-light {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: min(120vw, 900px);
+  width: min(120cqw, 900px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 210, 130, 0.42) 0%, rgba(232, 150, 60, 0.18) 32%, rgba(232, 150, 60, 0) 62%);
+  opacity: 0.55;
+  scale: 0.9;
+  transition: opacity 1200ms ease, scale 1600ms cubic-bezier(.2, .8, .2, 1);
+  pointer-events: none;
+}
+.wd-env-overlay:not([data-phase='closed']) .wd-env-light { opacity: 1; scale: 1.25; }
+
+.wd-env-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: wdEnvIn 900ms cubic-bezier(.2, .8, .2, 1) backwards;
+}
+@keyframes wdEnvIn { from { opacity: 0; translate: 0 18px; } to { opacity: 1; translate: 0 0; } }
+
+.wd-env {
+  position: relative;
+  width: min(88vw, 400px);
+  /* …and never taller than the frame allows (landscape phones). */
+  width: min(96cqw, 400px, 85cqh);
+  aspect-ratio: 600 / 440;
+  cursor: pointer;
+  border-radius: 6px;
+  box-shadow: 0 30px 60px -24px rgba(20, 4, 8, 0.65), 0 12px 24px -12px rgba(20, 4, 8, 0.4);
+  transition: box-shadow 600ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+@container (min-width: 768px) { .wd-env { width: min(560px, 85cqh); } }
+@supports not (container-type: size) { @media (min-width: 768px) { .wd-env { width: 560px; } } }
+.wd-env-overlay[data-phase='expand'] .wd-env,
+.wd-env-overlay[data-phase='leaving'] .wd-env { box-shadow: none; }
+
+.wd-env-layer { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.wd-env-liner { z-index: 1; border-radius: 6px; }
+.wd-env-pocket { z-index: 4; border-radius: 0 0 6px 6px; }
+
+/* The light inside the pocket. */
+.wd-env-glow {
+  position: absolute;
+  z-index: 2;
+  left: 8%;
+  right: 8%;
+  top: -6%;
+  height: 72%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 35%, rgba(255, 228, 160, 0.95) 0%, rgba(255, 190, 100, 0.55) 38%, rgba(255, 170, 80, 0) 70%);
+  opacity: 0;
+  transition: opacity 900ms ease 450ms;
+  pointer-events: none;
+}
+.wd-env-overlay:not([data-phase='closed']) .wd-env-glow { opacity: 1; }
+
+/* The card in the pocket. */
+.wd-env-card {
+  position: absolute;
+  z-index: 3;
+  left: 7%;
+  right: 7%;
+  top: 5%;
+  height: 88%;
+  border-radius: 6px;
+  overflow: hidden;
+  container-type: size;
+  box-shadow: 0 10px 24px -10px rgba(20, 4, 8, 0.55);
+  transition: transform 760ms cubic-bezier(.22, .9, .25, 1), box-shadow 760ms ease;
+}
+.wd-env-overlay[data-phase='rise'] .wd-env-card { transform: translateY(-58%) scale(1.03); box-shadow: 0 26px 44px -16px rgba(20, 4, 8, 0.6); }
+.wd-env-card-frame { position: absolute; inset: 4.5cqmin; border: 1px solid; border-radius: 4px; pointer-events: none; }
+.wd-env-card-body {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 6cqmin;
+  gap: 2.4cqmin;
+}
+.wd-env-card .wd-deva { font-size: clamp(13px, 9cqmin, 44px); line-height: 1.1; }
+.wd-env-names { display: flex; flex-direction: column; align-items: center; font-size: clamp(16px, 11.5cqmin, 64px); line-height: 1.05; }
+.wd-env-heart { font-size: 0.55em; margin: 0.15em 0; }
+.wd-env-date { font-size: clamp(11px, 5cqmin, 24px); letter-spacing: 0.04em; opacity: 0.9; }
+.wd-env-reveal { opacity: 0; translate: 0 8px; transition: opacity 600ms ease, translate 600ms ease; }
+.wd-env-overlay:is([data-phase='rise'], [data-phase='expand'], [data-phase='leaving']) .wd-env-reveal { opacity: 1; translate: 0 0; }
+.wd-env-overlay[data-phase='rise'] .wd-env-r1 { transition-delay: 280ms; }
+.wd-env-overlay[data-phase='rise'] .wd-env-r2 { transition-delay: 520ms; }
+.wd-env-overlay[data-phase='rise'] .wd-env-r3 { transition-delay: 760ms; }
+
+/* The flap: a 3D hinge along the top edge. perspective() lives on the flap itself. */
+.wd-env-flap {
+  position: absolute;
+  z-index: 5;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 59.5%;
+  transform-origin: 50% 0;
+  transform-style: preserve-3d;
+  transform: perspective(1400px) rotateX(0deg);
+  transition: transform 820ms cubic-bezier(.45, .05, .2, 1) 200ms;
+  pointer-events: none;
+}
+.wd-env-overlay:not([data-phase='closed']) .wd-env-flap { transform: perspective(1400px) rotateX(-180deg); }
+.wd-env-overlay[data-flap='behind'] .wd-env-flap { z-index: 2; }
+.wd-env-face { position: absolute; inset: 0; width: 100%; height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.wd-env-face-back { transform: rotateX(180deg); }
+
+/* The wax seal. */
+.wd-env-seal {
+  position: absolute;
+  z-index: 6;
+  left: 50%;
+  top: 57.3%;
+  width: 24%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  box-shadow: 0 8px 16px -4px rgba(40, 6, 14, 0.55), 0 2px 4px rgba(40, 6, 14, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.15);
+  animation: wdSealBreathe 2.8s ease-in-out infinite;
+  transition: scale 200ms ease;
+}
+.wd-env-seal:hover { scale: 1.04; }
+.wd-env-seal:focus-visible { outline: 3px solid #E7C877; outline-offset: 4px; }
+@keyframes wdSealBreathe {
+  0%, 100% { box-shadow: 0 8px 16px -4px rgba(40, 6, 14, 0.55), 0 2px 4px rgba(40, 6, 14, 0.35), 0 0 0 0 rgba(231, 200, 119, 0); }
+  50% { box-shadow: 0 8px 16px -4px rgba(40, 6, 14, 0.55), 0 2px 4px rgba(40, 6, 14, 0.35), 0 0 0 10px rgba(231, 200, 119, 0.14); }
+}
+.wd-env-overlay:not([data-phase='closed']) .wd-env-seal { animation: wdSealOff 620ms cubic-bezier(.5, 0, .7, .4) forwards; pointer-events: none; }
+@keyframes wdSealOff {
+  0% { scale: 1; rotate: 0deg; opacity: 1; }
+  18% { scale: 0.9; }
+  40% { scale: 1.08; rotate: -8deg; translate: -50% -58%; opacity: 1; }
+  100% { scale: 0.62; rotate: -32deg; translate: -50% 90%; opacity: 0; }
+}
+
+/* As the card takes over, the envelope sinks away beneath it. */
+.wd-env-overlay:is([data-phase='expand'], [data-phase='leaving']) :is(.wd-env-liner, .wd-env-pocket, .wd-env-flap, .wd-env-glow) {
+  translate: 0 38%;
+  opacity: 0;
+  transition: translate 700ms cubic-bezier(.5, 0, .75, 0), opacity 600ms ease;
+}
+
+.wd-env-hint { margin-top: 26px; text-align: center; transition: opacity 400ms ease; }
+.wd-env-cta { font-size: 22px; line-height: 1.2; animation: wdHint 2.8s ease-in-out infinite; }
+.wd-env-sub { margin-top: 6px; font-size: 13px; letter-spacing: 0.04em; opacity: 0.72; }
+@keyframes wdHint { 0%, 100% { opacity: 0.75; } 50% { opacity: 1; } }
+.wd-env-overlay:not([data-phase='closed']) .wd-env-hint { opacity: 0; }
+@container (min-width: 768px) { .wd-env-cta { font-size: 26px; } .wd-env-hint { margin-top: 32px; } }
+
+.wd-env-skip {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  min-height: 36px;
+  padding: 0 10px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  opacity: 0.55;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.wd-env-skip:hover, .wd-env-skip:focus-visible { opacity: 0.9; }
+.wd-env-overlay:not([data-phase='closed']) .wd-env-skip { opacity: 0; pointer-events: none; }
+
+/* The guest's language and "open again" controls. */
+.wd-langbar {
+  position: fixed;
+  z-index: 70;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(255, 250, 240, 0.86);
+  border: 1px solid rgba(200, 155, 69, 0.45);
+  box-shadow: 0 6px 16px -10px rgba(20, 4, 8, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.wd-langbar button { min-height: 30px; padding: 0 9px; border-radius: 999px; font-size: 12px; color: #5A0E19; }
+.wd-langbar button[aria-pressed='true'] { background: #7A1220; color: #FFF8EC; }
+.wd-langbar .wd-langbar-sep { width: 1px; height: 18px; background: rgba(200, 155, 69, 0.45); margin: 0 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wd-env-wrap, .wd-env-seal, .wd-env-cta { animation: none !important; }
+  .wd-env-light, .wd-env-glow, .wd-env-flap, .wd-env-card { transition: none !important; }
 }

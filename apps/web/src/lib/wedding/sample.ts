@@ -4,6 +4,7 @@ import { contentSchema, WELCOME_PRESETS, type Invite } from './schema'
 export const SAMPLE_INVITE: Invite = {
   v: 1,
   t: 'kohbar',
+  l: 'mai',
   c: contentSchema.parse({
     couple: { brideName: 'मुस्कान', groomName: 'अंकित', nickname: 'MuskanKeAnkit', brideAbout: 'Daughter of Smt. Sunita & Shri Ramesh Jha', groomAbout: 'Son of Smt. Rekha & Shri Mohan Mishra' },
     wedding: { date: '2026-11-25', time: '19:30', venueName: 'Shyama Mandir Parisar', venueAddress: 'Darbhanga, Bihar 846004' },

@@ -4,6 +4,7 @@
  * venue is optional, and every Mithila/family field can be switched off.
  */
 import { z } from 'zod'
+import { LANGS, type Lang } from './i18n'
 
 export const THEME_IDS = ['kohbar', 'mithila-vivah', 'madhubani-garden', 'royal-mithila', 'modern-mithila'] as const
 export type ThemeId = (typeof THEME_IDS)[number]
@@ -56,7 +57,7 @@ export const contentSchema = z.object({
     note: optText(300),
   }).default({}),
   message: z.object({
-    language: z.enum(['mai', 'hi', 'en', 'custom']).default('mai'),
+    language: z.enum(['mai', 'hi', 'en', 'sa', 'custom']).default('mai'),
     text: optText(800),
   }).default({}),
   story: z.object({ title: optText(80), text: optText(3000) }).default({}),
@@ -90,6 +91,8 @@ export type WeddingContent = z.infer<typeof contentSchema>
 export const inviteSchema = z.object({
   v: z.literal(1),
   t: z.enum(THEME_IDS),
+  /** Invitation language. Links made before languages existed were Maithili-first. */
+  l: z.enum(LANGS).default('mai'),
   c: contentSchema,
 })
 export type Invite = z.infer<typeof inviteSchema>
@@ -121,26 +124,47 @@ export function compact(value: unknown): unknown {
 
 // ─── Presets ───────────────────────────────────────────────────────────────
 
-export const WELCOME_PRESETS: Record<'mai' | 'hi' | 'en', string> = {
+/** Default welcome messages, written for each language — always editable by the couple. */
+export const WELCOME_PRESETS: Record<Lang, string> = {
   mai:
-    'अहाँ सभक स्नेह आ आशीर्वाद हमर नव जीवनक पहिल पूँजी अछि।\n\nएहि शुभ अवसर पर अहाँ सभ सपरिवार पधारि नव दम्पतिके आशीर्वाद देबाक कृपा करी।',
+    'अहाँ सभक स्नेह आ आशीर्वाद हमर नव जीवनक पहिल पूँजी अछि।\n\nएहि शुभ अवसर पर अहाँ सभ सपरिवार पधारि नव दम्पतिकेँ आशीर्वाद देबाक कृपा करी।',
   hi:
-    'आपका स्नेह और आशीर्वाद हमारे नए जीवन की पहली पूँजी है।\n\nइस शुभ अवसर पर आप सपरिवार पधारकर नवदम्पति को आशीर्वाद देने की कृपा करें।',
+    'आपका स्नेह और आशीर्वाद हमारे नए जीवन की पहली पूँजी है।\n\nइस मंगल अवसर पर आप सपरिवार पधारकर नवदम्पति को अपना आशीर्वाद प्रदान करने की कृपा करें।',
   en:
     'Your love and blessings are the first treasure of our new life together.\n\nWe warmly invite you and your family to join us and bless the couple on this auspicious occasion.',
+  sa:
+    'भवतां स्नेहः आशीर्वादश्च अस्माकं नवजीवनस्य प्रथमं धनम्।\n\nअस्मिन् मङ्गलावसरे भवन्तः सपरिवारम् आगत्य नवदम्पती स्वाशीर्भिः अनुगृह्णन्तु इति सविनयं प्रार्थयामः।',
 }
 
-/** Ceremonies many Maithil families hold — offered as one-tap starting points, never assumed. */
-export const CEREMONY_PRESETS: Array<{ name: string; icon: WeddingEvent['icon']; hint: string }> = [
-  { name: 'तिलक', icon: 'tilak', hint: 'Tilak' },
-  { name: 'मटकोर', icon: 'matkor', hint: 'Matkor' },
-  { name: 'हल्दी', icon: 'haldi', hint: 'Haldi' },
-  { name: 'बरियाती', icon: 'baraat', hint: 'Baraat' },
-  { name: 'विवाह', icon: 'vivah', hint: 'Vivah' },
-  { name: 'सिन्दूरदान', icon: 'sindoor', hint: 'Sindoordan' },
-  { name: 'विदाई', icon: 'vidai', hint: 'Vidai' },
-  { name: 'स्वागत समारोह', icon: 'reception', hint: 'Reception' },
-]
+type Preset = { name: string; icon: WeddingEvent['icon']; hint: string }
+
+/** Ceremonies many families hold — one-tap starting points in the invitation's language, never assumed and always editable. */
+export const CEREMONY_PRESETS: Record<Lang, Preset[]> = {
+  mai: [
+    { name: 'तिलक', icon: 'tilak', hint: 'Tilak' }, { name: 'मटकोर', icon: 'matkor', hint: 'Matkor' },
+    { name: 'हरदि', icon: 'haldi', hint: 'Haldi' }, { name: 'बरियाती', icon: 'baraat', hint: 'Baraat' },
+    { name: 'विवाह', icon: 'vivah', hint: 'Vivah' }, { name: 'सिन्दूरदान', icon: 'sindoor', hint: 'Sindoordan' },
+    { name: 'विदाई', icon: 'vidai', hint: 'Vidai' }, { name: 'स्वागत समारोह', icon: 'reception', hint: 'Reception' },
+  ],
+  hi: [
+    { name: 'तिलक', icon: 'tilak', hint: 'Tilak' }, { name: 'हल्दी', icon: 'haldi', hint: 'Haldi' },
+    { name: 'मेहँदी', icon: 'other', hint: 'Mehendi' }, { name: 'बारात', icon: 'baraat', hint: 'Baraat' },
+    { name: 'विवाह', icon: 'vivah', hint: 'Vivah' }, { name: 'सिंदूरदान', icon: 'sindoor', hint: 'Sindoordan' },
+    { name: 'विदाई', icon: 'vidai', hint: 'Vidai' }, { name: 'स्वागत समारोह', icon: 'reception', hint: 'Reception' },
+  ],
+  en: [
+    { name: 'Tilak', icon: 'tilak', hint: 'तिलक' }, { name: 'Matkor', icon: 'matkor', hint: 'मटकोर' },
+    { name: 'Haldi Ceremony', icon: 'haldi', hint: 'हल्दी' }, { name: 'Baraat', icon: 'baraat', hint: 'बारात' },
+    { name: 'Wedding Ceremony', icon: 'vivah', hint: 'विवाह' }, { name: 'Sindoor Daan', icon: 'sindoor', hint: 'सिंदूरदान' },
+    { name: 'Vidaai', icon: 'vidai', hint: 'विदाई' }, { name: 'Reception', icon: 'reception', hint: 'स्वागत' },
+  ],
+  sa: [
+    { name: 'तिलकोत्सवः', icon: 'tilak', hint: 'Tilak' }, { name: 'मृत्तिकापूजनम्', icon: 'matkor', hint: 'Matkor' },
+    { name: 'हरिद्रालेपनम्', icon: 'haldi', hint: 'Haldi' }, { name: 'वरयात्रा', icon: 'baraat', hint: 'Baraat' },
+    { name: 'पाणिग्रहणम्', icon: 'vivah', hint: 'Vivah' }, { name: 'सिन्दूरदानम्', icon: 'sindoor', hint: 'Sindoordan' },
+    { name: 'प्रस्थानम्', icon: 'vidai', hint: 'Vidai' }, { name: 'स्वागतसमारोहः', icon: 'reception', hint: 'Reception' },
+  ],
+}
 
 export const MITHILA_FIELDS: Array<{ key: keyof WeddingContent['mithila']['bride']; label: string; hi: string; placeholder: string }> = [
   { key: 'gram', label: 'Native village', hi: 'गाम', placeholder: 'e.g. Sarisab-Pahi' },

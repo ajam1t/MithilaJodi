@@ -2,17 +2,30 @@ import Link from 'next/link'
 import type { CSSProperties, ReactNode } from 'react'
 import { WEDDING_THEMES, weddingTheme, type WeddingTheme } from '@/lib/wedding/themes'
 import { visibleMithila, type Invite, type WeddingEvent } from '@/lib/wedding/schema'
-import { directionsUrl, longDate, mapEmbedUrl, paragraphs, time12, weddingMoment, weekday } from '@/lib/wedding/format'
+import { directionsUrl, mapEmbedUrl, paragraphs, weddingMoment } from '@/lib/wedding/format'
+import { dateL, LANG_TAG, timeL, translator, weekdayL, type Lang, type WeddingStrings } from '@/lib/wedding/i18n'
 import { Border, Divider, FishPair, Kohbar, Lotus, Paag, Peacock, Sun } from '../motifs'
-import { Countdown, RsvpWhatsApp, ShareBar, SiteEffects } from './islands'
+import { Countdown, LangBar, RsvpWhatsApp, ShareBar, SiteEffects } from './islands'
+import { Envelope } from './Envelope'
 
 type Props = {
   invite: Invite
   /** Absolute link to this invitation, for sharing; empty in the builder preview. */
   shareUrl: string
-  /** 'embedded' is the builder's live preview: no share bar, a shorter opening. */
+  /** 'embedded' is the builder's live preview: no share bar, no language bar, a shorter opening view. */
   mode: 'public' | 'embedded'
+  /** Show this language instead of the invitation's own (a guest's choice). */
+  lang?: Lang
+  /**
+   * The sealed-envelope opening. 'session' = public page, once per visit;
+   * 'preview' = in the builder, on request; 'none' = straight to the invitation.
+   */
+  opening?: 'session' | 'preview' | 'none'
+  /** sessionStorage key for 'session' openings. */
+  openingKey?: string
 }
+
+const DEVANAGARI = /[ऀ-ॿ]/
 
 function themeVars(t: WeddingTheme): CSSProperties {
   return {
@@ -84,19 +97,21 @@ function HeroArt({ t }: { t: WeddingTheme }) {
   }
 }
 
-export function WeddingSite({ invite, shareUrl, mode }: Props) {
+export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, opening = 'none', openingKey }: Props) {
   const t = weddingTheme(invite.t)
   const c = invite.c
+  const lang: Lang = langOverride ?? invite.l
+  const tr = translator(lang)
   const inv = {
-    brideName: c.couple.brideName || 'वधू',
-    groomName: c.couple.groomName || 'वर',
+    brideName: c.couple.brideName || tr('bridePlaceholder'),
+    groomName: c.couple.groomName || tr('groomPlaceholder'),
     weddingAt: weddingMoment(c.wedding.date, c.wedding.time),
   }
   const motifInk = { ink: t.accent, gold: t.gold }
   const divider = ({ kohbar: 'lotus', paag: 'paag', peacock: 'peacock', sun: 'sun', line: 'dot' } as const)[t.motif]
   const couple = `${inv.brideName} & ${inv.groomName}`
   const dateIso = c.wedding.date
-  const day = weekday(dateIso)
+  const when = (d: string, tm: string) => [dateL(lang, d), timeL(lang, tm)].filter(Boolean).join(' · ')
   const venueQuery = [c.wedding.venueName, c.wedding.venueAddress].filter(Boolean).join(', ')
   const brideSide = visibleMithila(c.mithila.bride)
   const groomSide = visibleMithila(c.mithila.groom)
@@ -104,232 +119,249 @@ export function WeddingSite({ invite, shareUrl, mode }: Props) {
   const showCouple = !!(c.couple.brideAbout || c.couple.groomAbout)
   const showFamily = !!(c.family.brideParents || c.family.groomParents || c.family.members || c.family.message)
   const events = c.events.filter(e => e.name)
+  /** Devanagari text gets the Devanagari display face, Latin text the Latin one. */
+  const face = (text: string) => (DEVANAGARI.test(text) ? 'wd-deva' : 'wd-display')
+  const [madeBefore, madeAfter] = tr('madeWith', { brand: '\u0000' }).split('\u0000')
 
   return (
-    <div className={`wd ${mode === 'embedded' ? 'wd-embedded' : ''}`} style={themeVars(t)} data-theme={t.id}>
-      {mode === 'public' && <SiteEffects />}
+    <div className={`wd ${mode === 'embedded' ? 'wd-embedded' : ''}`} style={themeVars(t)} data-theme={t.id} data-lang={lang} lang={LANG_TAG[lang]}>
+      {opening !== 'none' && (
+        <Envelope
+          theme={t}
+          lang={lang}
+          bride={c.couple.brideName}
+          groom={c.couple.groomName}
+          dateLine={dateL(lang, dateIso)}
+          storageKey={opening === 'session' ? openingKey ?? null : null}
+          embedded={mode === 'embedded'}
+        />
+      )}
+      {mode === 'public' && <LangBar lang={lang} />}
 
-      {/* ── Opening ── */}
-      <header className="wd-hero">
-        <div className="absolute inset-0 -z-10 grid place-items-center wd-hero-art"><HeroArt t={t} /></div>
-        {t.ornament > 0 && (
-          <>
-            <svg className="wd-petal left-[8%] top-[14%]" width="46" viewBox="-30 -30 60 60" aria-hidden="true"><Lotus r={24} ink={t.heroInk} gold={t.gold} /></svg>
-            <svg className="wd-petal right-[9%] bottom-[18%]" style={{ animationDelay: '2.5s' }} width="38" viewBox="-30 -30 60 60" aria-hidden="true"><Lotus r={24} ink={t.heroInk} gold={t.gold} /></svg>
-          </>
-        )}
-        <div className="relative max-w-[560px]">
-          <p className="wd-deva wd-rise wd-d1 text-[34px] sm:text-[44px] leading-none" style={{ color: t.gold }}>शुभ विवाह</p>
-          <Border ink={t.heroInk} gold={t.gold} className="wd-rise wd-d2 mx-auto mt-5 !w-40 opacity-70" />
-          <h1 className="wd-display wd-rise wd-d3 mt-6 text-[42px] sm:text-[60px] leading-[1.05]">
-            <span className="block">{inv.brideName}</span>
-            <span className="block text-[26px] sm:text-[32px] my-1" aria-label="and">❤️</span>
-            <span className="block">{inv.groomName}</span>
-          </h1>
-          {c.couple.nickname && <p className="wd-rise wd-d3 mt-3 font-hand text-[22px] opacity-90">#{c.couple.nickname.replace(/^#/, '')}</p>}
-          {dateIso && (
-            <p className="wd-rise wd-d4 mt-6 text-[18px] sm:text-[20px] tracking-wide">
-              {longDate(dateIso)}
-              {day && <span className="block text-[14px] opacity-80 mt-1">{day.en} · <span className="wd-deva">{day.hi}</span>{c.wedding.time ? ` · ${time12(c.wedding.time)}` : ''}</span>}
-            </p>
+      <div className="wd-content">
+        {mode === 'public' && <SiteEffects />}
+
+        {/* ── Opening view — what the card becomes ── */}
+        <header className="wd-hero">
+          <div className="absolute inset-0 -z-10 grid place-items-center wd-hero-art"><HeroArt t={t} /></div>
+          {t.ornament > 0 && (
+            <>
+              <svg className="wd-petal left-[8%] top-[14%]" width="46" viewBox="-30 -30 60 60" aria-hidden="true"><Lotus r={24} ink={t.heroInk} gold={t.gold} /></svg>
+              <svg className="wd-petal right-[9%] bottom-[18%]" style={{ animationDelay: '2.5s' }} width="38" viewBox="-30 -30 60 60" aria-hidden="true"><Lotus r={24} ink={t.heroInk} gold={t.gold} /></svg>
+            </>
           )}
-          <a href="#welcome" className="wd-rise wd-d5 inline-flex flex-col items-center gap-1 mt-10 text-[13px] tracking-[0.2em] uppercase opacity-85 hover:opacity-100">
-            <span className="wd-deva normal-case tracking-normal text-[17px]">निमंत्रण देखू</span>
-            <svg className="wd-scroll-cue" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-          </a>
-        </div>
-      </header>
+          <div className="relative max-w-[560px]">
+            <p className={`${face(tr('shubhVivah'))} wd-rise wd-d1 text-[34px] sm:text-[44px] leading-none`} style={{ color: t.gold }}>{tr('shubhVivah')}</p>
+            <Border ink={t.heroInk} gold={t.gold} className="wd-rise wd-d2 mx-auto mt-5 !w-40 opacity-70" />
+            <h1 className="wd-display wd-rise wd-d3 mt-6 text-[42px] sm:text-[60px] leading-[1.05]">
+              <span className="block">{inv.brideName}</span>
+              <span className="block text-[26px] sm:text-[32px] my-1" aria-label={tr('and')}>❤️</span>
+              <span className="block">{inv.groomName}</span>
+            </h1>
+            {c.couple.nickname && <p className="wd-rise wd-d3 mt-3 font-hand text-[22px] opacity-90">#{c.couple.nickname.replace(/^#/, '')}</p>}
+            {dateIso && (
+              <p className="wd-rise wd-d4 mt-6 text-[18px] sm:text-[20px] tracking-wide">
+                {dateL(lang, dateIso)}
+                <span className="block text-[14px] opacity-80 mt-1">{[weekdayL(lang, dateIso), timeL(lang, c.wedding.time)].filter(Boolean).join(' · ')}</span>
+              </p>
+            )}
+            <a href="#welcome" className="wd-rise wd-d5 inline-flex flex-col items-center gap-1 mt-10 text-[15px] opacity-85 hover:opacity-100">
+              <span className={face(tr('viewInvitation'))}>{tr('viewInvitation')}</span>
+              <svg className="wd-scroll-cue" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+            </a>
+          </div>
+        </header>
 
-      {/* ── Welcome ── */}
-      {c.message.text && (
-        <section id="welcome" className="wd-section" aria-label="Welcome">
-          <div className="wd-wrap text-center" data-reveal>
-            <Divider {...motifInk} motif={divider} />
-            <div className="mt-6 space-y-4">
-              {paragraphs(c.message.text).map((p, i) => (
-                <p key={i} className={`${c.message.language === 'en' ? 'wd-display text-[20px] sm:text-[23px]' : 'wd-deva text-[21px] sm:text-[25px]'} leading-relaxed`} style={{ whiteSpace: 'pre-line' }}>{p}</p>
+        {/* ── Welcome ── */}
+        {c.message.text ? (
+          <section id="welcome" className="wd-section" aria-label={tr('invitation')}>
+            <div className="wd-wrap text-center" data-reveal>
+              <Divider {...motifInk} motif={divider} />
+              <div className="mt-6 space-y-4">
+                {paragraphs(c.message.text).map((p, i) => (
+                  <p key={i} className={`${face(p)} ${DEVANAGARI.test(p) ? 'text-[21px] sm:text-[25px]' : 'text-[20px] sm:text-[23px]'} leading-relaxed`} style={{ whiteSpace: 'pre-line' }}>{p}</p>
+                ))}
+              </div>
+              <p className="mt-6 wd-soft text-[14px]">— {couple}</p>
+            </div>
+          </section>
+        ) : <span id="welcome" />}
+
+        {/* ── Story ── */}
+        {c.story.text && (
+          <Section id="story" title={`❤️ ${tr('storyTitle')}`} sub={c.story.title || undefined} alt>
+            <div className="wd-card p-6 sm:p-9 space-y-4 text-[17px] leading-relaxed" data-reveal>
+              {paragraphs(c.story.text).map((p, i) => <p key={i} style={{ whiteSpace: 'pre-line' }} className={i === 0 ? 'first-letter:font-serif first-letter:text-[44px] first-letter:float-left first-letter:mr-2 first-letter:leading-none' : ''}>{p}</p>)}
+            </div>
+          </Section>
+        )}
+
+        {/* ── Mithila ── */}
+        {showMithila && (
+          <Section id="mithila" title={`🌺 ${tr('mithilaTitle')}`}>
+            {c.mithila.intro && <p className="text-center text-[17px] leading-relaxed max-w-xl mx-auto mb-8" data-reveal style={{ whiteSpace: 'pre-line' }}>{c.mithila.intro}</p>}
+            <div className={`grid gap-5 ${brideSide.length && groomSide.length ? 'sm:grid-cols-2' : 'max-w-md mx-auto'}`}>
+              {([[brideSide, tr('brideSide')], [groomSide, tr('groomSide')]] as const).filter(([s]) => s.length).map(([side, title]) => (
+                <div key={title} className="wd-card overflow-hidden" data-reveal>
+                  <Border ink={t.accent} gold={t.gold} />
+                  <div className="p-6">
+                    <p className={`${face(title)} text-[22px] wd-accent text-center`}>{title}</p>
+                    <dl className="mt-5 space-y-3">
+                      {side.map(f => {
+                        const label = tr(`field_${f.key}` as keyof WeddingStrings)
+                        return (
+                          <div key={f.key} className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: 'var(--w-line)' }}>
+                            <dt className={`shrink-0 ${face(label)} text-[16px] wd-accent`}>{label}</dt>
+                            <dd className="text-right text-[16px]">{f.value}</dd>
+                          </div>
+                        )
+                      })}
+                    </dl>
+                  </div>
+                </div>
               ))}
             </div>
-            <p className="mt-6 wd-soft text-[14px]">— {couple}</p>
-          </div>
-        </section>
-      )}
-      {!c.message.text && <span id="welcome" />}
+          </Section>
+        )}
 
-      {/* ── Story ── */}
-      {c.story.text && (
-        <Section id="story" title="❤️ हमर कहानी" sub={c.story.title || 'Our story'} alt>
-          <div className="wd-card p-6 sm:p-9 space-y-4 text-[17px] leading-relaxed" data-reveal>
-            {paragraphs(c.story.text).map((p, i) => <p key={i} style={{ whiteSpace: 'pre-line' }} className={i === 0 ? 'first-letter:font-serif first-letter:text-[44px] first-letter:float-left first-letter:mr-2 first-letter:leading-none' : ''}>{p}</p>)}
-          </div>
-        </Section>
-      )}
-
-      {/* ── Mithila ── */}
-      {showMithila && (
-        <Section id="mithila" title="🌺 हमर मिथिला" sub="Our Mithila roots">
-          {c.mithila.intro && <p className="text-center text-[17px] leading-relaxed max-w-xl mx-auto mb-8" data-reveal style={{ whiteSpace: 'pre-line' }}>{c.mithila.intro}</p>}
-          <div className={`grid gap-5 ${brideSide.length && groomSide.length ? 'sm:grid-cols-2' : 'max-w-md mx-auto'}`}>
-            {([[brideSide, 'वधू पक्ष', 'The bride’s family'], [groomSide, 'वर पक्ष', 'The groom’s family']] as const).filter(([s]) => s.length).map(([side, hi, en]) => (
-              <div key={hi} className="wd-card overflow-hidden" data-reveal>
-                <Border ink={t.accent} gold={t.gold} />
-                <div className="p-6">
-                  <p className="wd-deva text-[22px] wd-accent text-center">{hi}</p>
-                  <p className="text-center text-[12px] uppercase tracking-[0.18em] wd-soft">{en}</p>
-                  <dl className="mt-5 space-y-3">
-                    {side.map(f => (
-                      <div key={f.key} className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: 'var(--w-line)' }}>
-                        <dt className="shrink-0"><span className="wd-deva text-[16px] wd-accent">{f.hi}</span> <span className="text-[12px] wd-soft">{f.label}</span></dt>
-                        <dd className="text-right text-[16px]">{f.value}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Section>
-      )}
-
-      {/* ── The couple ── */}
-      {showCouple && (
-        <Section id="couple" title="वर-वधू" sub="The bride & the groom" alt>
-          <div className="grid grid-cols-2 gap-4 sm:gap-10 max-w-xl mx-auto">
-            {([[inv.brideName, c.couple.brideAbout, 'वधू', 'bride'], [inv.groomName, c.couple.groomAbout, 'वर', 'groom']] as const).map(([name, about, hi, side]) => (
-              <figure key={hi} className="text-center" data-reveal>
-                <div className="wd-portrait grid place-items-center">
-                  <svg viewBox="-60 -66 120 132" className="w-[78%] h-[78%]" aria-hidden="true">
-                    {side === 'bride' ? <Lotus r={44} ink={t.accent} gold={t.gold} fill={t.accent} /> : <Paag s={1.05} ink={t.accent} gold={t.gold} fill={t.bg} />}
-                  </svg>
-                </div>
-                <figcaption className="mt-4">
-                  <span className="block wd-deva text-[15px]" style={{ color: t.gold }}>{hi}</span>
-                  <span className="block wd-display text-[24px] sm:text-[28px] wd-accent leading-tight">{name}</span>
-                  {about && <span className="block mt-2 text-[14px] wd-soft leading-relaxed" style={{ whiteSpace: 'pre-line' }}>{about}</span>}
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-        </Section>
-      )}
-
-      {/* ── Countdown ── */}
-      {inv.weddingAt && (
-        <section className="wd-section" aria-label="Countdown to the wedding">
-          <div className="wd-wrap text-center" data-reveal>
-            <p className="wd-deva text-[24px] sm:text-[30px] wd-accent mb-6">विवाह में अब बस…</p>
-            <Countdown at={inv.weddingAt} label={longDate(dateIso)} />
-          </div>
-        </section>
-      )}
-
-      {/* ── Ceremonies ── */}
-      {events.length > 0 && (
-        <Section id="events" title="विवाहक कार्यक्रम" sub="Wedding ceremonies" alt>
-          <ol className="wd-timeline">
-            {events.map(e => (
-              <li key={e.id} className="wd-event" data-reveal>
-                <span className="wd-event-dot" aria-hidden="true">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d={EVENT_GLYPH[e.icon]} /></svg>
-                </span>
-                <div className="wd-card p-5">
-                  <h3 className="wd-deva text-[22px] wd-accent leading-tight">{e.name}</h3>
-                  {(e.date || e.time) && (
-                    <p className="mt-1.5 text-[15px] font-medium">{[longDate(e.date), time12(e.time)].filter(Boolean).join(' · ')}</p>
-                  )}
-                  {e.venue && <p className="mt-1 text-[14px] wd-soft">📍 {e.venue}</p>}
-                  {e.description && <p className="mt-2.5 text-[15px] leading-relaxed" style={{ whiteSpace: 'pre-line' }}>{e.description}</p>}
-                </div>
-              </li>
-            ))}
-          </ol>
-        </Section>
-      )}
-
-      {/* ── Venue ── */}
-      {c.wedding.venueName && (
-        <Section id="venue" title="📍 विवाह स्थल" sub="The venue">
-          <div className="wd-card overflow-hidden" data-reveal>
-            <div className="p-6 sm:p-8 text-center">
-              <p className="wd-display text-[26px] sm:text-[30px] wd-accent leading-tight">{c.wedding.venueName}</p>
-              {c.wedding.venueAddress && <p className="mt-2 text-[16px] wd-soft" style={{ whiteSpace: 'pre-line' }}>{c.wedding.venueAddress}</p>}
-              {(dateIso || c.wedding.time) && <p className="mt-3 text-[15px]">{[longDate(dateIso), time12(c.wedding.time)].filter(Boolean).join(' · ')}</p>}
-              {c.wedding.dressCode && <p className="mt-2 text-[14px]"><span className="wd-soft">Dress code:</span> {c.wedding.dressCode}</p>}
-              {c.wedding.note && <p className="mt-2 text-[14px] wd-soft" style={{ whiteSpace: 'pre-line' }}>{c.wedding.note}</p>}
-              <a className="wd-btn mt-6" href={directionsUrl(c.wedding.mapUrl, venueQuery)} target="_blank" rel="noopener noreferrer">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z" /><circle cx="12" cy="10" r="2.5" /></svg>
-                <span className="wd-deva">Google Maps पर रास्ता देखें</span>
-              </a>
+        {/* ── The couple ── */}
+        {showCouple && (
+          <Section id="couple" title={tr('coupleTitle')} alt>
+            <div className="grid grid-cols-2 gap-4 sm:gap-10 max-w-xl mx-auto">
+              {([[inv.brideName, c.couple.brideAbout, tr('bride'), 'bride'], [inv.groomName, c.couple.groomAbout, tr('groom'), 'groom']] as const).map(([name, about, role, side]) => (
+                <figure key={side} className="text-center" data-reveal>
+                  <div className="wd-portrait grid place-items-center">
+                    <svg viewBox="-60 -66 120 132" className="w-[78%] h-[78%]" aria-hidden="true">
+                      {side === 'bride' ? <Lotus r={44} ink={t.accent} gold={t.gold} fill={t.accent} /> : <Paag s={1.05} ink={t.accent} gold={t.gold} fill={t.bg} />}
+                    </svg>
+                  </div>
+                  <figcaption className="mt-4">
+                    <span className={`block ${face(role)} text-[15px]`} style={{ color: t.gold }}>{role}</span>
+                    <span className="block wd-display text-[24px] sm:text-[28px] wd-accent leading-tight">{name}</span>
+                    {about && <span className="block mt-2 text-[14px] wd-soft leading-relaxed" style={{ whiteSpace: 'pre-line' }}>{about}</span>}
+                  </figcaption>
+                </figure>
+              ))}
             </div>
-            {venueQuery && (
-              <iframe
-                title={`Map of ${c.wedding.venueName}`}
-                src={mapEmbedUrl(venueQuery)}
-                className="block w-full h-[260px] sm:h-[320px] border-0"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
-            )}
+          </Section>
+        )}
+
+        {/* ── Countdown ── */}
+        {inv.weddingAt && (
+          <section className="wd-section" aria-label={tr('countdownTitle')}>
+            <div className="wd-wrap text-center" data-reveal>
+              <p className={`${face(tr('countdownTitle'))} text-[24px] sm:text-[30px] wd-accent mb-6`}>{tr('countdownTitle')}</p>
+              <Countdown at={inv.weddingAt} lang={lang} label={dateL(lang, dateIso)} />
+            </div>
+          </section>
+        )}
+
+        {/* ── Ceremonies ── */}
+        {events.length > 0 && (
+          <Section id="events" title={tr('eventsTitle')} alt>
+            <ol className="wd-timeline">
+              {events.map(e => (
+                <li key={e.id} className="wd-event" data-reveal>
+                  <span className="wd-event-dot" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d={EVENT_GLYPH[e.icon]} /></svg>
+                  </span>
+                  <div className="wd-card p-5">
+                    <h3 className={`${face(e.name)} text-[22px] wd-accent leading-tight`}>{e.name}</h3>
+                    {(e.date || e.time) && <p className="mt-1.5 text-[15px] font-medium">{when(e.date, e.time)}</p>}
+                    {e.venue && <p className="mt-1 text-[14px] wd-soft">📍 {e.venue}</p>}
+                    {e.description && <p className="mt-2.5 text-[15px] leading-relaxed" style={{ whiteSpace: 'pre-line' }}>{e.description}</p>}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </Section>
+        )}
+
+        {/* ── Venue ── */}
+        {c.wedding.venueName && (
+          <Section id="venue" title={`📍 ${tr('venueTitle')}`}>
+            <div className="wd-card overflow-hidden" data-reveal>
+              <div className="p-6 sm:p-8 text-center">
+                <p className="wd-display text-[26px] sm:text-[30px] wd-accent leading-tight">{c.wedding.venueName}</p>
+                {c.wedding.venueAddress && <p className="mt-2 text-[16px] wd-soft" style={{ whiteSpace: 'pre-line' }}>{c.wedding.venueAddress}</p>}
+                {(dateIso || c.wedding.time) && <p className="mt-3 text-[15px]">{when(dateIso, c.wedding.time)}</p>}
+                {c.wedding.dressCode && <p className="mt-2 text-[14px]"><span className="wd-soft">{tr('dressCode')}:</span> {c.wedding.dressCode}</p>}
+                {c.wedding.note && <p className="mt-2 text-[14px] wd-soft" style={{ whiteSpace: 'pre-line' }}>{c.wedding.note}</p>}
+                <a className="wd-btn mt-6" href={directionsUrl(c.wedding.mapUrl, venueQuery)} target="_blank" rel="noopener noreferrer">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z" /><circle cx="12" cy="10" r="2.5" /></svg>
+                  <span>{tr('directions')}</span>
+                </a>
+              </div>
+              {venueQuery && (
+                <iframe
+                  title={tr('mapOf', { venue: c.wedding.venueName })}
+                  src={mapEmbedUrl(venueQuery)}
+                  className="block w-full h-[260px] sm:h-[320px] border-0"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              )}
+            </div>
+          </Section>
+        )}
+
+        {/* ── RSVP ── */}
+        {c.rsvp.enabled && c.rsvp.phone && (
+          <Section id="rsvp" title={`💌 ${tr('rsvpTitle')}`} sub={c.rsvp.deadline ? tr('rsvpBy', { date: dateL(lang, c.rsvp.deadline) }) : undefined}>
+            <div className="max-w-md mx-auto" data-reveal>
+              <RsvpWhatsApp phone={c.rsvp.phone} couple={couple} contactName={c.rsvp.contactName} lang={lang} />
+            </div>
+          </Section>
+        )}
+
+        {/* ── Family ── */}
+        {showFamily && (
+          <Section id="family" title={tr('familyTitle')} alt>
+            <div className="grid gap-5 sm:grid-cols-2" data-reveal>
+              {c.family.brideParents && (
+                <div className="wd-card p-6 text-center"><p className={`${face(tr('brideParents'))} text-[18px]`} style={{ color: t.gold }}>{tr('brideParents')}</p><p className="mt-2 text-[17px]" style={{ whiteSpace: 'pre-line' }}>{c.family.brideParents}</p></div>
+              )}
+              {c.family.groomParents && (
+                <div className="wd-card p-6 text-center"><p className={`${face(tr('groomParents'))} text-[18px]`} style={{ color: t.gold }}>{tr('groomParents')}</p><p className="mt-2 text-[17px]" style={{ whiteSpace: 'pre-line' }}>{c.family.groomParents}</p></div>
+              )}
+            </div>
+            {c.family.members && <p className="mt-6 text-center text-[16px] wd-soft leading-relaxed" data-reveal style={{ whiteSpace: 'pre-line' }}>{c.family.members}</p>}
+            {c.family.message && <p className={`mt-6 text-center ${face(c.family.message)} text-[20px] leading-relaxed`} data-reveal style={{ whiteSpace: 'pre-line' }}>{c.family.message}</p>}
+          </Section>
+        )}
+
+        {/* ── Share ── */}
+        {mode === 'public' && (
+          <section className="wd-section text-center" aria-label={tr('shareTitle')}>
+            <div className="wd-wrap" data-reveal>
+              <Divider {...motifInk} motif={divider} />
+              <p className={`mt-6 mb-6 ${face(tr('shareTitle'))} text-[22px] wd-accent`}>{tr('shareTitle')}</p>
+              <ShareBar url={shareUrl} couple={couple} lang={lang} />
+            </div>
+          </section>
+        )}
+
+        {/* ── Footer ── */}
+        <footer className="relative overflow-hidden text-center" style={{ background: t.heroBg, color: t.heroInk }}>
+          <Border ink={t.heroInk} gold={t.gold} className="opacity-60" />
+          <div className="px-6 py-12">
+            <p className="wd-display text-[22px]">{couple}</p>
+            {dateIso && <p className="mt-1 text-[14px] opacity-80">{dateL(lang, dateIso)}</p>}
+            <div className="mx-auto my-8 h-px w-24" style={{ background: t.gold }} />
+            <p className="text-[14px] opacity-90">
+              {madeBefore}<Link href="/" className="font-semibold underline underline-offset-4" style={{ textDecorationColor: t.gold }}>Mithila Jodi</Link>{madeAfter}
+            </p>
+            <p className={`mt-1 ${face(tr('tagline'))} text-[15px] opacity-80`}>{tr('tagline')}</p>
+            <Link href="/marriage-invitation/premium" className="inline-block mt-5 rounded-full px-5 py-2.5 text-[14px] font-semibold" style={{ border: `1px solid ${t.gold}`, color: t.heroInk }}>
+              {tr('createOwn')}
+            </Link>
+            <p className="mt-6 text-[11px] opacity-60">
+              {tr('footerNote')}{' '}
+              <Link href="/contact?topic=report-invitation" className="underline underline-offset-2">{tr('report')}</Link>
+            </p>
           </div>
-        </Section>
-      )}
-
-      {/* ── RSVP ── */}
-      {c.rsvp.enabled && c.rsvp.phone && (
-        <Section id="rsvp" title="💌 उपस्थितिक पुष्टि" sub={c.rsvp.deadline ? `Kindly respond by ${longDate(c.rsvp.deadline)}` : 'Kindly respond'}>
-          <div className="max-w-md mx-auto" data-reveal>
-            <RsvpWhatsApp phone={c.rsvp.phone} couple={couple} contactName={c.rsvp.contactName} />
-          </div>
-        </Section>
-      )}
-
-      {/* ── Family ── */}
-      {showFamily && (
-        <Section id="family" title="परिवार" sub="With blessings from" alt>
-          <div className="grid gap-5 sm:grid-cols-2" data-reveal>
-            {c.family.brideParents && (
-              <div className="wd-card p-6 text-center"><p className="wd-deva text-[18px]" style={{ color: t.gold }}>वधूक माता-पिता</p><p className="mt-2 text-[17px]" style={{ whiteSpace: 'pre-line' }}>{c.family.brideParents}</p></div>
-            )}
-            {c.family.groomParents && (
-              <div className="wd-card p-6 text-center"><p className="wd-deva text-[18px]" style={{ color: t.gold }}>वरक माता-पिता</p><p className="mt-2 text-[17px]" style={{ whiteSpace: 'pre-line' }}>{c.family.groomParents}</p></div>
-            )}
-          </div>
-          {c.family.members && <p className="mt-6 text-center text-[16px] wd-soft leading-relaxed" data-reveal style={{ whiteSpace: 'pre-line' }}>{c.family.members}</p>}
-          {c.family.message && <p className="mt-6 text-center wd-deva text-[20px] leading-relaxed" data-reveal style={{ whiteSpace: 'pre-line' }}>{c.family.message}</p>}
-        </Section>
-      )}
-
-      {/* ── Share ── */}
-      {mode === 'public' && (
-        <section className="wd-section text-center" aria-label="Share the invitation">
-          <div className="wd-wrap" data-reveal>
-            <Divider {...motifInk} motif={divider} />
-            <p className="mt-6 wd-deva text-[22px] wd-accent">अपन परिजनके निमंत्रण पठाउ</p>
-            <p className="wd-soft text-[14px] mt-1 mb-6">Send this invitation to family and friends</p>
-            <ShareBar url={shareUrl} couple={couple} />
-          </div>
-        </section>
-      )}
-
-      {/* ── Footer ── */}
-      <footer className="relative overflow-hidden text-center" style={{ background: t.heroBg, color: t.heroInk }}>
-        <Border ink={t.heroInk} gold={t.gold} className="opacity-60" />
-        <div className="px-6 py-12">
-          <p className="wd-display text-[22px]">{couple}</p>
-          {dateIso && <p className="mt-1 text-[14px] opacity-80">{longDate(dateIso)}</p>}
-          <div className="mx-auto my-8 h-px w-24" style={{ background: t.gold }} />
-          <p className="text-[14px] opacity-90">Made with ❤️ on <Link href="/" className="font-semibold underline underline-offset-4" style={{ textDecorationColor: t.gold }}>Mithila Jodi</Link></p>
-          <p className="mt-1 wd-deva text-[15px] opacity-80">जहाँ परम्परा मिले, प्रेम से</p>
-          <Link href="/marriage-invitation#premium" className="inline-block mt-5 rounded-full px-5 py-2.5 text-[14px] font-semibold" style={{ border: `1px solid ${t.gold}`, color: t.heroInk }}>
-            Create your own Mithila Wedding Invitation →
-          </Link>
-          <p className="mt-6 text-[11px] opacity-60">
-            Made by the couple with Mithila Jodi’s free invitation maker — nothing is stored on our servers.{' '}
-            <Link href="/contact?topic=report-invitation" className="underline underline-offset-2">Report this invitation</Link>
-          </p>
-        </div>
-      </footer>
-
+        </footer>
+      </div>
     </div>
   )
 }

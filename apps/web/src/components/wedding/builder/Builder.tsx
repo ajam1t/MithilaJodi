@@ -8,6 +8,7 @@ import {
 } from '@/lib/wedding/schema'
 import { WEDDING_THEMES } from '@/lib/wedding/themes'
 import { editUrl, encodeInvite, inviteUrl, MAX_LINK_PAYLOAD } from '@/lib/wedding/codec'
+import { LANG_LABEL, LANGS, wt, type Lang } from '@/lib/wedding/i18n'
 import { WeddingSite } from '../site/WeddingSite'
 
 const DRAFT_KEY = 'mj-wedding-draft'
@@ -28,6 +29,13 @@ const ICONS: Array<{ v: WeddingEvent['icon']; label: string }> = [
   { v: 'vivah', label: 'Vivah (fire)' }, { v: 'sindoor', label: 'Sindoordan' }, { v: 'vidai', label: 'Vidai (doli)' },
   { v: 'reception', label: 'Reception' }, { v: 'puja', label: 'Puja' }, { v: 'other', label: 'Lotus' },
 ]
+
+/** Earlier wordings of the default messages — still treated as untouched defaults. */
+const LEGACY_PRESETS = [
+  'अहाँ सभक स्नेह आ आशीर्वाद हमर नव जीवनक पहिल पूँजी अछि।\n\nएहि शुभ अवसर पर अहाँ सभ सपरिवार पधारि नव दम्पतिके आशीर्वाद देबाक कृपा करी।',
+  'आपका स्नेह और आशीर्वाद हमारे नए जीवन की पहली पूँजी है।\n\nइस शुभ अवसर पर आप सपरिवार पधारकर नवदम्पति को आशीर्वाद देने की कृपा करें।',
+]
+const isDefaultMessage = (text: string) => !text || Object.values(WELCOME_PRESETS).includes(text) || LEGACY_PRESETS.includes(text)
 
 function freshContent(): WeddingContent {
   return { ...EMPTY_CONTENT, message: { language: 'mai', text: WELCOME_PRESETS.mai } }
@@ -85,6 +93,9 @@ function StepHead({ hi, en, children }: { hi: string; en: string; children?: Rea
 
 export function Builder({ initial }: { initial: Invite | null }) {
   const [theme, setTheme] = useState<ThemeId>(initial?.t ?? 'kohbar')
+  const [lang, setLang] = useState<Lang>(initial?.l ?? 'mai')
+  /** Bumped to play the envelope opening inside the preview. */
+  const [openingRun, setOpeningRun] = useState(0)
   const [c, setC] = useState<WeddingContent>(initial?.c ?? freshContent())
   const [step, setStep] = useState<StepKey>('couple')
   const [saved, setSaved] = useState<'idle' | 'saved'>('idle')
@@ -103,7 +114,11 @@ export function Builder({ initial }: { initial: Invite | null }) {
         if (raw) {
           const d = JSON.parse(raw)
           const parsed = contentSchema.safeParse(d.c)
-          if (parsed.success) { setC(parsed.data); if (WEDDING_THEMES.some(t => t.id === d.t)) setTheme(d.t) }
+          if (parsed.success) {
+            setC(parsed.data)
+            if (WEDDING_THEMES.some(t => t.id === d.t)) setTheme(d.t)
+            if ((LANGS as readonly string[]).includes(d.l)) setLang(d.l)
+          }
         }
       } catch { /* no draft */ }
     }
@@ -114,10 +129,10 @@ export function Builder({ initial }: { initial: Invite | null }) {
   useEffect(() => {
     if (!loaded.current) return
     const t = setTimeout(() => {
-      try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ t: theme, c })); setSaved('saved') } catch { /* storage full or blocked */ }
+      try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ t: theme, l: lang, c })); setSaved('saved') } catch { /* storage full or blocked */ }
     }, 600)
     return () => clearTimeout(t)
-  }, [c, theme])
+  }, [c, theme, lang])
 
   const update = useCallback(<K extends keyof WeddingContent>(key: K, patch: Partial<WeddingContent[K]>) => {
     setC(prev => ({ ...prev, [key]: { ...(prev[key] as object), ...patch } }))
@@ -126,7 +141,16 @@ export function Builder({ initial }: { initial: Invite | null }) {
   }, [])
   const setEvents = (events: WeddingEvent[]) => { setC(prev => ({ ...prev, events })); setResult(null) }
 
-  const invite: Invite = useMemo(() => ({ v: 1, t: theme, c }), [theme, c])
+  const invite: Invite = useMemo(() => ({ v: 1, t: theme, l: lang, c }), [theme, lang, c])
+
+  /** The invitation's language. The welcome message follows it only while it is still an untouched default. */
+  const chooseLang = (l: Lang) => {
+    setLang(l)
+    setResult(null)
+    setC(prev => (prev.message.language !== 'custom' && isDefaultMessage(prev.message.text)
+      ? { ...prev, message: { language: l, text: WELCOME_PRESETS[l] } }
+      : prev))
+  }
   const ready = readiness(c)
   const idx = STEPS.findIndex(s => s.key === step)
   const go = (k: StepKey) => { setStep(k); setTimeout(() => topRef.current?.scrollIntoView({ behavior: 'instant' as ScrollBehavior, block: 'start' }), 0) }
@@ -136,7 +160,7 @@ export function Builder({ initial }: { initial: Invite | null }) {
     const parsed = contentSchema.safeParse(c)
     if (!parsed.success) { setError(parsed.error.issues[0]?.message ?? 'Please check your details.'); return }
     if (!ready.ready) { setError(`Please add: ${ready.missing.join(', ')}.`); return }
-    const payload = await encodeInvite({ v: 1, t: theme, c: parsed.data })
+    const payload = await encodeInvite({ v: 1, t: theme, l: lang, c: parsed.data })
     if (payload.length > MAX_LINK_PAYLOAD) {
       setError('Your invitation has more text than one link can carry. Please shorten the story or the ceremony descriptions.')
       return
@@ -151,17 +175,26 @@ export function Builder({ initial }: { initial: Invite | null }) {
 
   function startOver() {
     if (!window.confirm('Clear everything and start a new invitation?')) return
-    setC(freshContent()); setTheme('kohbar'); setResult(null); go('couple')
+    setC(freshContent()); setTheme('kohbar'); setLang('mai'); setResult(null); go('couple')
     try { localStorage.removeItem(DRAFT_KEY) } catch { /* ignore */ }
   }
 
-  const couple = `${c.couple.brideName || 'वधू'} & ${c.couple.groomName || 'वर'}`
-  const waText = result ? `💍 हमर विवाहक शुभ अवसर पर अहाँ सपरिवार सादर आमंत्रित छी ❤️\n\nनिमंत्रण देखबाक लेल:\n${result.share}` : ''
+  const couple = `${c.couple.brideName || wt(lang, 'bridePlaceholder')} & ${c.couple.groomName || wt(lang, 'groomPlaceholder')}`
+  const waText = result ? wt(lang, 'shareText', { url: result.share }) : ''
 
+  /** The scroller is the containing block for the envelope (translateZ), so it opens inside the frame. */
+  const site = (
+    <WeddingSite key={openingRun} invite={invite} shareUrl="" mode="embedded" opening={openingRun > 0 ? 'preview' : 'none'} />
+  )
+  const watchOpening = (
+    <button type="button" className="btn-ghost btn-sm" onClick={() => setOpeningRun(n => n + 1)}>
+      ✉️ Watch the opening
+    </button>
+  )
   const preview = (
     <div className="mx-auto w-full max-w-[400px] overflow-hidden rounded-[30px] border-[8px] border-[#2B211C] bg-[#2B211C] shadow-mj">
-      <div className="h-[min(78vh,760px)] overflow-y-auto overscroll-contain rounded-[22px] bg-white">
-        <WeddingSite invite={invite} shareUrl="" mode="embedded" />
+      <div data-wd-scroll className="relative h-[min(78vh,760px)] overflow-y-auto overscroll-contain rounded-[22px] bg-white [transform:translateZ(0)]">
+        {site}
       </div>
     </div>
   )
@@ -190,6 +223,18 @@ export function Builder({ initial }: { initial: Invite | null }) {
             {step === 'couple' && (
               <div className="space-y-4">
                 <StepHead hi="युगल" en="The couple">Just the two names are enough to begin — everything else is optional.</StepHead>
+                <fieldset className="rounded-mj border border-gold/30 bg-paper px-4 py-3">
+                  <legend className="px-1 field-label !mb-0">Invitation language</legend>
+                  <p className="text-[13px] text-ink-soft mb-2.5">Every heading, button and date on the invitation will be in this language. Guests can switch if they prefer.</p>
+                  <div className="grid grid-cols-2 gap-2 min-[480px]:grid-cols-4" role="radiogroup" aria-label="Invitation language">
+                    {LANGS.map(l => (
+                      <button key={l} type="button" role="radio" aria-checked={lang === l} lang={l} onClick={() => chooseLang(l)}
+                        className={`rounded-mj-sm border px-3 py-2.5 text-[16px] min-h-[46px] transition-colors ${lang === l ? 'border-maroon bg-maroon text-cream' : 'border-gold/40 bg-cream text-ink hover:border-gold'} ${l === 'en' ? '' : 'font-deva'}`}>
+                        {LANG_LABEL[l]}
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field id="w-bride" label="Bride’s name"><Text id="w-bride" value={c.couple.brideName} max={60} placeholder="e.g. मुस्कान or Muskan" onChange={v => update('couple', { brideName: v })} /></Field>
                   <Field id="w-groom" label="Groom’s name"><Text id="w-groom" value={c.couple.groomName} max={60} placeholder="e.g. अंकित or Ankit" onChange={v => update('couple', { groomName: v })} /></Field>
@@ -225,7 +270,7 @@ export function Builder({ initial }: { initial: Invite | null }) {
               <div className="space-y-4">
                 <StepHead hi="कार्यक्रम" en="Ceremonies">Every family’s rituals differ — add only the ones yours will hold, in your own words.</StepHead>
                 <div className="flex flex-wrap gap-2">
-                  {CEREMONY_PRESETS.map(p => (
+                  {CEREMONY_PRESETS[lang].map(p => (
                     <button key={p.name} type="button" className="rounded-full border border-gold/50 bg-cream px-3 py-1.5 text-[13px] text-maroon hover:bg-paper-2 min-h-[36px]"
                       onClick={() => setEvents([...c.events, { id: newEventId(), name: p.name, icon: p.icon, date: c.wedding.date, time: '', venue: '', description: '' }])}>
                       + <span className="font-deva">{p.name}</span> <span className="text-ink-soft">{p.hint}</span>
@@ -283,17 +328,17 @@ export function Builder({ initial }: { initial: Invite | null }) {
                 <fieldset>
                   <legend className="field-label">Welcome message</legend>
                   <div className="flex flex-wrap gap-2">
-                    {([['mai', 'मैथिली'], ['hi', 'हिन्दी'], ['en', 'English'], ['custom', 'Write my own']] as const).map(([lang, label]) => (
+                    {([['mai', 'मैथिली'], ['hi', 'हिन्दी'], ['en', 'English'], ['sa', 'संस्कृत'], ['custom', 'Write my own']] as const).map(([lang, label]) => (
                       <button key={lang} type="button" aria-pressed={c.message.language === lang}
                         className={`rounded-full border px-3.5 py-1.5 text-[14px] min-h-[38px] ${c.message.language === lang ? 'border-maroon bg-maroon text-cream' : 'border-gold/40 bg-cream text-ink'}`}
                         onClick={() => {
                           const presets = Object.values(WELCOME_PRESETS)
-                          const isPreset = !c.message.text || presets.includes(c.message.text)
+                          const isPreset = !c.message.text || presets.includes(c.message.text) || LEGACY_PRESETS.includes(c.message.text)
                           if (lang === 'custom') { update('message', { language: 'custom', text: isPreset ? '' : c.message.text }); return }
                           if (!isPreset && !window.confirm('Replace your message with the ready-made one?')) return
                           update('message', { language: lang, text: WELCOME_PRESETS[lang] })
                         }}>
-                        <span className={lang === 'mai' || lang === 'hi' ? 'font-deva' : ''}>{label}</span>
+                        <span className={lang === 'en' || lang === 'custom' ? '' : 'font-deva'}>{label}</span>
                       </button>
                     ))}
                   </div>
@@ -415,7 +460,7 @@ export function Builder({ initial }: { initial: Invite | null }) {
                       <a className="btn-primary !bg-[#1F7A47] text-center" href={`https://wa.me/?text=${encodeURIComponent(waText)}`} target="_blank" rel="noopener noreferrer">💚 WhatsApp पर निमंत्रण भेजू</a>
                       <button type="button" className="btn-ghost" onClick={() => copy(result.share, 'share')}>{copied === 'share' ? 'Link copied ✓' : 'Copy link'}</button>
                       {typeof navigator !== 'undefined' && 'share' in navigator && (
-                        <button type="button" className="btn-ghost" onClick={() => navigator.share({ title: `${couple} — Wedding Invitation`, text: waText, url: result.share }).catch(() => undefined)}>Share…</button>
+                        <button type="button" className="btn-ghost" onClick={() => navigator.share({ title: wt(lang, 'shareTitleNative', { couple }), text: waText, url: result.share }).catch(() => undefined)}>Share…</button>
                       )}
                       <a className="btn-ghost text-center" href={result.share} target="_blank" rel="noopener noreferrer">Open invitation ↗</a>
                     </div>
@@ -448,7 +493,10 @@ export function Builder({ initial }: { initial: Invite | null }) {
 
         {/* ── Live preview (desktop) ── */}
         <aside className="hidden lg:block lg:sticky lg:top-24" aria-label="Live preview">
-          <p className="mb-3 text-center text-[12px] uppercase tracking-[0.2em] text-terra font-semibold">Live preview</p>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <p className="text-[12px] uppercase tracking-[0.2em] text-terra font-semibold">Live preview</p>
+            {watchOpening}
+          </div>
           {preview}
         </aside>
       </div>
@@ -457,11 +505,12 @@ export function Builder({ initial }: { initial: Invite | null }) {
       {previewOpen && (
         <div className="fixed inset-0 z-[60] flex flex-col bg-[#2B211C] lg:hidden" role="dialog" aria-modal="true" aria-label="Invitation preview">
           <div className="flex items-center justify-between px-4 py-3 text-cream">
-            <span className="text-[13px] uppercase tracking-[0.18em]">Preview</span>
+            <span className="flex items-center gap-3"><span className="text-[13px] uppercase tracking-[0.18em]">Preview</span>
+              <button type="button" className="rounded-full border border-cream/50 px-3 py-1.5 text-[13px]" onClick={() => setOpeningRun(n => n + 1)}>✉️ Opening</button></span>
             <button type="button" className="rounded-full bg-cream px-4 py-2 text-[14px] font-semibold text-maroon" onClick={() => setPreviewOpen(false)}>Close</button>
           </div>
-          <div className="flex-1 overflow-y-auto overscroll-contain bg-white">
-            <WeddingSite invite={invite} shareUrl="" mode="embedded" />
+          <div data-wd-scroll className="relative flex-1 overflow-y-auto overscroll-contain bg-white [transform:translateZ(0)]">
+            {site}
           </div>
         </div>
       )}
