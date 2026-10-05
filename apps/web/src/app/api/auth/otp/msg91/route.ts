@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createAdminClient } from '@/lib/supabase/server'
 import { establishAccountSession } from '@/lib/authFlow'
+import { issuePasswordReset } from '@/lib/passwordReset'
 import { INDIA_MOBILE_RE, SESSION_COOKIE, SESSION_DAYS, toE164 } from '@/lib/constants'
 
 // MSG91 server-side access-token verification endpoint (from the MSG91 dashboard).
@@ -11,7 +12,7 @@ const MSG91_VERIFY_URL = 'https://control.msg91.com/api/v5/widget/verifyAccessTo
 const VerifySchema = z.object({
   mobile: z.string(),
   accessToken: z.string().min(10),
-  intent: z.enum(['login', 'register']),
+  intent: z.enum(['login', 'register', 'forgot_password']),
   consent_terms: z.boolean().optional(),
   consent_privacy: z.boolean().optional(),
 })
@@ -100,6 +101,19 @@ export async function POST(request: NextRequest) {
         { ok: false, message: 'OTP verification failed. Please try again.' },
         { status: 400 },
       )
+    }
+  }
+
+  // Forgot password: the number is proven, so hand back a one-time reset token.
+  // No session is created until the new password is set.
+  if (intent === 'forgot_password') {
+    try {
+      const reset = await issuePasswordReset(await createAdminClient(), mobile)
+      if (!reset.ok) return NextResponse.json({ ok: false, message: reset.message }, { status: reset.status })
+      return NextResponse.json({ ok: true, reset_token: reset.resetToken })
+    } catch (err) {
+      console.error('[otp/msg91] forgot_password error:', err)
+      return NextResponse.json({ ok: false, message: 'Server error. Please try again.' }, { status: 500 })
     }
   }
 

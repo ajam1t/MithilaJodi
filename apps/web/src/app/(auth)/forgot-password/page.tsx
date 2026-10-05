@@ -6,8 +6,11 @@ import { checkPassword, PASSWORD_RULES } from '@/lib/password'
 import { OtpBoxInput } from '@/components/OtpBoxInput'
 import { OtpSentAnimation } from '@/components/OtpSentAnimation'
 import { OTP_LENGTH } from '@/lib/constants'
+import { isMsg91Enabled, ensureMsg91, msg91SendOtp, msg91VerifyOtp, msg91RetryOtp } from '@/lib/msg91'
 
 type Step = 'mobile' | 'human' | 'sent' | 'otp' | 'new_password'
+/** How the OTP was sent: the MSG91 widget in production, the server-generated code otherwise. */
+type OtpChannel = 'msg91' | 'server'
 
 export default function ForgotPasswordPage() {
   const [step, setStep]                         = useState<Step>('mobile')
@@ -17,6 +20,7 @@ export default function ForgotPasswordPage() {
   const [humanAnswer, setHumanAnswer]           = useState('')
   const [otp, setOtp]                           = useState('')
   const [resetToken, setResetToken]             = useState('')
+  const [otpChannel, setOtpChannel]             = useState<OtpChannel>('server')
   const [password, setPassword]                 = useState('')
   const [passwordConfirm, setPasswordConfirm]  = useState('')
   const [showPassword, setShowPassword]         = useState(false)
@@ -80,13 +84,32 @@ export default function ForgotPasswordPage() {
       const verifyData: { ok: boolean; message?: string } = await verifyRes.json()
       if (!verifyData.ok) { setError(verifyData.message ?? 'Incorrect answer. Please try again.'); return }
 
-      const otpRes  = await fetch('/api/auth/otp/challenge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mobile }),
-      })
-      const otpData: { ok: boolean; message?: string } = await otpRes.json()
-      if (!otpData.ok) { setError(otpData.message ?? 'Could not send OTP. Please try again.'); return }
+      // MSG91 path (production): the same headless widget registration uses.
+      // The server-side /otp/challenge provider has no SMS gateway in production.
+      if (isMsg91Enabled()) {
+        try {
+          await ensureMsg91()
+        } catch {
+          setError('Could not start OTP verification. Please refresh and try again.')
+          return
+        }
+        try {
+          await msg91SendOtp('91' + mobile)
+        } catch {
+          setError('Could not send OTP. Please check the number and try again.')
+          return
+        }
+        setOtpChannel('msg91')
+      } else {
+        const otpRes  = await fetch('/api/auth/otp/challenge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile }),
+        })
+        const otpData: { ok: boolean; message?: string } = await otpRes.json()
+        if (!otpData.ok) { setError(otpData.message ?? 'Could not send OTP. Please try again.'); return }
+        setOtpChannel('server')
+      }
 
       setOtp('')
       setStep('sent')
@@ -104,6 +127,10 @@ export default function ForgotPasswordPage() {
     setError('')
     startResendCountdown()
     try {
+      if (otpChannel === 'msg91') {
+        await msg91RetryOtp()
+        return
+      }
       const res = await fetch('/api/auth/otp/challenge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -123,11 +150,27 @@ export default function ForgotPasswordPage() {
     setError('')
     setLoading(true)
     try {
-      const res  = await fetch('/api/auth/otp/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mobile, code: otp, intent: 'forgot_password' }),
-      })
+      let res: Response
+      if (otpChannel === 'msg91') {
+        let accessToken: string
+        try {
+          accessToken = await msg91VerifyOtp(otp)
+        } catch {
+          setError('Incorrect or expired OTP. Please try again.')
+          return
+        }
+        res = await fetch('/api/auth/otp/msg91', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile, accessToken, intent: 'forgot_password' }),
+        })
+      } else {
+        res = await fetch('/api/auth/otp/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile, code: otp, intent: 'forgot_password' }),
+        })
+      }
       const data: { ok: boolean; reset_token?: string; message?: string } = await res.json()
       if (!data.ok) { setError(data.message ?? 'Verification failed. Please try again.'); return }
       setResetToken(data.reset_token!)
