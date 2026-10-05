@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { SAMPLE_PROFILE_PATH } from '@/lib/digitalProfileDemo'
 
 /**
  * Announcement strip for the Digital Profile page — the same treatment and
@@ -7,8 +6,10 @@ import { SAMPLE_PROFILE_PATH } from '@/lib/digitalProfileDemo'
  * return later; with more than one, the row scrolls sideways on a phone
  * rather than wrapping into a tall block.
  */
-const ITEMS = [
-  { href: SAMPLE_PROFILE_PATH, icon: '👤', label: 'Mithila Digital Profile', cta: 'View sample profile' },
+// The strip opens the owner's chosen live example in a new tab (their
+// decision, 2026-10-06); the page's other sample buttons use /digital-profile/sample.
+const ITEMS: Array<{ href: string; icon: string; label: string; cta: string; newTab?: boolean }> = [
+  { href: 'https://mithilajodi.com/p/kxzsSnfFidVRJmFedtxAdg', icon: '👤', label: 'Mithila Digital Profile', cta: 'View sample profile', newTab: true },
 ]
 
 export function DualPromoStrip() {
@@ -19,6 +20,7 @@ export function DualPromoStrip() {
           <Link
             key={it.href}
             href={it.href}
+            {...(it.newTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
             className={`group flex shrink-0 snap-start items-center gap-2 whitespace-nowrap px-4 py-[7px] transition-colors hover:bg-maroon-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-gold-lt sm:px-6 ${i > 0 ? 'border-l border-gold/30' : ''}`}
           >
             <span aria-hidden="true" className="text-[12px] sm:text-[13px]">{it.icon}</span>
