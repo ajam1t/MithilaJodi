@@ -1,249 +1,407 @@
+import Image from 'next/image'
 import Link from 'next/link'
-import { DigitalProfileView } from '@/components/digital-profile/DigitalProfileView'
-import { DEMO_PROFILE } from '@/lib/digitalProfileDemo'
+import { DEMO_PROFILE, SAMPLE_PROFILE_PATH } from '@/lib/digitalProfileDemo'
 
 /**
- * /digital-profile for visitors: what a Digital Profile is, the demo, and the
- * way in. Plain, specific language throughout — this page is what search
- * engines and answer engines read to learn what the product is.
+ * /digital-profile for visitors. Built to the product reference: the promise
+ * ("your biodata, now beautifully shareable"), the sample profile as a real
+ * product preview, Mithila fields, sharing, how it works, privacy, a
+ * comparison, and the way in. All sample content comes from DEMO_PROFILE, the
+ * same data the full sample page renders.
  */
 
-export const DIGITAL_PROFILE_FAQ: Array<{ q: string; a: string }> = [
-  {
-    q: 'What is a Mithila Jodi Digital Profile?',
-    a: 'It is an online matrimonial profile you share with a link. It shows your details, photos and Mithila roots — gotra, maternal gotra, mool and native village — on a page designed for phones, so a family can open it straight from WhatsApp without an account.',
-  },
-  {
-    q: 'How is a Digital Profile different from a marriage biodata?',
-    a: 'A marriage biodata is a document — a PDF you download, print or forward. A Digital Profile is a living page: it always shows your latest details, you choose what it shows, you can make the link expire or turn it off, and you can see when it has been opened. Many families use both.',
-  },
-  {
-    q: 'Can I share my Digital Profile on WhatsApp?',
-    a: 'Yes. Your dashboard has a Share on WhatsApp button with a message you can edit, and a Copy Link button for anywhere else. The message contains only your link — no details from your profile.',
-  },
-  {
-    q: 'Can I control what information people see?',
-    a: 'Yes. Under “What people can see” you switch each section on or off — photos, about you, education, career, location, family, gotra, maternal gotra, mool, native village, lifestyle, what you are looking for and horoscope. Your contact details are off unless you turn them on.',
-  },
-  {
-    q: 'Can I make my profile link expire?',
-    a: 'Yes. Pick the date it stops working, change it later, or choose no expiry. After the date, anyone opening the link sees that it has expired.',
-  },
-  {
-    q: 'Can I deactivate my shared profile link?',
-    a: 'Yes. Turn the link off and it stops working immediately, everywhere it has been forwarded. When you want to share again you make a new link; the old one stays off.',
-  },
-  {
-    q: 'Can I see how many times my profile was opened?',
-    a: 'Yes. Your dashboard shows total opens, unique visitors and the date it was last opened, with a short list of recent activity. Your own visits and WhatsApp’s link previews are not counted, and no one’s identity, IP address or location is recorded.',
-  },
-  {
-    q: 'Do I need to create a separate marriage biodata?',
-    a: 'No. The Digital Profile is built from your Mithila Jodi profile. If your family also wants a printable document, the free marriage biodata maker makes one in Maithili, Hindi, English or Sanskrit.',
-  },
-  {
-    q: 'Is the Digital Profile free?',
-    a: 'Yes. Creating a Mithila Jodi account, building your profile and sharing your Digital Profile are free.',
-  },
-  {
-    q: 'Who can view my Digital Profile?',
-    a: 'Only people who have your link. It is not listed in search results — the page is kept out of Google — and you can turn the link off at any time. Because links can be forwarded, choose what it shows with that in mind.',
-  },
-  {
-    q: 'Can I update my Digital Profile after sharing it?',
-    a: 'Yes. The link always shows your current profile, so edits appear for everyone who already has it. You can also change what the link shows at any time without sending a new one.',
-  },
+const P = DEMO_PROFILE
+const height = (cm: number | null) => {
+  if (!cm) return ''
+  const inches = Math.round(cm / 2.54)
+  return `${Math.floor(inches / 12)}'${inches % 12}"`
+}
+const META = `${P.age} · ${P.gender} · ${height(P.heightCm)}`
+const PILLS = [P.community?.caste, P.community?.selfGotra ? `${P.community.selfGotra} Gotra` : null].filter(Boolean) as string[]
+
+// ─── Small pieces ───────────────────────────────────────────────────────────
+
+const GOLD = '#B98A2E'
+
+function Icon({ d, className = 'h-5 w-5' }: { d: string; className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={d} />
+    </svg>
+  )
+}
+const ICON = {
+  user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8c.8-3.6 3.6-6 7-6s6.2 2.4 7 6',
+  eye: 'M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Zm10 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z',
+  arrow: 'M5 12h14M13 6l6 6-6 6',
+  shield: 'M12 3 19 6v5.5c0 4.4-3 7.9-7 9.5-4-1.6-7-5.1-7-9.5V6Z',
+  lock: 'M6 11h12v9H6Zm2.5 0V8a3.5 3.5 0 0 1 7 0v3',
+  pin: 'M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11Zm0-8.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z',
+  layout: 'M4 5h16v14H4ZM4 10h16M10 10v9',
+  list: 'M7 4h10l3 3v13H4V4h3Zm2 6h6m-6 4h6m-6 4h4',
+  lotus: 'M12 20c-4.5 0-8-2-8-5 2.5 0 5 1.5 8 5Zm0 0c4.5 0 8-2 8-5-2.5 0-5 1.5-8 5Zm0 0c-2.5-2.5-3.5-6-2-10 1 1 2 3 2 5 0-2 1-4 2-5 1.5 4 .5 7.5-2 10Z',
+  share: 'M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm12 7a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM8.6 13.5l6.8 4M15.4 6.5l-6.8 4',
+  device: 'M7 3h10v18H7ZM11 18h2',
+  pen: 'M4 20l4.5-1 10-10-3.5-3.5-10 10ZM14 6.5l3.5 3.5',
+  clock: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-13v4.5l3 2',
+  doc: 'M7 3h7l4 4v14H7ZM14 3v4h4M10 12h5m-5 4h5',
+  gear: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7.4-1.5 1.6 1.2-2 3.4-1.9-.7a7 7 0 0 1-1.7 1l-.3 2h-4l-.3-2a7 7 0 0 1-1.7-1l-1.9.7-2-3.4 1.6-1.2a7 7 0 0 1 0-2l-1.6-1.2 2-3.4 1.9.7a7 7 0 0 1 1.7-1l.3-2h4l.3 2a7 7 0 0 1 1.7 1l1.9-.7 2 3.4-1.6 1.2a7 7 0 0 1 0 2Z',
+  send: 'M21 3 10 14M21 3l-7 18-4-7-7-4Z',
+  question: 'M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01',
+}
+
+/** Madhubani-style lotus spray for corners. Decorative. */
+function FloralSpray({ className = '', flip = false }: { className?: string; flip?: boolean }) {
+  return (
+    <svg viewBox="0 0 160 160" className={className} style={flip ? { transform: 'scaleX(-1)' } : undefined} aria-hidden="true">
+      <g fill="none" stroke={GOLD} strokeWidth="1.2" strokeOpacity="0.7">
+        <path d="M20 150C50 120 70 90 80 40" />
+        <path d="M80 40c10 30 30 60 60 90" strokeOpacity="0.45" />
+      </g>
+      {[[34, 128, -30], [52, 104, -20], [66, 78, -12], [104, 92, 22], [122, 112, 30]].map(([x, y, r], i) => (
+        <path key={i} d="M0 0C-8-6-10-16-4-24 2-16 4-6 0 0Z" transform={`translate(${x} ${y}) rotate(${r}) scale(1.6)`} fill="#C9A24A" fillOpacity="0.35" stroke={GOLD} strokeWidth="0.8" />
+      ))}
+      <g transform="translate(80 40)">
+        <path d="M0 0C-6-8-6-20 0-30 6-20 6-8 0 0Z" fill="#9E1C3E" />
+        <path d="M0 0C-11-3-17-11-18-21-9-19-3-11 0 0ZM0 0C11-3 17-11 18-21 9-19 3-11 0 0Z" fill="#7A1220" />
+        <path d="M0 0C-15 0-23-6-27-13-17-14-8-8 0 0ZM0 0C15 0 23-6 27-13 17-14 8-8 0 0Z" fill="#B8323F" />
+        <circle cx="0" cy="-3" r="2.4" fill="#E4C572" />
+      </g>
+    </svg>
+  )
+}
+
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-terra sm:text-[12px]">{children}</p>
+}
+
+// ─── The phone: the sample Digital Profile as a product preview ─────────────
+
+function PhonePreview() {
+  return (
+    <div className="relative mx-auto w-[260px] sm:w-[290px]" aria-hidden="true">
+      <div className="overflow-hidden rounded-[40px] border-[9px] border-[#211915] bg-[#211915] shadow-[0_30px_60px_-24px_rgba(58,20,12,0.6)]">
+        <div className="relative overflow-hidden rounded-[31px] bg-cream">
+          {/* app bar */}
+          <div className="flex items-center justify-between px-3.5 pb-2 pt-3">
+            <Icon d="M15 6l-6 6 6 6" className="h-4 w-4 text-maroon" />
+            <span className="flex items-center gap-1.5">
+              <Image src="/logo-mark.png" alt="" width={24} height={22} className="h-[22px] w-auto" />
+              <span className="font-serif text-[14px] leading-none text-maroon">Mithila Jodi</span>
+            </span>
+            <Icon d="M4 7h16M4 12h16M4 17h16" className="h-4 w-4 text-maroon" />
+          </div>
+          {/* photo */}
+          <div className="relative mx-3 overflow-hidden rounded-[18px]">
+            <Image src={P.photos[0]} alt="" width={640} height={800} className="aspect-[5/4] w-full object-cover object-[center_22%]" priority />
+          </div>
+          <div className="relative -mt-4 flex justify-center">
+            <span className="grid h-8 w-8 place-items-center rounded-full border border-gold/60 bg-cream text-maroon"><Icon d={ICON.lotus} className="h-4 w-4" /></span>
+          </div>
+          {/* identity */}
+          <div className="px-4 pb-3 pt-1 text-center">
+            <p className="font-serif text-[20px] leading-tight text-maroon">{P.displayName}</p>
+            <p className="mt-0.5 text-[11.5px] text-ink-soft">{META}</p>
+            <p className="mt-1 flex items-center justify-center gap-1 text-[11.5px] text-ink"><Icon d={ICON.pin} className="h-3 w-3 text-maroon" />{P.location?.current}</p>
+            <p className="text-[11px] italic text-[#9A6F1E]">Originally from {P.location?.native}</p>
+            <div className="mt-2 flex flex-wrap justify-center gap-1.5">
+              {PILLS.map(x => <span key={x} className="rounded-full border border-gold/50 bg-paper px-2 py-0.5 text-[10px] text-maroon">{x}</span>)}
+            </div>
+            <span className="mt-3 inline-block w-full rounded-full bg-maroon-gradient py-2 text-[12px] font-semibold text-cream">View Full Profile</span>
+          </div>
+          {/* tabs */}
+          <div className="grid grid-cols-4 border-t border-gold/25 bg-paper-2/60 px-1 py-1.5 text-center text-[9.5px] text-ink-soft">
+            {[['About', ICON.user], ['Education', ICON.doc], ['Family', ICON.lotus], ['Lifestyle', ICON.clock]].map(([l, d], i) => (
+              <span key={l} className={`flex flex-col items-center gap-0.5 ${i === 0 ? 'text-maroon' : ''}`}><Icon d={d} className="h-3.5 w-3.5" />{l}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** The compact card in "Here's what your family will see". */
+function PreviewCard() {
+  return (
+    <div className="overflow-hidden rounded-[18px] border border-gold/35 bg-white p-2.5 shadow-mj-sm">
+      <Image src={P.photos[0]} alt={`${P.displayName}, sample Digital Profile`} width={640} height={800} className="aspect-[16/10] w-full rounded-[12px] object-cover object-[center_22%]" />
+      <div className="px-1.5 pb-1.5 pt-2.5">
+        <p className="font-serif text-[18px] leading-tight text-maroon">{P.displayName}</p>
+        <p className="mt-0.5 text-[12px] text-ink-soft">{META}</p>
+        <p className="mt-1 flex items-center gap-1 text-[12px] text-ink"><Icon d={ICON.pin} className="h-3.5 w-3.5 text-maroon" />{P.location?.current}</p>
+        <p className="flex items-center gap-1 text-[12px] italic text-[#9A6F1E]"><Icon d={ICON.pin} className="h-3.5 w-3.5" />Originally from {P.location?.native}</p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {PILLS.map(x => <span key={x} className="rounded-full border border-gold/45 bg-paper px-2.5 py-0.5 text-[11px] text-maroon">{x}</span>)}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Content ────────────────────────────────────────────────────────────────
+
+const BENEFITS: Array<[string, string]> = [
+  ['Beautiful layout', ICON.layout], ['All important details', ICON.list], ['Mithila cultural fields', ICON.lotus],
+  ['Easy to share', ICON.share], ['Works on any device', ICON.device],
 ]
 
-const STEPS = [
-  { t: 'Create your profile', b: 'Join Mithila Jodi free and fill in your details — gotra, mool and native village included.' },
-  { t: 'Choose what to share', b: 'Switch each section on or off. Contact details stay private unless you decide otherwise.' },
-  { t: 'Send your link', b: 'Share on WhatsApp or copy the link. It opens beautifully on any phone, no account needed.' },
-  { t: 'Stay in control', b: 'See when it is opened, set an expiry date, or turn the link off whenever you like.' },
+const ROOTS: Array<{ title: string; sub: string; deva?: boolean; icon: React.ReactNode }> = [
+  { title: 'गोत्र', sub: 'Your family lineage', deva: true, icon: <Icon d="M5 19c6-1 11-6 13-14-7 1-12 6-13 14Zm0 0 7-7" className="h-9 w-9" /> },
+  { title: 'मातृक गोत्र', sub: 'Maternal lineage', deva: true, icon: <Icon d="M12 21v-7m0 0c-3 0-6-2-6-5s3-5 6-6c3 1 6 3 6 6s-3 5-6 5Zm-3 7h6M9 9h.01M12 7h.01M15 9h.01M12 11h.01" className="h-9 w-9" /> },
+  { title: 'मूल / ग्राम', sub: 'Your ancestral roots', deva: true, icon: <Icon d="M4 21h16M6 21V10m12 11V10M4 10h16L12 4ZM10 21v-5h4v5M9 13h.01M15 13h.01" className="h-9 w-9" /> },
+  { title: 'Native Village', sub: 'Where your family comes from', icon: <Icon d={ICON.pin} className="h-9 w-9" /> },
 ]
 
-const CONTROLS = [
-  { t: 'You choose every section', b: 'Photos, family, horoscope, gotra — each one on or off.' },
-  { t: 'Private by default', b: 'Mobile number, email and address are never shown unless you turn them on.' },
-  { t: 'Links that expire', b: 'Set a date, change it, or choose no expiry.' },
-  { t: 'Turn it off instantly', b: 'One tap stops the link everywhere it was forwarded.' },
-  { t: 'Know when it is opened', b: 'Opens, unique visitors and recent activity — no tracking of who.' },
-  { t: 'Kept out of Google', b: 'Your profile is reached only through your link.' },
+const MORE: Array<[string, string, string]> = [
+  ['Share', 'Send one beautiful link on WhatsApp.', ICON.share],
+  ['Update', 'Your latest details always appear.', ICON.pen],
+  ['Control', 'Choose what people can see.', ICON.shield],
+  ['Expire', 'Set an expiry date or turn it off anytime.', ICON.clock],
 ]
+
+const STEPS: Array<[string, string, string]> = [
+  ['01', 'Create your profile', ICON.doc], ['02', 'Choose what to share', ICON.gear],
+  ['03', 'Send your link', ICON.send], ['04', 'Stay in control', ICON.shield],
+]
+
+const PRIVACY = ['You choose every section', 'Private by default', 'Links that expire', 'Turn it off instantly', 'Know when it is opened', 'Kept out of Google']
+
+const COMPARE: Array<[string, string, string]> = [
+  ['Share', 'One link (WhatsApp ready)', 'Send file / attachment'],
+  ['Updates', 'Always current', 'Need a new PDF'],
+  ['Privacy', 'You control what people see', 'Once shared, can’t recall'],
+  ['Expiry', 'Set expiry or turn off anytime', 'No expiry'],
+  ['WhatsApp', 'Open with one tap', 'Upload / attach file'],
+]
+
+function Check() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-4 w-4 shrink-0" aria-hidden="true">
+      <circle cx="8" cy="8" r="7.2" fill={GOLD} />
+      <path d="M4.6 8.3 7 10.6l4.4-4.8" fill="none" stroke="#FFFAF0" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+const WA = 'M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.2 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 1-2.3.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .6l-.4.6-.4.4c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.1 1 2 1.3 2.3 1.4.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.7-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.4Z'
+
+// ─── Page ───────────────────────────────────────────────────────────────────
 
 export function DigitalProfileLanding({ ctaHref, member }: { ctaHref: string; member?: boolean }) {
-  const cta = member ? 'Go to my Digital Profile' : 'Create My Digital Profile'
+  const cta = member ? 'Go to My Digital Profile' : 'Create My Digital Profile'
   return (
-    <>
+    <div className="overflow-x-clip">
       {/* ── Hero ── */}
-      <section className="dp-hero px-4 pb-12 pt-10 text-center sm:pb-16 sm:pt-14" aria-labelledby="dp-h1">
-        <nav aria-label="Breadcrumb" className="relative mx-auto mb-6 max-w-3xl text-[12px] text-cream/75">
-          <Link href="/" className="hover:text-cream">Home</Link> <span aria-hidden="true">›</span> <span aria-current="page">Digital Profile</span>
-        </nav>
-        <p className="relative text-[11px] font-semibold uppercase tracking-[0.34em] text-gold-lt">Mithila Jodi</p>
-        <h1 id="dp-h1" className="relative mx-auto mt-3 max-w-3xl font-serif text-[34px] leading-[1.1] sm:text-[50px]">
-          Mithila Jodi Digital Profile
-        </h1>
-        <p className="relative mt-3 font-serif text-[19px] italic text-gold-lt sm:text-[23px]">Your story. Your roots. Your future.</p>
-        <p className="relative mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-cream/90 sm:text-[16px]">
-          Create a beautiful, shareable matrimonial profile rooted in Mithila — and send it to family and potential matches with one link.
-        </p>
-        <div className="relative mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Link href={ctaHref} className="btn bg-gold-lt px-6 py-3 text-[15px] font-semibold text-maroon-deep shadow-mj hover:-translate-y-px">{cta}</Link>
-          <a href="#demo" className="rounded-mj-sm border border-gold-lt/60 px-6 py-3 text-[15px] text-cream hover:bg-cream/10">See the demo profile ↓</a>
-        </div>
-        <p className="relative mt-4 text-[12.5px] text-cream/70">Free · Built for phones · You decide what it shows</p>
-      </section>
-
-      {/* ── What is it ── */}
-      <section className="bg-cream px-4 py-10 sm:py-14" aria-labelledby="dp-what">
-        <div className="mx-auto max-w-3xl">
-          <p className="eyebrow mb-1.5 text-center">Definition</p>
-          <h2 id="dp-what" className="text-center font-serif text-[26px] text-maroon sm:text-[32px]">What is a Digital Profile?</h2>
-          <div className="ornament-line mx-auto mb-5 mt-2 w-16" />
-          <p className="text-[15.5px] leading-relaxed text-ink">
-            A <strong>Digital Profile</strong> is a shareable online matrimonial profile for Mithila and Maithili families. Instead of
-            forwarding a PDF, you send one link. Whoever opens it — a relative, a family friend, a potential match — sees your
-            profile on a page made for their phone, without needing an account.
-          </p>
-          <p className="mt-3 text-[15.5px] leading-relaxed text-ink-soft">
-            It is built from your <Link href="/" className="text-maroon underline underline-offset-2">Mithila Jodi</Link> profile,
-            so it always shows your latest details, and it reads the way a Maithil family reads a profile: name and age first,
-            then gotra, maternal gotra, mool and native village, then education, career and family. You choose what it shows,
-            you can make the link expire, and you can turn it off at any time.
-          </p>
-        </div>
-      </section>
-
-      {/* ── Demo ── */}
-      <section id="demo" className="scroll-mt-20 bg-paper px-4 py-10 sm:py-14" aria-labelledby="dp-demo">
-        <div className="mx-auto max-w-5xl lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,500px)] lg:gap-10">
-          <div className="mx-auto max-w-xl text-center lg:sticky lg:top-28 lg:self-start lg:pt-10 lg:text-left">
-            <p className="eyebrow mb-1.5">Demo profile</p>
-            <h2 id="dp-demo" className="font-serif text-[26px] leading-tight text-maroon sm:text-[32px]">See how a Digital Profile looks</h2>
-            <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">
-              This is <strong className="text-ink">Amit Jha</strong> — a fictional profile we wrote to show the real thing. Scroll
-              through it the way a family would after opening a link on WhatsApp.
+      <section className="relative bg-[radial-gradient(ellipse_80%_70%_at_80%_20%,#FBEEDF,transparent_70%)] pb-10 pt-8 sm:pb-14 sm:pt-12" aria-labelledby="dp-h1">
+        <FloralSpray className="pointer-events-none absolute -right-6 bottom-0 hidden h-56 w-56 opacity-80 lg:block" />
+        <div className="wrap grid items-center gap-9 lg:grid-cols-[1.08fr_0.92fr]">
+          <div>
+            <Eyebrow>Mithila Jodi Digital Profile</Eyebrow>
+            <h1 id="dp-h1" className="mt-3 font-display text-[36px] leading-[1.06] text-maroon sm:text-[48px] lg:text-[56px]">
+              Your Biodata, Now <span className="block text-[#9A6F1E]">Beautifully Shareable.</span>
+            </h1>
+            <p className="mt-3 text-[17px] text-ink sm:text-[19px]">A private digital matrimonial profile rooted in Mithila.</p>
+            <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-ink-soft sm:text-[16px]">
+              Share one beautiful link with family and potential matches. Show your story, education, career, family
+              and Mithila roots exactly the way you choose.
             </p>
-            <ul className="mx-auto mt-5 max-w-sm space-y-2 text-left text-[14px] text-ink">
-              {['Mithila roots shown the way families read them', 'A rotating “at a glance” card', 'Every section is the owner’s choice', 'No phone number unless they share it'].map(x => (
-                <li key={x} className="flex gap-2.5"><span className="text-marigold" aria-hidden="true">◆</span>{x}</li>
-              ))}
+            <div className="mt-6 flex max-w-sm flex-col gap-3">
+              <Link href={ctaHref} className="btn-primary justify-center gap-2 rounded-full px-6 py-3.5 text-[16px]">
+                <Icon d={ICON.user} className="h-[18px] w-[18px]" />{cta}<Icon d={ICON.arrow} className="h-4 w-4" />
+              </Link>
+              <Link href={SAMPLE_PROFILE_PATH} className="btn justify-center gap-2 rounded-full border border-maroon/40 bg-cream px-6 py-3.5 text-[16px] font-semibold text-maroon hover:bg-white">
+                <Icon d={ICON.eye} className="h-[18px] w-[18px]" />View Sample Profile<Icon d={ICON.arrow} className="h-4 w-4" />
+              </Link>
+            </div>
+            <ul className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-[14px] text-ink">
+              <li className="flex items-center gap-1.5"><Icon d={ICON.shield} className="h-[18px] w-[18px] text-terra" />Free</li>
+              <li className="flex items-center gap-1.5"><Icon d={ICON.lock} className="h-[18px] w-[18px] text-[#9A6F1E]" />Private</li>
+              <li className="flex items-center gap-1.5">
+                <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="#1F7A47" aria-hidden="true"><path d={WA} /></svg>WhatsApp Ready
+              </li>
             </ul>
           </div>
-          <div className="mx-auto mt-6 w-full max-w-[500px] overflow-hidden rounded-[28px] border-[7px] border-[#2B211C] bg-paper shadow-mj lg:mt-0">
-            <DigitalProfileView profile={DEMO_PROFILE} profileId={null} mode="demo" />
+
+          <div className="relative">
+            <PhonePreview />
+            <p className="pointer-events-none absolute -right-2 top-14 hidden w-32 rotate-[-6deg] font-hand text-[19px] leading-snug text-[#9A6F1E] xl:block" aria-hidden="true">
+              A beautiful link for a brighter beginning <span className="text-maroon">♥</span>
+            </p>
           </div>
         </div>
       </section>
 
-      {/* ── Conversion ── */}
-      <section className="bg-maroon-gradient px-4 py-10 text-center text-cream sm:py-12" aria-labelledby="dp-pdf">
-        <h2 id="dp-pdf" className="font-serif text-[24px] leading-tight sm:text-[30px]">Your story deserves more than a PDF.</h2>
-        <p className="mx-auto mt-2.5 max-w-xl text-[15px] leading-relaxed text-cream/90">
-          Create your own Mithila Jodi Digital Profile and share it privately with family and potential matches.
-        </p>
-        <Link href={ctaHref} className="btn mt-5 bg-gold-lt px-6 py-3 text-[15px] font-semibold text-maroon-deep">{cta}</Link>
-      </section>
-
-      {/* ── How it works ── */}
-      <section className="bg-cream px-4 py-10 sm:py-14" aria-labelledby="dp-how">
-        <div className="mx-auto max-w-5xl">
-          <h2 id="dp-how" className="text-center font-serif text-[26px] text-maroon sm:text-[32px]">How it works</h2>
-          <div className="ornament-line mx-auto mb-6 mt-2 w-16" />
-          <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {STEPS.map((s, i) => (
-              <li key={s.t} className="rounded-mj border border-gold/30 bg-paper p-4">
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-maroon font-serif text-[15px] text-gold-lt">{i + 1}</span>
-                <h3 className="mt-2.5 font-serif text-[18px] text-maroon">{s.t}</h3>
-                <p className="mt-1 text-[14px] leading-relaxed text-ink-soft">{s.b}</p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      {/* ── Privacy & control ── */}
-      <section className="bg-paper-2 px-4 py-10 sm:py-14" aria-labelledby="dp-control">
-        <div className="mx-auto max-w-5xl">
-          <h2 id="dp-control" className="text-center font-serif text-[26px] text-maroon sm:text-[32px]">Private, and always in your hands</h2>
-          <p className="mx-auto mt-2 max-w-2xl text-center text-[15px] text-ink-soft">
-            A link on WhatsApp travels. So the Digital Profile is built around what the link shows and how long it works.
-          </p>
-          <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {CONTROLS.map(c => (
-              <li key={c.t} className="rounded-mj border border-gold/30 bg-cream p-4">
-                <h3 className="font-serif text-[17px] text-maroon">{c.t}</h3>
-                <p className="mt-1 text-[14px] leading-relaxed text-ink-soft">{c.b}</p>
+      {/* ── See it before you create it ── */}
+      <section className="wrap" aria-labelledby="dp-see">
+        <div className="grid items-center gap-6 rounded-[24px] border border-gold/30 bg-[#FBF0EA] p-5 shadow-mj-xs sm:p-7 lg:grid-cols-[1fr_minmax(0,300px)_minmax(0,250px)]">
+          <div>
+            <Eyebrow>See it before you create it</Eyebrow>
+            <h2 id="dp-see" className="mt-2 font-display text-[28px] leading-tight text-maroon sm:text-[34px]">Here’s what your family will see.</h2>
+            <p className="mt-2 text-[15.5px] text-ink-soft">A clean, elegant and culturally rooted digital profile.</p>
+            <Link href={SAMPLE_PROFILE_PATH} className="btn-primary mt-5 inline-flex gap-2 rounded-full px-6 py-3 text-[15px]">
+              Open Full Sample Profile<Icon d={ICON.arrow} className="h-4 w-4" />
+            </Link>
+          </div>
+          <PreviewCard />
+          <ul className="grid gap-2">
+            {BENEFITS.map(([t, d]) => (
+              <li key={t} className="flex items-center gap-3 rounded-[12px] border border-gold/25 bg-cream px-3.5 py-2.5 text-[14px] text-ink">
+                <span className="text-[#9A6F1E]"><Icon d={d} /></span>{t}
               </li>
             ))}
           </ul>
         </div>
       </section>
 
-      {/* ── vs biodata ── */}
-      <section className="bg-cream px-4 py-10 sm:py-14" aria-labelledby="dp-vs">
-        <div className="mx-auto max-w-3xl">
-          <h2 id="dp-vs" className="text-center font-serif text-[26px] text-maroon sm:text-[32px]">Digital Profile or marriage biodata?</h2>
-          <div className="ornament-line mx-auto mb-5 mt-2 w-16" />
-          <div className="overflow-x-auto rounded-mj border border-gold/30">
-            <table className="w-full min-w-[480px] bg-white text-left text-[14px]">
-              <thead className="bg-paper-2 text-[12px] uppercase tracking-wide text-maroon">
-                <tr><th className="px-3 py-2.5"> </th><th className="px-3 py-2.5">Digital Profile</th><th className="px-3 py-2.5">Marriage Biodata</th></tr>
+      {/* ── Mithila fields ── */}
+      <section className="relative py-10 sm:py-14" aria-labelledby="dp-roots">
+        <FloralSpray className="pointer-events-none absolute left-0 top-2 hidden h-28 w-28 opacity-40 sm:block" />
+        <FloralSpray flip className="pointer-events-none absolute right-0 top-2 hidden h-28 w-28 opacity-40 sm:block" />
+        <div className="wrap">
+          <h2 id="dp-roots" className="text-center font-display text-[24px] leading-tight text-ink sm:text-[30px]">
+            Built for the way <span className="text-[#9A6F1E]">Mithila families</span> look at a biodata
+          </h2>
+          <ul className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            {ROOTS.map(r => (
+              <li key={r.title} className="flex flex-col items-center rounded-[16px] border border-gold/40 bg-white px-3 py-5 text-center shadow-mj-xs">
+                <span className="text-[#9A6F1E]">{r.icon}</span>
+                <span className={`mt-2 text-[20px] leading-tight text-maroon sm:text-[22px] ${r.deva ? 'font-deva' : 'font-serif'}`}>{r.title}</span>
+                <span className="mt-1 text-[13px] text-ink-soft">{r.sub}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* ── Sharing ── */}
+      <section className="wrap" aria-label="Sharing">
+        <div className="grid gap-8 lg:grid-cols-2 lg:gap-0">
+          <div className="lg:border-r lg:border-gold/30 lg:pr-10">
+            <h2 className="font-display text-[26px] text-maroon sm:text-[30px]">One link. Send it anywhere.</h2>
+            <p className="mt-2 text-[15.5px] text-ink">No PDF attachment. No complicated forms. Just send your Mithila Jodi profile link.</p>
+            <ol className="mt-6 flex items-start justify-between gap-2 text-center text-[13.5px] text-ink">
+              <li className="flex w-24 flex-col items-center gap-2">
+                <span className="grid h-16 w-14 place-items-center rounded-[10px] border-2 border-maroon text-maroon"><Icon d={ICON.user} className="h-7 w-7" /></span>Your Profile
+              </li>
+              <li className="pt-5 text-[22px] text-ink" aria-hidden="true">→</li>
+              <li className="flex w-24 flex-col items-center gap-2">
+                <svg viewBox="0 0 24 24" className="h-16 w-16" fill="#25D366" aria-hidden="true"><path d={WA} /></svg>WhatsApp
+              </li>
+              <li className="pt-5 text-[22px] text-ink" aria-hidden="true">→</li>
+              <li className="flex w-24 flex-col items-center gap-2">
+                <span className="grid h-16 w-16 place-items-center text-maroon">
+                  <svg viewBox="0 0 32 32" className="h-14 w-14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="11" r="4.5" /><circle cx="22" cy="12.5" r="3.5" /><path d="M4 26c.8-5 4-7.5 8-7.5s7.2 2.5 8 7.5M19.5 19c3.5-.6 7 1.3 8 6" /></svg>
+                </span>Family / Potential Match
+              </li>
+            </ol>
+          </div>
+          <div className="lg:pl-10">
+            <h2 className="font-display text-[26px] text-maroon sm:text-[30px]">One link. More than a biodata.</h2>
+            <ul className="mt-5 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
+              {MORE.map(([t, b, d]) => (
+                <li key={t} className="flex items-start gap-3 rounded-[14px] border border-gold/25 bg-white p-3.5 shadow-mj-xs">
+                  <span className="mt-0.5 text-[#9A6F1E]"><Icon d={d} className="h-6 w-6" /></span>
+                  <span><span className="block text-[15px] font-semibold text-ink">{t}</span><span className="block text-[13px] leading-snug text-ink-soft">{b}</span></span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* ── How it works ── */}
+      <section className="wrap mt-10 sm:mt-14" aria-labelledby="dp-how">
+        <div className="rounded-[24px] border border-gold/25 bg-[#FBF0EA] px-4 py-6 sm:px-6">
+          <h2 id="dp-how" className="text-center font-display text-[26px] text-maroon sm:text-[30px]">How It Works</h2>
+          <ol className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] lg:items-center">
+            {STEPS.map(([n, t, d], i) => (
+              <li key={n} className="contents">
+                <div className="flex items-center gap-3 rounded-[14px] bg-cream px-3 py-3 shadow-mj-xs">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#F6E3B8] text-[#9A6F1E]"><Icon d={d} /></span>
+                  <span><span className="block font-display text-[20px] leading-none text-maroon">{n}</span><span className="mt-1 block text-[13px] leading-snug text-ink">{t}</span></span>
+                </div>
+                {i < STEPS.length - 1 && <span className="hidden text-[20px] text-ink-soft lg:block" aria-hidden="true">→</span>}
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* ── Privacy ── */}
+      <section className="wrap mt-5" aria-labelledby="dp-privacy">
+        <div className="relative overflow-hidden rounded-[20px] border border-gold/30 bg-white px-5 py-5 shadow-mj-xs sm:px-7">
+          <FloralSpray flip className="pointer-events-none absolute -bottom-6 -right-4 hidden h-28 w-28 opacity-40 sm:block" />
+          <div className="flex items-start gap-4">
+            <span className="hidden h-12 w-12 shrink-0 place-items-center rounded-full bg-maroon text-cream sm:grid"><Icon d={ICON.lock} className="h-6 w-6" /></span>
+            <div className="min-w-0">
+              <h2 id="dp-privacy" className="font-display text-[24px] text-maroon sm:text-[28px]">Your Privacy, Our Priority</h2>
+              <p className="text-[14.5px] text-ink-soft">You decide what your profile reveals.</p>
+              <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2.5 sm:grid-cols-3 lg:grid-cols-6">
+                {PRIVACY.map(x => <li key={x} className="flex items-center gap-2 text-[13px] leading-snug text-ink"><Check />{x}</li>)}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Comparison + FAQ ── */}
+      <section className="wrap mt-10 grid gap-5 pb-10 sm:mt-14 sm:pb-14 lg:grid-cols-[1.55fr_1fr]" aria-label="Comparison and questions">
+        <div className="min-w-0">
+          <h2 className="font-display text-[24px] text-maroon sm:text-[28px]">Digital Profile vs Traditional Biodata</h2>
+          <div className="mt-3 overflow-x-auto rounded-[14px] border border-gold/30 bg-white">
+            <table className="w-full text-left text-[12.5px] sm:text-[13.5px]">
+              <thead>
+                <tr>
+                  <th scope="col" className="bg-paper-2/70 px-2.5 py-2.5 font-semibold text-ink sm:px-3">Feature</th>
+                  <th scope="col" className="bg-maroon px-2.5 py-2.5 font-semibold leading-snug text-cream sm:px-3">Mithila Jodi Digital Profile</th>
+                  <th scope="col" className="bg-ink-soft px-2.5 py-2.5 font-semibold leading-snug text-cream sm:px-3">Traditional Biodata (PDF)</th>
+                </tr>
               </thead>
-              <tbody className="divide-y divide-paper-3 text-ink">
-                {[
-                  ['What it is', 'A living page, shared by link', 'A document — PDF or print'],
-                  ['Stays up to date', 'Yes, always your latest details', 'A fixed copy'],
-                  ['Choose what it shows', 'Any time, even after sharing', 'Before you download'],
-                  ['Expiry and turn off', 'Yes', 'No — a file cannot be recalled'],
-                  ['See when it is opened', 'Yes', 'No'],
-                  ['Languages', 'English', 'Maithili, Hindi, English, Sanskrit'],
-                ].map(([a, b, c]) => (
-                  <tr key={a}><th scope="row" className="px-3 py-2.5 font-medium text-ink-soft">{a}</th><td className="px-3 py-2.5">{b}</td><td className="px-3 py-2.5">{c}</td></tr>
+              <tbody className="divide-y divide-paper-3">
+                {COMPARE.map(([f, a, b]) => (
+                  <tr key={f}>
+                    <th scope="row" className="px-2.5 py-2.5 font-semibold text-ink sm:px-3">{f}</th>
+                    <td className="px-2.5 py-2.5 leading-snug text-ink sm:px-3">{a}</td>
+                    <td className="px-2.5 py-2.5 leading-snug text-ink-soft sm:px-3">{b}</td>
+                  </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <p className="mt-3 text-center text-[14px] text-ink-soft">
-            Need a traditional document as well? <Link href="/marriage-biodata" className="text-maroon underline underline-offset-2">Make a free marriage biodata</Link>.
-          </p>
         </div>
-      </section>
-
-      {/* ── FAQ ── */}
-      <section className="bg-paper px-4 py-10 sm:py-14" aria-labelledby="dp-faq">
-        <div className="mx-auto max-w-3xl">
-          <h2 id="dp-faq" className="text-center font-serif text-[26px] text-maroon sm:text-[32px]">Questions families ask</h2>
-          <div className="ornament-line mx-auto mb-5 mt-2 w-16" />
-          <div className="space-y-2.5">
-            {DIGITAL_PROFILE_FAQ.map(f => (
-              <details key={f.q} className="group rounded-mj border border-gold/30 bg-cream px-4 py-3 open:shadow-mj-xs">
-                <summary className="cursor-pointer list-none pr-6 font-serif text-[16.5px] leading-snug text-maroon [&::-webkit-details-marker]:hidden">
-                  <h3 className="inline">{f.q}</h3>
-                  <span className="float-right -mr-6 text-gold transition-transform group-open:rotate-45" aria-hidden="true">＋</span>
-                </summary>
-                <p className="mt-2 text-[14.5px] leading-relaxed text-ink-soft">{f.a}</p>
-              </details>
-            ))}
+        <div className="relative overflow-hidden rounded-[20px] border border-gold/30 bg-white p-5 shadow-mj-xs sm:p-6">
+          <FloralSpray flip className="pointer-events-none absolute -bottom-6 -right-6 h-32 w-32 opacity-35" />
+          <div className="relative flex items-start gap-3">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-maroon text-cream"><Icon d={ICON.question} className="h-6 w-6" /></span>
+            <div>
+              <h2 className="font-display text-[22px] leading-tight text-maroon">Frequently Asked Questions</h2>
+              <p className="mt-1.5 text-[14px] text-ink-soft">Find answers to common questions about Mithila Jodi Digital Profile.</p>
+            </div>
           </div>
-          <p className="mt-5 text-center text-[14px] text-ink-soft">
-            More about Mithila Jodi: <Link href="/about" className="text-maroon underline underline-offset-2">about us</Link> ·{' '}
-            <Link href="/safety" className="text-maroon underline underline-offset-2">safety</Link> ·{' '}
-            <Link href="/astrology/kundli-match" className="text-maroon underline underline-offset-2">Kundli match</Link>
-          </p>
+          <Link href="/help#digital-profile" className="btn relative mt-5 inline-flex gap-2 rounded-full border border-maroon/40 bg-cream px-6 py-2.5 text-[15px] font-semibold text-maroon hover:bg-white">
+            View All FAQs<Icon d={ICON.arrow} className="h-4 w-4" />
+          </Link>
         </div>
       </section>
 
       {/* ── Final CTA ── */}
-      <section className="dp-hero px-4 py-12 text-center sm:py-16" aria-labelledby="dp-ready">
-        <h2 id="dp-ready" className="relative font-serif text-[26px] sm:text-[34px]">Ready to create yours?</h2>
-        <p className="relative mx-auto mt-2 max-w-md text-[15px] text-cream/90">It takes a few minutes, and you can change everything later.</p>
-        {/* Not btn-primary: its gradient is a background-image, so a gold colour over it never showed. */}
-        <Link href={ctaHref} className="btn relative mt-6 justify-center bg-gold-lt px-6 py-3 text-[15px] font-semibold text-maroon-deep shadow-mj hover:-translate-y-px">
-          {member ? 'Go to my Digital Profile' : 'Create Your Digital Profile — Free'}
-        </Link>
+      <section className="relative overflow-hidden bg-maroon-gradient px-4 py-10 text-center text-cream sm:py-14" aria-labelledby="dp-final">
+        <FloralSpray className="pointer-events-none absolute -bottom-8 -left-8 h-40 w-40 opacity-50" />
+        <FloralSpray flip className="pointer-events-none absolute -bottom-8 -right-8 h-40 w-40 opacity-50" />
+        <h2 id="dp-final" className="relative font-display text-[28px] leading-tight sm:text-[38px]">Your story deserves more than a PDF.</h2>
+        <p className="relative mx-auto mt-2.5 max-w-xl text-[15px] text-cream/90 sm:text-[16px]">
+          Create your Mithila Jodi Digital Profile and share it privately with family and potential matches.
+        </p>
+        <div className="relative mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Link href={ctaHref} className="btn gap-2 rounded-full bg-gold-lt px-6 py-3 text-[15px] font-semibold text-maroon-deep hover:-translate-y-px">
+            <Icon d={ICON.user} className="h-[18px] w-[18px]" />{cta}<Icon d={ICON.arrow} className="h-4 w-4" />
+          </Link>
+          <Link href={SAMPLE_PROFILE_PATH} className="btn gap-2 rounded-full border border-cream/60 bg-transparent px-6 py-3 text-[15px] font-semibold text-cream hover:bg-white/10">
+            <Icon d={ICON.eye} className="h-[18px] w-[18px]" />View Sample Profile<Icon d={ICON.arrow} className="h-4 w-4" />
+          </Link>
+        </div>
       </section>
-    </>
+    </div>
   )
 }

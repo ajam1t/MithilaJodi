@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { pageMetadata, breadcrumbJsonLd, faqJsonLd, jsonLdScript } from '@/lib/seo'
+import { DIGITAL_PROFILE_FAQ } from '@/lib/digitalProfileFaq'
 
 export const metadata = pageMetadata({
   path: '/help',
@@ -78,7 +79,7 @@ export default function HelpPage() {
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={jsonLdScript(breadcrumb, faqJsonLd(FAQS))}
+        dangerouslySetInnerHTML={jsonLdScript(breadcrumb, faqJsonLd([...FAQS, ...DIGITAL_PROFILE_FAQ]))}
       />
       <MithilaHeader />
       <main id="main-content" className="flex-1 wrap py-14 max-w-3xl">
@@ -107,6 +108,23 @@ export default function HelpPage() {
             </div>
           ))}
         </div>
+
+        {/* Linked from the Digital Profile page's "View All FAQs". */}
+        <section id="digital-profile" className="mt-12 scroll-mt-24" aria-labelledby="faq-dp">
+          <p className="eyebrow mb-2 text-center">Digital Profile</p>
+          <h2 id="faq-dp" className="section-heading mb-6 text-center text-[24px] sm:text-[28px]">Digital Profile questions</h2>
+          <div className="space-y-4">
+            {DIGITAL_PROFILE_FAQ.map(({ q, a }) => (
+              <div key={q} className="card p-6">
+                <h3 className="font-serif text-lg text-maroon mb-2">{q}</h3>
+                <p className="text-ink-soft text-[15px] leading-relaxed">{a}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-5 text-center text-[14px]">
+            <Link href="/digital-profile" className="text-maroon underline underline-offset-2">About Digital Profiles</Link>
+          </p>
+        </section>
 
         <div className="mt-10 text-center">
           <p className="text-ink-soft text-[15px]">

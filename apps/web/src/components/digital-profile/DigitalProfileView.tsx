@@ -102,13 +102,15 @@ function toCard(p: SharedProfile, id: string): SearchCard {
 // ─── The profile ────────────────────────────────────────────────────────────
 
 export function DigitalProfileView({
-  profile: p, profileId, mode, viewerIsMember = false,
+  profile: p, profileId, mode, viewerIsMember = false, nested = false,
 }: {
   profile: SharedProfile
   /** Only used for a signed-in visitor's link to the full member profile. */
   profileId: string | null
   mode: ProfileMode
   viewerIsMember?: boolean
+  /** Inside another page (the landing): headings step down below that page's H1. */
+  nested?: boolean
 }) {
   const first = p.displayName.split(' ')[0]
   const meta = [p.age ? `${p.age}` : null, p.gender, height(p.heightCm)].filter(Boolean).join(' · ')
@@ -120,15 +122,15 @@ export function DigitalProfileView({
   ]
   const hasRoots = roots.some(([, v]) => v)
   let n = 3
-  const Name: Level = mode === 'demo' ? 'h3' : 'h1'
-  const h: Level = mode === 'demo' ? 'h4' : 'h2'
+  const Name: Level = nested ? 'h3' : 'h1'
+  const h: Level = nested ? 'h4' : 'h2'
   const H = h
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 px-4 py-5 sm:py-8">
       {mode === 'demo' && (
         <p className="dp-demo-ribbon dp-rise rounded-full px-4 py-1.5 text-center text-[11.5px] font-bold uppercase tracking-[0.2em]">
-          Demo profile · fictional
+          Sample profile · fictional
         </p>
       )}
 
@@ -157,7 +159,7 @@ export function DigitalProfileView({
         <div className="dp-portrait relative mt-5">
           <span className="dp-portrait-ring" aria-hidden="true" />
           <span className="dp-portrait-img">
-            {mode === 'demo' ? <DemoPortrait /> : p.photos[0] ? (
+            {mode === 'demo' && !p.photos[0] ? <DemoPortrait /> : p.photos[0] ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={p.photos[0]} alt={p.displayName} className="h-full w-full object-cover object-[center_35%]" />
             ) : (
@@ -312,8 +314,8 @@ export function DigitalProfileView({
 
       {mode === 'demo' && (
         <p className="text-center text-[12px] leading-relaxed text-ink-soft">
-          Amit Jha is a fictional person. Every detail above was written to show how a Digital Profile looks —
-          he is not a Mithila Jodi member.
+          {p.displayName} is fictional. Every detail above was written to show how a Digital Profile looks —
+          this is not a Mithila Jodi member.
         </p>
       )}
 

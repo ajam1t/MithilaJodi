@@ -3,7 +3,8 @@ import Link from 'next/link'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
-import { DigitalProfileLanding, DIGITAL_PROFILE_FAQ } from '@/components/digital-profile/DigitalProfileLanding'
+import { DigitalProfileLanding } from '@/components/digital-profile/DigitalProfileLanding'
+import { DualPromoStrip } from '@/components/home/DualPromoStrip'
 import { DigitalProfileDashboard } from '@/components/digital-profile/DigitalProfileDashboard'
 import { DigitalProfileView } from '@/components/digital-profile/DigitalProfileView'
 import { getSessionAccount } from '@/lib/auth'
@@ -12,7 +13,7 @@ import { loadOwnerDashboard } from '@/lib/digitalProfileOwner'
 import { DIGITAL_PROFILE_PATH } from '@/lib/digitalProfile'
 import { SITE_URL } from '@/lib/constants'
 import {
-  breadcrumbJsonLd, canonicalUrl, faqJsonLd, jsonLdScript, organizationJsonLd, organizationRef, pageMetadata,
+  breadcrumbJsonLd, canonicalUrl, jsonLdScript, organizationJsonLd, organizationRef, pageMetadata,
 } from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
@@ -42,10 +43,11 @@ export const metadata: Metadata = pageMetadata({
   ],
 })
 
-function Shell({ children }: { children: React.ReactNode }) {
+function Shell({ children, promo = false }: { children: React.ReactNode; promo?: boolean }) {
   return (
     <>
       <MithilaHeader />
+      {promo && <DualPromoStrip />}
       <main id="main-content" className="bg-paper">{children}</main>
       <MithilaFooter className="pb-16 lg:pb-0" />
       <MobileBottomNav />
@@ -78,7 +80,7 @@ export default async function DigitalProfilePage({ searchParams }: { searchParam
     }
 
     const preview = data.preview?.status === 'ok'
-      ? <DigitalProfileView profile={data.preview.profile} profileId={data.preview.profileId} mode="preview" />
+      ? <DigitalProfileView profile={data.preview.profile} profileId={data.preview.profileId} mode="preview" nested />
       : <p className="px-4 py-10 text-center text-[14px] text-ink-soft">Your preview will appear here once your profile is active.</p>
 
     return (
@@ -124,12 +126,11 @@ export default async function DigitalProfilePage({ searchParams }: { searchParam
         },
       },
       { ...breadcrumbJsonLd([{ name: 'Home', path: '/' }, { name: 'Digital Profile', path: DIGITAL_PROFILE_PATH }]), '@context': undefined },
-      { ...faqJsonLd(DIGITAL_PROFILE_FAQ), '@context': undefined },
     ],
   }
 
   return (
-    <Shell>
+    <Shell promo>
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(jsonLd)} />
       <DigitalProfileLanding ctaHref={session ? DIGITAL_PROFILE_PATH : '/register'} member={!!session} />
     </Shell>
