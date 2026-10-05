@@ -34,7 +34,7 @@ export default async function WelcomePage() {
         <div className="wrap py-3.5 text-center">
           <span className="font-serif text-maroon text-[19px] leading-none">Mithila Jodi</span>
           <span className="block font-deva text-ink-soft text-[11.5px] mt-0.5" lang="hi">
-            जहाँ परम्परा मिले, प्रेम से
+            जहाँ परंपरा मिले, प्रेम से
           </span>
         </div>
       </header>

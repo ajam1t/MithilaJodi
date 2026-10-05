@@ -21,7 +21,7 @@ export function PrintReport({ result, includeBirthDetails }: { result: MatchResu
       <header style={{ borderBottom: '2px solid #B98A2E', paddingBottom: '8px', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
           <p style={{ fontFamily: 'Marcellus, serif', fontSize: '20pt', color: '#7A1220', margin: 0 }}>Mithila Jodi</p>
-          <p style={{ margin: 0, fontSize: '9pt', color: '#6A5A4E' }}>जहाँ परम्परा मिले, प्रेम से · mithilajodi.com</p>
+          <p style={{ margin: 0, fontSize: '9pt', color: '#6A5A4E' }}>जहाँ परंपरा मिले, प्रेम से · mithilajodi.com</p>
         </div>
         <div style={{ textAlign: 'right' }}>
           <p style={{ fontFamily: 'Marcellus, serif', fontSize: '14pt', color: '#7A1220', margin: 0 }}>Kundli Match Report</p>

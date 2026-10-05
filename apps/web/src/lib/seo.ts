@@ -85,7 +85,7 @@ export function pageMetadata({
  *
  * A title is still worth setting: these pages are real destinations for signed-in
  * members, and without one they all inherit the root default, which makes every
- * browser tab and history entry read "Mithila Jodi — जहाँ परम्परा मिले, प्रेम से".
+ * browser tab and history entry read "Mithila Jodi — जहाँ परंपरा मिले, प्रेम से".
  *
  * `follow: true` by default so link equity still flows through utility pages to
  * the public ones they link to; pass `follow: false` for genuinely private areas.
@@ -213,12 +213,12 @@ export function organizationJsonLd() {
     url: SITE_URL,
     logo: {
       '@type': 'ImageObject',
-      url: `${SITE_URL}/favicon-512.png`,
-      width: 512,
-      height: 512,
+      url: `${SITE_URL}/logo.png`,
+      width: 707,
+      height: 615,
     },
     image: `${SITE_URL}/og-card.png`,
-    slogan: 'जहाँ परम्परा मिले, प्रेम से | Where tradition meets love.',
+    slogan: 'जहाँ परंपरा मिले, प्रेम से | Where tradition meets love.',
     description:
       'A matrimonial platform for the Mithila (Maithili) community of India, offering shareable Digital Profiles and marriage biodata creation in English, Hindi, Maithili and Sanskrit.',
     // schema.org provides this property specifically to separate an entity from

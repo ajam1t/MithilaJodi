@@ -22,7 +22,7 @@
  * Bump CACHE_VERSION to force old caches out.
  */
 
-const CACHE_VERSION = 'mj-v2'
+const CACHE_VERSION = 'mj-v3' // v3: new brand logo (offline-page icon)
 const OFFLINE_URL = '/offline.html'
 
 /* The offline page's logo. Precached alongside the page itself because a page

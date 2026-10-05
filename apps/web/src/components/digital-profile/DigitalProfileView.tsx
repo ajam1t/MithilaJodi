@@ -176,7 +176,7 @@ export function DigitalProfileView({
             {identity.map(x => <span key={x} className="dp-pill">{x}</span>)}
           </div>
         )}
-        <p className="relative mt-5 font-deva text-[12px] text-gold-lt/90" lang="hi">जहाँ परम्परा मिले, प्रेम से</p>
+        <p className="relative mt-5 font-deva text-[12px] text-gold-lt/90" lang="hi">जहाँ परंपरा मिले, प्रेम से</p>
       </section>
 
       {p.photos.length > 1 && <SharedPhotoCarousel photos={p.photos} name={p.displayName} />}
@@ -321,7 +321,7 @@ export function DigitalProfileView({
         <footer className="pb-2 pt-3 text-center">
           <div className="ornament-line mx-auto mb-3 w-14" />
           <Link href="/" className="font-serif text-[18px] leading-none text-maroon">Mithila Jodi</Link>
-          <p className="mt-1 font-deva text-[12px] text-ink-soft">जहाँ परम्परा मिले, प्रेम से</p>
+          <p className="mt-1 font-deva text-[12px] text-ink-soft">जहाँ परंपरा मिले, प्रेम से</p>
           <p className="mx-auto mt-2 max-w-sm text-[12px] leading-relaxed text-ink-soft">
             Shared privately by a member. Please do not forward it without asking them first.
           </p>

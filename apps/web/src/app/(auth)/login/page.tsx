@@ -47,15 +47,15 @@ export default function LoginPage() {
 
   return (
     <div className="w-full max-w-sm">
-      <div className="mb-6 text-center sm:mb-8">
+      <div className="mb-6 text-center sm:mb-8 lg:hidden">
         <Link href="/" className="inline-block">
           <Image
             src="/logo.png"
             alt="Mithila Jodi"
-            width={96}
-            height={96}
+            width={160}
+            height={139}
             priority
-            className="mx-auto h-20 w-auto object-contain sm:h-24"
+            className="mx-auto h-28 w-auto object-contain sm:h-32"
           />
         </Link>
       </div>

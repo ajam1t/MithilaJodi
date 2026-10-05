@@ -55,19 +55,8 @@ function BrandPanel() {
       <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-maroon-deep via-gold-lt to-maroon-deep" aria-hidden="true" />
 
       <div className="relative">
-        <Link href="/" className="inline-flex items-center gap-3" aria-label="Mithila Jodi — home">
-          <Image
-            src="/logo.png"
-            alt=""
-            width={48}
-            height={48}
-            priority
-            className="h-12 w-auto object-contain"
-          />
-          <span className="flex flex-col leading-none">
-            <span className="font-serif text-2xl text-cream">Mithila Jodi</span>
-            <span className="font-deva text-[12px] text-gold-lt mt-1" lang="hi">जहाँ परम्परा मिले, प्रेम से</span>
-          </span>
+        <Link href="/" className="inline-block rounded-mj bg-cream px-4 py-3 shadow-mj-sm" aria-label="Mithila Jodi — home">
+          <Image src="/logo.png" alt="Mithila Jodi — जहाँ परंपरा मिले, प्रेम से" width={160} height={139} priority className="h-[130px] w-auto object-contain" />
         </Link>
       </div>
 

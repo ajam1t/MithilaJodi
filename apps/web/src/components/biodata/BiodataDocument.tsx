@@ -107,7 +107,7 @@ export function BiodataDocument({
       {/* Header */}
       <div style={{ textAlign: 'center', borderBottom: '2px solid #7A1220', paddingBottom: '14px', marginBottom: '20px', position: 'relative', zIndex: 2 }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.png" alt="Mithila Jodi" style={{ width: '58px', height: '58px', objectFit: 'contain', margin: '0 auto 5px', display: 'block' }} />
+        <img src="/logo-mark.png" alt="Mithila Jodi" style={{ width: '64px', height: '59px', objectFit: 'contain', margin: '0 auto 5px', display: 'block' }} />
         <div style={{ fontSize: '12px', color: '#A27A2A', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: '5px' }}>Mithila Jodi</div>
         {/* Not an <h1>. This document is embedded inside /marriage-biodata,
             whose own heading is the page's H1 — two competing H1s made the

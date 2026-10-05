@@ -26,7 +26,7 @@ const mukta = Mukta({
  *
  * It was declared in tailwind.config.ts and in globals.css but never actually
  * loaded, so every Devanagari line on the site — including the brand tagline
- * "जहाँ परम्परा मिले, प्रेम से" in the header, hero and footer — was silently
+ * "जहाँ परंपरा मिले, प्रेम से" in the header, hero and footer — was silently
  * falling back to a generic serif. Loading it here is what makes those
  * declarations real. It is above the fold, so it IS preloaded.
  *
@@ -53,11 +53,11 @@ const kalam = Kalam({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'Mithila Jodi — जहाँ परम्परा मिले, प्रेम से',
+    default: 'Mithila Jodi — जहाँ परंपरा मिले, प्रेम से',
     template: '%s | Mithila Jodi',
   },
   description:
-    'Mithila Jodi — जहाँ परम्परा मिले, प्रेम से | Where tradition meets love. A trusted matrimonial platform for the Mithila community. Create a marriage biodata in English, Hindi, Maithili & Sanskrit, connect families, and discover matches rooted in Mithila heritage.',
+    'Mithila Jodi — जहाँ परंपरा मिले, प्रेम से | Where tradition meets love. A trusted matrimonial platform for the Mithila community. Create a marriage biodata in English, Hindi, Maithili & Sanskrit, connect families, and discover matches rooted in Mithila heritage.',
   keywords: [
     'Mithila matrimonial',
     'Mithila matrimony',
@@ -114,7 +114,7 @@ export const metadata: Metadata = {
     siteName: 'Mithila Jodi',
     locale: 'en_IN',
     url: SITE_URL,
-    title: 'Mithila Jodi — जहाँ परम्परा मिले, प्रेम से',
+    title: 'Mithila Jodi — जहाँ परंपरा मिले, प्रेम से',
     description: 'Where tradition meets love. A trusted matrimonial platform for the Mithila community of India.',
     // 1200x630 brand card, 105 KB. Replaces /hero-couple.jpg, which at 605 KB was
     // large enough for WhatsApp to skip generating a link preview — and WhatsApp

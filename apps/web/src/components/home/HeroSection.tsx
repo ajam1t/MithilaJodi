@@ -50,7 +50,7 @@ export function HeroSection() {
           {/* Tagline — the emotional line, Hindi and English visually connected */}
           <div className="space-y-0.5">
             <p className="font-deva text-[15px] sm:text-lg md:text-xl text-maroon opacity-90" lang="hi">
-              जहाँ परम्परा मिले, प्रेम से
+              जहाँ परंपरा मिले, प्रेम से
             </p>
             <p className="font-serif text-[14px] text-ink-soft italic">
               Meaningful connections, rooted in Mithila.

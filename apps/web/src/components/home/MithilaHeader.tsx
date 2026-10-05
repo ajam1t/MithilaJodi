@@ -116,18 +116,20 @@ export function MithilaHeader() {
 
   const Brand = (
     <Link href="/" className="flex items-center gap-2.5 group shrink-0" aria-label="Mithila Jodi — home">
+      {/* The symbol from the official logo; the full lockup's wordmark is
+          unreadable at header height, so the name is typeset beside it. */}
       <Image
-        src="/logo.png"
+        src="/logo-mark.png"
         alt=""
-        width={44}
-        height={44}
+        width={52}
+        height={48}
         priority
-        className="h-10 sm:h-11 w-auto object-contain shrink-0"
+        className="h-11 w-auto object-contain shrink-0"
       />
       <span className="flex flex-col leading-none min-w-0">
         <span className="font-serif font-bold text-[19px] sm:text-[21px] text-maroon leading-tight">Mithila Jodi</span>
         <span className="font-deva text-[10px] sm:text-[11px] text-maroon opacity-80 leading-tight mt-0.5" lang="hi">
-          जहाँ परम्परा मिले, प्रेम से
+          जहाँ परंपरा मिले, प्रेम से
         </span>
         <span className="text-[9px] sm:text-[10px] text-ink-soft italic leading-tight">
           Where tradition meets love.
@@ -174,12 +176,15 @@ export function MithilaHeader() {
           )}
         </button>
 
-        <Link href="/" className="flex flex-col items-center text-center">
-          <span className="font-serif font-bold text-[24px] sm:text-[28px] text-maroon leading-none tracking-tight">
-            Mithila Jodi
+        <Link href="/" className="flex flex-col items-center text-center" aria-label="Mithila Jodi — home">
+          <span className="flex items-center gap-2">
+            <Image src="/logo-mark.png" alt="" width={40} height={37} priority className="h-[34px] w-auto object-contain shrink-0 sm:h-10" />
+            <span className="font-serif font-bold text-[24px] sm:text-[28px] text-maroon leading-none tracking-tight">
+              Mithila Jodi
+            </span>
           </span>
           <span className="font-deva text-[11px] sm:text-[12px] text-maroon opacity-80 mt-1" lang="hi">
-            जहाँ परम्परा मिले, प्रेम से
+            जहाँ परंपरा मिले, प्रेम से
           </span>
           <span className="font-serif italic text-[10px] sm:text-[11px] text-ink-soft mt-0.5">
             Where tradition meets love.
@@ -191,12 +196,12 @@ export function MithilaHeader() {
       </div>
 
       {/* ── Desktop: brand + nav row ── */}
-      <div className="hidden lg:flex wrap items-center justify-between h-16">
+      <div className="hidden lg:flex wrap items-center justify-between gap-6 h-16">
         {/* Brand */}
         {Brand}
 
         {/* Desktop nav */}
-        <nav className="flex items-center gap-[14px] xl:gap-6" aria-label="Main navigation">
+        <nav className="flex items-center gap-[14px] xl:gap-5" aria-label="Main navigation">
           {auth.loggedIn ? (
             <>
               {AUTH_NAV_LINKS.map(({ href, label }) => (

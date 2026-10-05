@@ -211,15 +211,15 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="w-full max-w-sm">
-      <div className="text-center mb-8">
+      <div className="text-center mb-8 lg:hidden">
         <Link href="/" className="inline-block">
           <Image
             src="/logo.png"
             alt="Mithila Jodi"
-            width={96}
-            height={96}
+            width={160}
+            height={139}
             priority
-            className="h-24 w-auto object-contain mx-auto"
+            className="h-32 w-auto object-contain mx-auto"
           />
         </Link>
       </div>

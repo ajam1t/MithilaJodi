@@ -91,18 +91,15 @@ export function MithilaFooter({ className = '' }: { className?: string }) {
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           {/* Brand — compact on mobile */}
           <div className="flex sm:flex-col items-center sm:items-start gap-3 sm:gap-0 flex-shrink-0">
-            <Link href="/" className="inline-block sm:mb-1.5">
-              <Image
-                src="/logo.png"
-                alt="Mithila Jodi"
-                width={40}
-                height={40}
-                loading="lazy"
-                className="h-10 w-auto object-contain rounded"
-              />
+            {/* Maroon on maroon would vanish, so the logo sits on ivory — the
+                paper it was drawn on — never recoloured. */}
+            <Link href="/" className="inline-block shrink-0 rounded-mj-sm bg-cream p-1.5 sm:mb-2.5 sm:p-2.5" aria-label="Mithila Jodi — home">
+              <Image src="/logo-mark.png" alt="Mithila Jodi" width={48} height={44} loading="lazy" className="h-11 w-auto object-contain sm:hidden" />
+              <Image src="/logo.png" alt="Mithila Jodi" width={160} height={139} loading="lazy" className="hidden h-[120px] w-auto object-contain sm:block" />
             </Link>
-            <div>
-              <p className="font-deva text-paper-3 text-[12px] opacity-80 leading-snug">जहाँ परम्परा मिले, प्रेम से</p>
+            {/* On desktop the full logo already carries the tagline. */}
+            <div className="sm:hidden">
+              <p className="font-deva text-paper-3 text-[12px] opacity-80 leading-snug">जहाँ परंपरा मिले, प्रेम से</p>
               <p className="font-serif text-paper-3 text-[10px] italic opacity-60 mt-0.5">Where tradition meets love.</p>
             </div>
           </div>
