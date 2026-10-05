@@ -7,8 +7,7 @@ import { WHATSAPP_COMMUNITY_URL } from '@/lib/constants'
  * consistent instead of drifting into four separate designs:
  *
  *   JoinCommunityButton — the link itself, used on its own in the footer and
- *                         inside the two blocks below.
- *   JoinCommunityBand   — a full homepage section.
+ *                         inside the card below.
  *   JoinCommunityCard   — a compact card for the profile area and the
  *                         post-registration success panel.
  *
@@ -68,35 +67,6 @@ export function JoinCommunityButton({
       <WhatsAppIcon size={size === 'sm' ? 15 : 17} />
       {label}
     </a>
-  )
-}
-
-/**
- * Homepage section. Sits after the community stories, where the page is already
- * talking about the community, rather than next to the closing call to action
- * where it would compete with "create your profile".
- */
-export function JoinCommunityBand() {
-  return (
-    <section className="bg-cream py-9 sm:py-12" aria-labelledby="whatsapp-community-heading">
-      <div className="wrap max-w-2xl text-center">
-        <p className="eyebrow mb-1.5">Stay Connected</p>
-        <h2 id="whatsapp-community-heading" className="section-heading">
-          Join the Mithila Jodi Community
-        </h2>
-        <div className="ornament-line mx-auto mt-2 w-16" />
-        <p className="mx-auto mt-4 max-w-lg text-[15px] leading-relaxed text-ink-soft">
-          Stay connected with the Mithila Jodi community and receive important updates,
-          announcements and community news.
-        </p>
-        <div className="mt-5 flex justify-center">
-          <JoinCommunityButton />
-        </div>
-        <p className="mt-3 text-[12px] text-ink-soft">
-          Opens WhatsApp — you choose whether to join.
-        </p>
-      </div>
-    </section>
   )
 }
 

@@ -1,7 +1,11 @@
-import { SectionHeading } from '@/components/ui'
+'use client'
+
+import { useState } from 'react'
+import { Modal } from '@/components/ui/Modal'
 
 /**
- * Community stories.
+ * Community stories — four compact family selectors in one row; the full
+ * story opens in a dialog, so the homepage never carries the long text.
  *
  * These are presented as real member stories, on the site owner's confirmation
  * that they are.
@@ -54,47 +58,55 @@ const STORIES: Story[] = [
   },
 ]
 
+/** "The Jha family" → "Jha Family" for the compact selector. */
+const shortName = (family: string) => family.replace(/^The\s+/i, '').replace(/family$/i, 'Family')
+
 export function CommunityStories() {
+  const [open, setOpen] = useState<Story | null>(null)
   return (
-    <section className="bg-paper py-9 sm:py-12" aria-label="Community stories">
+    <section className="bg-paper py-8 sm:py-11" aria-label="Community stories">
       <div className="wrap">
-        {/* Wrapper rather than a prop on SectionHeading: it takes a fixed set
-            of props and does not spread the rest onto its root element. */}
-        <div data-mj-reveal>
-          <SectionHeading
-            eyebrow="From Mithila Families"
-            title="Stories From Our Community"
-            subtitle="How families are using Mithila Jodi to begin the conversation."
-          />
+        {/* Same compact heading as "Why Mithila Jodi" above it. */}
+        <div data-mj-reveal className="mb-5 text-center sm:mb-7">
+          <p className="eyebrow mb-1.5">From Mithila Families</p>
+          <h2 className="section-heading">Stories From Our Community</h2>
+          <div className="ornament-line mx-auto mt-2 w-16" />
+          <p className="mt-2.5 text-[13.5px] text-ink-soft sm:text-[14.5px]">Real stories from Mithila families — tap one to read it.</p>
         </div>
 
-        {/* Four cards: 2×2 on tablet, 4 across on desktop, so the row never
-            leaves a single orphaned card on its own line. */}
-        <div data-mj-stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-          {STORIES.map((s) => (
-            <figure key={s.family} className="card mj-lift relative p-5 flex flex-col h-full">
-              <span className="text-gold text-2xl leading-none font-serif" aria-hidden="true">&ldquo;</span>
-
-              <blockquote className="text-ink-soft text-[14.5px] leading-relaxed mt-1 mb-4 flex-1">
-                {s.quote}
-              </blockquote>
-
-              <figcaption className="flex items-center gap-3 pt-3 border-t border-paper-3">
-                <span
-                  className="grid place-items-center h-9 w-9 shrink-0 rounded-full bg-paper-2 border border-gold/40"
-                  aria-hidden="true"
-                >
-                  <span className="font-serif text-maroon text-[15px] leading-none">{s.initial}</span>
+        {/* Always four across — on a phone too. */}
+        <ul data-mj-reveal className="mx-auto grid max-w-3xl grid-cols-4 gap-2 sm:gap-4">
+          {STORIES.map(s => (
+            <li key={s.family}>
+              <button
+                type="button"
+                onClick={() => setOpen(s)}
+                aria-haspopup="dialog"
+                className="group flex h-full w-full flex-col items-center rounded-mj-sm border border-paper-3 bg-cream px-1 py-3 text-center transition-colors hover:border-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold sm:px-3 sm:py-4"
+              >
+                <span className="grid h-10 w-10 place-items-center rounded-full border border-gold/50 bg-paper-2 font-serif text-[17px] leading-none text-maroon transition-colors group-hover:border-gold sm:h-12 sm:w-12 sm:text-[20px]" aria-hidden="true">
+                  {s.initial}
                 </span>
-                <span className="min-w-0">
-                  <span className="block font-serif text-maroon text-[14px] leading-tight">{s.family}</span>
-                  <span className="block font-sans text-ink-soft text-[12px] leading-tight">{s.place}</span>
-                </span>
-              </figcaption>
-            </figure>
+                <span className="mt-2 block font-serif text-[12.5px] leading-tight text-maroon sm:text-[15px]">{shortName(s.family)}</span>
+                <span className="mt-0.5 block text-[11px] leading-tight text-ink-soft sm:text-[12.5px]">{s.place}</span>
+              </button>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
+
+      <Modal open={!!open} onClose={() => setOpen(null)} title={open ? shortName(open.family) : undefined}>
+        {open && (
+          <figure>
+            <p className="-mt-2 mb-3 text-[13px] text-ink-soft">{open.place}</p>
+            <span className="font-serif text-[28px] leading-none text-gold" aria-hidden="true">&ldquo;</span>
+            <blockquote className="mt-1 text-[16px] leading-relaxed text-ink">{open.quote}</blockquote>
+            <figcaption className="mt-4 border-t border-paper-3 pt-3 font-serif text-[14px] text-maroon">
+              {open.family}, {open.place}
+            </figcaption>
+          </figure>
+        )}
+      </Modal>
     </section>
   )
 }

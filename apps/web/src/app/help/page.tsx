@@ -7,11 +7,33 @@ export const metadata = pageMetadata({
   path: '/help',
   title: 'Help & Support — Your Questions Answered',
   description:
-    'How Mithila Jodi works — creating an account, building a marriage biodata in your language, who can see your profile, and what it costs.',
+    'Answers about Mithila Jodi — gotra, maternal gotra and mool, creating an account, marriage biodata in your language, who can see your profile, and what it costs.',
   keywords: ['Mithila Jodi help', 'Mithila matrimony questions', 'Mithila biodata help'],
 })
 
-const FAQS = [
+/** `more` adds "read more" links under an answer; the answer text itself is what FAQPage carries. */
+const FAQS: Array<{ q: string; a: string; more?: Array<{ href: string; label: string }> }> = [
+  {
+    q: 'What is Mithila Jodi?',
+    a: 'Mithila Jodi is a matrimonial platform for the Mithila (Maithili) community of India. It brings matchmaking, marriage biodata, wedding invitations, astrology and Mithila culture together in one place, rooted in the community’s values.',
+  },
+  {
+    q: 'What is gotra, and why does it matter in marriage?',
+    a: 'Gotra is a patrilineal lineage traced to a common Vedic ancestor, and many Hindu and Mithila families traditionally avoid same-gotra marriage. It is commonly asked during matrimonial matching.',
+    more: [{ href: '/blogs/gotra-family-lineage/what-is-gotra', label: 'What Is Gotra?' }],
+  },
+  {
+    q: 'What are maternal gotra and mool in Mithila?',
+    a: "Maternal gotra is the gotra of the mother's side, and mool refers to a family's ancestral origin or native place in Mithila tradition. Both are often considered during matrimonial matching.",
+    more: [
+      { href: '/blogs/gotra-family-lineage/what-is-maternal-gotra', label: 'Maternal gotra' },
+      { href: '/blogs/gotra-family-lineage/what-is-mool-in-mithila', label: 'Mool in Mithila' },
+    ],
+  },
+  {
+    q: 'Is Mithila Jodi only for the Mithila and Maithil community?',
+    a: "Mithila Jodi is designed specifically for Mithila and Maithili families, capturing gotra, mool and native-place details that matter to the community's marriage traditions.",
+  },
   {
     q: 'How do I create an account?',
     a: 'Enter your Indian mobile number, verify the one-time password (OTP) sent to you, and accept the Terms and Privacy Policy. Your account and profile are free.',
@@ -67,10 +89,21 @@ export default function HelpPage() {
         </div>
 
         <div className="space-y-4">
-          {FAQS.map(({ q, a }) => (
+          {FAQS.map(({ q, a, more }) => (
             <div key={q} className="card p-6">
               <h2 className="font-serif text-lg text-maroon mb-2">{q}</h2>
               <p className="text-ink-soft text-[15px] leading-relaxed">{a}</p>
+              {more && (
+                <p className="mt-2 text-[14px]">
+                  Read more:{' '}
+                  {more.map((m, i) => (
+                    <span key={m.href}>
+                      {i > 0 && ' · '}
+                      <Link href={m.href} className="text-maroon underline underline-offset-2">{m.label}</Link>
+                    </span>
+                  ))}
+                </p>
+              )}
             </div>
           ))}
         </div>

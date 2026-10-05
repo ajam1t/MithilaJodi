@@ -57,12 +57,12 @@ export function MithilaFooter({ className = '' }: { className?: string }) {
             so the new tab cannot reach back into this one via window.opener.
             The WhatsApp pill sits beside Instagram in the same treatment rather
             than as a separate block — they are the same kind of link. */}
-        <div className="flex flex-wrap justify-center gap-2 mb-3.5">
+        <div className="mx-auto mb-3.5 grid max-w-md grid-cols-2 gap-2">
           <a
             href={INSTAGRAM_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-pill border border-gold/40 bg-maroon/40 px-4 py-1.5
+            className="inline-flex w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-pill border border-gold/40 bg-maroon/40 px-2 py-2
                        text-[12.5px] font-medium text-paper-3 hover:text-cream hover:border-gold transition-colors
                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-lt"
           >
@@ -71,7 +71,7 @@ export function MithilaFooter({ className = '' }: { className?: string }) {
               <path d="M12 5.84A6.16 6.16 0 1 0 18.16 12 6.16 6.16 0 0 0 12 5.84zm0 10.16A4 4 0 1 1 16 12a4 4 0 0 1-4 4z" />
               <circle cx="18.41" cy="5.59" r="1.44" />
             </svg>
-            Join us on Instagram
+            Instagram
           </a>
 
           <a
@@ -79,7 +79,7 @@ export function MithilaFooter({ className = '' }: { className?: string }) {
             target="_blank"
             rel="noopener noreferrer nofollow"
             aria-label="Join Mithila Jodi WhatsApp Community"
-            className="inline-flex items-center gap-2 rounded-pill border border-gold/40 bg-maroon/40 px-4 py-1.5
+            className="inline-flex w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-pill border border-gold/40 bg-maroon/40 px-2 py-2
                        text-[12.5px] font-medium text-paper-3 hover:text-cream hover:border-gold transition-colors
                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-lt"
           >

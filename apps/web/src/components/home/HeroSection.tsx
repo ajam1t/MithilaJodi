@@ -16,6 +16,14 @@ import { HeroCinematic } from './hero/HeroCinematic'
  * The previous full-bleed /hero-couple.jpg is no longer used here. It is still
  * the Open Graph / Twitter card image in the page metadata.
  */
+const ECOSYSTEM: Array<[string, string, string]> = [
+  ['❤️', 'Matrimony', '/explore'],
+  ['📄', 'Biodata', '/marriage-biodata'],
+  ['💌', 'Wedding Invitation', '/marriage-invitation'],
+  ['🔮', 'Astrology', '/astrology'],
+  ['🌸', 'Mithila Culture', '/festivals'],
+]
+
 export function HeroSection() {
   return (
     <section className="relative overflow-hidden bg-paper" aria-label="Hero — Mithila matrimonial platform">
@@ -67,18 +75,27 @@ export function HeroSection() {
               couples, because no prominent, unambiguous sentence tied the name
               to this platform. */}
           <p className="text-[14px] sm:text-[15px] leading-relaxed text-ink-soft max-w-xl">
-            <strong className="font-semibold text-ink">Mithila Jodi</strong> is a matrimonial
-            platform for Maithil families — search profiles by gotra, mool and native place, share a
-            Digital Profile with one link, or create a marriage biodata in Maithili, Hindi, English or Sanskrit.
+            <strong className="font-semibold text-ink">Mithila Jodi</strong> is a matrimonial platform for
+            Maithil families — meaningful matchmaking, marriage biodata, wedding invitations, astrology and
+            Mithila culture, together in one place.
           </p>
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-2.5 pt-0.5 w-full sm:w-auto">
-            <Link href="/register" className="btn-primary text-[15px] px-6 py-3 justify-center">
+          {/* The same ecosystem as small links — one or two short rows, no taller
+              than the second button they replaced. */}
+          <ul className="flex flex-wrap justify-center gap-1.5 sm:gap-2" aria-label="What Mithila Jodi offers">
+            {ECOSYSTEM.map(([icon, label, href]) => (
+              <li key={label}>
+                <Link href={href} className="inline-flex items-center gap-1 rounded-full border border-gold/45 bg-cream px-2.5 py-1 text-[12px] font-medium text-maroon transition-colors hover:border-gold hover:bg-white sm:text-[13px]">
+                  <span aria-hidden="true">{icon}</span>{label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+
+          {/* CTA */}
+          <div className="flex pt-0.5 w-full sm:w-auto">
+            <Link href="/register" className="btn-primary text-[15px] px-6 py-3 justify-center w-full sm:w-auto">
               Find Your Match →
-            </Link>
-            <Link href="/digital-profile" className="btn-ghost text-[15px] px-6 py-3 justify-center !border-maroon !border-opacity-40">
-              Create Digital Profile
             </Link>
           </div>
         </div>

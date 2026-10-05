@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState } from 'react'
 
 type Feature = {
@@ -7,13 +8,15 @@ type Feature = {
   title: string
   tagline: string
   bullets: string[]
+  /** Optional ways in, shown under the bullets. */
+  links?: Array<{ href: string; label: string }>
   icon: React.ReactNode
 }
 
 const FEATURES: Feature[] = [
   {
     id: 'verified',
-    title: 'Mobile-Verified Profiles',
+    title: 'Mobile Verified Profiles',
     tagline: 'Real People. Greater Trust.',
     bullets: [
       'Every account is mobile-number verified',
@@ -92,31 +95,6 @@ const FEATURES: Feature[] = [
     ),
   },
   {
-    id: 'biodata',
-    title: 'Create Biodata',
-    tagline: 'Your Story, Beautifully Told.',
-    bullets: [
-      'Easy biodata creation in minutes',
-      'Traditional formats available',
-      'Share as a beautiful PDF',
-      'Customise your presentation',
-    ],
-    icon: (
-      <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 sm:w-8 sm:h-8" aria-hidden="true">
-        <rect x="10" y="6" width="28" height="36" rx="3" fill="#FBF1DD" stroke="#7A1220" strokeWidth="1.5" />
-        <rect x="10" y="6" width="28" height="9" rx="3" fill="#7A1220" />
-        <rect x="10" y="11" width="28" height="4" fill="#7A1220" />
-        <line x1="15" y1="22" x2="33" y2="22" stroke="#B98A2E" strokeWidth="1.4" />
-        <line x1="15" y1="27" x2="33" y2="27" stroke="#B98A2E" strokeWidth="1.4" />
-        <line x1="15" y1="32" x2="27" y2="32" stroke="#B98A2E" strokeWidth="1.4" />
-        {[-6,-3,0,3,6].map((dx,pi) => (
-          <ellipse key={pi} cx={24+dx} cy={11} rx={2.5} ry={4} fill="#E4C572" stroke="#B98A2E" strokeWidth="0.5" />
-        ))}
-        <circle cx="24" cy="9" r="2" fill="#B98A2E" />
-      </svg>
-    ),
-  },
-  {
     id: 'private',
     title: 'Safe & Private',
     tagline: 'Your Privacy, Fully Protected.',
@@ -153,6 +131,32 @@ const FEATURES: Feature[] = [
           return <circle key={i} cx={24+18*Math.cos(rad)} cy={24+15*Math.sin(rad)} r="2.2" fill={i%2===0?'#E4C572':'#E8912A'} stroke="#B98A2E" strokeWidth="0.5" />
         })}
         <circle cx="24" cy="24" r="19" fill="none" stroke="#B98A2E" strokeWidth="0.8" strokeDasharray="3,3" />
+      </svg>
+    ),
+  },
+  {
+    id: 'wedding',
+    title: 'Wedding Tools',
+    tagline: 'From the First Biodata to the Wedding Day.',
+    bullets: [
+      'Marriage biodata in Maithili, Hindi, English or Sanskrit',
+      'Wedding invitation cards in Mithila designs',
+      'Mithila Premium — a digital wedding webpage in one link',
+      'Free, and no login needed',
+    ],
+    links: [
+      { href: '/marriage-biodata', label: 'Marriage Biodata' },
+      { href: '/marriage-invitation', label: 'Wedding Invitations' },
+    ],
+    icon: (
+      <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 sm:w-8 sm:h-8" aria-hidden="true">
+        <rect x="6" y="14" width="36" height="26" rx="3" fill="#FBF1DD" stroke="#7A1220" strokeWidth="1.5" />
+        <path d="M6 16 24 30 42 16" fill="none" stroke="#7A1220" strokeWidth="1.5" />
+        <path d="M24 26c-3-2.4-5-4.4-5-6.6 0-1.6 1.2-2.8 2.7-2.8 1 0 1.8.5 2.3 1.3.5-.8 1.3-1.3 2.3-1.3 1.5 0 2.7 1.2 2.7 2.8 0 2.2-2 4.2-5 6.6Z" fill="#7A1220" />
+        {[-6,-3,0,3,6].map((dx, pi) => (
+          <ellipse key={pi} cx={24 + dx} cy={9} rx={2.2} ry={4} fill="#E4C572" stroke="#B98A2E" strokeWidth="0.5" />
+        ))}
+        <circle cx="24" cy="7" r="1.8" fill="#B98A2E" />
       </svg>
     ),
   },
@@ -273,6 +277,16 @@ export function WhyMithilaJodi() {
                     </li>
                   ))}
                 </ul>
+
+                {active.links && (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {active.links.map(l => (
+                      <Link key={l.href} href={l.href} className="inline-flex items-center rounded-full border border-gold/60 bg-cream px-3 py-1.5 text-[12.5px] font-medium text-maroon hover:border-gold hover:bg-white">
+                        {l.label} →
+                      </Link>
+                    ))}
+                  </div>
+                )}
 
                 {/* Gold bottom accent */}
                 <div className="h-px w-full bg-gradient-to-r from-transparent via-gold to-transparent mt-4 opacity-40" />
