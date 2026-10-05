@@ -1,7 +1,6 @@
 'use client'
 import { useState, useRef } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { checkPassword, PASSWORD_RULES } from '@/lib/password'
 import { OtpBoxInput } from '@/components/OtpBoxInput'
 import { OtpSentAnimation } from '@/components/OtpSentAnimation'
@@ -211,18 +210,6 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="w-full max-w-sm">
-      <div className="text-center mb-8 lg:hidden">
-        <Link href="/" className="inline-block">
-          <Image
-            src="/logo.png"
-            alt="Mithila Jodi"
-            width={160}
-            height={139}
-            priority
-            className="h-32 w-auto object-contain mx-auto"
-          />
-        </Link>
-      </div>
 
       <div className="card p-6 sm:p-8">
 

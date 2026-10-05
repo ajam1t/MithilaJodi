@@ -1,7 +1,6 @@
 'use client'
 import { use, useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { checkPassword, PASSWORD_RULES } from '@/lib/password'
 import { OtpBoxInput } from '@/components/OtpBoxInput'
 import { OtpSentAnimation } from '@/components/OtpSentAnimation'
@@ -237,18 +236,6 @@ export default function RegisterPage({ searchParams }: { searchParams: Promise<{
 
   return (
     <div className="w-full max-w-sm motion-safe:animate-fade-in">
-      <div className="mb-6 text-center sm:mb-8 lg:hidden">
-        <Link href="/" className="inline-block">
-          <Image
-            src="/logo.png"
-            alt="Mithila Jodi"
-            width={160}
-            height={139}
-            priority
-            className="mx-auto h-28 w-auto object-contain sm:h-32"
-          />
-        </Link>
-      </div>
 
       <div className="card p-6 sm:p-8">
 

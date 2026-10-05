@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { MithilaCouple } from '@/components/astrology/hub/MithilaCouple'
 
@@ -154,13 +153,6 @@ function WelcomeScene() {
 export function AuthWelcome() {
   return (
     <div className="w-full max-w-[460px] motion-safe:animate-fade-in">
-      {/* On desktop the brand panel beside this already carries the logo. */}
-      <div className="mb-2 text-center lg:hidden">
-        <Link href="/" className="inline-block" aria-label="Mithila Jodi — home">
-          <Image src="/logo.png" alt="Mithila Jodi — जहाँ परंपरा मिले, प्रेम से" width={160} height={139} priority className="mx-auto h-[86px] w-auto object-contain sm:h-[104px]" />
-        </Link>
-      </div>
-
       <div className="text-center">
         <h1 className="font-serif text-[26px] leading-[1.15] text-maroon sm:text-[31px]">
           A beautiful beginning

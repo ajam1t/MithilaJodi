@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
-import Image from 'next/image'
+import { MithilaHeader } from '@/components/home/MithilaHeader'
 
 // Login / register / forgot-password are functional pages, not content.
 // Keep them out of the search index.
@@ -26,7 +25,7 @@ const TRUST_POINTS = [
 /** Decorative Mithila brand panel shown beside the form on large screens. */
 function BrandPanel() {
   return (
-    <aside className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-maroon-deep text-paper-2 p-12 xl:p-16">
+    <aside className="relative hidden lg:flex flex-col justify-center gap-10 overflow-hidden bg-maroon-deep text-paper-2 p-12 xl:p-16">
       {/* Faint Madhubani lotus field */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.18]" aria-hidden="true">
         <svg viewBox="0 0 400 700" className="w-full h-full" preserveAspectRatio="xMidYMid slice" fill="none">
@@ -54,12 +53,7 @@ function BrandPanel() {
       {/* Gold edge */}
       <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-maroon-deep via-gold-lt to-maroon-deep" aria-hidden="true" />
 
-      <div className="relative">
-        <Link href="/" className="inline-block rounded-mj bg-cream px-4 py-3 shadow-mj-sm" aria-label="Mithila Jodi — home">
-          <Image src="/logo.png" alt="Mithila Jodi — जहाँ परंपरा मिले, प्रेम से" width={160} height={139} priority className="h-[130px] w-auto object-contain" />
-        </Link>
-      </div>
-
+      {/* The logo lives in the global header above; the panel carries the promise. */}
       <div className="relative max-w-sm">
         <h2 className="font-serif text-[30px] leading-tight text-cream mb-8">
           Where tradition meets love.
@@ -88,13 +82,20 @@ function BrandPanel() {
   )
 }
 
+/**
+ * Join / Login, registration and password recovery use the same global header
+ * as every other page (MithilaHeader), so header changes reach them too.
+ */
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-paper lg:grid lg:grid-cols-[1.05fr_1fr] xl:grid-cols-2">
-      <BrandPanel />
-      <main id="main-content" className="flex flex-col items-center justify-center px-4 py-8 sm:py-12">
-        {children}
-      </main>
+    <div className="flex min-h-screen flex-col bg-paper">
+      <MithilaHeader />
+      <div className="flex-1 lg:grid lg:grid-cols-[1.05fr_1fr] xl:grid-cols-2">
+        <BrandPanel />
+        <main id="main-content" className="flex flex-col items-center justify-center px-4 py-6 sm:py-10">
+          {children}
+        </main>
+      </div>
     </div>
   )
 }
