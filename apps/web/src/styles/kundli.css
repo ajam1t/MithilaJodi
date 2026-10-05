@@ -100,48 +100,51 @@
 }
 
 /* ── Astrology hub ─────────────────────────────────────────────────────── */
-/* Hero: a compact navy night over a Mithila skyline. */
-.astro-hero {
-  color: #FFF8EC;
+/* Hero: a Mithila sunrise — ivory sky warming to peach and rose at the horizon. */
+.astro-dawn {
+  color: #5A3A32;
   background:
-    radial-gradient(ellipse 60% 70% at 72% 40%, rgba(232, 145, 42, 0.18), transparent 70%),
-    radial-gradient(ellipse 45% 60% at 8% 100%, rgba(139, 18, 53, 0.35), transparent 70%),
-    linear-gradient(180deg, #0B1126 0%, #101A35 55%, #1A2347 100%);
+    radial-gradient(ellipse 55% 60% at 78% 62%, rgba(255, 214, 160, 0.55), transparent 70%),
+    radial-gradient(ellipse 60% 55% at 15% 0%, #FFFDF7 0%, transparent 70%),
+    linear-gradient(180deg, #FFFDF7 0%, #FFF6EA 34%, #FCE6D3 64%, #F7D8C2 100%);
 }
-.astro-hero-stars {
+/* A few faint gold stars, high in the morning sky. */
+.astro-dawn-stars {
   position: absolute;
-  inset: 0;
+  inset: 0 0 45% 0;
   pointer-events: none;
   background-image:
-    radial-gradient(1.2px 1.2px at 8% 14%, #fff, transparent 60%),
-    radial-gradient(1px 1px at 22% 38%, #FFF1C2, transparent 60%),
-    radial-gradient(1.4px 1.4px at 31% 9%, #fff, transparent 60%),
-    radial-gradient(1px 1px at 47% 28%, #E8C878, transparent 60%),
-    radial-gradient(1.2px 1.2px at 58% 12%, #fff, transparent 60%),
-    radial-gradient(1px 1px at 66% 44%, #FFF1C2, transparent 60%),
-    radial-gradient(1.5px 1.5px at 79% 18%, #fff, transparent 60%),
-    radial-gradient(1px 1px at 91% 36%, #E8C878, transparent 60%),
-    radial-gradient(1px 1px at 14% 62%, #fff, transparent 60%),
-    radial-gradient(1.2px 1.2px at 52% 58%, #FFF1C2, transparent 60%);
-  background-size: 520px 360px;
+    radial-gradient(1.4px 1.4px at 58% 12%, rgba(200, 155, 69, 0.7), transparent 60%),
+    radial-gradient(1px 1px at 66% 22%, rgba(200, 155, 69, 0.55), transparent 60%),
+    radial-gradient(1.6px 1.6px at 86% 9%, rgba(200, 155, 69, 0.6), transparent 60%),
+    radial-gradient(1px 1px at 93% 30%, rgba(200, 155, 69, 0.5), transparent 60%),
+    radial-gradient(1.2px 1.2px at 74% 6%, rgba(200, 155, 69, 0.6), transparent 60%),
+    radial-gradient(1px 1px at 47% 28%, rgba(200, 155, 69, 0.45), transparent 60%);
+  animation: astroTwinkle 6s ease-in-out infinite;
 }
-.astro-hero-stars--b { background-size: 340px 260px; background-position: 120px 60px; opacity: 0.6; animation: astroTwinkle 5s ease-in-out infinite; }
-@keyframes astroTwinkle { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.75; } }
+@keyframes astroTwinkle { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+/* Soft morning clouds. */
+.astro-cloud {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 999px;
+  background: radial-gradient(ellipse at 50% 60%, rgba(255, 253, 247, 0.95), rgba(255, 253, 247, 0) 70%);
+  filter: blur(2px);
+}
+.astro-cloud::before, .astro-cloud::after {
+  content: '';
+  position: absolute;
+  border-radius: 999px;
+  background: radial-gradient(ellipse, rgba(255, 253, 247, 0.9), rgba(255, 253, 247, 0) 70%);
+}
+.astro-cloud::before { width: 55%; height: 120%; left: 15%; top: -45%; }
+.astro-cloud::after { width: 40%; height: 100%; right: 12%; top: -30%; }
 
-.astro-gold-text {
-  background: linear-gradient(180deg, #FFF1C2 0%, #E8C878 45%, #C99532 100%);
+.astro-maroon-text {
+  background: linear-gradient(180deg, #9B1A3C 0%, #8B1235 45%, #681027 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  text-shadow: 0 2px 18px rgba(232, 200, 120, 0.15);
-}
-
-/* The couple in a jharokha arch with a gold frame. */
-.astro-arch {
-  overflow: hidden;
-  border-radius: 999px 999px 14px 14px;
-  border: 2px solid #E8C878;
-  box-shadow: 0 0 0 5px rgba(232, 200, 120, 0.18), 0 20px 40px -18px rgba(0, 0, 0, 0.7);
 }
 
 /* Tool cards: cream, thin gold border, warm shadow, Mithila sprigs in the corners. */
@@ -241,7 +244,7 @@
 .astro-tool-in { animation: astroRise 520ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .astro-hero-stars--b, .astro-tool--featured::before, .astro-constellation, .astro-tool-in, .kd-wheel-spin { animation: none; }
+  .astro-dawn-stars, .astro-tool--featured::before, .astro-constellation, .astro-tool-in, .kd-wheel-spin { animation: none; }
 }
 
 /* ── Decorative hero wheel ─────────────────────────────────────────────── */
