@@ -5,12 +5,11 @@ import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { MithilaBorder } from '@/components/home/MithilaBorder'
 import { InvitationMaker } from './InvitationMaker'
-import { PremiumShowcase } from '@/components/wedding/PremiumShowcase'
 import { TEMPLATES } from '@/lib/invitation'
 import { SITE_URL } from '@/lib/constants'
 import { organizationJsonLd, organizationRef } from '@/lib/seo'
 
-const CANONICAL = `${SITE_URL}/marriage-invitation`
+const CANONICAL = `${SITE_URL}/marriage-invitation/basic`
 
 export const metadata: Metadata = {
   title: 'Free Wedding Invitation Card Maker',
@@ -113,13 +112,14 @@ const jsonLd = {
       '@id': `${CANONICAL}#breadcrumb`,
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
-        { '@type': 'ListItem', position: 2, name: 'Wedding Invitation Card Maker', item: CANONICAL },
+        { '@type': 'ListItem', position: 2, name: 'Wedding Invitations', item: `${SITE_URL}/marriage-invitation` },
+        { '@type': 'ListItem', position: 3, name: 'Basic Invitation Card Maker', item: CANONICAL },
       ],
     },
   ],
 }
 
-export default function MarriageInvitationPage() {
+export default function BasicInvitationPage() {
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
       <MithilaHeader />
@@ -146,36 +146,40 @@ export default function MarriageInvitationPage() {
             </svg>
           </div>
 
-          <div className="wrap relative py-11 sm:py-14 text-center">
-            <nav aria-label="Breadcrumb" className="mb-4">
+          <div className="wrap relative py-7 sm:py-10 text-center">
+            <nav aria-label="Breadcrumb" className="mb-3">
               <ol className="flex items-center justify-center gap-2 text-[12.5px] text-paper-3/70">
                 <li><Link href="/" className="hover:text-gold-lt transition-colors">Home</Link></li>
                 <li aria-hidden="true" className="text-gold/60">›</li>
-                <li className="text-gold-lt" aria-current="page">Wedding Invitation</li>
+                <li><Link href="/marriage-invitation" className="hover:text-gold-lt transition-colors">Wedding Invitations</Link></li>
+                <li aria-hidden="true" className="text-gold/60">›</li>
+                <li className="text-gold-lt" aria-current="page">Basic</li>
               </ol>
             </nav>
-
-            <p className="eyebrow !text-marigold mb-3">Free · No login</p>
-            <h1 className="font-serif text-[28px] sm:text-[42px] leading-[1.1] text-paper max-w-2xl mx-auto">
+            <h1 className="font-serif text-[27px] sm:text-[38px] leading-[1.1] text-paper max-w-2xl mx-auto">
               Wedding Invitation Card Maker
             </h1>
-            <p className="font-deva text-[16px] sm:text-[19px] text-gold-lt mt-2.5" lang="hi">
+            <p className="font-deva text-[16px] sm:text-[18px] text-gold-lt mt-2" lang="hi">
               शुभ विवाह — निमंत्रण पत्र
             </p>
-            <p className="text-paper-2/85 text-[15px] sm:text-[16.5px] leading-relaxed max-w-xl mx-auto mt-4">
-              Pick a Mithila-inspired design, type your details, and download a beautiful
-              invitation in under a minute. Everything happens on your device.
+            <p className="text-paper-2/85 text-[14.5px] sm:text-[16px] leading-relaxed max-w-xl mx-auto mt-3">
+              Pick a design, add your details, then download or share. Free, and nothing leaves your device.
             </p>
           </div>
         </section>
 
         <MithilaBorder variant="bottom" className="h-6 sm:h-9 overflow-hidden" />
 
-        {/* ── The maker (client) ── */}
-        <InvitationMaker />
+        <div className="wrap pt-4">
+          <Link href="/marriage-invitation" className="inline-flex items-center gap-1.5 text-[14px] font-medium text-maroon hover:text-terra">
+            <span aria-hidden="true">←</span> Change invitation type
+          </Link>
+        </div>
 
-        {/* ── Premium wedding website (free, link-based) ── */}
-        <PremiumShowcase compact />
+        {/* ── The maker (client) ── */}
+        <div className="motion-safe:animate-fade-in">
+          <InvitationMaker />
+        </div>
 
         {/* ── How it works (server-rendered) ── */}
         <section className="bg-cream border-y border-paper-3 py-11 sm:py-14" aria-labelledby="how-heading">

@@ -514,7 +514,7 @@ export function Builder({ initial, published = null }: { initial: Invite | null;
                       <p className="mt-1 break-all rounded-mj-sm bg-cream px-3 py-2 font-mono text-[14px] text-ink">{result.share.replace(/^https?:\/\//, '')}</p>
                     </div>
                     <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
-                      <a className="btn-primary !bg-[#1F7A47] text-center" href={`https://wa.me/?text=${encodeURIComponent(waText)}`} target="_blank" rel="noopener noreferrer">💚 WhatsApp पर निमंत्रण भेजू</a>
+                      <a className="btn text-center bg-[#1F7A47] text-white hover:bg-[#186A3C]" href={`https://wa.me/?text=${encodeURIComponent(waText)}`} target="_blank" rel="noopener noreferrer">💚 WhatsApp पर निमंत्रण भेजू</a>
                       <button type="button" className="btn-ghost" onClick={() => copy(result.share, 'share')}>{copied === 'share' ? 'Link copied ✓' : 'Copy Link'}</button>
                       {typeof navigator !== 'undefined' && 'share' in navigator && (
                         <button type="button" className="btn-ghost" onClick={() => navigator.share({ title: wt(lang, 'shareTitleNative', { couple }), text: waText, url: result.share }).catch(() => undefined)}>Share…</button>

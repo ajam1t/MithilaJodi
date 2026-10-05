@@ -6,7 +6,7 @@ import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { MithilaBorder } from '@/components/home/MithilaBorder'
 import { Builder } from '@/components/wedding/builder/Builder'
-import { FreeVsPremium, PhonePreview } from '@/components/wedding/PremiumShowcase'
+import { PhonePreview } from '@/components/wedding/PhonePreview'
 import { decodeInvite } from '@/lib/wedding/codec.server'
 import { loadForEdit } from '@/lib/wedding/invites.server'
 import { createAdminClient } from '@/lib/supabase/server'
@@ -93,13 +93,13 @@ export default async function PremiumInvitationPage({ searchParams }: Props) {
                 <ol className="flex items-center justify-center lg:justify-start gap-2 text-[12.5px] text-paper-3/70">
                   <li><Link href="/" className="hover:text-gold-lt transition-colors">Home</Link></li>
                   <li aria-hidden="true" className="text-gold/60">›</li>
-                  <li><Link href="/marriage-invitation" className="hover:text-gold-lt transition-colors">Wedding Invitation</Link></li>
+                  <li><Link href="/marriage-invitation" className="hover:text-gold-lt transition-colors">Wedding Invitations</Link></li>
                   <li aria-hidden="true" className="text-gold/60">›</li>
-                  <li className="text-gold-lt" aria-current="page">Premium</li>
+                  <li className="text-gold-lt" aria-current="page">Mithila Premium</li>
                 </ol>
               </nav>
-              <p className="eyebrow !text-marigold mb-3">Free · No login · Short link</p>
-              <h1 className="font-serif text-[30px] sm:text-[44px] leading-[1.08] text-cream">Premium Mithila Wedding Experience</h1>
+              <p className="eyebrow !text-marigold mb-3">✦ Mithila Premium · Free · No login</p>
+              <h1 className="font-serif text-[30px] sm:text-[44px] leading-[1.08] text-cream">Mithila Premium Invitation</h1>
               <p className="font-deva text-[18px] sm:text-[22px] text-gold-lt mt-3" lang="mai">अपन विवाह निमंत्रणके एकटा यादगार अनुभव बनाउ</p>
               <p className="text-paper-2/85 text-[15px] sm:text-[17px] leading-relaxed max-w-xl mx-auto lg:mx-0 mt-4">
                 More than an invitation — your complete digital wedding story. Fill in what you like, watch it come alive,
@@ -112,27 +112,16 @@ export default async function PremiumInvitationPage({ searchParams }: Props) {
         </section>
         <MithilaBorder variant="bottom" className="h-6 sm:h-9 overflow-hidden" />
 
-        <section id="builder" className="wrap py-8 sm:py-12 scroll-mt-20" aria-label="Wedding invitation builder">
+        <section id="builder" className="wrap py-8 sm:py-12 scroll-mt-20 motion-safe:animate-fade-in" aria-label="Wedding invitation builder">
+          <Link href="/marriage-invitation" className="mb-4 inline-flex items-center gap-1.5 text-[14px] font-medium text-maroon hover:text-terra">
+            <span aria-hidden="true">←</span> Change invitation type
+          </Link>
           {initial && (
             <p className="mb-5 rounded-mj-sm bg-info-soft px-4 py-3 text-[14px] text-info-fg">
               Your invitation is open for editing.
             </p>
           )}
           <Builder initial={initial} published={published} />
-        </section>
-
-        <section className="bg-cream border-y border-paper-3 py-11 sm:py-14" aria-labelledby="compare-heading">
-          <div className="wrap max-w-3xl">
-            <div className="text-center mb-7">
-              <p className="eyebrow mb-2">Two free tools</p>
-              <h2 id="compare-heading" className="section-heading text-[24px] sm:text-[30px]">A card, or a wedding website</h2>
-              <div className="ornament-line w-16 mx-auto mt-4" />
-            </div>
-            <FreeVsPremium />
-            <p className="mt-5 text-center text-[14px] text-ink-soft">
-              Prefer a printable card? <Link href="/marriage-invitation" className="text-maroon underline underline-offset-2">Make a free invitation card</Link> — download it as an image in a minute.
-            </p>
-          </div>
         </section>
 
         <section className="py-11 sm:py-14" aria-labelledby="faq-heading">

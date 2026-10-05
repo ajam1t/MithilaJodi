@@ -22,7 +22,7 @@ const NAV_LINKS: NavLink[] = [
   { href: '/marriage-biodata', label: 'Marriage Biodata', menuOnly: true },
   { href: '/festivals', label: 'Festivals', mobileLabel: 'Mithila Festivals' },
   { href: '/festival-songs', label: 'Songs', mobileLabel: 'Festival Songs' },
-  { href: '/marriage-invitation', label: 'Invitation', mobileLabel: 'Marriage Invitation Card' },
+  { href: '/marriage-invitation', label: 'Invitation', mobileLabel: 'Wedding Invitations' },
   { href: '/astrology', label: 'Astrology' },
   // /blogs is intentionally kept here so it appears in the hamburger menu.
   // The mobile bottom nav replaces the blog slot with /astrology — blog is
@@ -45,7 +45,7 @@ const MEMBER_CONTENT_LINKS: NavLink[] = [
   { href: '/biodata', label: 'Biodata', mobileLabel: 'Marriage Biodata', menuOnly: true },
   { href: '/festivals', label: 'Festivals', mobileLabel: 'Mithila Festivals' },
   { href: '/festival-songs', label: 'Songs', mobileLabel: 'Festival Songs' },
-  { href: '/marriage-invitation', label: 'Invitation', mobileLabel: 'Marriage Invitation Card' },
+  { href: '/marriage-invitation', label: 'Invitation', mobileLabel: 'Wedding Invitations' },
   { href: '/astrology', label: 'Astrology' },
   { href: '/blogs', label: 'Blogs' },
   { href: '/help', label: 'Help' },

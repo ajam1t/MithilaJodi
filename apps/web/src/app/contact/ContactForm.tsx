@@ -28,7 +28,7 @@ type Status = 'idle' | 'submitting' | 'success' | 'error'
 const EMPTY: FormState = { name: '', email: '', mobile: '', reason: '', message: '' }
 
 const BASE_INPUT =
-  'w-full bg-cream border rounded-mj-sm px-4 py-3 text-[15px] text-ink placeholder:text-ink-soft/50 ' +
+  'w-full bg-cream border rounded-mj-sm px-4 py-3 text-[15px] text-ink placeholder:text-ink-soft/70 ' +
   'focus:outline-none focus:ring-2 transition-colors'
 const NORMAL_INPUT = BASE_INPUT + ' border-gold/30 focus:ring-gold/40 focus:border-gold/60'
 const ERROR_INPUT  = BASE_INPUT + ' border-terra/60 focus:ring-terra/30 focus:border-terra/60'
@@ -240,7 +240,7 @@ export function ContactForm() {
           <FieldError msg={fieldErrors.message} />
           <span className={[
             'text-[11px] ml-auto shrink-0',
-            form.message.length > 1800 ? 'text-terra' : 'text-ink-soft/60',
+            form.message.length > 1800 ? 'text-terra' : 'text-ink-soft',
           ].join(' ')}>
             {form.message.length}/2000
           </span>

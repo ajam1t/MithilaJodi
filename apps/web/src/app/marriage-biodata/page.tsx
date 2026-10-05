@@ -184,10 +184,10 @@ export default function MarriageBiodataPage() {
               explains itself.
             </p>
             <div className="flex flex-wrap gap-3 justify-center mt-4">
-              <Link href="/register" className="btn-primary bg-cream text-maroon border-cream hover:bg-paper">
+              <Link href="/register" className="btn bg-cream text-maroon border-cream hover:bg-paper">
                 Create a free account
               </Link>
-              <Link href="/explore" className="btn-ghost text-cream border-cream/40 hover:border-cream">
+              <Link href="/explore" className="btn bg-transparent text-cream border-cream/40 hover:border-cream hover:bg-white/5">
                 Browse Mithila profiles
               </Link>
             </div>

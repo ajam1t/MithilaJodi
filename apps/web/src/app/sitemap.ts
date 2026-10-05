@@ -70,6 +70,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/blogs', priority: 0.8, changeFrequency: 'weekly' },
     { path: '/festivals', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/marriage-invitation', priority: 0.8, changeFrequency: 'monthly' },
+    { path: '/marriage-invitation/basic', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/digital-profile', priority: 0.9, changeFrequency: 'monthly' },
     { path: '/marriage-biodata', priority: 0.9, changeFrequency: 'monthly' },
     { path: '/about', priority: 0.6, changeFrequency: 'monthly' },

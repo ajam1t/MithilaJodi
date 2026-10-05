@@ -221,7 +221,7 @@ function CompletionChecklist({ profile, photoCount }: { profile: Profile; photoC
         {rows.map(r => (
           <li key={r.label}>
             {r.done ? (
-              <span className="flex items-center gap-2 text-[13px] text-ink-soft/60">
+              <span className="flex items-center gap-2 text-[13px] text-ink-soft">
                 <TickIcon />
                 <span className="line-through">{r.label}</span>
               </span>

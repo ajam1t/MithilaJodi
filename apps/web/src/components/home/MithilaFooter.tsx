@@ -21,7 +21,7 @@ const GROUPS = [
       { href: '/astrology', label: 'Astrology Tools' },
       { href: '/festivals', label: 'Mithila Festivals' },
       { href: '/festival-songs', label: 'Festival Songs' },
-      { href: '/marriage-invitation', label: 'Invitation Card' },
+      { href: '/marriage-invitation', label: 'Wedding Invitations' },
       { href: '/blogs', label: 'Blogs' },
       { href: '/help', label: 'Help & Support' },
       { href: '/safety', label: 'Safety & Verification' },

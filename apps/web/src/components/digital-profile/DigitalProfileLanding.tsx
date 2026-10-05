@@ -71,10 +71,6 @@ const CONTROLS = [
   { t: 'Kept out of Google', b: 'Your profile is reached only through your link.' },
 ]
 
-function Cta({ href, label, className = '' }: { href: string; label: string; className?: string }) {
-  return <Link href={href} className={`btn-primary justify-center px-6 py-3 text-[15px] ${className}`}>{label}</Link>
-}
-
 export function DigitalProfileLanding({ ctaHref, member }: { ctaHref: string; member?: boolean }) {
   const cta = member ? 'Go to my Digital Profile' : 'Create My Digital Profile'
   return (
@@ -243,7 +239,10 @@ export function DigitalProfileLanding({ ctaHref, member }: { ctaHref: string; me
       <section className="dp-hero px-4 py-12 text-center sm:py-16" aria-labelledby="dp-ready">
         <h2 id="dp-ready" className="relative font-serif text-[26px] sm:text-[34px]">Ready to create yours?</h2>
         <p className="relative mx-auto mt-2 max-w-md text-[15px] text-cream/90">It takes a few minutes, and you can change everything later.</p>
-        <Cta href={ctaHref} label={member ? 'Go to my Digital Profile' : 'Create Your Digital Profile — Free'} className="relative mt-6 !bg-gold-lt !text-maroon-deep" />
+        {/* Not btn-primary: its gradient is a background-image, so a gold colour over it never showed. */}
+        <Link href={ctaHref} className="btn relative mt-6 justify-center bg-gold-lt px-6 py-3 text-[15px] font-semibold text-maroon-deep shadow-mj hover:-translate-y-px">
+          {member ? 'Go to my Digital Profile' : 'Create Your Digital Profile — Free'}
+        </Link>
       </section>
     </>
   )
