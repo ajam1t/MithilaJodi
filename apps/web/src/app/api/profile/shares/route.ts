@@ -5,20 +5,21 @@ import { getSessionAccount } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/server'
 import { findOwnProfileId } from '@/lib/ownProfile'
 import { generateShareToken, sanitiseFields, DEFAULT_SHARE_FIELDS } from '@/lib/profileShare'
+import { MAX_EXPIRY_DAYS, resolveExpiry } from '@/lib/digitalProfile'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 /** A member may hold this many live links at once. */
 const MAX_ACTIVE_SHARES = 20
 
-/** Guard rail on expiry: far enough for a long search, not "forever". */
-const MAX_EXPIRY_DAYS = 730
 
 const CreateSchema = z.object({
   label: z.string().max(80).optional().nullable(),
   fields: z.array(z.string()).optional(),
   /** Days from now. Defaults to a year. */
   expires_in_days: z.number().int().min(1).max(MAX_EXPIRY_DAYS).optional(),
+  /** A date (YYYY-MM-DD, the last day it works) or null for no expiry. Wins over days. */
+  expires_at: z.string().max(40).nullable().optional(),
   /**
    * "Give this member their first link if they have never had one."
    *
@@ -111,8 +112,9 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const days = parsed.data.expires_in_days ?? 365
-  const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString()
+  const expiry = resolveExpiry(parsed.data) ?? resolveExpiry({ expires_in_days: 365 })!
+  if ('error' in expiry) return NextResponse.json({ ok: false, message: expiry.error }, { status: 422 })
+  const expiresAt = expiry.iso
   const fields = parsed.data.fields ? sanitiseFields(parsed.data.fields) : DEFAULT_SHARE_FIELDS
 
   const { data, error } = await admin

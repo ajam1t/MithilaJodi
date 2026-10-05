@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ProfileCardGallery3D, { galleryFaceCount } from '@/components/ProfileCardGallery3D'
-import { ShareProfileLinks } from '@/components/ShareProfileLinks'
 import { JoinCommunityCard } from '@/components/whatsapp/JoinCommunity'
 import { Spinner } from '@/components/ui'
 import type { SearchCard, PartnerPreferencesDisplay } from '@/types/profile'
@@ -502,7 +501,19 @@ export default function ProfilePage() {
       {profile && (
         <div className="border-b border-ink/10">
           <div className="max-w-2xl mx-auto px-4 py-5">
-            <ShareProfileLinks hasProfile={!!profile} />
+            {/* Link management lives on the Digital Profile dashboard now — one
+                place for the link, its sections, expiry and activity. */}
+            <section className="card p-5" aria-label="Your Digital Profile">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-terra">Digital Profile</p>
+              <h2 className="mt-1 font-serif text-[18px] leading-tight text-maroon">Share your profile with one link</h2>
+              <p className="mt-1 text-[13px] leading-relaxed text-ink-soft">
+                Send it on WhatsApp, choose what it shows, set an expiry and see when it is opened.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link href="/digital-profile" className="btn-primary px-4 py-2 text-[13.5px]">Open my Digital Profile</Link>
+                <Link href="/digital-profile#preview" className="btn-ghost px-4 py-2 text-[13.5px]">Preview as visitor</Link>
+              </div>
+            </section>
 
             {/* Below the share card, not above it: sharing a biodata is what a
                 member came here to do, and the completion checklist higher up is

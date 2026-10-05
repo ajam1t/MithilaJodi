@@ -3,6 +3,7 @@ import { randomBytes } from 'crypto'
 import { getCommunityLabels, labelFor } from '@/lib/communityLabels'
 import { formatPartnerPreferences } from '@/lib/partnerPreferences'
 import type { PartnerPreferencesDisplay } from '@/types/profile'
+import { sanitiseFields } from '@/lib/digitalProfile'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -21,45 +22,9 @@ import type { PartnerPreferencesDisplay } from '@/types/profile'
  */
 
 // ─── Sections ────────────────────────────────────────────────────────────────
+// Defined once in lib/digitalProfile (client-safe) and re-exported here.
 
-export const SHARE_SECTIONS = [
-  { key: 'basic',     label: 'Name, age, height',   hint: 'Always included.', locked: true },
-  { key: 'photos',    label: 'Photos',              hint: 'Your approved photos.' },
-  { key: 'community', label: 'Community',           hint: 'Caste, gotra, maternal gotra, mool, gram.' },
-  { key: 'location',  label: 'Location',            hint: 'Where you live, your native place.' },
-  { key: 'education', label: 'Education',           hint: 'Degree, specialisation, institution.' },
-  { key: 'career',    label: 'Career',              hint: 'Role, employer, industry, experience.' },
-  { key: 'lifestyle', label: 'Lifestyle',           hint: 'Diet, habits, marriage timeline.' },
-  { key: 'family',    label: 'Family',              hint: 'Family type, values, parents, siblings.' },
-  { key: 'about',     label: 'About you',           hint: 'Your own words.' },
-  { key: 'horoscope', label: 'Horoscope',           hint: 'Rashi, nakshatra, manglik, birth details.' },
-  {
-    key: 'preferences',
-    label: 'What you are looking for',
-    hint: 'Your partner preferences — age, community, education, location, timeline.',
-  },
-  {
-    key: 'contact',
-    label: 'Contact details',
-    hint: 'Mobile, email and address. Off by default — anyone the link reaches would get these.',
-    sensitive: true,
-  },
-] as const
-
-export type ShareSection = typeof SHARE_SECTIONS[number]['key']
-
-export const DEFAULT_SHARE_FIELDS: ShareSection[] = [
-  'basic', 'photos', 'community', 'location', 'education', 'career', 'lifestyle', 'family', 'about',
-]
-
-const VALID_SECTIONS = new Set<string>(SHARE_SECTIONS.map(s => s.key))
-
-/** Keep only known sections, and always keep `basic` — a blank link is useless. */
-export function sanitiseFields(input: unknown): ShareSection[] {
-  const list = Array.isArray(input) ? input : []
-  const kept = list.filter((v): v is ShareSection => typeof v === 'string' && VALID_SECTIONS.has(v))
-  return [...new Set<ShareSection>(['basic', ...kept])]
-}
+export { SHARE_SECTIONS, DEFAULT_SHARE_FIELDS, sanitiseFields, type ShareSection } from '@/lib/digitalProfile'
 
 /**
  * 16 random bytes as base64url — 22 characters, ~128 bits.
@@ -107,7 +72,12 @@ export type ShareLoadResult =
    * only ever puts it in a link to /profile/<id>, which enforces its own access
    * rules — the shared projection itself stays the same for everyone.
    */
-  | { status: 'ok'; profile: SharedProfile; profileId: string }
+  | {
+      status: 'ok'; profile: SharedProfile; profileId: string
+      shareId: string
+      /** The owner allowed their name on link previews (WhatsApp cards). */
+      linkPreview: boolean
+    }
   | { status: 'expired' }
   | { status: 'revoked' }
   | { status: 'missing' }
@@ -143,7 +113,16 @@ function gate<T>(granted: boolean, value: T): T | null {
  * reachable through an old link immediately — the link is a view onto live
  * data, never a snapshot.
  */
-export async function loadSharedProfile(admin: any, token: string): Promise<ShareLoadResult> {
+/**
+ * `ownerPreview` is for the owner's dashboard only: it still renders a link
+ * they turned off or that expired, so they can see what it showed. The page
+ * at /p/[token] never passes it.
+ */
+export async function loadSharedProfile(
+  admin: any, token: string, { ownerPreview = false }: { ownerPreview?: boolean } = {},
+): Promise<ShareLoadResult> {
+  // Opens are counted by the page's beacon (/api/p/[token]/open), not here:
+  // this also serves the owner's preview and link-preview crawlers.
   if (!token || token.length < 16 || token.length > 64) return { status: 'missing' }
 
   const { data: share } = await admin
@@ -153,8 +132,10 @@ export async function loadSharedProfile(admin: any, token: string): Promise<Shar
     .maybeSingle()
 
   if (!share) return { status: 'missing' }
-  if (share.revoked_at) return { status: 'revoked' }
-  if (new Date(share.expires_at).getTime() <= Date.now()) return { status: 'expired' }
+  if (!ownerPreview) {
+    if (share.revoked_at) return { status: 'revoked' }
+    if (new Date(share.expires_at).getTime() <= Date.now()) return { status: 'expired' }
+  }
 
   const granted = new Set<string>(sanitiseFields(share.fields))
 
@@ -246,20 +227,24 @@ export async function loadSharedProfile(admin: any, token: string): Promise<Shar
     gender: humanize(p.gender),
     heightCm: p.height_cm ?? null,
     maritalStatus: humanize(p.marital_status),
-    motherTongue: humanize(p.mother_tongue),
+    motherTongue: granted.has('caste') ? humanize(p.mother_tongue) : null,
     profileFor: humanize(p.profile_for),
 
     photos,
 
-    community: gate(granted.has('community'), {
-      religion: labelFor(labels, 'religion', p.religion),
-      caste: labelFor(labels, 'caste', p.caste),
-      subCaste: p.sub_caste ?? null,
-      selfGotra: labelFor(labels, 'gotra', p.self_gotra),
-      maternalGotra: p.maternal_gotra ?? null,
-      mool: labelFor(labels, 'mool', p.mool),
-      gram: p.gram ?? null,
-    }),
+    // Each root is its own choice: a family may share gotra but not mool.
+    community: (() => {
+      const c = {
+        religion: granted.has('caste') ? labelFor(labels, 'religion', p.religion) : null,
+        caste: granted.has('caste') ? labelFor(labels, 'caste', p.caste) : null,
+        subCaste: granted.has('caste') ? p.sub_caste ?? null : null,
+        selfGotra: granted.has('gotra') ? labelFor(labels, 'gotra', p.self_gotra) : null,
+        maternalGotra: granted.has('maternal_gotra') ? p.maternal_gotra ?? null : null,
+        mool: granted.has('mool') ? labelFor(labels, 'mool', p.mool) : null,
+        gram: granted.has('gram') ? p.gram ?? null : null,
+      }
+      return Object.values(c).some(Boolean) ? c : null
+    })(),
 
     location: gate(granted.has('location'), {
       current: p.current_loc_id ? locMap.get(p.current_loc_id) ?? null : null,
@@ -333,17 +318,41 @@ export async function loadSharedProfile(admin: any, token: string): Promise<Shar
     preferences,
   }
 
-  // Best-effort view counting. Never blocks the render, and a failure here must
-  // not cost the visitor the page.
-  //
-  // Counted by a database function rather than writing back the value read
-  // above. A link sent to a family WhatsApp group gets opened by several people
-  // within the same second, and read-modify-write loses those: each request
-  // writes "what I read, plus one", so simultaneous opens collapse into a
-  // single increment. `view_count + 1` evaluated inside the UPDATE is atomic.
-  void admin
-    .rpc('record_share_view', { p_token: token })
-    .then(null, (err: unknown) => console.error('[profileShare] view count:', err))
+  return { status: 'ok', profile, profileId: p.id as string, shareId: share.id as string, linkPreview: granted.has('link_preview') }
+}
 
-  return { status: 'ok', profile, profileId: p.id as string }
+/**
+ * The name for a link-preview card, or null for the generic card.
+ *
+ * WhatsApp and Meta fetch the preview and keep it on their own CDN, beyond our
+ * reach once the link is revoked — so only the name is ever offered, only for
+ * a live link, and only if the owner left "Show my name in link previews" on.
+ * Links made before that option existed never had it, and keep the generic card.
+ */
+export async function loadSharePreviewName(admin: any, token: string): Promise<string | null> {
+  if (!token || token.length < 16 || token.length > 64) return null
+  const { data: share } = await admin
+    .from('profile_shares')
+    .select('profile_id, fields, expires_at, revoked_at')
+    .eq('token', token)
+    .maybeSingle()
+  if (!share || share.revoked_at || new Date(share.expires_at).getTime() <= Date.now()) return null
+  if (!sanitiseFields(share.fields).includes('link_preview')) return null
+
+  const { data: p } = await admin
+    .from('profiles')
+    .select('account_id, first_name, last_name, profile_status')
+    .eq('id', share.profile_id)
+    .is('deleted_at', null)
+    .maybeSingle()
+  if (!p || p.profile_status === 'deleted' || p.profile_status === 'deactivated') return null
+  const { data: account } = await admin
+    .from('accounts')
+    .select('account_status, deleted_at')
+    .eq('id', p.account_id)
+    .maybeSingle()
+  if (!account || account.deleted_at || account.account_status === 'banned' || account.account_status === 'deleted') return null
+
+  const name = [p.first_name, p.last_name].filter(Boolean).join(' ').trim()
+  return name || null
 }

@@ -1,0 +1,126 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Digital Profile — the shared renderer (/p/[token], owner preview, demo).
+   Maroon, antique gold and ivory; Madhubani only as texture, never clutter.
+   Motion is entrance-only and disappears under reduced motion.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.dp-rise {
+  animation: dpRise 720ms cubic-bezier(.2, .8, .2, 1) both;
+  animation-delay: calc(var(--i, 0) * 80ms);
+}
+@keyframes dpRise { from { opacity: 0; translate: 0 14px; } to { opacity: 1; translate: 0 0; } }
+
+/* Hero: maroon with a whisper of lotus, a fine gold frame inside. */
+.dp-hero {
+  position: relative;
+  overflow: hidden;
+  color: #FFF8EC;
+  background:
+    radial-gradient(ellipse 80% 70% at 50% 0%, rgba(232, 150, 60, 0.28), transparent 60%),
+    linear-gradient(180deg, #8E1A2C 0%, #6E1024 60%, #5A0E19 100%);
+}
+.dp-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.16;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Cg fill='none' stroke='%23E7C877' stroke-width='1'%3E%3Cpath d='M48 34c4 5 4 11 0 16-4-5-4-11 0-16Z'/%3E%3Cpath d='M48 50c-6-1-10-6-10-11 5 1 9 5 10 11Zm0 0c6-1 10-6 10-11-5 1-9 5-10 11Z'/%3E%3Cpath d='M39 53h18'/%3E%3C/g%3E%3C/svg%3E") center / 96px 96px;
+  pointer-events: none;
+}
+.dp-hero::after {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(231, 200, 119, 0.35);
+  border-radius: 16px;
+  pointer-events: none;
+}
+
+/* The photo sits in a gold ring; a dashed outer ring turns very slowly. */
+.dp-portrait { position: relative; width: 128px; height: 128px; margin: 0 auto; }
+.dp-portrait-img {
+  position: absolute;
+  inset: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 3px solid #E7C877;
+  box-shadow: 0 10px 28px -12px rgba(0, 0, 0, 0.6);
+  background: #F6EBD6;
+}
+.dp-portrait-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 1px dashed rgba(231, 200, 119, 0.7);
+  animation: dpSpin 60s linear infinite;
+}
+@keyframes dpSpin { to { rotate: 360deg; } }
+
+.dp-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  line-height: 1.2;
+  color: #FFF1D6;
+  background: rgba(255, 241, 214, 0.1);
+  border: 1px solid rgba(231, 200, 119, 0.45);
+}
+
+/* Panels: ivory, a fine gold rule, a small heading with a lotus mark. */
+.dp-panel {
+  position: relative;
+  border-radius: 18px;
+  background: #FFFCF5;
+  border: 1px solid rgba(200, 155, 69, 0.32);
+  box-shadow: 0 10px 30px -24px rgba(58, 20, 12, 0.45);
+  padding: 18px 18px 10px;
+}
+.dp-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #9B2233;
+}
+.dp-panel-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(200, 155, 69, 0.5), transparent);
+}
+
+/* Mithila roots: tiles, because these are the facts a Maithil family reads first. */
+.dp-roots {
+  background:
+    radial-gradient(ellipse 90% 80% at 100% 0%, rgba(232, 150, 60, 0.1), transparent 60%),
+    #FFF8EA;
+  border-color: rgba(200, 155, 69, 0.5);
+}
+.dp-tile {
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #FFFDF8;
+  border: 1px solid rgba(200, 155, 69, 0.28);
+}
+.dp-tile:last-child:nth-child(odd) { grid-column: span 2; }
+
+.dp-demo-ribbon {
+  background: repeating-linear-gradient(135deg, #C89B45 0 10px, #D8B76A 10px 20px);
+  color: #3A140C;
+}
+
+@media (hover: hover) {
+  .dp-panel { transition: box-shadow 300ms ease, translate 300ms ease; }
+  .dp-panel:hover { box-shadow: 0 16px 34px -22px rgba(58, 20, 12, 0.5); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dp-rise, .dp-portrait-ring { animation: none !important; }
+}

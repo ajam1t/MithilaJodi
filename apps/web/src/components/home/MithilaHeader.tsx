@@ -7,13 +7,19 @@ import { useState } from 'react'
 import { cn } from '@/lib/utils/cn'
 import { useAuthState, resetAuthState } from '@/lib/hooks/useAuthState'
 
-/** `mobileLabel` lets the hamburger show a fuller label than the tighter desktop row. */
-type NavLink = { href: string; label: string; mobileLabel?: string }
+/**
+ * `mobileLabel` lets the hamburger show a fuller label than the tighter desktop
+ * row; `menuOnly` keeps a link in the hamburger but out of the desktop row,
+ * which has no room left at 1024px.
+ */
+type NavLink = { href: string; label: string; mobileLabel?: string; menuOnly?: boolean }
 
 const NAV_LINKS: NavLink[] = [
   { href: '/', label: 'Home' },
   { href: '/about', label: 'About' },
-  { href: '/marriage-biodata', label: 'Marriage Biodata' },
+  // Digital Profile is the flagship; Marriage Biodata stays one tap away in the menu.
+  { href: '/digital-profile', label: 'Digital Profile' },
+  { href: '/marriage-biodata', label: 'Marriage Biodata', menuOnly: true },
   { href: '/festivals', label: 'Festivals', mobileLabel: 'Mithila Festivals' },
   { href: '/festival-songs', label: 'Songs', mobileLabel: 'Festival Songs' },
   { href: '/marriage-invitation', label: 'Invitation', mobileLabel: 'Marriage Invitation Card' },
@@ -25,6 +31,7 @@ const NAV_LINKS: NavLink[] = [
   // Safety is deliberately not in the top nav: reporting is available directly
   // on every profile, which is where someone actually needs it. The page is
   // still reachable from the footer and the legal pages, and stays indexable.
+  { href: '/safety', label: 'Safety', mobileLabel: 'Safety & Verification', menuOnly: true },
   { href: '/contact', label: 'Contact' },
   { href: '/help', label: 'Help' },
 ]
@@ -35,6 +42,7 @@ const NAV_LINKS: NavLink[] = [
  * Songs, the Invitation maker and Blogs from members.
  */
 const MEMBER_CONTENT_LINKS: NavLink[] = [
+  { href: '/biodata', label: 'Biodata', mobileLabel: 'Marriage Biodata', menuOnly: true },
   { href: '/festivals', label: 'Festivals', mobileLabel: 'Mithila Festivals' },
   { href: '/festival-songs', label: 'Songs', mobileLabel: 'Festival Songs' },
   { href: '/marriage-invitation', label: 'Invitation', mobileLabel: 'Marriage Invitation Card' },
@@ -48,7 +56,7 @@ const AUTH_NAV_LINKS = [
   { href: '/messages', label: 'Messages' },
   { href: '/interests', label: 'Interests' },
   { href: '/shortlists', label: 'Shortlist' },
-  { href: '/biodata', label: 'Biodata' },
+  { href: '/digital-profile', label: 'Digital Profile' },
   { href: '/profile', label: 'My Profile' },
 ]
 
@@ -197,7 +205,7 @@ export function MithilaHeader() {
                 </Link>
               ))}
               <div className="h-4 w-px bg-gold opacity-40" />
-              {MEMBER_CONTENT_LINKS.filter(l => l.href !== '/help').map(({ href, label }) => (
+              {MEMBER_CONTENT_LINKS.filter(l => l.href !== '/help' && !l.menuOnly).map(({ href, label }) => (
                 <Link key={label} href={href} className={deskLink(href)} aria-current={isActive(href) ? 'page' : undefined}>
                   {label}
                 </Link>
@@ -212,7 +220,7 @@ export function MithilaHeader() {
             </>
           ) : (
             <>
-              {NAV_LINKS.map(({ href, label }) => (
+              {NAV_LINKS.filter(l => !l.menuOnly).map(({ href, label }) => (
                 <Link key={label} href={href} className={deskLink(href)} aria-current={isActive(href) ? 'page' : undefined}>
                   {label}
                 </Link>

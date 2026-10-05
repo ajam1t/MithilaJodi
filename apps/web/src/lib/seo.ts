@@ -220,7 +220,7 @@ export function organizationJsonLd() {
     image: `${SITE_URL}/og-card.png`,
     slogan: 'जहाँ परम्परा मिले, प्रेम से | Where tradition meets love.',
     description:
-      'A matrimonial platform for the Mithila (Maithili) community of India, offering marriage biodata creation in English, Hindi, Maithili and Sanskrit.',
+      'A matrimonial platform for the Mithila (Maithili) community of India, offering shareable Digital Profiles and marriage biodata creation in English, Hindi, Maithili and Sanskrit.',
     // schema.org provides this property specifically to separate an entity from
     // similarly named ones, which is the whole difficulty with this brand name.
     disambiguatingDescription:
@@ -239,6 +239,7 @@ export function organizationJsonLd() {
       'Mithila marriage traditions',
       'Gotra and mool in Mithila',
       'Marriage biodata in Maithili',
+    'Shareable matrimonial profiles for Maithil families',
       'Maithili culture',
     ],
     telephone: `+${SUPPORT_PHONE_E164}`,

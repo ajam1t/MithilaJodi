@@ -8,6 +8,7 @@ import { FeaturedProfiles } from '@/components/home/FeaturedProfiles'
 import { WhyMithilaJodi } from '@/components/home/FeatureStrip'
 import { CommunityStories } from '@/components/home/CommunityStories'
 import { BiodataSection } from '@/components/home/BiodataSection'
+import { DigitalProfileSection } from '@/components/home/DigitalProfileSection'
 import { FinalCTA } from '@/components/home/FinalCTA'
 import { JoinCommunityBand } from '@/components/whatsapp/JoinCommunity'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
@@ -167,6 +168,7 @@ export default function HomePage() {
       <main id="main-content" className="flex-1">
         <HeroSection />
         <FeaturedProfiles />
+        <DigitalProfileSection />
         <WhyMithilaJodi />
         <CommunityStories />
         {/* Placed here, straight after the community stories, because the page is

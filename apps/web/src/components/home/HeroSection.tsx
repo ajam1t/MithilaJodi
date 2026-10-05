@@ -68,8 +68,8 @@ export function HeroSection() {
               to this platform. */}
           <p className="text-[14px] sm:text-[15px] leading-relaxed text-ink-soft max-w-xl">
             <strong className="font-semibold text-ink">Mithila Jodi</strong> is a matrimonial
-            platform for Maithil families — search profiles by gotra, mool and native place, and
-            create a marriage biodata in Maithili, Hindi, English or Sanskrit.
+            platform for Maithil families — search profiles by gotra, mool and native place, share a
+            Digital Profile with one link, or create a marriage biodata in Maithili, Hindi, English or Sanskrit.
           </p>
 
           {/* CTAs */}
@@ -77,8 +77,8 @@ export function HeroSection() {
             <Link href="/register" className="btn-primary text-[15px] px-6 py-3 justify-center">
               Find Your Match →
             </Link>
-            <Link href="#biodata" className="btn-ghost text-[15px] px-6 py-3 justify-center !border-maroon !border-opacity-40">
-              Explore Marriage Biodata
+            <Link href="/digital-profile" className="btn-ghost text-[15px] px-6 py-3 justify-center !border-maroon !border-opacity-40">
+              Create Digital Profile
             </Link>
           </div>
         </div>

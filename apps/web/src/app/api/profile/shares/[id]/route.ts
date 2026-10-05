@@ -5,10 +5,9 @@ import { getSessionAccount } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/server'
 import { findOwnProfileId } from '@/lib/ownProfile'
 import { sanitiseFields } from '@/lib/profileShare'
+import { MAX_EXPIRY_DAYS, resolveExpiry } from '@/lib/digitalProfile'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-const MAX_EXPIRY_DAYS = 730
 
 const PatchSchema = z.object({
   /** Kill the link now. Irreversible — mint a new one instead of un-revoking. */
@@ -16,6 +15,8 @@ const PatchSchema = z.object({
   label: z.string().max(80).optional().nullable(),
   fields: z.array(z.string()).optional(),
   expires_in_days: z.number().int().min(1).max(MAX_EXPIRY_DAYS).optional(),
+  /** A date (YYYY-MM-DD, the last day it works) or null for no expiry. Wins over days. */
+  expires_at: z.string().max(40).nullable().optional(),
 })
 
 export async function PATCH(
@@ -49,12 +50,12 @@ export async function PATCH(
   if (parsed.data.revoke) patch.revoked_at = new Date().toISOString()
   if (parsed.data.label !== undefined) patch.label = parsed.data.label?.trim() || null
   if (parsed.data.fields) patch.fields = sanitiseFields(parsed.data.fields)
-  if (parsed.data.expires_in_days) {
-    patch.expires_at = new Date(Date.now() + parsed.data.expires_in_days * 24 * 60 * 60 * 1000).toISOString()
-    // Extending a revoked link would silently bring it back to life; a member
-    // who revoked something meant it. Reviving requires a brand-new token.
-    if (!parsed.data.revoke) patch.revoked_at = null
-  }
+  // Changing the date never touches revoked_at. Clearing it here used to bring
+  // a turned-off link back to life — and with it every forwarded copy. A member
+  // who wants to share again gets a brand-new link instead.
+  const expiry = resolveExpiry(parsed.data)
+  if (expiry && 'error' in expiry) return NextResponse.json({ ok: false, message: expiry.error }, { status: 422 })
+  if (expiry) patch.expires_at = expiry.iso
 
   if (Object.keys(patch).length === 0) {
     return NextResponse.json({ ok: false, message: 'Nothing to update' }, { status: 422 })

@@ -107,7 +107,7 @@ export function MobileBottomNav() {
           </Link>
         </div>
       ) : (
-        /* Public / not-yet-loaded bottom nav — Home · Create Biodata · Join / Login · Search Profiles · Blog */
+        /* Public / not-yet-loaded bottom nav — Home · Digital Profile · Join / Login · Search · Astrology */
         <div className="flex items-stretch">
           {/* Home */}
           <Link href="/" className={navCls('/')}>
@@ -124,17 +124,15 @@ export function MobileBottomNav() {
             <span className={`text-[10px] font-medium tracking-wide leading-tight text-center ${isActive('/') ? 'font-semibold' : ''}`}>Home</span>
           </Link>
 
-          {/* Create Biodata — the PUBLIC maker. Pointing this at /biodata sent
-              signed-out visitors straight into the login wall, which is the
-              opposite of what a bottom-nav CTA on the public site is for. */}
-          <Link href="/marriage-biodata" className={navCls('/marriage-biodata')}>
+          {/* Digital Profile — the flagship. The biodata maker it replaced here is
+              still one tap away in the hamburger menu. */}
+          <Link href="/digital-profile" className={navCls('/digital-profile')}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="9" y1="13" x2="15" y2="13" />
-              <line x1="9" y1="17" x2="13" y2="17" />
+              <rect x="5" y="2.5" width="14" height="19" rx="2.5" />
+              <circle cx="12" cy="9.5" r="2.8" />
+              <path d="M8 17c.6-2.2 2.1-3.3 4-3.3s3.4 1.1 4 3.3" />
             </svg>
-            <span className={`text-[10px] font-medium tracking-wide leading-tight text-center ${isActive('/marriage-biodata') ? 'font-semibold' : ''}`}>Create Biodata</span>
+            <span className={`text-[10px] font-medium tracking-wide leading-tight text-center ${isActive('/digital-profile') ? 'font-semibold' : ''}`}>Digital Profile</span>
           </Link>
 
           {/* Join / Login — primary CTA centre */}
@@ -154,7 +152,7 @@ export function MobileBottomNav() {
               <circle cx="11" cy="11" r="7" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
-            <span className={`text-[10px] font-medium tracking-wide leading-tight text-center ${isActive('/explore') ? 'font-semibold' : ''}`}>Search Profiles</span>
+            <span className={`text-[10px] font-medium tracking-wide leading-tight text-center ${isActive('/explore') ? 'font-semibold' : ''}`}>Search</span>
           </Link>
 
           {/* Astrology — replaces Blog in the public bottom nav.

@@ -12,16 +12,16 @@ export function BiodataSection() {
     <section id="biodata" className="relative bg-paper-2 py-9 sm:py-12" aria-label="Marriage biodata in your language">
       <div className="wrap">
         <div data-mj-reveal className="text-center mb-4">
-          <p className="eyebrow mb-1.5">Your Language</p>
+          <p className="eyebrow mb-1.5">Traditional Marriage Biodata</p>
           <h2 className="font-serif text-maroon leading-tight text-[21px] sm:text-[26px] lg:text-[30px]">
-            Biodata in Your Mother Tongue
+            Need a traditional biodata to share with family?
           </h2>
           <div className="ornament-line w-16 mx-auto mt-2" />
         </div>
 
         <div data-mj-reveal className="max-w-2xl mx-auto text-center">
           <p className="text-ink-soft text-[14px] leading-relaxed mb-3.5">
-            Create your biodata in <span className="font-deva text-maroon">मैथिली</span>, हिन्दी, English, or Sanskrit — your profile, your culture.
+            A printable document in <span className="font-deva text-maroon">मैथिली</span>, हिन्दी, English, or Sanskrit — free, and no login needed.
           </p>
 
           {/* Language pills */}
@@ -53,7 +53,7 @@ export function BiodataSection() {
 
           <div className="flex flex-wrap gap-3 justify-center">
             <Link href="/marriage-biodata" className="btn-primary">
-              Create Your Biodata — Free
+              Create Marriage Biodata
             </Link>
             <Link href="/register" className="btn-ghost">
               Create an account
