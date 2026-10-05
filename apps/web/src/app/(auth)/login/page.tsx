@@ -46,7 +46,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="w-full max-w-sm">
+    <div className="w-full max-w-sm motion-safe:animate-fade-in">
       <div className="mb-6 text-center sm:mb-8 lg:hidden">
         <Link href="/" className="inline-block">
           <Image
@@ -62,6 +62,9 @@ export default function LoginPage() {
 
       <div className="card p-6 sm:p-8">
 
+        <Link href="/register" className="-mt-1 mb-3 inline-flex items-center gap-1 text-[13px] text-ink-soft hover:text-maroon">
+          <span aria-hidden="true">←</span> Back
+        </Link>
         <div className="mb-5">
           <p className="text-sm font-medium text-maroon">Member access</p>
           <p className="mt-1 text-sm leading-relaxed text-ink-soft">Sign in securely with your mobile number.</p>
@@ -114,7 +117,7 @@ export default function LoginPage() {
             </form>
             <p className="mt-5 text-center text-sm text-ink-soft">
               New to Mithila Jodi?{' '}
-              <Link href="/register" className="text-maroon font-medium hover:underline">Create account</Link>
+              <Link href="/register?start=1" className="text-maroon font-medium hover:underline">Create account</Link>
             </p>
           </>
         )}

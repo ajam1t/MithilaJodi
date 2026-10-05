@@ -1,19 +1,31 @@
 'use client'
-import { useState, useRef } from 'react'
+import { use, useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { checkPassword, PASSWORD_RULES } from '@/lib/password'
 import { OtpBoxInput } from '@/components/OtpBoxInput'
 import { OtpSentAnimation } from '@/components/OtpSentAnimation'
 import { AuthProgress } from '@/components/AuthProgress'
+import { AuthWelcome } from '@/components/auth/AuthWelcome'
 import { OTP_LENGTH } from '@/lib/constants'
 import { isMsg91Enabled, ensureMsg91, msg91SendOtp, msg91VerifyOtp, msg91RetryOtp } from '@/lib/msg91'
 
-type Step = 'mobile' | 'human' | 'sent' | 'otp' | 'password'
+type Step = 'welcome' | 'mobile' | 'human' | 'sent' | 'otp' | 'password'
 type OtpChannel = 'msg91' | 'server'
 
-export default function RegisterPage() {
-  const [step, setStep] = useState<Step>('mobile')
+/**
+ * /register is the entrance: a welcome screen with two equal ways in. Create
+ * Account opens the stepper at /register?start=1 (a real history entry, so
+ * browser back returns to the welcome); Welcome Back goes to /login.
+ */
+export default function RegisterPage({ searchParams }: { searchParams: Promise<{ start?: string }> }) {
+  const { start } = use(searchParams)
+  const [step, setStep] = useState<Step>(start ? 'mobile' : 'welcome')
+  // Follow the URL: back to /register shows the welcome again; ?start begins the flow.
+  useEffect(() => {
+    if (!start) setStep('welcome')
+    else setStep(s => (s === 'welcome' ? 'mobile' : s))
+  }, [start])
   const [mobile, setMobile]                     = useState('')
   const [challengeId, setChallengeId]           = useState('')
   const [challengeQ, setChallengeQ]             = useState('')
@@ -221,8 +233,10 @@ export default function RegisterPage() {
     }
   }
 
+  if (step === 'welcome') return <AuthWelcome />
+
   return (
-    <div className="w-full max-w-sm">
+    <div className="w-full max-w-sm motion-safe:animate-fade-in">
       <div className="mb-6 text-center sm:mb-8 lg:hidden">
         <Link href="/" className="inline-block">
           <Image
@@ -251,6 +265,9 @@ export default function RegisterPage() {
         {/* ── Step 1: mobile ── */}
         {step === 'mobile' && (
           <>
+            <Link href="/register" className="-mt-1 mb-3 inline-flex items-center gap-1 text-[13px] text-ink-soft hover:text-maroon">
+              <span aria-hidden="true">←</span> Back
+            </Link>
             <p className="eyebrow mb-2">Register</p>
             <h2 className="text-xl font-display text-ink mb-6">Create your account</h2>
             <p className="-mt-3 mb-5 text-sm leading-relaxed text-ink-soft">It takes about two minutes. Your mobile number stays private and is only used to secure your account.</p>
