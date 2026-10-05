@@ -18,7 +18,8 @@ export const DEMO_PROFILE: SharedProfile = {
   maritalStatus: 'Never married',
   motherTongue: 'Maithili',
   profileFor: 'Daughter',
-  photos: ['/sample/muskan-jha.webp'],
+  // Five looks of the same fictional person; more than one photo gives the 3D photo deck.
+  photos: [1, 2, 3, 4, 5].map(n => `/sample/muskan-${n}.webp`),
   community: {
     religion: 'Hindu',
     caste: 'Maithil Brahmin',

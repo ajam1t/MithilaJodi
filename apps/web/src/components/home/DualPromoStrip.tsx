@@ -2,19 +2,19 @@ import Link from 'next/link'
 import { SAMPLE_PROFILE_PATH } from '@/lib/digitalProfileDemo'
 
 /**
- * Two announcements in one thin maroon strip — the same treatment and height
- * as InvitationAnnouncementStrip. Side by side on wider screens; on a phone
- * the row scrolls sideways rather than wrapping into a tall block.
+ * Announcement strip for the Digital Profile page — the same treatment and
+ * height as InvitationAnnouncementStrip. Takes a list so a second item can
+ * return later; with more than one, the row scrolls sideways on a phone
+ * rather than wrapping into a tall block.
  */
 const ITEMS = [
-  { href: '/marriage-invitation', icon: '💍', label: 'Mithila Wedding Invitation', cta: 'Create yours' },
   { href: SAMPLE_PROFILE_PATH, icon: '👤', label: 'Mithila Digital Profile', cta: 'View sample profile' },
 ]
 
 export function DualPromoStrip() {
   return (
     <nav aria-label="Featured" className="relative bg-maroon">
-      <div className="flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] sm:justify-center [&::-webkit-scrollbar]:hidden">
+      <div className="flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*:first-child]:ml-auto [&>*:last-child]:mr-auto">
         {ITEMS.map((it, i) => (
           <Link
             key={it.href}
