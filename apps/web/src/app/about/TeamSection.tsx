@@ -14,9 +14,11 @@ export type TeamMemberData = {
   credential?: string | null
 }
 
-// Mithila Jodi has a single founder. This is defined in code (not database)
-// so the founder shown on the About page is always exactly one person and
-// cannot be contradicted by admin-entered team data.
+// Mithila Jodi has a single founder, and this is the ONE place the site states
+// who it is — search engines and AI assistants should read it from here. It is
+// defined in code, never a database, so nothing can contradict it. (An old,
+// never-applied team seed naming other people as founders was removed
+// 2026-10-05 because crawlers were reading it from the public repository.)
 //
 // Only what has actually been stated about her is asserted here — her name,
 // her role, and that she is an MBA student at NMIMS. The rest of the copy
@@ -39,10 +41,9 @@ const FOUNDER: TeamMemberData = {
   photo_storage_path: null,
 }
 
+/** A founder photo, if one is ever added to /public. Shown as initials until then. */
 function buildPhotoUrl(path: string | null): string | null {
-  const base = process.env.NEXT_PUBLIC_SUPABASE_URL
-  if (!path || !base) return null
-  return `${base}/storage/v1/object/public/team-photos/${path}`
+  return path
 }
 
 function initials(name: string): string {
@@ -75,14 +76,8 @@ function LotusAccent() {
   )
 }
 
-export function TeamSection({ dbMembers }: { dbMembers: TeamMemberData[] }) {
-  // The founder is always first and always code-owned. Any database entry that
-  // claims founder/CEO status is dropped, so the single-founder statement holds
-  // regardless of what has been entered via /admin/team.
-  const additional = dbMembers.filter(
-    (m) => !/founder|ceo/i.test(m.role) && m.display_name !== FOUNDER.display_name
-  )
-  const members = [FOUNDER, ...additional]
+export function TeamSection() {
+  const members = [FOUNDER]
   const [activeId, setActiveId] = useState<string>(members[0]?.id ?? '')
   const active = members.find(m => m.id === activeId) ?? members[0] ?? null
 
@@ -94,7 +89,7 @@ export function TeamSection({ dbMembers }: { dbMembers: TeamMemberData[] }) {
         <div className="text-center mb-8">
           <p className="eyebrow mb-1.5">The person behind the platform</p>
           <h2 className="section-heading">
-            {additional.length > 0 ? 'Founder & Team' : 'Our Founder'}
+            Our Founder
           </h2>
           <div className="ornament-line w-20 mx-auto mt-3" />
         </div>
@@ -154,8 +149,9 @@ export function TeamSection({ dbMembers }: { dbMembers: TeamMemberData[] }) {
                   {/* Short role */}
                   <span
                     className={[
-                      'text-[8px] sm:text-[9px] uppercase tracking-[0.1em] font-medium line-clamp-1 w-full transition-colors duration-150',
-                      isActive ? 'text-gold' : 'text-ink-soft',
+                      'text-[10px] sm:text-[11px] uppercase tracking-[0.1em] font-semibold line-clamp-1 w-full transition-colors duration-150',
+                      // terra, not gold: gold on cream is too faint for text this small
+                      isActive ? 'text-terra' : 'text-ink-soft',
                     ].join(' ')}
                   >
                     {shortRole(m.role)}

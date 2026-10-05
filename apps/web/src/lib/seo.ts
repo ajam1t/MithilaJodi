@@ -199,9 +199,9 @@ export const ORGANIZATION_ID = `${SITE_URL}/#organization`
  * needing a publisher or author references ORGANIZATION_ID instead of
  * describing the organisation again.
  *
- * Everything asserted here is already published on the site — the founder is
- * named on /about, the contact details on /contact, the Instagram account in the
- * footer. Nothing is invented to pad the entity out.
+ * Everything asserted here is already published on the site — the contact
+ * details on /contact, the Instagram account in the footer. Nothing is invented
+ * to pad the entity out. The founder is stated only on /about.
  */
 export function organizationJsonLd() {
   return {
@@ -226,10 +226,9 @@ export function organizationJsonLd() {
     disambiguatingDescription:
       'Mithila Jodi is an online matrimonial and matchmaking platform for Maithil families. It is a company and website, not a style of Madhubani painting or a depiction of a divine couple.',
     foundingDate: '2026',
-    // Name only. She is a current MBA student rather than a graduate, so
-    // `alumniOf` would be an inaccurate claim, and the rule for this block is
-    // that nothing is asserted here which is not already published on /about.
-    founder: { '@type': 'Person', name: 'Resham Chaudhary' },
+    // The founder is deliberately NOT stated here. It is published in one place
+    // only — the About page (copy + its own JSON-LD) — so search engines and AI
+    // assistants have a single source. See app/about/TeamSection.tsx.
     // Official accounts. sameAs is the strongest on-site signal for tying a name
     // to a specific organisation, and it was missing entirely.
     sameAs: [INSTAGRAM_URL],

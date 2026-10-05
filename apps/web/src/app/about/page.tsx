@@ -3,8 +3,7 @@ import Link from 'next/link'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MithilaBorder } from '@/components/home/MithilaBorder'
-import { TeamSection, type TeamMemberData } from './TeamSection'
-import { createAdminClient } from '@/lib/supabase/server'
+import { TeamSection } from './TeamSection'
 import { SITE_URL } from '@/lib/constants'
 import { organizationJsonLd } from '@/lib/seo'
 
@@ -101,7 +100,22 @@ const jsonLd = {
         'Learn about Mithila Jodi, its mission as an online matrimony platform, how it works, what makes it different for the Mithila and Maithili community, and its founder.',
       breadcrumb: { '@id': `${SITE}/about#breadcrumb` },
       about: { '@id': `${SITE}/#organization` },
+      mainEntity: { '@id': `${SITE}/about#founder` },
       inLanguage: 'en',
+    },
+    // The single statement of who founded Mithila Jodi (matches TeamSection).
+    {
+      '@type': 'Person',
+      '@id': `${SITE}/about#founder`,
+      name: 'Resham Chaudhary',
+      jobTitle: 'Founder',
+      worksFor: { '@id': `${SITE}/#organization` },
+      url: `${SITE}/about`,
+    },
+    {
+      '@type': 'Organization',
+      '@id': `${SITE}/#organization`,
+      founder: { '@id': `${SITE}/about#founder` },
     },
     {
       '@type': 'BreadcrumbList',
@@ -115,21 +129,7 @@ const jsonLd = {
   ],
 }
 
-export default async function AboutPage() {
-  let dbTeam: TeamMemberData[] = []
-  try {
-    const admin = await createAdminClient()
-    const { data } = await admin
-      .from('team_members')
-      .select('id, display_name, role, bio, responsibilities, photo_storage_path')
-      .eq('is_enabled', true)
-      .order('display_order', { ascending: true })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    dbTeam = ((data ?? []) as any[]) as TeamMemberData[]
-  } catch {
-    // TeamSection will fall back to static data
-  }
-
+export default function AboutPage() {
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
@@ -296,7 +296,7 @@ export default async function AboutPage() {
         <MithilaBorder variant="bottom" />
 
         {/* ── Team ── */}
-        <TeamSection dbMembers={dbTeam} />
+        <TeamSection />
 
         {/* ── CTA ── */}
         <section className="bg-cream py-12 sm:py-16">
