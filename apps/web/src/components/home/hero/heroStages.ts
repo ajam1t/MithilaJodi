@@ -50,9 +50,14 @@ export const COMPAT_SIGNALS = [
 ] as const
 
 /** Illustrative only — not real members. Mirrored in the aria description. */
+/**
+ * The two fictional characters of the opening animation — storytelling, not
+ * members and not a profile showcase. Portraits live in /public/hero; until a
+ * file exists there the card shows the character's initial instead.
+ */
 export const DEMO_PROFILES = {
-  left:  { name: 'Aarav Jha',    age: 28, place: 'Darbhanga' },
-  right: { name: 'Swati Mishra', age: 26, place: 'Madhubani' },
+  left:  { name: 'Aarav Jha',    age: 28, place: 'Darbhanga', photo: '/hero/aarav-jha.webp' },
+  right: { name: 'Swati Mishra', age: 26, place: 'Madhubani', photo: '/hero/swati-mishra.webp' },
 } as const
 
 /**

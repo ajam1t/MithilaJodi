@@ -1,34 +1,56 @@
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
 import { COMPAT_SIGNALS, DEMO_PROFILES, type HeroStage } from './heroStages'
 
 /**
- * Stage 2 — the two demo profiles and the compatibility read-out.
+ * Stage 2 — the two characters of the opening story and the compatibility read-out.
  *
  * Built from the site's own primitives (`.card`, rounded-mj, shadow tokens,
  * Marcellus for names, Mukta for meta) so it reads as a Mithila Jodi interface
- * component rather than a dating-app card. The avatars use the same
- * initial-on-paper fallback the real profile lists use, which also keeps this
- * honest: these are illustrative, not photographs of members.
+ * component rather than a dating-app card. Each character has a portrait;
+ * if it is missing or fails to load, the initial-on-paper circle stands in at
+ * the same size, so the layout never shifts.
  */
 
-function Avatar({ initial }: { initial: string }) {
+function Avatar({ initial, photo }: { initial: string; photo: string }) {
+  const [failed, setFailed] = useState(false)
+  const img = useRef<HTMLImageElement>(null)
+  // An image that 404s before hydration never fires onError — catch it here.
+  useEffect(() => {
+    const el = img.current
+    if (el && el.complete && el.naturalWidth === 0) setFailed(true)
+  }, [])
+  const ring = 'h-[60px] w-[60px] sm:h-16 sm:w-16 shrink-0 rounded-full border-[1.5px] border-gold shadow-[0_3px_10px_-4px_rgba(58,20,12,0.45)]'
+  if (failed) {
+    return (
+      <span className={`grid place-items-center bg-paper-2 ${ring}`} aria-hidden="true">
+        <span className="font-serif text-maroon text-[20px] sm:text-[22px] leading-none">{initial}</span>
+      </span>
+    )
+  }
   return (
-    <span
-      className="grid place-items-center rounded-full bg-paper-2 border border-gold/40
-                 h-9 w-9 sm:h-11 sm:w-11 shrink-0"
-      aria-hidden="true"
-    >
-      <span className="font-serif text-maroon text-[15px] sm:text-[18px] leading-none">{initial}</span>
-    </span>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      ref={img}
+      src={photo}
+      alt=""
+      width={128}
+      height={128}
+      decoding="async"
+      onError={() => setFailed(true)}
+      className={`object-cover object-[center_25%] bg-paper-2 ${ring}`}
+    />
   )
 }
 
 function ProfileCard({
-  side, name, age, place,
-}: { side: 'left' | 'right'; name: string; age: number; place: string }) {
+  side, name, age, place, photo,
+}: { side: 'left' | 'right'; name: string; age: number; place: string; photo: string }) {
   return (
     <div className={`mj-hero-card mj-hero-card--${side} card px-3 py-2.5 sm:px-4 sm:py-3`}>
       <div className="flex items-center gap-2.5 sm:gap-3">
-        <Avatar initial={name.charAt(0)} />
+        <Avatar initial={name.charAt(0)} photo={photo} />
         <span className="flex flex-col min-w-0">
           <span className="font-serif text-maroon text-[13px] sm:text-[15px] leading-tight truncate">
             {name}
@@ -53,9 +75,8 @@ export function ProfileMatchDemo({ stage, score }: { stage: HeroStage; score: nu
       // One concise description instead of exposing every animated fragment.
       role="img"
       aria-label={
-        'Illustration: two example Mithila Jodi profiles — ' +
-        `${left.name}, ${left.age}, ${left.place} and ${right.name}, ${right.age}, ${right.place} — ` +
-        'shown with a 92 percent compatibility match and connected by a golden thread.'
+        `Illustration: ${left.name} of ${left.place} and ${right.name} of ${right.place} ` +
+        'finding each other through Mithila Jodi, connected by a golden thread.'
       }
     >
       <ProfileCard side="left" {...left} />
