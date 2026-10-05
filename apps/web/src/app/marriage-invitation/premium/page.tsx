@@ -8,6 +8,8 @@ import { MithilaBorder } from '@/components/home/MithilaBorder'
 import { Builder } from '@/components/wedding/builder/Builder'
 import { FreeVsPremium, PhonePreview } from '@/components/wedding/PremiumShowcase'
 import { decodeInvite } from '@/lib/wedding/codec.server'
+import { loadForEdit } from '@/lib/wedding/invites.server'
+import { createAdminClient } from '@/lib/supabase/server'
 import { SITE_URL } from '@/lib/constants'
 import { organizationJsonLd, organizationRef } from '@/lib/seo'
 
@@ -16,7 +18,7 @@ const CANONICAL = `${SITE_URL}/marriage-invitation/premium`
 export const metadata: Metadata = {
   title: 'Premium Mithila Wedding Invitation — Free Wedding Website',
   description:
-    'Create a free interactive Mithila wedding invitation: opening animation, countdown, ceremony timeline from Tilak to Vidai, हमर मिथिला, venue map and WhatsApp replies. One link, no login, nothing stored.',
+    'Create a free interactive Mithila wedding invitation: opening animation, countdown, ceremony timeline from Tilak to Vidai, हमर मिथिला, venue map and WhatsApp replies. One short link, no login.',
   keywords: [
     'wedding website maker', 'digital wedding invitation', 'Mithila wedding invitation', 'Maithili wedding invitation',
     'online shaadi invitation link', 'wedding invitation with countdown', 'Madhubani wedding invitation', 'free wedding website India',
@@ -36,11 +38,11 @@ const FAQS = [
   },
   {
     q: 'Where are our wedding details stored?',
-    a: 'Nowhere on our servers. The whole invitation is packed into the link you share, so the link itself is the invitation. Anyone with the link can see it; nobody else can.',
+    a: 'Only for 180 days. Your short link (mithilajodi.com/Invitation/…) keeps a compact copy of the invitation and is deleted automatically 180 days after you create it. Nothing else is kept — no account, no photos. Anyone with the link can see the invitation; it is never listed on Google.',
   },
   {
     q: 'How do I change the invitation later?',
-    a: 'Keep the private edit link shown after you create the invitation — it reopens the builder with everything filled in. Your draft is also kept in this browser. After a change, create the link again and send the new one; earlier links keep showing the earlier version.',
+    a: 'Keep the private edit link shown after you create the invitation — it reopens the builder with everything filled in. Your draft is also kept in this browser. Save your changes and the same short link shows the new version, so there is nothing new to send.',
   },
   {
     q: 'How do guests reply?',
@@ -48,7 +50,7 @@ const FAQS = [
   },
   {
     q: 'Why are there no photos?',
-    a: 'Photos would have to be uploaded and stored. Because this invitation stores nothing, each theme uses Madhubani art instead — the Kohbar, the Paag, the peacock, the fish and the lotus.',
+    a: 'Photos would have to be uploaded and stored. To keep invitations small and private, each theme uses Madhubani art instead — the Kohbar, the Paag, the peacock, the fish and the lotus.',
   },
 ]
 
@@ -68,10 +70,15 @@ const jsonLd = {
   ],
 }
 
-type Props = { searchParams: Promise<{ d?: string }> }
+type Props = { searchParams: Promise<{ d?: string; i?: string; k?: string }> }
 
 export default async function PremiumInvitationPage({ searchParams }: Props) {
-  const initial = decodeInvite((await searchParams).d)
+  const { d, i, k } = await searchParams
+  // A short link's private edit link (?i=<slug>&k=<edit key>) reopens the stored
+  // invitation so saving updates the same link; an old long edit link (?d=) still works.
+  const stored = i && k ? await loadForEdit(await createAdminClient(), i, k).catch(() => null) : null
+  const initial = stored ? decodeInvite(stored.payload) : decodeInvite(d)
+  const published = stored && initial ? { slug: stored.displaySlug, key: k! } : null
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
       <MithilaHeader />
@@ -91,7 +98,7 @@ export default async function PremiumInvitationPage({ searchParams }: Props) {
                   <li className="text-gold-lt" aria-current="page">Premium</li>
                 </ol>
               </nav>
-              <p className="eyebrow !text-marigold mb-3">Free · No login · Nothing stored</p>
+              <p className="eyebrow !text-marigold mb-3">Free · No login · Short link</p>
               <h1 className="font-serif text-[30px] sm:text-[44px] leading-[1.08] text-cream">Premium Mithila Wedding Experience</h1>
               <p className="font-deva text-[18px] sm:text-[22px] text-gold-lt mt-3" lang="mai">अपन विवाह निमंत्रणके एकटा यादगार अनुभव बनाउ</p>
               <p className="text-paper-2/85 text-[15px] sm:text-[17px] leading-relaxed max-w-xl mx-auto lg:mx-0 mt-4">
@@ -108,10 +115,10 @@ export default async function PremiumInvitationPage({ searchParams }: Props) {
         <section id="builder" className="wrap py-8 sm:py-12 scroll-mt-20" aria-label="Wedding invitation builder">
           {initial && (
             <p className="mb-5 rounded-mj-sm bg-info-soft px-4 py-3 text-[14px] text-info-fg">
-              Your invitation is open for editing. When you are done, create the link again and share the new one.
+              Your invitation is open for editing.
             </p>
           )}
-          <Builder initial={initial} />
+          <Builder initial={initial} published={published} />
         </section>
 
         <section className="bg-cream border-y border-paper-3 py-11 sm:py-14" aria-labelledby="compare-heading">

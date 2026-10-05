@@ -4,6 +4,8 @@ import { decodeInvite } from '@/lib/wedding/codec.server'
 import { weddingTheme } from '@/lib/wedding/themes'
 import { longDate } from '@/lib/wedding/format'
 import { romanize } from '@/lib/wedding/translit'
+import { loadBySlug } from '@/lib/wedding/invites.server'
+import { createAdminClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
 
@@ -22,9 +24,12 @@ function Petal({ rotate, color }: { rotate: number; color: string }) {
   return <div style={{ position: 'absolute', width: 34, height: 110, borderRadius: '50%', border: `2px solid ${color}`, transform: `rotate(${rotate}deg)` }} />
 }
 
-/** GET /api/wedding/og?d=… — the WhatsApp / social preview card for an invitation link. */
+/** GET /api/wedding/og?d=… or ?s=<slug> — the WhatsApp / social preview card for an invitation link. */
 export async function GET(request: NextRequest) {
-  const invite = decodeInvite(request.nextUrl.searchParams.get('d'))
+  const slug = request.nextUrl.searchParams.get('s')
+  let d = request.nextUrl.searchParams.get('d')
+  if (slug) d = (await loadBySlug(await createAdminClient(), slug).catch(() => null))?.payload ?? null
+  const invite = decodeInvite(d)
   const t = weddingTheme(invite?.t ?? 'kohbar')
   const c = invite?.c
   // The image renderer cannot shape Devanagari (conjuncts and vowel signs break),
@@ -66,7 +71,8 @@ export async function GET(request: NextRequest) {
     ),
     {
       width: 1200, height: 630, fonts: fonts.length ? fonts : undefined,
-      headers: { 'Cache-Control': 'public, max-age=86400, s-maxage=31536000, immutable' },
+      // A ?d= card is its content, so it never changes; a short link's content can be edited.
+      headers: { 'Cache-Control': slug ? 'public, max-age=3600, s-maxage=3600' : 'public, max-age=86400, s-maxage=31536000, immutable' },
     },
   )
 }

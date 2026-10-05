@@ -88,13 +88,13 @@ const en = {
   copyLink: 'Copy link',
   copied: 'Link copied ✓',
   shareMore: 'Share…',
-  shareText: '💍 We joyfully invite you and your family to celebrate our wedding ❤️\n\nView the invitation:\n{url}',
+  shareText: '💍 You’re invited!\n\n{couple} are getting married ❤️\n\nView their wedding invitation:\n{url}\n\nWe would love to celebrate this special day with you! ❤️',
   shareTitleNative: '{couple} — Wedding Invitation',
 
   madeWith: 'Made with ❤️ on {brand}',
   tagline: 'Where tradition meets love.',
   createOwn: 'Create your own Mithila wedding invitation →',
-  footerNote: 'Made by the couple with Mithila Jodi’s free invitation maker — nothing is stored on our servers.',
+  footerNote: 'Made by the couple with Mithila Jodi’s free invitation maker.',
   report: 'Report this invitation',
 
   metaInvite: '{couple} warmly invite you to their wedding',
@@ -172,13 +172,13 @@ const hi: Partial<WeddingStrings> = {
   copyLink: 'लिंक कॉपी करें',
   copied: 'लिंक कॉपी हो गया ✓',
   shareMore: 'साझा करें…',
-  shareText: '💍 हमारे विवाह के शुभ अवसर पर आप सपरिवार सादर आमंत्रित हैं ❤️\n\nनिमंत्रण देखने के लिए:\n{url}',
+  shareText: '💍 आप सादर आमंत्रित हैं!\n\n{couple} विवाह के पवित्र बंधन में बंध रहे हैं ❤️\n\nविवाह निमंत्रण देखें:\n{url}\n\nइस शुभ दिन पर आपके साथ की प्रतीक्षा रहेगी! ❤️',
   shareTitleNative: '{couple} — विवाह आमंत्रण',
 
   madeWith: '{brand} पर ❤️ से बनाया गया',
   tagline: 'जहाँ परम्परा और प्रेम मिलते हैं।',
   createOwn: 'अपना मिथिला विवाह निमंत्रण बनाएँ →',
-  footerNote: 'यह निमंत्रण युगल ने मिथिला जोड़ी के निःशुल्क निमंत्रण-निर्माता से बनाया है — हमारे सर्वर पर कुछ भी संग्रहीत नहीं होता।',
+  footerNote: 'यह निमंत्रण युगल ने मिथिला जोड़ी के निःशुल्क निमंत्रण-निर्माता से बनाया है।',
   report: 'इस निमंत्रण की शिकायत करें',
 
   metaInvite: '{couple} आपको अपने विवाह में सादर आमंत्रित करते हैं',
@@ -253,13 +253,13 @@ const mai: Partial<WeddingStrings> = {
   copyLink: 'लिंक कॉपी करू',
   copied: 'लिंक कॉपी भ’ गेल ✓',
   shareMore: 'साझा करू…',
-  shareText: '💍 हमर विवाहक शुभ अवसर पर अहाँ सपरिवार सादर आमंत्रित छी ❤️\n\nनिमंत्रण देखबाक लेल:\n{url}',
+  shareText: '💍 अहाँ सादर आमंत्रित छी!\n\n{couple}क शुभ विवाह भ रहल अछि ❤️\n\nविवाहक निमंत्रण देखू:\n{url}\n\nएहि शुभ दिन पर अहाँक संग पाबि हम सभ धन्य होएब! ❤️',
   shareTitleNative: '{couple} — विवाह निमंत्रण',
 
   madeWith: '{brand} पर ❤️ सँ बनाओल गेल',
   tagline: 'जतय परम्परा आ प्रेम एक भेल।',
   createOwn: 'अपन मिथिला विवाह निमंत्रण बनाउ →',
-  footerNote: 'ई निमंत्रण युगल मिथिला जोड़ीक निःशुल्क निमंत्रण-निर्माता सँ बनौलनि अछि — हमर सर्वर पर किछु नहि राखल जाइत अछि।',
+  footerNote: 'ई निमंत्रण युगल मिथिला जोड़ीक निःशुल्क निमंत्रण-निर्माता सँ बनौलनि अछि।',
   report: 'एहि निमंत्रणक शिकायत करू',
 
   metaInvite: '{couple} अहाँकेँ अपन विवाहमे सादर आमंत्रित करैत छथि',
@@ -334,13 +334,13 @@ const sa: Partial<WeddingStrings> = {
   copyLink: 'लिङ्कं प्रतिलिखन्तु',
   copied: 'लिङ्कः प्रतिलिखितः ✓',
   shareMore: 'अन्यत्र प्रेषयन्तु…',
-  shareText: '💍 अस्माकं विवाहमङ्गलप्रसङ्गे भवन्तः सपरिवारं सादरम् आमन्त्रिताः ❤️\n\nआमन्त्रणं द्रष्टुम्:\n{url}',
+  shareText: '💍 भवन्तः सादरम् आमन्त्रिताः!\n\n{couple} इत्यनयोः शुभविवाहः ❤️\n\nविवाहामन्त्रणं पश्यन्तु:\n{url}\n\nअस्मिन् मङ्गलदिने भवतां सान्निध्यम् अपेक्षामहे! ❤️',
   shareTitleNative: '{couple} — विवाहामन्त्रणम्',
 
   madeWith: '{brand} इत्यत्र ❤️ सह निर्मितम्',
   tagline: 'यत्र परम्परा प्रेम्णा मिलति',
   createOwn: 'स्वकीयं मिथिलाविवाहामन्त्रणं रचयन्तु →',
-  footerNote: 'इदम् आमन्त्रणं दम्पतिभ्यां मिथिला जोडी इत्यस्य निःशुल्कसाधनेन रचितम् — अस्माकं सर्वरे किमपि न संगृह्यते।',
+  footerNote: 'इदम् आमन्त्रणं दम्पतिभ्यां मिथिला जोडी इत्यस्य निःशुल्कसाधनेन रचितम्।',
   report: 'अस्य आमन्त्रणस्य विषये सूचयन्तु',
 
   metaInvite: '{couple} स्वविवाहे भवतः सादरम् आमन्त्रयतः',

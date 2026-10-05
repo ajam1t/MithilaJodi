@@ -10,6 +10,16 @@ const ADMIN_PATHS = ['/admin']
 
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
+
+  // Short invitation links live at /Invitation/<slug>. Routes are case-sensitive,
+  // so /invitation/…, /INVITATION/… etc. are sent to the one canonical prefix;
+  // the page itself then fixes the slug's capitalisation.
+  if (/^\/invitation\//i.test(pathname) && !pathname.startsWith('/Invitation/')) {
+    const url = request.nextUrl.clone()
+    url.pathname = `/Invitation/${pathname.slice('/invitation/'.length)}`
+    return NextResponse.redirect(url, 308)
+  }
+
   const hasSession = request.cookies.has(SESSION_COOKIE)
 
   const isProtected = PROTECTED_PATHS.some(p => pathname.startsWith(p))

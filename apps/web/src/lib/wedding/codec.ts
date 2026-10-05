@@ -1,5 +1,6 @@
 /**
- * An invitation, carried entirely in its link — nothing is stored on a server.
+ * An invitation, carried entirely in its `d` code. Long links carry it in the URL;
+ * short links (/Invitation/<slug>) keep the same code server-side for 180 days.
  *
  * Format of the `d` parameter: one marker character, then base64url.
  *   'z' — raw DEFLATE of the UTF-8 JSON (browsers with CompressionStream)
@@ -33,19 +34,4 @@ export async function encodeInvite(invite: Invite): Promise<string> {
   const json = new TextEncoder().encode(JSON.stringify(compact(invite)))
   const z = await deflateRaw(json)
   return z ? `z${toBase64Url(z)}` : `j${toBase64Url(json)}`
-}
-
-/** A readable path segment for the link — only ever cosmetic. */
-export function linkName(bride: string, groom: string): string {
-  const latin = (s: string) => s.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24)
-  const parts = [latin(bride), latin(groom)].filter(Boolean)
-  return parts.length ? parts.join('-') : 'shubh-vivah'
-}
-
-export function inviteUrl(origin: string, invite: Invite, payload: string): string {
-  return `${origin}/wedding/${linkName(invite.c.couple.brideName, invite.c.couple.groomName)}?d=${payload}`
-}
-
-export function editUrl(origin: string, payload: string): string {
-  return `${origin}/marriage-invitation/premium?d=${payload}`
 }

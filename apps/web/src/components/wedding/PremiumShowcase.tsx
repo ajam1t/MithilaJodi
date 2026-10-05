@@ -61,7 +61,7 @@ export function PremiumShowcase({ compact = false }: { compact?: boolean }) {
             </Link>
             {compact && <Link href="/marriage-invitation/premium" className="btn justify-center text-center border border-gold/50 text-gold-lt px-6 py-3.5 rounded-mj-sm hover:bg-white/5">See everything it includes</Link>}
           </div>
-          <p className="mt-4 text-[13px] text-paper-2/70">Your details stay in the link you share — nothing is stored on our servers.</p>
+          <p className="mt-4 text-[13px] text-paper-2/70">One short link to share. It is deleted automatically 180 days after you create it.</p>
         </div>
         <PhonePreview />
       </div>

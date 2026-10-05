@@ -101,7 +101,7 @@ export function ShareBar({ url, couple, lang }: { url: string; couple: string; l
   const [copied, setCopied] = useState(false)
   const [canShare, setCanShare] = useState(false)
   useEffect(() => setCanShare(typeof navigator !== 'undefined' && 'share' in navigator), [])
-  const text = t('shareText', { url })
+  const text = t('shareText', { url, couple })
   return (
     <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
       <a className="wd-btn wd-btn-wa" href={`https://wa.me/?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer">

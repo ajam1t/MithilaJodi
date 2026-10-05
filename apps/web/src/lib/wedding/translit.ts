@@ -47,7 +47,9 @@ function word(w: string): string {
   }
   // Schwa deletion: word-final, then V·C(a)·C·V from the right.
   const last = units.length - 1
-  if (last > 0 && units[last].inherent && !units[last].nasal) units[last].v = ''
+  // …except after a cluster: मिश्र is Mishra, शुक्र Shukra, not Mishr / Shukr.
+  const afterCluster = last > 0 && units[last - 1].c && !units[last - 1].v
+  if (last > 0 && units[last].inherent && !units[last].nasal && !afterCluster) units[last].v = ''
   for (let i = last - 1; i > 0; i--) {
     const u = units[i]
     if (!u.inherent || u.nasal) continue

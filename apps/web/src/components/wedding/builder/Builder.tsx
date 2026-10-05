@@ -7,7 +7,8 @@ import {
   type Invite, type ThemeId, type WeddingContent, type WeddingEvent,
 } from '@/lib/wedding/schema'
 import { WEDDING_THEMES } from '@/lib/wedding/themes'
-import { editUrl, encodeInvite, inviteUrl, MAX_LINK_PAYLOAD } from '@/lib/wedding/codec'
+import { encodeInvite, MAX_LINK_PAYLOAD } from '@/lib/wedding/codec'
+import { baseSlug, invitationPath, slugStem } from '@/lib/wedding/slug'
 import { LANG_LABEL, LANGS, wt, type Lang } from '@/lib/wedding/i18n'
 import { WeddingSite } from '../site/WeddingSite'
 
@@ -91,7 +92,10 @@ function StepHead({ hi, en, children }: { hi: string; en: string; children?: Rea
 
 // ─── The builder ────────────────────────────────────────────────────────────
 
-export function Builder({ initial }: { initial: Invite | null }) {
+/** A published invitation: its short link and the private key that edits it. */
+type Published = { slug: string; key: string }
+
+export function Builder({ initial, published = null }: { initial: Invite | null; published?: Published | null }) {
   const [theme, setTheme] = useState<ThemeId>(initial?.t ?? 'kohbar')
   const [lang, setLang] = useState<Lang>(initial?.l ?? 'mai')
   /** Bumped to play the envelope opening inside the preview. */
@@ -101,6 +105,10 @@ export function Builder({ initial }: { initial: Invite | null }) {
   const [saved, setSaved] = useState<'idle' | 'saved'>('idle')
   const [previewOpen, setPreviewOpen] = useState(false)
   const [result, setResult] = useState<{ share: string; edit: string } | null>(null)
+  /** Set once this invitation has a short link; saving then updates it in place. */
+  const [pub, setPub] = useState<Published | null>(published)
+  const [renameLink, setRenameLink] = useState(false)
+  const [publishing, setPublishing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
   const loaded = useRef(false)
@@ -118,6 +126,7 @@ export function Builder({ initial }: { initial: Invite | null }) {
             setC(parsed.data)
             if (WEDDING_THEMES.some(t => t.id === d.t)) setTheme(d.t)
             if ((LANGS as readonly string[]).includes(d.l)) setLang(d.l)
+            if (d.pub && typeof d.pub.slug === 'string' && typeof d.pub.key === 'string') setPub(d.pub)
           }
         }
       } catch { /* no draft */ }
@@ -129,10 +138,10 @@ export function Builder({ initial }: { initial: Invite | null }) {
   useEffect(() => {
     if (!loaded.current) return
     const t = setTimeout(() => {
-      try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ t: theme, l: lang, c })); setSaved('saved') } catch { /* storage full or blocked */ }
+      try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ t: theme, l: lang, c, pub })); setSaved('saved') } catch { /* storage full or blocked */ }
     }, 600)
     return () => clearTimeout(t)
-  }, [c, theme, lang])
+  }, [c, theme, lang, pub])
 
   const update = useCallback(<K extends keyof WeddingContent>(key: K, patch: Partial<WeddingContent[K]>) => {
     setC(prev => ({ ...prev, [key]: { ...(prev[key] as object), ...patch } }))
@@ -165,8 +174,30 @@ export function Builder({ initial }: { initial: Invite | null }) {
       setError('Your invitation has more text than one link can carry. Please shorten the story or the ceremony descriptions.')
       return
     }
-    const origin = window.location.origin
-    setResult({ share: inviteUrl(origin, invite, payload), edit: editUrl(origin, payload) })
+    setPublishing(true)
+    try {
+      const r = await fetch('/api/wedding/invites', {
+        method: pub ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pub ? { slug: pub.slug, key: pub.key, payload, rename: renameLink } : { payload }),
+      })
+      const j = await r.json().catch(() => ({}))
+      // An edit link that no longer matches (the link closed after 180 days): start a fresh one.
+      if (pub && r.status === 404) { setPub(null); setError(`${j.message ?? 'This link has closed.'} Press the button again for a new link.`); return }
+      if (!r.ok || !j.ok) { setError(j.message ?? 'Could not create the link. Please try again.'); return }
+      const next: Published = pub ? { ...pub, slug: j.slug } : { slug: j.slug, key: j.editKey }
+      setPub(next)
+      setRenameLink(false)
+      const origin = window.location.origin
+      setResult({
+        share: `${origin}${invitationPath(next.slug)}`,
+        edit: `${origin}/marriage-invitation/premium?i=${encodeURIComponent(next.slug)}&k=${encodeURIComponent(next.key)}`,
+      })
+    } catch {
+      setError('Network error. Please try again.')
+    } finally {
+      setPublishing(false)
+    }
   }
 
   async function copy(text: string, what: string) {
@@ -175,12 +206,15 @@ export function Builder({ initial }: { initial: Invite | null }) {
 
   function startOver() {
     if (!window.confirm('Clear everything and start a new invitation?')) return
-    setC(freshContent()); setTheme('kohbar'); setLang('mai'); setResult(null); go('couple')
+    setC(freshContent()); setTheme('kohbar'); setLang('mai'); setResult(null); setPub(null); go('couple')
     try { localStorage.removeItem(DRAFT_KEY) } catch { /* ignore */ }
   }
 
   const couple = `${c.couple.brideName || wt(lang, 'bridePlaceholder')} & ${c.couple.groomName || wt(lang, 'groomPlaceholder')}`
-  const waText = result ? wt(lang, 'shareText', { url: result.share }) : ''
+  const waText = result ? wt(lang, 'shareText', { url: result.share, couple }) : ''
+  /** After publishing, did the names or date change enough that the link no longer matches them? */
+  const wantedStem = baseSlug(c.couple.brideName, c.couple.groomName, c.wedding.date)
+  const linkOutdated = !!pub && !!c.couple.brideName && !!c.couple.groomName && !!c.wedding.date && slugStem(pub.slug) !== wantedStem
 
   /** The scroller is the containing block for the envelope (translateZ), so it opens inside the frame. */
   const site = (
@@ -450,15 +484,38 @@ export function Builder({ initial }: { initial: Invite | null }) {
                 {error && <p className="rounded-mj-sm bg-error-soft px-4 py-3 text-[14px] text-error-fg" role="alert">{error}</p>}
 
                 {!result ? (
-                  <button type="button" className="kd-cta w-full" onClick={createLink}>
-                    <span className="font-deva">निमंत्रण तैयार करू</span> · Create my invitation link
-                  </button>
+                  <div className="space-y-3">
+                    {pub && (
+                      <p className="rounded-mj-sm bg-cream px-4 py-3 text-[13.5px] text-ink-soft">
+                        Your link: <span className="break-all font-mono text-ink">mithilajodi.com{invitationPath(pub.slug)}</span>
+                        <br />Saving updates this same link, so guests who already have it see the new version.
+                      </p>
+                    )}
+                    {linkOutdated && (
+                      <label className="flex items-start gap-2.5 rounded-mj-sm border border-gold/40 bg-paper px-4 py-3 text-[13.5px] text-ink">
+                        <input type="checkbox" className="mt-0.5 accent-maroon" checked={renameLink} onChange={e => setRenameLink(e.target.checked)} />
+                        <span>
+                          Change the link to match the new details: <span className="break-all font-mono">{invitationPath(wantedStem)}</span>
+                          <span className="block text-[12.5px] text-ink-soft">The current link will stop working — only tick this if you have not shared it yet.</span>
+                        </span>
+                      </label>
+                    )}
+                    <button type="button" className="kd-cta w-full" onClick={createLink} disabled={publishing}>
+                      {publishing ? 'Saving…' : pub
+                        ? <><span className="font-deva">निमंत्रण सहेजू</span> · Save my invitation</>
+                        : <><span className="font-deva">निमंत्रण तैयार करू</span> · Create my invitation link</>}
+                    </button>
+                  </div>
                 ) : (
                   <div className="rounded-mj border-2 border-success/40 bg-success-soft/60 p-4 sm:p-5 space-y-4" role="status">
                     <p className="font-deva text-[22px] text-success-fg">अहाँक निमंत्रण तैयार अछि ❤️</p>
+                    <div>
+                      <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-success-fg">Your Invitation Link</p>
+                      <p className="mt-1 break-all rounded-mj-sm bg-cream px-3 py-2 font-mono text-[14px] text-ink">{result.share.replace(/^https?:\/\//, '')}</p>
+                    </div>
                     <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
                       <a className="btn-primary !bg-[#1F7A47] text-center" href={`https://wa.me/?text=${encodeURIComponent(waText)}`} target="_blank" rel="noopener noreferrer">💚 WhatsApp पर निमंत्रण भेजू</a>
-                      <button type="button" className="btn-ghost" onClick={() => copy(result.share, 'share')}>{copied === 'share' ? 'Link copied ✓' : 'Copy link'}</button>
+                      <button type="button" className="btn-ghost" onClick={() => copy(result.share, 'share')}>{copied === 'share' ? 'Link copied ✓' : 'Copy Link'}</button>
                       {typeof navigator !== 'undefined' && 'share' in navigator && (
                         <button type="button" className="btn-ghost" onClick={() => navigator.share({ title: wt(lang, 'shareTitleNative', { couple }), text: waText, url: result.share }).catch(() => undefined)}>Share…</button>
                       )}
@@ -467,8 +524,8 @@ export function Builder({ initial }: { initial: Invite | null }) {
                     <div className="rounded-mj-sm bg-cream px-4 py-3">
                       <p className="text-[14px] font-semibold text-ink">Keep your private edit link</p>
                       <p className="mt-0.5 text-[13px] text-ink-soft leading-relaxed">
-                        Nothing is saved on our servers — this link is the only way to reopen and change your invitation from
-                        another phone. If you change anything, create the link again and share the new one.
+                        This is the only way to reopen and change your invitation from another phone — keep it to yourself.
+                        Saved changes appear on the same invitation link. Your link stays open for 180 days from when it was made.
                       </p>
                       <button type="button" className="btn-ghost btn-sm mt-2" onClick={() => copy(result.edit, 'edit')}>{copied === 'edit' ? 'Edit link copied ✓' : 'Copy edit link'}</button>
                     </div>
