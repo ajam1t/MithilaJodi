@@ -50,6 +50,14 @@ const kalam = Kalam({
   preload: false,
 })
 
+/**
+ * Bump when the icon files change. The URLs are what Google and browsers
+ * cache: on 2026-10-07 Google was still serving the September "MJ" icon two
+ * days after the new logo shipped under the same file names. A new URL makes
+ * the next homepage crawl fetch the current files instead of reusing the old.
+ */
+const ICON_VERSION = '20261005'
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
@@ -99,15 +107,15 @@ export const metadata: Metadata = {
       // crawler fetches /favicon.ico directly, and it was 404ing — the PNGs
       // below were the only icons, which is a known reason Google is slow to
       // pick up or refresh the SERP favicon. `sizes: 'any'` marks the .ico as
-      // the multi-resolution default (it embeds 48/96/192).
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/favicon.png', sizes: '48x48', type: 'image/png' },
-      { url: '/favicon-96.png', sizes: '96x96', type: 'image/png' },
-      { url: '/favicon-192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/favicon-512.png', sizes: '512x512', type: 'image/png' },
+      // the multi-resolution default (it embeds 16/32/48).
+      { url: `/favicon.ico?v=${ICON_VERSION}`, sizes: 'any' },
+      { url: `/favicon.png?v=${ICON_VERSION}`, sizes: '48x48', type: 'image/png' },
+      { url: `/favicon-96.png?v=${ICON_VERSION}`, sizes: '96x96', type: 'image/png' },
+      { url: `/favicon-192.png?v=${ICON_VERSION}`, sizes: '192x192', type: 'image/png' },
+      { url: `/favicon-512.png?v=${ICON_VERSION}`, sizes: '512x512', type: 'image/png' },
     ],
-    shortcut: '/favicon.ico',
-    apple: { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    shortcut: `/favicon.ico?v=${ICON_VERSION}`,
+    apple: { url: `/apple-touch-icon.png?v=${ICON_VERSION}`, sizes: '180x180', type: 'image/png' },
   },
   openGraph: {
     type: 'website',
