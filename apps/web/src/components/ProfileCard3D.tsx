@@ -183,7 +183,10 @@ export function ProfileCard3D({
 }: ProfileCardProps) {
   const [flipped, setFlipped] = useState(false)
   const [shortlisted, setShortlisted] = useState(false)
-  const [interestSent, setInterestSent] = useState(false)
+  // Seeded from the server's view of where the member stands with this person.
+  const [interestSent, setInterestSent] = useState(profile.interest === 'sent')
+  const isMatch = profile.interest === 'match'
+  const theyAsked = profile.interest === 'received'
   const [busy, setBusy] = useState<'shortlist' | 'interest' | null>(null)
 
   const reducedMotion = useRef(
@@ -305,8 +308,8 @@ export function ProfileCard3D({
                   <span className="block text-[9px] uppercase tracking-wider text-ink-soft leading-none">
                     {blocked ? 'Check' : BAND_LABEL[match.band]}
                   </span>
-                  <span className="block text-[10px] text-ink-soft leading-tight mt-0.5">
-                    {Math.round(match.confidence * 100)}% of factors
+                  <span className="block text-[10px] font-semibold text-maroon leading-tight mt-0.5">
+                    {blocked ? 'See details' : `${match.score}% Match`}
                   </span>
                 </span>
               </div>
@@ -374,52 +377,91 @@ export function ProfileCard3D({
             )}
 
             <div className={cn('mt-auto flex flex-col', compact ? 'gap-1.5 pt-2' : 'gap-2 pt-3')}>
-              {showActions && (
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    disabled={shortlisted || busy === 'shortlist'}
-                    onClick={handleShortlist}
-                    className={cn(
-                      cn('flex items-center justify-center gap-1.5 rounded-mj-sm font-semibold border transition-all disabled:opacity-70', compact ? 'py-1.5 text-[12px]' : 'py-2 text-[13px]'),
-                      shortlisted ? 'bg-gold border-gold text-maroon' : 'bg-cream border-gold/50 text-maroon hover:bg-gold/10'
+              {showActions ? (
+                <>
+                  {/* Member search: View Profile is the primary action, the
+                      interest the secondary one, in whichever state it is. */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link
+                      href={`/profile/${profile.id}`}
+                      className={cn(cn('flex items-center justify-center gap-1.5 rounded-mj-sm font-semibold border transition-all', compact ? 'py-1.5 text-[12px]' : 'py-2 text-[13px]'), 'bg-maroon-gradient border-maroon text-cream hover:shadow-mj-sm')}
+                    >
+                      View Profile
+                    </Link>
+                    {isMatch ? (
+                      <Link
+                        href="/interests?tab=mutual"
+                        className={cn(cn('flex items-center justify-center gap-1.5 rounded-mj-sm font-semibold border transition-all', compact ? 'py-1.5 text-[12px]' : 'py-2 text-[13px]'), 'bg-gold/15 border-gold text-maroon')}
+                      >
+                        It&rsquo;s a Match! <span aria-hidden="true">❤️</span>
+                      </Link>
+                    ) : theyAsked ? (
+                      <Link
+                        href="/interests?tab=received"
+                        className={cn(cn('flex items-center justify-center gap-1.5 rounded-mj-sm font-semibold border transition-all', compact ? 'py-1.5 text-[12px]' : 'py-2 text-[13px]'), 'bg-cream border-maroon/40 text-maroon hover:bg-maroon/5')}
+                      >
+                        <HeartIcon /> Respond
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={interestSent || busy === 'interest'}
+                        onClick={handleInterest}
+                        className={cn(cn('flex items-center justify-center gap-1.5 rounded-mj-sm font-semibold border transition-all', compact ? 'py-1.5 text-[12px]' : 'py-2 text-[13px]'), 'disabled:opacity-80',
+                          interestSent ? 'bg-green/[0.07] border-green/30 text-green' : 'bg-cream border-maroon/40 text-maroon hover:bg-maroon/5')}
+                      >
+                        {interestSent ? <>Interest Sent <span aria-hidden="true">✓</span></> : <><HeartIcon /> Send Interest</>}
+                      </button>
                     )}
-                  >
-                    <StarIcon />
-                    {shortlisted ? 'Saved' : 'Shortlist'}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={interestSent || busy === 'interest'}
-                    onClick={handleInterest}
-                    className={cn(
-                      cn('flex items-center justify-center gap-1.5 rounded-mj-sm font-semibold border transition-all disabled:opacity-70', compact ? 'py-1.5 text-[12px]' : 'py-2 text-[13px]'),
-                      'bg-maroon-gradient border-maroon text-cream hover:shadow-mj-sm'
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {onShortlist && (
+                      <button
+                        type="button"
+                        disabled={shortlisted || busy === 'shortlist'}
+                        onClick={handleShortlist}
+                        className={cn(
+                          'flex flex-1 items-center justify-center gap-1.5 rounded-mj-sm font-semibold border transition-all disabled:opacity-70',
+                          compact ? 'py-1.5 text-[12px]' : 'py-1.5 text-[12.5px]',
+                          shortlisted ? 'bg-gold/20 border-gold text-maroon' : 'bg-cream border-gold/40 text-ink-soft hover:text-maroon hover:border-gold'
+                        )}
+                      >
+                        <StarIcon />
+                        {shortlisted ? 'Saved' : 'Shortlist'}
+                      </button>
                     )}
+                    {hasDetails && (
+                      <button
+                        type="button"
+                        onClick={() => setFlipped(true)}
+                        aria-expanded={flipped}
+                        className={cn('flex-1 rounded-mj-sm font-semibold border border-gold/40 text-ink-soft hover:text-maroon hover:border-gold transition-colors', compact ? 'px-2 py-1.5 text-[12px]' : 'px-3 py-1.5 text-[12.5px]')}
+                      >
+                        Details
+                      </button>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/profile/${profile.id}`}
+                    className={cn('flex-1 text-center rounded-mj-sm font-semibold border border-maroon/30 text-maroon hover:bg-maroon hover:text-cream transition-colors', compact ? 'py-1.5 text-[12px]' : 'py-2 text-[13px]')}
                   >
-                    <HeartIcon />
-                    {interestSent ? 'Sent' : 'Interest'}
-                  </button>
+                    View profile
+                  </Link>
+                  {hasDetails && (
+                    <button
+                      type="button"
+                      onClick={() => setFlipped(true)}
+                      aria-expanded={flipped}
+                      className={cn('rounded-mj-sm font-semibold border border-gold/40 text-ink-soft hover:text-maroon hover:border-gold transition-colors', compact ? 'px-2 py-1.5 text-[12px]' : 'px-3 py-2 text-[13px]')}
+                    >
+                      Details
+                    </button>
+                  )}
                 </div>
               )}
-              <div className="flex items-center gap-2">
-                <Link
-                  href={`/profile/${profile.id}`}
-                  className={cn('flex-1 text-center rounded-mj-sm font-semibold border border-maroon/30 text-maroon hover:bg-maroon hover:text-cream transition-colors', compact ? 'py-1.5 text-[12px]' : 'py-2 text-[13px]')}
-                >
-                  View profile
-                </Link>
-                {hasDetails && (
-                  <button
-                    type="button"
-                    onClick={() => setFlipped(true)}
-                    aria-expanded={flipped}
-                    className={cn('rounded-mj-sm font-semibold border border-gold/40 text-ink-soft hover:text-maroon hover:border-gold transition-colors', compact ? 'px-2 py-1.5 text-[12px]' : 'px-3 py-2 text-[13px]')}
-                  >
-                    Details
-                  </button>
-                )}
-              </div>
             </div>
           </div>
         </div>

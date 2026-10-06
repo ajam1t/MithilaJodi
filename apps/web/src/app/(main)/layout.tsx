@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { AuthBottomNav } from '@/components/AuthBottomNav'
 import { MatchesNavLink } from '@/components/MatchesNavLink'
+import { NotificationsNavLink } from '@/components/NotificationsNavLink'
 import { getSessionAccount } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getOnboardingState } from '@/lib/onboarding'
@@ -28,6 +30,19 @@ export const metadata: Metadata = {
  * The cost is one indexed query per member page view. /welcome sits outside
  * this group so it does not redirect to itself.
  */
+/**
+ * The official Mithila Jodi mark — the same logo-mark + typeset name the main
+ * site header uses (MithilaHeader), not a separate member-area logo.
+ */
+function MemberBrand() {
+  return (
+    <Link href="/" className="flex items-center gap-2 shrink-0" aria-label="Mithila Jodi — home">
+      <Image src="/logo-mark.png" alt="" width={40} height={37} priority className="h-8 w-auto object-contain" />
+      <span className="font-serif font-bold text-[19px] text-maroon leading-none tracking-tight">Mithila Jodi</span>
+    </Link>
+  )
+}
+
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
   const account = await getSessionAccount()
   if (account) {
@@ -43,44 +58,43 @@ export default async function MainLayout({ children }: { children: React.ReactNo
       {/* Top nav — hidden on mobile, visible from lg breakpoint */}
       <nav className="sticky top-0 z-40 bg-cream border-b border-paper-3 shadow-mj-xs hidden lg:block">
         <div className="wrap flex items-center justify-between h-14">
-          <Link href="/" className="font-serif text-maroon text-xl leading-none">
-            Mithila Jodi
-          </Link>
+          <MemberBrand />
           <div className="flex items-center gap-1">
             <Link
               href="/search"
-              className="px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
+              className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
             >
               Search
             </Link>
             <Link
               href="/messages"
-              className="px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
+              className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
             >
               Messages
             </Link>
             <MatchesNavLink />
+            <NotificationsNavLink />
             <Link
               href="/shortlists"
-              className="px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
+              className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
             >
               Shortlist
             </Link>
             <Link
               href="/biodata"
-              className="px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
+              className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
             >
               Biodata
             </Link>
             <Link
               href="/settings"
-              className="px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
+              className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
             >
               Settings
             </Link>
             <Link
               href="/profile"
-              className="px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
+              className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
             >
               My Profile
             </Link>
@@ -96,7 +110,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
               <Link
                 key={href}
                 href={href}
-                className="px-3 py-1.5 text-sm font-medium text-ink-soft hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
+                className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink-soft hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
               >
                 {label}
               </Link>
@@ -108,9 +122,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
       {/* Mobile top bar — only on mobile */}
       <div className="sticky top-0 z-40 bg-cream border-b border-paper-3 shadow-mj-xs lg:hidden">
         <div className="flex items-center justify-between h-12 px-4">
-          <Link href="/" className="font-serif text-maroon text-lg leading-none">
-            Mithila Jodi
-          </Link>
+          <MemberBrand />
           <Link href="/settings" className="p-2 text-ink-soft hover:text-maroon transition-colors" aria-label="Settings">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="3" />
@@ -120,8 +132,9 @@ export default async function MainLayout({ children }: { children: React.ReactNo
         </div>
       </div>
 
-      {/* Page content — add bottom padding on mobile for bottom nav */}
-      <div className="pb-16 lg:pb-0">
+      {/* Page content — clear of the fixed bottom nav on mobile (its 56px plus
+          the iPhone home-indicator inset). */}
+      <div className="pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0">
         {children}
       </div>
 

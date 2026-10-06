@@ -45,16 +45,16 @@ const tabs: Tab[] = [
     ),
   },
   {
-    href: '/biodata',
-    label: 'Biodata',
+    // Notifications replaced Biodata here (2026-10-07). The biodata maker is
+    // still at /biodata, linked from the member's Profile page and the desktop
+    // nav.
+    href: '/notifications',
+    label: 'Notifications',
     icon: (active) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <polyline points="14 2 14 8 20 8" />
-        <line x1="16" y1="13" x2="8" y2="13" />
-        <line x1="16" y1="17" x2="8" y2="17" />
-        <polyline points="10 9 9 9 8 9" />
+      <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'} stroke="currentColor"
+        strokeWidth={active ? 1.4 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 8.5a6 6 0 1 0-12 0c0 6.5-2.5 8.5-2.5 8.5h17S18 15 18 8.5" />
+        <path d="M10.3 20.5a1.9 1.9 0 0 0 3.4 0" fill="none" />
       </svg>
     ),
   },
@@ -84,7 +84,9 @@ export function AuthBottomNav() {
   // share one badge. Without it a request could sit unanswered forever — the
   // approve buttons are on a page nothing tells you to open.
   const badgeFor = (tab: Tab) =>
-    tab.href === '/interests' ? pending.interests + pending.whatsapp : 0
+    tab.href === '/interests' ? pending.interests + pending.whatsapp
+      : tab.href === '/notifications' ? pending.notifications
+      : 0
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-cream border-t border-ink/10 lg:hidden"
@@ -97,6 +99,7 @@ export function AuthBottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
+              aria-current={active ? 'page' : undefined}
               className={`relative flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors
                 ${active ? 'text-maroon' : 'text-ink-soft hover:text-ink'}`}
             >
@@ -115,7 +118,9 @@ export function AuthBottomNav() {
                 {tab.label}
               </span>
               {badge > 0 && (
-                <span className="sr-only">{badge} waiting for your response</span>
+                <span className="sr-only">
+                  {tab.href === '/notifications' ? `${badge} unread` : `${badge} waiting for your response`}
+                </span>
               )}
             </Link>
           )

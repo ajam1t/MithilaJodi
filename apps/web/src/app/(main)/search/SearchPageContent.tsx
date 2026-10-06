@@ -268,7 +268,6 @@ export default function SearchPageContent() {
   const [page, setPage] = useState(Number(searchParams.get('page') ?? '1'))
   const [results, setResults] = useState<SearchCard[]>([])
   const [hasMore, setHasMore] = useState(false)
-  const [total, setTotal] = useState(0)
   const [relaxed, setRelaxed] = useState<Relaxation[]>([])
   const [noProfile, setNoProfile] = useState(false)
   const [showing, setShowing] = useState<string | null>(null)
@@ -306,7 +305,6 @@ export default function SearchPageContent() {
       }
       setResults(json.results ?? [])
       setHasMore(json.has_more ?? false)
-      setTotal(json.total ?? (json.results?.length ?? 0))
       setRelaxed(json.relaxed ?? [])
       setNoProfile(json.scoring === 'no_profile')
       setShowing(json.showing ?? null)
@@ -411,7 +409,8 @@ export default function SearchPageContent() {
                 value={filters.q}
                 onChange={e => setFilters(f => ({ ...f, q: e.target.value }))}
                 onKeyDown={e => e.key === 'Enter' && applyFilters()}
-                placeholder="Search by name, gotra, mool, gram…"
+                placeholder="Search by name, gotra, village…"
+                aria-label="Search by name, gotra or village"
                 className="w-full border border-ink/20 rounded-mj-sm pl-4 pr-10 py-2.5 text-sm text-ink focus:outline-none focus:border-maroon bg-white"
               />
             </div>
@@ -567,14 +566,12 @@ export default function SearchPageContent() {
 
             {!loading && results.length > 0 && (
               <>
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-sm text-ink-soft">
-                    <span className="text-ink font-semibold">{total}</span>{' '}
-                    {total === 1 ? 'profile' : 'profiles'} found
-                    {total > results.length && <> · showing {results.length}</>}
-                  </p>
-                  <p className="text-xs text-ink-soft">Page {page}</p>
-                </div>
+                {/* No result count, by design: the order already says "best
+                    first", and a running total reads as a statement about how
+                    many members there are rather than help finding one. */}
+                {page === 1 && !noProfile && (
+                  <p className="mb-3 text-[12.5px] text-ink-soft">Best matches for you first.</p>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                   {results.map(p => (
                     <div key={p.id} className="flex justify-center">

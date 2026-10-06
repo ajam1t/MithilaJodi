@@ -515,6 +515,21 @@ export default function ProfilePage() {
               </div>
             </section>
 
+            {/* Marriage Biodata left the mobile bottom nav for Notifications
+                (2026-10-07); this is its home on the member's own profile. */}
+            <section className="mt-4 flex items-center gap-3 rounded-mj border border-gold/35 bg-cream p-4" aria-label="Marriage Biodata">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-paper-2 text-maroon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8L14 2.5Zm0 0V8h5.5M8.5 13h7m-7 3.5h5" />
+                </svg>
+              </span>
+              <div className="min-w-0 flex-1">
+                <h2 className="font-serif text-[16px] leading-tight text-maroon">Marriage Biodata</h2>
+                <p className="mt-0.5 text-[12.5px] leading-snug text-ink-soft">Create a PDF biodata to print or share with family.</p>
+              </div>
+              <Link href="/biodata" className="btn-ghost shrink-0 px-3.5 py-2 text-[13px]">Open</Link>
+            </section>
+
             {/* Below the share card, not above it: sharing a biodata is what a
                 member came here to do, and the completion checklist higher up is
                 what we actually want them to finish. This is a quiet extra. */}

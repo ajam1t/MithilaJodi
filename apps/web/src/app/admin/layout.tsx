@@ -16,6 +16,7 @@ const NAV = [
   { href: '/admin/profiles',  label: 'Profiles' },
   { href: '/admin/messages',  label: 'Messages' },
   { href: '/admin/reports',   label: 'Reports' },
+  { href: '/admin/notifications', label: 'Notifications' },
   { href: '/admin/flags',     label: 'Flags' },
   { href: '/admin/accounts',  label: 'Accounts' },
   { href: '/admin/master-data', label: 'Master Data' },
