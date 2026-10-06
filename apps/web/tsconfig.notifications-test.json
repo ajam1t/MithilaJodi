@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": ".notifications-test",
+    "rootDir": "src",
+    "baseUrl": ".",
+    "paths": { "@/*": ["src/*"] },
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "noEmit": false,
+    "incremental": false
+  },
+  "files": ["src/lib/notifications.ts", "src/lib/notificationCampaigns.ts"]
+}

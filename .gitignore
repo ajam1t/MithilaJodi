@@ -9,6 +9,7 @@ apps/web/out/
 
 # Compiled astrology engine for node:test (npm run test:astrology)
 apps/web/.astrology-test/
+apps/web/.notifications-test/
 
 # Environment
 .env

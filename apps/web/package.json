@@ -8,7 +8,8 @@
         "start": "next start",
         "lint": "next lint",
         "type-check": "tsc --noEmit",
-        "test:astrology": "node -e \"require('fs').rmSync('.astrology-test',{recursive:true,force:true})\" && tsc -p tsconfig.astrology-test.json && node --test \".astrology-test/__tests__/*.test.js\""
+        "test:astrology": "node -e \"require('fs').rmSync('.astrology-test',{recursive:true,force:true})\" && tsc -p tsconfig.astrology-test.json && node --test \".astrology-test/__tests__/*.test.js\"",
+        "test:notifications": "node tests/notifications/build.js && node --test tests/notifications/notifications.test.js"
     },
     "dependencies": {
         "@supabase/ssr": "^0.6.1",
