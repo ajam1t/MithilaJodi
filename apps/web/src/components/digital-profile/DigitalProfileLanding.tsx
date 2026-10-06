@@ -346,7 +346,7 @@ export function DigitalProfileLanding({ ctaHref, member }: { ctaHref: string; me
       </section>
 
       {/* ── Comparison + FAQ ── */}
-      <section className="wrap mt-10 grid gap-5 pb-10 sm:mt-14 sm:pb-14 lg:grid-cols-[1.55fr_1fr]" aria-label="Comparison and questions">
+      <section className="wrap mt-10 grid gap-5 pb-8 sm:mt-14 sm:pb-10 lg:grid-cols-[1.55fr_1fr]" aria-label="Comparison and questions">
         <div className="min-w-0">
           <h2 className="font-display text-[24px] text-maroon sm:text-[28px]">Digital Profile vs Traditional Biodata</h2>
           <div className="mt-3 overflow-x-auto rounded-[14px] border border-gold/30 bg-white">
@@ -385,20 +385,23 @@ export function DigitalProfileLanding({ ctaHref, member }: { ctaHref: string; me
         </div>
       </section>
 
-      {/* ── Final CTA ── */}
-      <section className="relative overflow-hidden bg-maroon-gradient px-4 py-10 text-center text-cream sm:py-14" aria-labelledby="dp-final">
-        <FloralSpray className="pointer-events-none absolute -bottom-8 -left-8 h-40 w-40 opacity-50" />
-        <FloralSpray flip className="pointer-events-none absolute -bottom-8 -right-8 h-40 w-40 opacity-50" />
-        <h2 id="dp-final" className="relative font-display text-[28px] leading-tight sm:text-[38px]">Your story deserves more than a PDF.</h2>
-        <p className="relative mx-auto mt-2.5 max-w-xl text-[15px] text-cream/90 sm:text-[16px]">
-          Create your Mithila Jodi Digital Profile and share it privately with family and potential matches.
-        </p>
-        <div className="relative mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Link href={ctaHref} className="btn gap-2 rounded-full bg-gold-lt px-6 py-3 text-[15px] font-semibold text-maroon-deep hover:-translate-y-px">
-            <Icon d={ICON.user} className="h-[18px] w-[18px]" />{cta}<Icon d={ICON.arrow} className="h-4 w-4" />
-          </Link>
-          <Link href={SAMPLE_PROFILE_PATH} className="btn gap-2 rounded-full border border-cream/60 bg-transparent px-6 py-3 text-[15px] font-semibold text-cream hover:bg-white/10">
-            <Icon d={ICON.eye} className="h-[18px] w-[18px]" />View Sample Profile<Icon d={ICON.arrow} className="h-4 w-4" />
+      {/* ── Marriage Biodata ── a small pointer to the PDF maker, not a banner. */}
+      <section className="wrap pb-10 sm:pb-14" aria-labelledby="dp-biodata">
+        <div className="mx-auto flex max-w-3xl flex-col gap-2.5 rounded-[16px] border border-gold/40 bg-cream px-4 py-3.5 shadow-mj-xs sm:flex-row sm:items-center sm:gap-5 sm:px-6 sm:py-5">
+          <div className="flex min-w-0 items-start gap-3 sm:items-center">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-gold/40 bg-paper-2 text-maroon" aria-hidden="true">
+              <Icon d={ICON.doc} className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <h2 id="dp-biodata" className="font-display text-[18px] leading-tight text-maroon sm:text-[21px]">Create your Marriage Biodata</h2>
+              <p className="mt-1 text-[13.5px] leading-snug text-ink-soft sm:text-[14.5px]">Download a beautiful PDF biodata to print or share with family.</p>
+            </div>
+          </div>
+          <Link
+            href={member ? '/biodata' : '/marriage-biodata'}
+            className="btn-primary ml-[52px] shrink-0 gap-2 self-start rounded-full px-5 py-2.5 text-[14.5px] sm:ml-auto sm:self-center"
+          >
+            Create Marriage Biodata<Icon d={ICON.arrow} className="h-4 w-4" />
           </Link>
         </div>
       </section>
