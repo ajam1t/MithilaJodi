@@ -10,6 +10,7 @@ import {
   scoreMatch, topReasons,
   type ScoreProfile, type ScorePreferences, type MatchResult,
 } from '@/lib/matchScore'
+import { toScoreProfile, toScorePrefs } from '@/lib/matchInputs'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -82,6 +83,13 @@ type SearchCard = {
   family_type: string | null
   /** Null when the viewer has no profile of their own to score against. */
   match: MatchSummary | null
+  /**
+   * Where the viewer stands with this person: they sent an interest, the
+   * person sent one to them, or it is mutual (accepted either way).
+   */
+  interest: 'sent' | 'received' | 'match' | null
+  /** Joined in the last 7 days. */
+  is_new: boolean
 }
 
 /** What the UI needs to explain a fallback honestly. */
@@ -164,6 +172,7 @@ const PROFILE_COLUMNS = [
   'native_place_id',
   'current_loc_id',
   'updated_at',
+  'created_at',     // internal — only feeds the `is_new` flag
   'employer',
   'profession_detail',
   'education_detail',
@@ -180,34 +189,6 @@ const PROFILE_COLUMNS = [
   'family_values',
   'marriage_timeline',
 ].join(', ')
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function toScoreProfile(row: any): ScoreProfile {
-  return {
-    id: row.id, gender: row.gender, dob: row.dob,
-    // Raw option keys on purpose. Scoring compares these values between two
-    // profiles — sagotra detection is an equality check on self_gotra — so they
-    // must stay keys. Labels are applied only in the display projection below.
-    religion: row.religion, caste: row.caste, sub_caste: row.sub_caste,
-    self_gotra: row.self_gotra, maternal_gotra: row.maternal_gotra,
-    mool: row.mool, gram: row.gram,
-    native_place_id: row.native_place_id, current_loc_id: row.current_loc_id, job_loc_id: row.job_loc_id,
-    diet: row.diet, smoking: row.smoking, drinking: row.drinking,
-    marriage_timeline: row.marriage_timeline,
-    education_detail: row.education_detail, degree: row.degree,
-    family_type: row.family_type, family_values: row.family_values,
-  }
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function toScorePrefs(row: any | null | undefined): ScorePreferences {
-  if (!row) return {}
-  return {
-    pref_age_min: row.pref_age_min, pref_age_max: row.pref_age_max,
-    pref_caste: row.pref_caste, pref_diet: row.pref_diet, pref_location: row.pref_location,
-    pref_marriage_timeline: row.pref_marriage_timeline, pref_gotra_safe: row.pref_gotra_safe,
-  }
-}
 
 // ─── Filter model ─────────────────────────────────────────────────────────────
 //
@@ -436,7 +417,7 @@ export async function GET(request: NextRequest) {
       const q = sanitizeSearchQuery(f.q)
       if (q.length > 0) {
         query = query.or(
-          `first_name.ilike.%${q}%,caste.ilike.%${q}%,mool.ilike.%${q}%,gram.ilike.%${q}%,job_title.ilike.%${q}%,employer.ilike.%${q}%`
+          `first_name.ilike.%${q}%,self_gotra.ilike.%${q}%,caste.ilike.%${q}%,mool.ilike.%${q}%,gram.ilike.%${q}%,job_title.ilike.%${q}%,employer.ilike.%${q}%`
         )
       }
     }
@@ -564,7 +545,7 @@ export async function GET(request: NextRequest) {
   if (pool.length === 0) {
     return NextResponse.json({
       ok: true, results: [], page, has_more: false,
-      total: 0, relaxed: relaxations, scored_pool_truncated: false,
+      relaxed: relaxations, scored_pool_truncated: false,
     })
   }
 
@@ -611,7 +592,7 @@ export async function GET(request: NextRequest) {
   if (candidates.length === 0) {
     return NextResponse.json({
       ok: true, results: [], page, has_more: false,
-      total: 0, relaxed: relaxations, scored_pool_truncated: poolTruncated,
+      relaxed: relaxations, scored_pool_truncated: poolTruncated,
     })
   }
 
@@ -678,7 +659,7 @@ export async function GET(request: NextRequest) {
   if (validProfiles.length === 0) {
     return NextResponse.json({
       ok: true, results: [], page, has_more: false,
-      total, relaxed: relaxations, scored_pool_truncated: poolTruncated,
+      relaxed: relaxations, scored_pool_truncated: poolTruncated,
     })
   }
 
@@ -795,6 +776,27 @@ export async function GET(request: NextRequest) {
   // only. Cached per server process, so this is not a per-request query.
   const labels = await getCommunityLabels(admin)
 
+  // Interest state for each card, in both directions, in one query.
+  const interestById = new Map<string, 'sent' | 'received' | 'match'>()
+  if (myProfileIds.length > 0) {
+    const me = myProfileIds[0]
+    const ids = profileIds.join(',')
+    const { data: ivRows } = await admin
+      .from('interests')
+      .select('from_profile, to_profile, status')
+      .or(`and(from_profile.eq.${me},to_profile.in.(${ids})),and(to_profile.eq.${me},from_profile.in.(${ids}))`)
+    for (const iv of (ivRows ?? [])) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const r = iv as any
+      const other = (r.from_profile === me ? r.to_profile : r.from_profile) as string
+      if (r.status === 'accepted') interestById.set(other, 'match')
+      else if (r.status === 'sent' && interestById.get(other) !== 'match') {
+        interestById.set(other, r.from_profile === me ? 'sent' : 'received')
+      }
+    }
+  }
+  const newSince = Date.now() - 7 * 86_400_000
+
   const results: SearchCard[] = validProfiles.map((p) => {
     const firstName = (p.first_name ?? '') as string
     const lastName  = p.last_name as string | null
@@ -865,6 +867,8 @@ export async function GET(request: NextRequest) {
       marital_status:    labelFor(labels, 'marital_status', p.marital_status as string | null),
       family_type:       (p.family_type       as string | null) ?? null,
       match,
+      interest:          interestById.get(p.id as string) ?? null,
+      is_new:            p.created_at ? Date.parse(p.created_at as string) > newSince : false,
     } satisfies SearchCard
   })
 
@@ -873,7 +877,7 @@ export async function GET(request: NextRequest) {
     results,
     page,
     has_more: hasMore,
-    total,
+    // No `total`: how many members matched is deliberately not published.
     /** Non-empty means these are NOT the results the filters asked for. */
     relaxed: relaxations,
     /** True when more candidates matched than could be scored in one pass. */

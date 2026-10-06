@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
+import { after } from 'next/server'
 import { getSessionAccount } from '@/lib/auth'
 import { canViewPhotos } from '@/lib/photoAccess'
 import { createAdminClient } from '@/lib/supabase/server'
@@ -8,6 +9,7 @@ import { getLocationIndex } from '@/lib/locationIndex'
 import { scoreMatch, topReasons, type ScoreProfile, type ScorePreferences } from '@/lib/matchScore'
 import { formatPartnerPreferences } from '@/lib/partnerPreferences'
 import type { PartnerPreferencesDisplay } from '@/types/profile'
+import { notifyProfileViewed } from '@/lib/notifications'
 import ProfileViewClient from './ProfileViewClient'
 
 export const dynamic = 'force-dynamic'
@@ -19,7 +21,7 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
   // score is computed against.
   const { data: myProfile } = await admin
     .from('profiles')
-    .select('id, gender, dob, religion, caste, sub_caste, self_gotra, maternal_gotra, mool, gram, native_place_id, current_loc_id, job_loc_id, diet, smoking, drinking, marriage_timeline, education_detail, degree, family_type, family_values')
+    .select('id, account_id, first_name, last_name, profile_status, discoverable, gender, dob, religion, caste, sub_caste, self_gotra, maternal_gotra, mool, gram, native_place_id, current_loc_id, job_loc_id, diet, smoking, drinking, marriage_timeline, education_detail, degree, family_type, family_values')
     .eq('account_id', viewerAccountId)
     .neq('profile_status', 'deleted')
     .is('deleted_at', null)
@@ -35,7 +37,7 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
   const { data: profile } = await admin
     .from('profiles')
     .select(
-      'id, first_name, last_name, gender, dob, religion, caste, sub_caste, self_gotra, mool, gram, height_cm, diet, about_me, family_about, profile_complete, profile_status, discoverable, native_place_id, current_loc_id, employer, profession_detail, education_detail, smoking, drinking, maternal_gotra, job_loc_id, marriage_timeline, marital_status, mother_tongue, degree, specialization, institution, passing_year, job_title, employment_type, industry, work_type, experience_years, family_type, managed_by, family_values, parents_info, siblings_info, family_expectations, family_introduction'
+      'id, account_id, first_name, last_name, gender, dob, religion, caste, sub_caste, self_gotra, mool, gram, height_cm, diet, about_me, family_about, profile_complete, profile_status, discoverable, native_place_id, current_loc_id, employer, profession_detail, education_detail, smoking, drinking, maternal_gotra, job_loc_id, marriage_timeline, marital_status, mother_tongue, degree, specialization, institution, passing_year, job_title, employment_type, industry, work_type, experience_years, family_type, managed_by, family_values, parents_info, siblings_info, family_expectations, family_introduction'
     )
     .eq('id', profileId)
     .eq('discoverable', true)
@@ -47,6 +49,12 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const p = profile as any
+
+  // "Someone viewed your profile" — after the response, so it never slows the
+  // page; deduped per viewer per week inside notifyProfileViewed.
+  if (myProfile) {
+    after(() => notifyProfileViewed(admin, myProfile, { id: p.id as string, account_id: p.account_id as string }))
+  }
 
   // Age from dob
   let age: number | null = null

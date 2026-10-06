@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 
 /**
- * Counts of interests and WhatsApp requests waiting on the member.
+ * Counts of interests, WhatsApp requests and unread notifications waiting on
+ * the member.
  *
  * Deduped and cached for the page like useAuthState, because both the desktop
  * header and the mobile bottom nav want the same numbers and both render on
@@ -15,9 +16,9 @@ import { useEffect, useState } from 'react'
  * until the next full page load.
  */
 
-export type PendingCounts = { interests: number; whatsapp: number }
+export type PendingCounts = { interests: number; whatsapp: number; notifications: number }
 
-const ZERO: PendingCounts = { interests: 0, whatsapp: 0 }
+const ZERO: PendingCounts = { interests: 0, whatsapp: 0, notifications: 0 }
 
 let cache: PendingCounts | null = null
 let inflight: Promise<PendingCounts> | null = null
@@ -29,9 +30,9 @@ function fetchCounts(): Promise<PendingCounts> {
 
   inflight = fetch('/api/pending', { credentials: 'include', cache: 'no-store' })
     .then((r) => (r.ok ? r.json() : null))
-    .then((data: { ok?: boolean; interests?: number; whatsapp?: number } | null) => {
+    .then((data: { ok?: boolean; interests?: number; whatsapp?: number; notifications?: number } | null) => {
       const counts: PendingCounts = data?.ok
-        ? { interests: data.interests ?? 0, whatsapp: data.whatsapp ?? 0 }
+        ? { interests: data.interests ?? 0, whatsapp: data.whatsapp ?? 0, notifications: data.notifications ?? 0 }
         : ZERO
       cache = counts
       subscribers.forEach((fn) => fn(counts))

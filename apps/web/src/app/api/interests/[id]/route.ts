@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
+import { displayName, notify } from '@/lib/notifications'
 
 type Action = 'accept' | 'decline' | 'withdraw'
 
@@ -113,22 +114,54 @@ export async function PATCH(
   }
 
   if (typedAction === 'accept' || typedAction === 'decline') {
-    const notifType = typedAction === 'accept' ? 'interest_accepted' : 'interest_declined'
-
-    // Get sender's account_id to target the notification correctly
-    const { data: senderProfile } = await admin
+    const { data: pair } = await admin
       .from('profiles')
-      .select('account_id, first_name, last_name')
-      .eq('id', iv.from_profile)
-      .maybeSingle()
+      .select('id, account_id, first_name, last_name')
+      .in('id', [iv.from_profile, iv.to_profile])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sender = (pair ?? []).find((r: any) => r.id === iv.from_profile) as any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const accepter = (pair ?? []).find((r: any) => r.id === iv.to_profile) as any
+    const chatUrl = conversationId ? `/messages/${conversationId}` : '/interests?tab=mutual'
 
-    if (senderProfile) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const sp = senderProfile as any
-      await admin.from('notifications').insert({
-        account_id: sp.account_id,
-        type: notifType,
+    if (sender && typedAction === 'accept') {
+      await notify(admin, {
+        accountId: sender.account_id,
+        type: 'interest_accepted',
+        icon: 'heart',
+        title: 'Your interest was accepted ❤️',
+        message: `${displayName(accepter?.first_name, accepter?.last_name)} accepted your interest. You can now message each other.`,
+        ctaLabel: 'View Match',
+        ctaUrl: chatUrl,
         payload: { interest_id: id, conversation_id: conversationId },
+        dedupeKey: `interest_accepted:${id}`,
+      })
+    }
+    // The member who accepted gets the match too, with the way into the chat.
+    if (accepter && sender && typedAction === 'accept') {
+      await notify(admin, {
+        accountId: accepter.account_id,
+        type: 'mutual_match',
+        icon: 'heart',
+        title: "It's a Match! ❤️",
+        message: `You and ${displayName(sender.first_name, sender.last_name)} have expressed mutual interest.`,
+        ctaLabel: 'View Match',
+        ctaUrl: chatUrl,
+        payload: { interest_id: id, conversation_id: conversationId },
+        dedupeKey: `mutual_match:${id}`,
+      })
+    }
+    if (sender && typedAction === 'decline') {
+      await notify(admin, {
+        accountId: sender.account_id,
+        type: 'interest_declined',
+        icon: 'bell',
+        title: 'An update on your interest',
+        message: 'One of the interests you sent was not taken forward. New members join every week.',
+        ctaLabel: 'Explore Profiles',
+        ctaUrl: '/search',
+        payload: { interest_id: id },
+        dedupeKey: `interest_declined:${id}`,
       })
     }
   }

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
 import { hasFeatureAccess } from '@/lib/membership'
+import { notify } from '@/lib/notifications'
 
 export async function POST(
   request: NextRequest,
@@ -140,10 +141,19 @@ export async function POST(
   if (partnerRow) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const partnerAccountId = (partnerRow as any).account_id as string
-    await admin.from('notifications').insert({
-      account_id: partnerAccountId,
+    // One notification per conversation while it is unread: further messages
+    // refresh it rather than stacking a new row each.
+    await notify(admin, {
+      accountId: partnerAccountId,
       type: 'new_message',
+      icon: 'chat',
+      title: 'You have a new message',
+      message: `“${trimmed.slice(0, 80)}${trimmed.length > 80 ? '…' : ''}”`,
+      ctaLabel: 'Open Messages',
+      ctaUrl: `/messages/${id}`,
       payload: { conversation_id: id, preview: trimmed.slice(0, 80) },
+      dedupeKey: `new_message:${id}`,
+      mode: 'refresh',
     })
   }
 

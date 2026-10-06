@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
 import { isSystemProfile } from '@/lib/systemProfile'
+import { markConversationNotificationsRead } from '@/lib/notifications'
 
 export async function GET(
   request: NextRequest,
@@ -124,6 +125,7 @@ export async function GET(
     .is('read_at', null)
     .neq('sender_id', myProfileId)
     .eq('conversation_id', id)
+  await markConversationNotificationsRead(admin, session.id, id)
 
   // Step 9: reverse to ascending order and return
   const ascending = [...messages].reverse()

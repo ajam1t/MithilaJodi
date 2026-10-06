@@ -47,6 +47,10 @@ export type SearchCard = {
    * of their own — there is nothing to compare against.
    */
   match?: MatchSummary | null
+  /** Viewer's interest state with this person (member search only). */
+  interest?: 'sent' | 'received' | 'match' | null
+  /** Joined in the last 7 days (member search only). */
+  is_new?: boolean
   /**
    * Partner preferences, when the surface chose to load them. Absent on search
    * cards: there the match score already says how well the two sides' stated

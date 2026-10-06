@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
+import { markConversationNotificationsRead } from '@/lib/notifications'
 
 export async function POST(
   _request: NextRequest,
@@ -53,6 +54,7 @@ export async function POST(
     .is('read_at', null)
     .neq('sender_id', myProfileId)
     .eq('conversation_id', id)
+  await markConversationNotificationsRead(admin, session.id, id)
 
   // Step 5: return
   return NextResponse.json({ ok: true })

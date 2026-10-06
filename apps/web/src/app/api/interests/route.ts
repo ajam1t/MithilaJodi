@@ -5,10 +5,33 @@ import { filterPhotoViewable } from '@/lib/photoAccess'
 import { getSessionAccount } from '@/lib/auth'
 import { getInterestAllowance } from '@/lib/membership'
 import { canBeMatched } from '@/lib/matchEligibility'
+import { notify } from '@/lib/notifications'
+import { getCommunityLabels, labelFor } from '@/lib/communityLabels'
+import { getLocationIndex } from '@/lib/locationIndex'
+import { scoreMatch, type MatchResult } from '@/lib/matchScore'
+import { SCORE_COLUMNS, SCORE_PREF_COLUMNS, toScoreProfile, toScorePrefs } from '@/lib/matchInputs'
 
 function toDisplayName(firstName: string, lastName: string | null): string {
   if (lastName) return `${firstName} ${lastName}`
   return firstName
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function notifyInterestReceived(admin: any, toAccountId: string, me: any): Promise<void> {
+  const name = toDisplayName(me.first_name, me.last_name ?? null)
+  await notify(admin, {
+    accountId: toAccountId,
+    type: 'interest_received',
+    icon: 'heart',
+    title: 'New interest received',
+    message: `${name} sent you an interest.`,
+    ctaLabel: 'View Interest',
+    ctaUrl: '/interests?tab=received',
+    payload: { from_profile_id: me.id, from_name: name },
+    // A withdraw-and-resend within a day is one interest, not two.
+    dedupeKey: `interest_received:${me.id}`,
+    cooldownHours: 24,
+  })
 }
 
 /** Age in whole years from a YYYY-MM-DD dob string (dob itself is never returned). */
@@ -29,7 +52,7 @@ export async function GET() {
 
   const { data: myProfile } = await admin
     .from('profiles')
-    .select('id')
+    .select(SCORE_COLUMNS.join(', '))
     .eq('account_id', session.id)
     .is('deleted_at', null)
     .neq('profile_status', 'deleted')
@@ -81,6 +104,12 @@ export async function GET() {
     caste: string | null
     current_loc_name: string | null
     photo_url: string | null
+    gotra: string | null
+    mool: string | null
+    gram: string | null
+    occupation: string | null
+    /** Same scoring as search, so a person's % agrees on both pages. */
+    match: { score: number; band: MatchResult['band'] } | null
   }
   const profileMap = new Map<string, OtherProfile>()
 
@@ -88,7 +117,7 @@ export async function GET() {
     const idList = [...otherIds]
     const { data: rows } = await admin
       .from('profiles')
-      .select('id, first_name, last_name, dob, gender, caste, current_loc_id')
+      .select([...SCORE_COLUMNS, 'first_name', 'last_name', 'job_title', 'employer'].join(', '))
       .in('id', idList)
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -156,13 +185,31 @@ export async function GET() {
       }
     }
 
+    const [labels, index, { data: myPrefRow }, { data: theirPrefRows }] = await Promise.all([
+      getCommunityLabels(admin),
+      getLocationIndex(admin),
+      admin.from('profile_preferences').select(SCORE_PREF_COLUMNS).eq('profile_id', myId).maybeSingle(),
+      admin.from('profile_preferences').select(SCORE_PREF_COLUMNS).in('profile_id', idList),
+    ])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const prefsBy = new Map<string, any>((theirPrefRows ?? []).map((r: any) => [r.profile_id as string, r]))
+    const viewer = toScoreProfile(myProfile)
+    const viewerPrefs = toScorePrefs(myPrefRow)
+
     for (const r of profileRows) {
+      const scored = scoreMatch(viewer, viewerPrefs, toScoreProfile(r), toScorePrefs(prefsBy.get(r.id as string)), index)
+      const hasEvidence = scored.confidence > 0 || scored.reasons.length > 0
       profileMap.set(r.id as string, {
+        gotra: labelFor(labels, 'gotra', r.self_gotra as string | null),
+        mool: labelFor(labels, 'mool', r.mool as string | null),
+        gram: (r.gram as string | null) ?? null,
+        occupation: (r.job_title as string | null) || (r.employer as string | null) || null,
+        match: hasEvidence ? { score: scored.score, band: scored.band } : null,
         id: r.id as string,
         display_name: toDisplayName(r.first_name as string, (r.last_name as string | null) ?? null),
         age: r.dob ? computeAge(r.dob as string) : null,
         gender: r.gender as string,
-        caste: (r.caste as string | null) ?? null,
+        caste: labelFor(labels, 'caste', r.caste as string | null),
         current_loc_name: r.current_loc_id != null ? (locMap.get(r.current_loc_id as number) ?? null) : null,
         photo_url: signedByProfile.get(r.id as string) ?? null,
       })
@@ -171,6 +218,7 @@ export async function GET() {
 
   const fallback = (id: string): OtherProfile => ({
     id, display_name: 'Member', age: null, gender: '', caste: null, current_loc_name: null, photo_url: null,
+    gotra: null, mool: null, gram: null, occupation: null, match: null,
   })
 
   // Map partner profile id → conversation id (for mutual matches, so the UI can
@@ -360,14 +408,7 @@ export async function POST(request: NextRequest) {
             .eq('id', allowance.membershipId)
         }
 
-        await admin.from('notifications').insert({
-          account_id: target.account_id,
-          type: 'interest_received',
-          payload: {
-            from_profile_id: me.id,
-            from_name: toDisplayName(me.first_name, me.last_name ?? null),
-          },
-        })
+        await notifyInterestReceived(admin, target.account_id, me)
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return NextResponse.json({ ok: true, interest_id: (revived as any).id }, { status: 201 })
@@ -387,14 +428,7 @@ export async function POST(request: NextRequest) {
       .eq('id', allowance.membershipId)
   }
 
-  await admin.from('notifications').insert({
-    account_id: target.account_id,
-    type: 'interest_received',
-    payload: {
-      from_profile_id: me.id,
-      from_name: toDisplayName(me.first_name, me.last_name ?? null),
-    },
-  })
+  await notifyInterestReceived(admin, target.account_id, me)
 
   return NextResponse.json({
     ok: true,
