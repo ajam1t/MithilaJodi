@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { ContextualPromoStrip } from '@/components/home/ContextualPromoStrip'
+import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 
 // Login / register / forgot-password are functional pages, not content.
 // Keep them out of the search index.
@@ -85,11 +86,13 @@ function BrandPanel() {
 
 /**
  * Join / Login, registration and password recovery use the same global header
- * as every other page (MithilaHeader), so header changes reach them too.
+ * (MithilaHeader) and mobile bottom nav (MobileBottomNav) as every other page,
+ * so changes to either reach them too. The bottom padding below lg keeps the
+ * last of the content clear of the fixed nav.
  */
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col bg-paper">
+    <div className="flex min-h-screen flex-col bg-paper pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0">
       <MithilaHeader />
       <ContextualPromoStrip set="join" />
       <div className="flex-1 lg:grid lg:grid-cols-[1.05fr_1fr] xl:grid-cols-2">
@@ -98,6 +101,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           {children}
         </main>
       </div>
+      <MobileBottomNav />
     </div>
   )
 }

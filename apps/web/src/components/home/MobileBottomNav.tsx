@@ -12,12 +12,19 @@ export function MobileBottomNav() {
 
   function isActive(href: string) {
     if (href === '/') return pathname === '/'
+    // Join / Login covers the whole sign-in group, not just /register.
+    if (href === '/register') return ['/register', '/login', '/forgot-password'].some(p => pathname.startsWith(p))
     return pathname.startsWith(href)
   }
 
   function navCls(href: string, isCta = false) {
     if (isCta) {
-      return 'flex-[1.3] flex flex-col items-center justify-center gap-0.5 py-2 bg-maroon text-gold-lt hover:bg-maroon-deep active:bg-maroon-deep transition-colors'
+      // The CTA is always maroon; when it is the current page it deepens and
+      // gains the gold rule, the same signal the brand uses for "selected".
+      return [
+        'relative flex-[1.3] flex flex-col items-center justify-center gap-0.5 py-2 text-gold-lt hover:bg-maroon-deep active:bg-maroon-deep transition-colors',
+        isActive(href) ? 'bg-maroon-deep shadow-[inset_0_2px_0_#E4C572]' : 'bg-maroon',
+      ].join(' ')
     }
     const active = isActive(href)
     return [
@@ -136,7 +143,7 @@ export function MobileBottomNav() {
           </Link>
 
           {/* Join / Login — primary CTA centre */}
-          <Link href="/register" className={navCls('/register', true)}>
+          <Link href="/register" className={navCls('/register', true)} aria-current={isActive('/register') ? 'page' : undefined}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <circle cx="9" cy="8" r="4" />
               <path d="M3 20c0-3.6 2.7-6 6-6" />
