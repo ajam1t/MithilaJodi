@@ -181,6 +181,11 @@ const config: Config = {
           from: { opacity: '0', transform: 'translateY(24px)' },
           to: { opacity: '1', transform: 'translateY(0)' },
         },
+        // The hamburger drawer: a short slide from the right, no bounce.
+        menuIn: {
+          from: { opacity: '0', transform: 'translateX(24px)' },
+          to: { opacity: '1', transform: 'none' },
+        },
       },
     },
   },

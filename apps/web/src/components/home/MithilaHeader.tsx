@@ -3,35 +3,26 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { cn } from '@/lib/utils/cn'
 import { useAuthState, resetAuthState } from '@/lib/hooks/useAuthState'
+import { MenuDrawer } from './MenuDrawer'
+
+type NavLink = { href: string; label: string }
 
 /**
- * `mobileLabel` lets the hamburger show a fuller label than the tighter desktop
- * row; `menuOnly` keeps a link in the hamburger but out of the desktop row,
- * which has no room left at 1024px.
+ * The desktop row only. Below lg the hamburger opens MenuDrawer, which carries
+ * the complete, locked site navigation.
  */
-type NavLink = { href: string; label: string; mobileLabel?: string; menuOnly?: boolean }
-
 const NAV_LINKS: NavLink[] = [
   { href: '/', label: 'Home' },
   { href: '/about', label: 'About' },
-  // Digital Profile is the flagship; Marriage Biodata stays one tap away in the menu.
   { href: '/digital-profile', label: 'Digital Profile' },
-  { href: '/marriage-biodata', label: 'Marriage Biodata', menuOnly: true },
-  { href: '/festivals', label: 'Festivals', mobileLabel: 'Mithila Festivals' },
-  { href: '/festival-songs', label: 'Songs', mobileLabel: 'Festival Songs' },
-  { href: '/marriage-invitation', label: 'Invitation', mobileLabel: 'Wedding Invitations' },
+  { href: '/festivals', label: 'Festivals' },
+  { href: '/festival-songs', label: 'Songs' },
+  { href: '/marriage-invitation', label: 'Invitation' },
   { href: '/astrology', label: 'Astrology' },
-  // /blogs is intentionally kept here so it appears in the hamburger menu.
-  // The mobile bottom nav replaces the blog slot with /astrology — blog is
-  // reachable via this hamburger, not a dead link.
   { href: '/blogs', label: 'Blogs' },
-  // Safety is deliberately not in the top nav: reporting is available directly
-  // on every profile, which is where someone actually needs it. The page is
-  // still reachable from the footer and the legal pages, and stays indexable.
-  { href: '/safety', label: 'Safety', mobileLabel: 'Safety & Verification', menuOnly: true },
   { href: '/contact', label: 'Contact' },
   { href: '/help', label: 'Help' },
 ]
@@ -42,13 +33,11 @@ const NAV_LINKS: NavLink[] = [
  * Songs, the Invitation maker and Blogs from members.
  */
 const MEMBER_CONTENT_LINKS: NavLink[] = [
-  { href: '/biodata', label: 'Biodata', mobileLabel: 'Marriage Biodata', menuOnly: true },
-  { href: '/festivals', label: 'Festivals', mobileLabel: 'Mithila Festivals' },
-  { href: '/festival-songs', label: 'Songs', mobileLabel: 'Festival Songs' },
-  { href: '/marriage-invitation', label: 'Invitation', mobileLabel: 'Wedding Invitations' },
+  { href: '/festivals', label: 'Festivals' },
+  { href: '/festival-songs', label: 'Songs' },
+  { href: '/marriage-invitation', label: 'Invitation' },
   { href: '/astrology', label: 'Astrology' },
   { href: '/blogs', label: 'Blogs' },
-  { href: '/help', label: 'Help' },
 ]
 
 const AUTH_NAV_LINKS = [
@@ -89,6 +78,8 @@ function SearchIcon() {
 
 export function MithilaHeader() {
   const [open, setOpen] = useState(false)
+  const menuButton = useRef<HTMLButtonElement>(null)
+  const closeMenu = useCallback(() => setOpen(false), [])
   // Shared across header + bottom nav: one /api/auth/me per page load.
   const { auth, authLoaded } = useAuthState()
   const pathname = usePathname()
@@ -105,8 +96,6 @@ export function MithilaHeader() {
         ? 'text-maroon font-semibold border-marigold'
         : 'text-ink hover:text-terra border-transparent'
     )
-  const mobileLink = (href: string) =>
-    cn('text-sm py-1 transition-colors', isActive(href) ? 'text-maroon font-semibold' : 'text-ink hover:text-terra')
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
@@ -160,20 +149,18 @@ export function MithilaHeader() {
 
         {/* Hamburger — corner, never overlaps the centered brand */}
         <button
-          onClick={() => setOpen(v => !v)}
+          ref={menuButton}
+          type="button"
+          onClick={() => setOpen(true)}
           className="absolute top-2 right-1.5 text-maroon p-2 rounded"
           aria-expanded={open}
-          aria-label="Toggle menu"
+          aria-controls="site-menu"
+          aria-haspopup="dialog"
+          aria-label="Open menu"
         >
-          {open ? (
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="4" y1="4" x2="18" y2="18" /><line x1="18" y1="4" x2="4" y2="18" />
-            </svg>
-          ) : (
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="3" y1="7" x2="19" y2="7" /><line x1="3" y1="12" x2="19" y2="12" /><line x1="3" y1="17" x2="19" y2="17" />
-            </svg>
-          )}
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <line x1="3" y1="7" x2="19" y2="7" /><line x1="3" y1="12" x2="19" y2="12" /><line x1="3" y1="17" x2="19" y2="17" />
+          </svg>
         </button>
 
         <Link href="/" className="flex flex-col items-center text-center" aria-label="Mithila Jodi — home">
@@ -210,7 +197,7 @@ export function MithilaHeader() {
                 </Link>
               ))}
               <div className="h-4 w-px bg-gold opacity-40" />
-              {MEMBER_CONTENT_LINKS.filter(l => l.href !== '/help' && !l.menuOnly).map(({ href, label }) => (
+              {MEMBER_CONTENT_LINKS.map(({ href, label }) => (
                 <Link key={label} href={href} className={deskLink(href)} aria-current={isActive(href) ? 'page' : undefined}>
                   {label}
                 </Link>
@@ -225,7 +212,7 @@ export function MithilaHeader() {
             </>
           ) : (
             <>
-              {NAV_LINKS.filter(l => !l.menuOnly).map(({ href, label }) => (
+              {NAV_LINKS.map(({ href, label }) => (
                 <Link key={label} href={href} className={deskLink(href)} aria-current={isActive(href) ? 'page' : undefined}>
                   {label}
                 </Link>
@@ -263,48 +250,15 @@ export function MithilaHeader() {
           intact at every scroll position. */}
       <div className="mj-line mj-line--delayed h-[2px] w-full bg-gradient-to-r from-cream via-gold to-cream" />
 
-      {/* Mobile menu */}
-      {open && (
-        <div className="lg:hidden bg-paper border-t border-gold border-opacity-20">
-          <div className="wrap py-4 flex flex-col gap-4">
-            {auth.loggedIn ? (
-              <>
-                {AUTH_NAV_LINKS.map(({ href, label }) => (
-                  <Link key={label} href={href} onClick={() => setOpen(false)} className={mobileLink(href)} aria-current={isActive(href) ? 'page' : undefined}>{label}</Link>
-                ))}
-                <div className="h-px bg-gold opacity-20" />
-                <p className="text-[10px] uppercase tracking-[0.2em] text-terra font-semibold">Explore</p>
-                {MEMBER_CONTENT_LINKS.map(({ href, label, mobileLabel }) => (
-                  <Link key={label} href={href} onClick={() => setOpen(false)} className={mobileLink(href)} aria-current={isActive(href) ? 'page' : undefined}>{mobileLabel ?? label}</Link>
-                ))}
-                <div className="h-px bg-gold opacity-20" />
-                <button
-                  onClick={() => { setOpen(false); handleLogout() }}
-                  className="text-maroon text-sm py-1 font-medium text-left"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                {NAV_LINKS.map(({ href, label, mobileLabel }) => (
-                  <Link key={label} href={href} onClick={() => setOpen(false)} className={mobileLink(href)} aria-current={isActive(href) ? 'page' : undefined}>{mobileLabel ?? label}</Link>
-                ))}
-                <div className="h-px bg-gold opacity-20" />
-                {authLoaded && (
-                  <>
-                    <Link href="/login" onClick={() => setOpen(false)} className="text-maroon text-sm py-1 font-medium">Login</Link>
-                    <Link href="/register" onClick={() => setOpen(false)} className="btn bg-maroon text-gold-lt w-full text-center text-sm py-2.5 rounded-mj-sm">
-                      Create Free Account
-                    </Link>
-                  </>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
+      <MenuDrawer
+        open={open}
+        onClose={closeMenu}
+        loggedIn={auth.loggedIn}
+        authLoaded={authLoaded}
+        isActive={isActive}
+        onLogout={handleLogout}
+        returnFocusTo={menuButton}
+      />
     </header>
   )
 }
