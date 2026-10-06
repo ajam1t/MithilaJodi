@@ -411,6 +411,18 @@
   .mj-line::after { display: none; }
 }
 
+/* ContextualPromoStrip: a label too long for the strip slides across once
+   during its 4s turn (hold, slide, hold), so the strip never grows a line.
+   --mj-shift is set per label from its measured overflow. */
+.mj-promo-slide { animation: mjPromoSlide 4s linear both; }
+@keyframes mjPromoSlide {
+  0%, 18%   { transform: translateX(0); }
+  82%, 100% { transform: translateX(var(--mj-shift, 0)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mj-promo-slide { animation: none; }
+}
+
 /* ── Keyboard focus ────────────────────────────────────────────────────────
    Tailwind's preflight removes the browser's default focus outline and nothing
    replaced it, so 38 of the first 40 interactive elements on the homepage had

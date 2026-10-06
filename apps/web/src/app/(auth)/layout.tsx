@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
+import { ContextualPromoStrip } from '@/components/home/ContextualPromoStrip'
 
 // Login / register / forgot-password are functional pages, not content.
 // Keep them out of the search index.
@@ -90,6 +91,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="flex min-h-screen flex-col bg-paper">
       <MithilaHeader />
+      <ContextualPromoStrip set="join" />
       <div className="flex-1 lg:grid lg:grid-cols-[1.05fr_1fr] xl:grid-cols-2">
         <BrandPanel />
         <main id="main-content" className="flex flex-col items-center justify-center px-4 py-6 sm:py-10">

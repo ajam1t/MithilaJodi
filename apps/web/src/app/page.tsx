@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { AnnouncementTicker } from '@/components/home/AnnouncementTicker'
-import { InvitationAnnouncementStrip } from '@/components/home/InvitationAnnouncementStrip'
+import { ContextualPromoStrip } from '@/components/home/ContextualPromoStrip'
 import { HeroSection } from '@/components/home/HeroSection'
 import { FeaturedProfiles } from '@/components/home/FeaturedProfiles'
 import { WhyMithilaJodi } from '@/components/home/FeatureStrip'
@@ -81,7 +81,7 @@ export default function HomePage() {
       <InstallBanner />
       <AnnouncementTicker />
       <MithilaHeader />
-      <InvitationAnnouncementStrip />
+      <ContextualPromoStrip set="home" />
       <main id="main-content" className="flex-1">
         <HeroSection />
         <FeaturedProfiles />

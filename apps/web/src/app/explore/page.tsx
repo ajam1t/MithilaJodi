@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
+import { ContextualPromoStrip } from '@/components/home/ContextualPromoStrip'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { ExploreGrid } from './ExploreGrid'
@@ -66,6 +67,7 @@ export default async function ExplorePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(breadcrumb, collection)} />
 
       <MithilaHeader />
+      <ContextualPromoStrip set="search" />
       <main id="main-content" className="flex-1">
         <section className="wrap py-8 sm:py-12" aria-labelledby="explore-heading">
           <header className="text-center mb-8 max-w-2xl mx-auto">

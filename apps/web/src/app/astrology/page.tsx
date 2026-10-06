@@ -4,6 +4,7 @@ import { AstroHero } from '@/components/astrology/hub/AstroHero'
 import { ToolGrid } from '@/components/astrology/hub/ToolGrid'
 import { HubClosing, HubTrust } from '@/components/astrology/hub/HubClosing'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
+import { ContextualPromoStrip } from '@/components/home/ContextualPromoStrip'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { SITE_URL } from '@/lib/constants'
@@ -79,6 +80,7 @@ export default function AstrologyHubPage() {
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(...jsonLd)} />
       <MithilaHeader />
+      <ContextualPromoStrip set="astrology" />
 
       <main id="main-content" className="flex-1">
         <AstroHero />

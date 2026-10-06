@@ -4,7 +4,7 @@ import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { DigitalProfileLanding } from '@/components/digital-profile/DigitalProfileLanding'
-import { DualPromoStrip } from '@/components/home/DualPromoStrip'
+import { ContextualPromoStrip } from '@/components/home/ContextualPromoStrip'
 import { DigitalProfileDashboard } from '@/components/digital-profile/DigitalProfileDashboard'
 import { DigitalProfileView } from '@/components/digital-profile/DigitalProfileView'
 import { getSessionAccount } from '@/lib/auth'
@@ -43,11 +43,11 @@ export const metadata: Metadata = pageMetadata({
   ],
 })
 
-function Shell({ children, promo = false }: { children: React.ReactNode; promo?: boolean }) {
+function Shell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <MithilaHeader />
-      {promo && <DualPromoStrip />}
+      <ContextualPromoStrip set="digitalProfile" />
       <main id="main-content" className="bg-paper">{children}</main>
       <MithilaFooter className="pb-16 lg:pb-0" />
       <MobileBottomNav />
@@ -130,7 +130,7 @@ export default async function DigitalProfilePage({ searchParams }: { searchParam
   }
 
   return (
-    <Shell promo>
+    <Shell>
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(jsonLd)} />
       <DigitalProfileLanding ctaHref={session ? DIGITAL_PROFILE_PATH : '/register'} member={!!session} />
     </Shell>
