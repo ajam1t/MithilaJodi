@@ -1,0 +1,52 @@
+/* ── About page ──────────────────────────────────────────────────────────────
+   Four restrained motions, all CSS:
+   1. Hero: two profile medallions fade in, a gold line draws between them,
+      then the Mithila Jodi node and the cultural labels appear (~2s, once).
+   2. "Why" story line draws down as the section scrolls in.
+   3. Tradition → Modern: roots, then the connector, then the modern column.
+   4. Card hover lift (in the markup).
+
+   The scroll motions key off the shared RevealOnScroll driver, and only on
+   elements it ARMED ([data-mj-armed].mj-in) — so anything already on screen,
+   every crawler, and every reduced-motion reader get the finished page. */
+
+@keyframes abFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes abRise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes abDraw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes abGrowY { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes abGrowX { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* 1 — Hero connection */
+.ab-hero-a     { animation: abRise 0.6s 0.1s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.ab-hero-b     { animation: abRise 0.6s 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.ab-hero-line  { stroke-dasharray: 1; stroke-dashoffset: 1; animation: abDraw 0.8s 0.8s ease-in-out forwards; }
+.ab-hero-node  { animation: abRise 0.5s 1.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.ab-hero-label { animation: abFade 0.9s 1.6s ease both; }
+
+/* 2 — Story line */
+.ab-story-line { transform-origin: top; }
+[data-mj-armed].mj-in .ab-story-line { animation: abGrowY 1.1s 0.15s cubic-bezier(0.4, 0, 0.2, 1) both; }
+[data-mj-armed].mj-in .ab-story-node { animation: abRise 0.5s both; }
+[data-mj-armed].mj-in .ab-story-node:nth-child(2) { animation-delay: 0.2s; }
+[data-mj-armed].mj-in .ab-story-node:nth-child(3) { animation-delay: 0.4s; }
+[data-mj-armed].mj-in .ab-story-node:nth-child(4) { animation-delay: 0.6s; }
+[data-mj-armed].mj-in .ab-story-node:nth-child(5) { animation-delay: 0.8s; }
+
+/* 3 — Tradition → Modern */
+.ab-bridge-x { transform-origin: left; }
+.ab-bridge-y { transform-origin: top; }
+[data-mj-armed].mj-in .ab-roots   { animation: abRise 0.6s both; }
+[data-mj-armed].mj-in .ab-bridge  { animation: abFade 0.4s 0.35s both; }
+[data-mj-armed].mj-in .ab-bridge-x { animation: abGrowX 0.6s 0.4s ease-out both; }
+[data-mj-armed].mj-in .ab-bridge-y { animation: abGrowY 0.6s 0.4s ease-out both; }
+[data-mj-armed].mj-in .ab-modern  { animation: abRise 0.6s 0.8s both; }
+
+/* FAQ disclosure marker */
+.ab-faq summary::-webkit-details-marker { display: none; }
+.ab-faq[open] .ab-faq-plus { transform: rotate(45deg); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ab-hero-a, .ab-hero-b, .ab-hero-node, .ab-hero-label { animation: abFade 0.4s both; }
+  .ab-hero-line { animation: none; stroke-dashoffset: 0; }
+  .ab-story-line, .ab-story-node, .ab-roots, .ab-bridge, .ab-bridge-x, .ab-bridge-y, .ab-modern { animation: none !important; }
+}

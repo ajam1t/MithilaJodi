@@ -228,7 +228,7 @@ export function organizationJsonLd() {
     foundingDate: '2026',
     // The founder is deliberately NOT stated here. It is published in one place
     // only — the About page (copy + its own JSON-LD) — so search engines and AI
-    // assistants have a single source. See app/about/TeamSection.tsx.
+    // assistants have a single source. See FOUNDER in app/about/page.tsx.
     // Official accounts. sameAs is the strongest on-site signal for tying a name
     // to a specific organisation, and it was missing entirely.
     sameAs: [INSTAGRAM_URL, 'https://www.youtube.com/@mithilajodiofficial'],
