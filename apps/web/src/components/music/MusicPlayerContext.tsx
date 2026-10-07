@@ -4,6 +4,7 @@ import {
   createContext, useCallback, useContext, useEffect, useMemo, useRef, useState,
   type ReactNode,
 } from 'react'
+import { track as trackEvent } from '@/lib/track'
 
 /**
  * Global music player state for Mithila Jodi.
@@ -229,6 +230,7 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
 
   // ── Public actions ──
   const playTrack = useCallback((track: PlayerTrack, nextQueue?: PlayerTrack[]) => {
+    trackEvent('song_played', { k: track.festivalSlug })
     if (nextQueue) setQueue(nextQueue)
     setCurrentTrack(track)
     setCurrentTime(0)

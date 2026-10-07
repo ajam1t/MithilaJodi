@@ -11,6 +11,7 @@ import { formatPartnerPreferences } from '@/lib/partnerPreferences'
 import type { PartnerPreferencesDisplay } from '@/types/profile'
 import { notifyProfileViewed } from '@/lib/notifications'
 import ProfileViewClient from './ProfileViewClient'
+import { recordMemberActivity } from '@/lib/serverEvents'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,6 +56,9 @@ async function fetchProfileView(profileId: string, viewerAccountId: string, prev
 
   // "Someone viewed your profile" — after the response, so it never slows the
   // page; deduped per viewer per week inside notifyProfileViewed.
+  // Conversion funnel: this member opened someone's profile.
+  if (!isSelf) recordMemberActivity(viewerAccountId, 'profile_view')
+
   if (myProfile) {
     after(() => notifyProfileViewed(admin, myProfile, { id: p.id as string, account_id: p.account_id as string }))
   }

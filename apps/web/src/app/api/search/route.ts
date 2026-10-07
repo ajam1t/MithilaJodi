@@ -11,6 +11,7 @@ import {
   type ScoreProfile, type ScorePreferences, type MatchResult,
 } from '@/lib/matchScore'
 import { toScoreProfile, toScorePrefs } from '@/lib/matchInputs'
+import { recordMemberActivity } from '@/lib/serverEvents'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -225,6 +226,8 @@ export async function GET(request: NextRequest) {
   if (!session) {
     return NextResponse.json({ ok: false, message: 'Unauthorized' }, { status: 401 })
   }
+  // Conversion funnel: this member has searched (a per-day counter, no query text).
+  recordMemberActivity(session.id, 'search')
 
   const sp = request.nextUrl.searchParams
 

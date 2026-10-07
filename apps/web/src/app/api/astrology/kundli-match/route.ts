@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { computeKundliMatch, KundliInputError } from '@/lib/astrology/engine'
 import { fieldErrors, kundliMatchRequestSchema } from '@/lib/astrology/schema'
 import { rateLimit } from '@/lib/astrology/server/rateLimit'
+import { recordServerEvent } from '@/lib/serverEvents'
 
 export const runtime = 'nodejs'
 
@@ -45,6 +46,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const response = computeKundliMatch(parsed.data, new Date())
+    if ((response as { kind?: string }).kind !== 'needs_moon_choice') recordServerEvent('astrology_tool_used', 'kundli-match')
     return NextResponse.json({ ok: true, ...response }, { headers: NO_STORE })
   } catch (e) {
     if (e instanceof KundliInputError) {

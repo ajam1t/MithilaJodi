@@ -27,7 +27,11 @@ import { pageMetadata } from '@/lib/seo'
  *  - profiles.contact_visibility / photo_visibility are stored but no
  *    member-facing read path enforces them, so this page deliberately does not
  *    claim them as controls. `discoverable` IS enforced server-side.
- *  - There is no analytics or advertising tracking in the codebase.
+ *  - Analytics are first-party only (lib/analytics.ts, site_events): a random
+ *    browser id in localStorage, normalised paths, coarse device class, referring
+ *    hostname on entry. No IP, user agent, account id or cookies; DNT/GPC is
+ *    honoured. No advertising or third-party tracking. Keep the Cookies section
+ *    below in step with lib/analytics.ts.
  */
 
 // Indexable on purpose: a matrimonial platform's privacy terms should be
@@ -326,6 +330,19 @@ export default function PrivacyPage() {
         which keeps you signed in. It is strictly necessary for the platform to work, cannot be read
         by JavaScript, and is cleared when you sign out or deactivate your account. We do not use
         advertising cookies, analytics cookies or cross-site tracking cookies.
+      </P>
+      <P>
+        <strong>Usage statistics.</strong> To understand which pages and tools are used, our own
+        servers count page visits and feature use (for example, that an astrology tool was used, or
+        that a song was played). Your browser keeps a random identifier in its local storage, not a
+        cookie, so that we can count distinct visitors rather than page loads. With each visit we
+        record the page address (with any member, profile-link or invitation identifiers removed),
+        whether this browser has visited before, a rough device type (phone, tablet or computer) and,
+        on arrival, the name of the website that linked you here. We do not record your IP address,
+        your browser details, your account or anything you type. These statistics stay with us and
+        are not shared with analytics or advertising companies. If your browser sends a Do Not Track
+        or Global Privacy Control signal, nothing is recorded. You can also clear the identifier at
+        any time by clearing this site&rsquo;s data in your browser.
       </P>
 
       <H2 n={12}>Age requirement</H2>

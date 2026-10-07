@@ -39,6 +39,8 @@ export default function robots(): MetadataRoute.Robots {
           // Shared Kundli Match results — unlisted, and noindex on the page too.
           '/astrology/kundli-match/result/',
           '/legal/consent',
+          // Redirects to the official WhatsApp / Instagram / YouTube links.
+          '/go/',
         ],
       },
     ],

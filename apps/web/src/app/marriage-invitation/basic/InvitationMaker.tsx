@@ -7,6 +7,7 @@ import {
   type InvitationData, type TemplateId,
 } from '@/lib/invitation'
 import { cn } from '@/lib/utils/cn'
+import { track } from '@/lib/track'
 
 type Status = { kind: 'idle' | 'working' | 'ok' | 'error'; message?: string }
 
@@ -78,6 +79,7 @@ export function InvitationMaker() {
       a.remove()
       URL.revokeObjectURL(url)
       setStatus({ kind: 'ok', message: 'Downloaded. Check your device’s Downloads folder.' })
+      track('invitation_card_made', { k: 'download' })
     } catch (err) {
       setStatus({ kind: 'error', message: err instanceof Error ? err.message : 'Download failed.' })
     }
@@ -97,6 +99,7 @@ export function InvitationMaker() {
           text: 'Our wedding invitation — made on Mithila Jodi',
         })
         setStatus({ kind: 'ok', message: 'Shared.' })
+        track('invitation_card_made', { k: 'share' })
         return
       }
 

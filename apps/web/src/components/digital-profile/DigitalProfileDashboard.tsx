@@ -8,6 +8,7 @@ import {
   DEFAULT_SHARE_MESSAGE, SECTION_GROUPS, SHARE_SECTIONS, formatDay,
 } from '@/lib/digitalProfile'
 import type { LinkActivity, OwnerShare } from '@/lib/digitalProfileOwner'
+import { track } from '@/lib/track'
 
 /**
  * The owner's Digital Profile — a primary destination in the member nav.
@@ -137,10 +138,11 @@ export function DigitalProfileDashboard({ firstName, shares, primary, activity, 
   }
 
   async function copy(s: OwnerShare) {
+    track('dp_shared', { k: 'copy' })
     try { await navigator.clipboard.writeText(url(s)); setCopied(s.id); window.setTimeout(() => setCopied(null), 2000) } catch { window.prompt('Copy your profile link:', url(s)) }
   }
   async function nativeShare(s: OwnerShare) {
-    try { await navigator.share({ title: `${firstName || 'My'} — Mithila Jodi Digital Profile`, text: textFor(s).replace(url(s), '').trim(), url: url(s) }) } catch { /* cancelled */ }
+    try { await navigator.share({ title: `${firstName || 'My'} — Mithila Jodi Digital Profile`, text: textFor(s).replace(url(s), '').trim(), url: url(s) }); track('dp_shared', { k: 'native' }) } catch { /* cancelled */ }
   }
   function saveMessage(m: string) { setMessage(m); try { localStorage.setItem(MSG_KEY, m) } catch { /* ignore */ } }
 
@@ -200,7 +202,7 @@ export function DigitalProfileDashboard({ firstName, shares, primary, activity, 
           {primary.live ? (
             <>
               <a
-                href={`https://wa.me/?text=${encodeURIComponent(textFor(primary))}`} target="_blank" rel="noopener noreferrer"
+                href={`https://wa.me/?text=${encodeURIComponent(textFor(primary))}`} target="_blank" rel="noopener noreferrer" onClick={() => track('dp_shared', { k: 'whatsapp' })}
                 className="mt-3 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full bg-green px-5 text-[15px] font-semibold text-white transition-colors hover:bg-green-2"
               >
                 <WhatsAppIcon size={19} /> Share on WhatsApp
@@ -428,7 +430,7 @@ export function DigitalProfileDashboard({ firstName, shares, primary, activity, 
                     {s.live && (
                       <div className="mt-2 flex gap-3 text-[13px]">
                         <button type="button" onClick={() => copy(s)} className="font-medium text-maroon underline underline-offset-2">{copied === s.id ? 'Copied' : 'Copy'}</button>
-                        <a href={`https://wa.me/?text=${encodeURIComponent(textFor(s))}`} target="_blank" rel="noopener noreferrer" className="font-medium text-green underline underline-offset-2">WhatsApp</a>
+                        <a href={`https://wa.me/?text=${encodeURIComponent(textFor(s))}`} target="_blank" rel="noopener noreferrer" onClick={() => track('dp_shared', { k: 'whatsapp' })} className="font-medium text-green underline underline-offset-2">WhatsApp</a>
                         <button type="button" onClick={() => setConfirmOff(s)} className="font-medium text-terra underline underline-offset-2">Revoke</button>
                       </div>
                     )}

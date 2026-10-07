@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { useEffect, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils/cn'
-import { INSTAGRAM_URL, WHATSAPP_COMMUNITY_URL, YOUTUBE_URL } from '@/lib/constants'
+import { OFFICIAL_LINKS } from '@/lib/constants'
 import { WhatsAppIcon } from '@/components/whatsapp/JoinCommunity'
 
 /*
@@ -287,17 +287,17 @@ export function MenuDrawer({
               गाँव से जुड़ाव <span className="text-gold" aria-hidden="true">•</span> संस्कार से रिश्ता <span className="text-gold" aria-hidden="true">•</span> प्रेम से जीवन
             </p>
             <div className="mt-3 flex gap-1.5">
-              <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className={SOCIAL} aria-label="Mithila Jodi on Instagram">
+              <a href={OFFICIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" className={SOCIAL} aria-label="Mithila Jodi on Instagram">
                 <svg width="14" height="14" viewBox="0 0 24 24" {...P} strokeWidth={2} aria-hidden="true" className="shrink-0 text-maroon"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" /></svg>
                 Instagram
               </a>
-              <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer" className={SOCIAL} aria-label="Mithila Jodi on YouTube">
+              <a href={OFFICIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className={SOCIAL} aria-label="Mithila Jodi on YouTube">
                 <svg width="16" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="shrink-0 text-maroon">
                   <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.3 3.6Z" />
                 </svg>
                 YouTube
               </a>
-              <a href={WHATSAPP_COMMUNITY_URL} target="_blank" rel="noopener noreferrer nofollow" className={SOCIAL} aria-label="Join the Mithila Jodi WhatsApp Community">
+              <a href={OFFICIAL_LINKS.whatsapp} target="_blank" rel="noopener noreferrer nofollow" className={SOCIAL} aria-label="Join the Mithila Jodi WhatsApp Community">
                 <span className="shrink-0 text-[#1F8A4C]"><WhatsAppIcon size={14} /></span>
                 {/* The full name fits from ~380px; the narrowest phones get the short form. */}
                 <span className="min-[380px]:hidden">WhatsApp</span>

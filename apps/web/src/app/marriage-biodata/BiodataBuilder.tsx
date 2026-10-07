@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { BiodataDocument } from '@/components/biodata/BiodataDocument'
+import { track } from '@/lib/track'
 import {
   BIODATA_LANGUAGES, biodataFileName, computeAge,
   type BiodataData, type BiodataLanguage,
@@ -263,6 +264,7 @@ export function BiodataBuilder() {
     const previous = document.title
     document.title = biodataFileName(data.full_name)
     window.print()
+    track('biodata_downloaded')
     // Restoring immediately is safe: print() blocks until the dialog is dismissed
     // in every browser that supports it, and the title is only read on open.
     document.title = previous

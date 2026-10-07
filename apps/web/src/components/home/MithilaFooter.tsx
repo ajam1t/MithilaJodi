@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { INSTAGRAM_URL, WHATSAPP_COMMUNITY_URL, YOUTUBE_URL } from '@/lib/constants'
+import { OFFICIAL_LINKS } from '@/lib/constants'
 import { WhatsAppIcon } from '@/components/whatsapp/JoinCommunity'
 
 const GROUPS = [
@@ -67,7 +67,7 @@ export function MithilaFooter({ className = '' }: { className?: string }) {
             platform glyphs, in the footer text colour, so each reads at a glance. */}
         <div className="mx-auto mb-3.5 grid max-w-lg grid-cols-3 gap-1.5 sm:gap-2">
           <a
-            href={INSTAGRAM_URL}
+            href={OFFICIAL_LINKS.instagram}
             target="_blank"
             rel="noopener noreferrer"
             className={SOCIAL}
@@ -81,7 +81,7 @@ export function MithilaFooter({ className = '' }: { className?: string }) {
           </a>
 
           <a
-            href={WHATSAPP_COMMUNITY_URL}
+            href={OFFICIAL_LINKS.whatsapp}
             target="_blank"
             rel="noopener noreferrer nofollow"
             aria-label="Join Mithila Jodi WhatsApp Community"
@@ -92,7 +92,7 @@ export function MithilaFooter({ className = '' }: { className?: string }) {
           </a>
 
           <a
-            href={YOUTUBE_URL}
+            href={OFFICIAL_LINKS.youtube}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Mithila Jodi on YouTube"

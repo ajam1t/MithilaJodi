@@ -4,6 +4,7 @@ import type { z } from 'zod'
 import { KundliInputError } from '../birthChart'
 import { fieldErrors } from '../schema'
 import { rateLimit } from './rateLimit'
+import { recordServerEvent } from '@/lib/serverEvents'
 
 const NO_STORE = { 'Cache-Control': 'no-store' }
 
@@ -45,7 +46,11 @@ export async function astrologyPost<S extends z.ZodTypeAny>(
   }
 
   try {
-    return NextResponse.json({ ok: true, ...compute(parsed.data, new Date()) }, { headers: NO_STORE })
+    const result = compute(parsed.data, new Date()) as { kind?: string }
+    // One calculation counts once: the "which part of the day?" step is a
+    // question back to the visitor, not a result.
+    if (result.kind !== 'needs_moon_choice') recordServerEvent('astrology_tool_used', scope)
+    return NextResponse.json({ ok: true, ...result }, { headers: NO_STORE })
   } catch (e) {
     if (e instanceof KundliInputError) {
       return NextResponse.json(

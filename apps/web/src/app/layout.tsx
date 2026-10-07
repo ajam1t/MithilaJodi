@@ -6,6 +6,7 @@ import { MusicPlayerProvider } from '@/components/music/MusicPlayerContext'
 import { PersistentPlayer } from '@/components/music/PersistentPlayer'
 import { ServiceWorkerRegistrar } from '@/components/pwa/ServiceWorkerRegistrar'
 import '@/styles/globals.css'
+import { SiteTracker } from '@/components/analytics/SiteTracker'
 
 const marcellus = Marcellus({
   weight: '400',
@@ -173,6 +174,8 @@ export default function RootLayout({
             that shows the install banner — Chrome needs the worker registered
             before it will consider offering an install at all. */}
         <ServiceWorkerRegistrar />
+        {/* First-party page-view and web-vitals counting (lib/analytics.ts). */}
+        <SiteTracker />
         <ToastProvider>
           {/* Global music state + the persistent player live above the page
               tree, so playback survives client-side navigation. */}

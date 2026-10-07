@@ -1,4 +1,4 @@
-import { WHATSAPP_COMMUNITY_URL } from '@/lib/constants'
+import { OFFICIAL_LINKS } from '@/lib/constants'
 
 /**
  * Joining the official Mithila Jodi WhatsApp community.
@@ -37,7 +37,7 @@ export function WhatsAppIcon({ size = 17 }: { size?: number }) {
 
 /** Attributes every link to the invite shares. */
 const EXTERNAL = {
-  href: WHATSAPP_COMMUNITY_URL,
+  href: OFFICIAL_LINKS.whatsapp,
   target: '_blank',
   // noopener/noreferrer: the new tab must not reach back via window.opener.
   // nofollow: an invite link is an external destination, not something to pass
