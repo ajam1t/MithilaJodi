@@ -170,9 +170,9 @@ export default function TermsPage() {
         <li><strong>Reporting.</strong> You can report a profile you believe is fraudulent, abusive or in breach of these terms. We review reports and may warn, restrict, hide or remove the account concerned. We may not be able to tell you the outcome of a report about someone else.</li>
       </UL>
       <P>
-        Contact details you enter in your profile are not shown to other members. Your registered
-        mobile number can be shared for WhatsApp only if you have opted in and approved that
-        member&rsquo;s specific request, and you can revoke it — see the Privacy Policy.
+        Contact details you enter in your profile, and your registered mobile number, are not
+        shown to other members on the platform. They appear on a Digital Profile link only if you
+        choose to include them — see the Privacy Policy.
       </P>
 
       <H2 n={8}>Publicly featured profiles</H2>

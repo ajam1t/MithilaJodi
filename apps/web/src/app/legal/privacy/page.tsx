@@ -124,7 +124,6 @@ export default function PrivacyPage() {
         <li>Profiles you shortlist</li>
         <li>Messages you exchange with members you are connected to</li>
         <li>Members you block, and reports you submit about a profile</li>
-        <li>WhatsApp contact requests you send, receive, approve, decline or revoke</li>
       </UL>
 
       <p className="text-[14px] font-semibold text-ink mt-4 mb-1.5">Consent records</p>
@@ -189,11 +188,10 @@ export default function PrivacyPage() {
         and in-platform messaging rather than by seeing each other&rsquo;s numbers.
       </P>
       <P>
-        The one exception is WhatsApp contact sharing, and it is entirely in your hands. Your
-        registered mobile number can be shared with another member for WhatsApp only if you have
-        opted in to WhatsApp contact sharing <em>and</em> you have approved that specific
-        member&rsquo;s request. You can decline a request, and you can revoke an approval you have
-        already given. Opting in never makes your number public.
+        Your registered mobile number is never shown to other members on the platform. The only
+        way your contact details — including your mobile — reach anyone is if you choose to include
+        them in a Digital Profile link you share yourself. They are off by default, and you can turn
+        them off or withdraw the link at any time.
       </P>
 
       <H2 n={6}>Photographs</H2>
@@ -285,10 +283,6 @@ export default function PrivacyPage() {
           <strong>Report a profile</strong> — report a profile you believe is fraudulent, abusive or
           otherwise breaks our{' '}
           <Link href="/legal/terms" className="text-maroon underline underline-offset-2">Terms of Service</Link>.
-        </li>
-        <li>
-          <strong>Control WhatsApp sharing</strong> — opt in or out, and approve, decline or revoke
-          individual requests.
         </li>
         <li>
           <strong>Download your data</strong> — request a copy of your account data from your settings

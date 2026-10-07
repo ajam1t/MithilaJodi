@@ -6,8 +6,7 @@ import type { SearchCard } from '@/types/profile'
 /*
  * The match card and its actions, shared by Inbox (Interests, Mutual) and the
  * member Home's "Recommended for you", so a person looks the same everywhere.
- * Presentation only: actions call the existing interest / message / WhatsApp
- * flows.
+ * Presentation only: actions call the existing interest and message flows.
  */
 
 export type MatchInfo = { score: number; band: string } | null
@@ -135,7 +134,6 @@ export function MatchedActions({ id, conversationId }: { id: string; conversatio
       {conversationId && (
         <Link href={`/messages/${conversationId}`} className={`${BTN} bg-maroon-gradient border-maroon text-cream`}>Message</Link>
       )}
-      <Link href={`/profile/${id}#whatsapp`} className={`${BTN} border-green/30 bg-green/[0.06] text-green hover:bg-green/10`}>WhatsApp</Link>
     </>
   )
 }

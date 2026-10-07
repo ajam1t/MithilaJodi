@@ -3,22 +3,22 @@
 import { useEffect, useState } from 'react'
 
 /**
- * Counts of interests, WhatsApp requests, unread messages and unread
- * notifications waiting on the member.
+ * Counts of interests, unread messages and unread notifications waiting on
+ * the member.
  *
  * Deduped and cached for the page like useAuthState, because both the desktop
  * header and the mobile bottom nav want the same numbers and both render on
  * every member page.
  *
  * `refreshPendingCounts()` clears the cache and re-fetches, so a page that acts
- * on one of these (approving a WhatsApp request, accepting an interest) can
+ * on one of these (accepting an interest, reading a message) can
  * drop the badge immediately instead of leaving a count that is visibly wrong
  * until the next full page load.
  */
 
-export type PendingCounts = { interests: number; whatsapp: number; notifications: number; messages: number }
+export type PendingCounts = { interests: number; notifications: number; messages: number }
 
-const ZERO: PendingCounts = { interests: 0, whatsapp: 0, notifications: 0, messages: 0 }
+const ZERO: PendingCounts = { interests: 0, notifications: 0, messages: 0 }
 
 let cache: PendingCounts | null = null
 let inflight: Promise<PendingCounts> | null = null
@@ -30,9 +30,9 @@ function fetchCounts(): Promise<PendingCounts> {
 
   inflight = fetch('/api/pending', { credentials: 'include', cache: 'no-store' })
     .then((r) => (r.ok ? r.json() : null))
-    .then((data: { ok?: boolean; interests?: number; whatsapp?: number; notifications?: number; messages?: number } | null) => {
+    .then((data: { ok?: boolean; interests?: number; notifications?: number; messages?: number } | null) => {
       const counts: PendingCounts = data?.ok
-        ? { interests: data.interests ?? 0, whatsapp: data.whatsapp ?? 0, notifications: data.notifications ?? 0, messages: data.messages ?? 0 }
+        ? { interests: data.interests ?? 0, notifications: data.notifications ?? 0, messages: data.messages ?? 0 }
         : ZERO
       cache = counts
       subscribers.forEach((fn) => fn(counts))
@@ -55,9 +55,9 @@ export function refreshPendingCounts(): void {
   void fetchCounts()
 }
 
-/** Everything the Inbox badge stands for: replies owed and messages unread. */
+/** Everything the Inbox badge stands for: interests to answer and messages unread. */
 export function inboxCount(c: PendingCounts): number {
-  return c.interests + c.whatsapp + c.messages
+  return c.interests + c.messages
 }
 
 export function usePendingCounts(): PendingCounts {

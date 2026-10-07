@@ -5,7 +5,7 @@ import { inboxCount, usePendingCounts } from '@/lib/hooks/usePendingCounts'
 
 /**
  * The desktop "Inbox" link with the same count as the mobile Inbox tab:
- * interests and WhatsApp requests to answer, and unread messages. A client
+ * interests to answer and unread messages. A client
  * component only for the live count, so the member layout stays a server one.
  */
 export function InboxNavLink() {

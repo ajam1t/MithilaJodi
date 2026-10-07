@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import ProfileCardGallery3D from '@/components/ProfileCardGallery3D'
-import { WhatsAppConnect } from '@/components/whatsapp/WhatsAppConnect'
 import type { SearchCard } from '@/types/profile'
 
 type ProfileData = {
@@ -420,21 +419,6 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
               )}
             </div>
           </div>
-
-          {/* WhatsApp — only after an interest between us has been accepted.
-              #whatsapp is the Matches page's "WhatsApp" link target. */}
-          {!data.preview && (
-          <div id="whatsapp" className="scroll-mt-24">
-            <WhatsAppConnect
-              profileId={data.id}
-              profileName={data.display_name}
-              canRequest={
-                data.interestSent?.status === 'accepted' ||
-                data.interestReceived?.status === 'accepted'
-              }
-            />
-          </div>
-          )}
 
           {/* About */}
           {data.about_me && (

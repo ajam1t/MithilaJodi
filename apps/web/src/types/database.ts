@@ -94,7 +94,6 @@ export type Database = {
           role: Database["public"]["Enums"]["account_role"]
           status_reason: string | null
           updated_at: string
-          whatsapp_opt_in: boolean
         }
         Insert: {
           account_status?: Database["public"]["Enums"]["account_status"]
@@ -114,7 +113,6 @@ export type Database = {
           role?: Database["public"]["Enums"]["account_role"]
           status_reason?: string | null
           updated_at?: string
-          whatsapp_opt_in?: boolean
         }
         Update: {
           account_status?: Database["public"]["Enums"]["account_status"]
@@ -134,7 +132,6 @@ export type Database = {
           role?: Database["public"]["Enums"]["account_role"]
           status_reason?: string | null
           updated_at?: string
-          whatsapp_opt_in?: boolean
         }
         Relationships: []
       }
@@ -1971,54 +1968,6 @@ export type Database = {
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "accounts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      whatsapp_requests: {
-        Row: {
-          id: string
-          owner_profile_id: string
-          requested_at: string
-          requester_profile_id: string
-          responded_at: string | null
-          revoked_at: string | null
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          owner_profile_id: string
-          requested_at?: string
-          requester_profile_id: string
-          responded_at?: string | null
-          revoked_at?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          owner_profile_id?: string
-          requested_at?: string
-          requester_profile_id?: string
-          responded_at?: string | null
-          revoked_at?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "whatsapp_requests_owner_profile_id_fkey"
-            columns: ["owner_profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "whatsapp_requests_requester_profile_id_fkey"
-            columns: ["requester_profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

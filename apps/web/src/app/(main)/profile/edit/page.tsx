@@ -1929,8 +1929,8 @@ export default function ProfileEditPage() {
               <div className="col-span-2"><label className="block text-sm font-medium text-ink mb-1">Address</label><textarea value={form.address} onChange={e => set('address', e.target.value)} rows={3} className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm focus:outline-none focus:border-maroon" /></div>
               <div className="col-span-2 text-xs text-ink-soft bg-paper border border-paper-3 rounded-mj-sm p-3">
                 The contact details above are private. They are never shown to other members,
-                whatever your profile visibility is set to. Your registered mobile can only be
-                shared through the WhatsApp request flow, which you approve one request at a time.
+                whatever your profile visibility is set to, and neither is your registered mobile.
+                Members talk to each other through Mithila Jodi messages.
               </div>
 
               {/* Photo visibility is a separate axis from profile visibility:

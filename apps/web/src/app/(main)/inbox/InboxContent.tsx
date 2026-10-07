@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { WhatsAppRequests } from '@/components/whatsapp/WhatsAppConnect'
 import { refreshPendingCounts, usePendingCounts } from '@/lib/hooks/usePendingCounts'
 import { useToast } from '@/components/ui'
 import { ConversationList } from '@/components/inbox/ConversationList'
@@ -16,9 +15,9 @@ import {
  * interest → mutual interest → message. Messages | Interests | Mutual.
  *
  * Presentation only. Interests are still answered through
- * PATCH /api/interests/[id], conversations are still the ones acceptance
- * opens, and WhatsApp is still requested and approved through WhatsAppConnect
- * and WhatsAppRequests.
+ * PATCH /api/interests/[id], and conversations are still the ones acceptance
+ * opens. Members talk through Mithila Jodi messaging; there is no phone-number
+ * exchange.
  */
 
 export type InboxTab = 'messages' | 'interests' | 'mutual'
@@ -89,9 +88,6 @@ export default function InboxContent() {
       <div className="mx-auto max-w-2xl px-4 py-6 sm:py-8">
         <h1 className="font-serif text-[28px] leading-tight text-maroon sm:text-[32px]">Inbox</h1>
         <p className="mt-1 text-[13.5px] text-ink-soft">Your messages, interests and matches.</p>
-
-        {/* WhatsApp requests awaiting my approval — wherever I am in the Inbox. */}
-        <div className="mt-4"><WhatsAppRequests /></div>
 
         <div className="mt-4 grid grid-cols-3 rounded-full border border-gold/30 bg-cream p-1" role="tablist" aria-label="Inbox">
           {tabs.map(t => (

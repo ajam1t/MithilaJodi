@@ -11,10 +11,9 @@ import { countUnreadMessages } from '@/lib/memberActivity'
 /**
  * Counts of things waiting on the member, for the nav badges.
  *
- * This exists because a WhatsApp request could sit unanswered indefinitely with
- * nothing anywhere in the UI to say so — the approve buttons live on /interests
- * and that section renders nothing at all when it is empty, so the only way to
- * discover a request was to happen to open that page.
+ * Interests waiting for a reply, unread messages and unread notifications —
+ * without these an interest could sit unanswered with nothing in the UI to
+ * say so.
  *
  * Counts only. No names, no ids, nothing that would leak who is interested in
  * whom to a stale or shared cache.
@@ -26,7 +25,7 @@ import { countUnreadMessages } from '@/lib/memberActivity'
 export async function GET() {
   const session = await getSessionAccount()
   if (!session) {
-    return NextResponse.json({ ok: true, interests: 0, whatsapp: 0, notifications: 0, messages: 0 })
+    return NextResponse.json({ ok: true, interests: 0, notifications: 0, messages: 0 })
   }
 
   const admin = await createAdminClient()
@@ -42,27 +41,21 @@ export async function GET() {
   )
 
   if (!myProfileId) {
-    return NextResponse.json({ ok: true, interests: 0, whatsapp: 0, notifications: (notificationsRes as any).count ?? 0, messages: 0 })
+    return NextResponse.json({ ok: true, interests: 0, notifications: (notificationsRes as any).count ?? 0, messages: 0 })
   }
 
-  const [interestsRes, whatsappRes, messages] = await Promise.all([
+  const [interestsRes, messages] = await Promise.all([
     admin
       .from('interests')
       .select('id', { count: 'exact', head: true })
       .eq('to_profile', myProfileId)
       .eq('status', 'sent'),
-    admin
-      .from('whatsapp_requests')
-      .select('id', { count: 'exact', head: true })
-      .eq('owner_profile_id', myProfileId)
-      .eq('status', 'pending'),
     countUnreadMessages(admin, myProfileId),
   ])
 
   return NextResponse.json({
     ok: true,
     interests: (interestsRes as any).count ?? 0,
-    whatsapp: (whatsappRes as any).count ?? 0,
     notifications: (notificationsRes as any).count ?? 0,
     messages,
   })
