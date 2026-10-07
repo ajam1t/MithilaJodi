@@ -64,7 +64,7 @@ function sections(loggedIn: boolean): Section[] {
       id: 'explore',
       title: 'Explore',
       items: [
-        { href: '/', label: 'Home', icon: 'home' },
+        { href: loggedIn ? '/home' : '/', label: 'Home', icon: 'home' },
         { href: loggedIn ? '/search' : '/explore', label: 'Search Profiles', icon: 'search' },
         { href: '/digital-profile', label: 'Digital Profile', icon: 'profile' },
       ],

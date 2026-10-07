@@ -7,6 +7,7 @@ import { DigitalProfileLanding } from '@/components/digital-profile/DigitalProfi
 import { ContextualPromoStrip } from '@/components/home/ContextualPromoStrip'
 import { DigitalProfileDashboard } from '@/components/digital-profile/DigitalProfileDashboard'
 import { DigitalProfileView } from '@/components/digital-profile/DigitalProfileView'
+import { ProfileGallery } from '@/components/digital-profile/ProfileGallery'
 import { getSessionAccount } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/server'
 import { loadOwnerDashboard } from '@/lib/digitalProfileOwner'
@@ -92,6 +93,9 @@ export default async function DigitalProfilePage({ searchParams }: { searchParam
           activity={data.activity}
           profileViews={data.profileViews}
           siteUrl={SITE_URL}
+          gallery={data.preview?.status === 'ok'
+            ? <ProfileGallery bare profile={data.preview.profile} id={data.preview.profileId} title="Your Profile Gallery" subtitle="See the details families see first." />
+            : null}
           preview={preview}
         />
         <p className="pb-10 text-center text-[13px] text-ink-soft">

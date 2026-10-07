@@ -4,6 +4,7 @@ import '@/styles/digital-profile.css'
 import type { SharedProfile } from '@/lib/profileShare'
 import { SharedPhotoCarousel } from '@/components/SharedPhotoCarousel'
 import { DemoPortrait } from '@/components/digital-profile/DemoPortrait'
+import { ProfileGallery } from '@/components/digital-profile/ProfileGallery'
 
 /**
  * THE Digital Profile renderer.
@@ -78,10 +79,10 @@ function aboutTitle(gender: string | null): string {
 }
 
 export function DigitalProfileView({
-  profile: p, mode, audience = 'visitor', connection, nested = false,
+  profile: p, profileId, mode, audience = 'visitor', connection, nested = false,
 }: {
   profile: SharedProfile
-  /** Kept for callers; the view itself no longer needs it. */
+  /** Keys the gallery; never shown. */
   profileId?: string | null
   mode: ProfileMode
   audience?: ProfileAudience
@@ -180,6 +181,12 @@ export function DigitalProfileView({
           </dl>
         </Panel>
       )}
+
+      {/* The six-card Profile Gallery — the same component as the member's own
+          Profile page, built only from this link's shared fields. */}
+      <div className="dp-rise" style={{ ['--i' as string]: n++ }}>
+        <ProfileGallery profile={p} id={profileId ?? 'shared'} h={h === 'h4' ? 'h4' : 'h2'} />
+      </div>
 
       {(hasAny(p.education) || hasAny(p.career)) && (
         <Panel h={h} title="Education & career" i={n++}>

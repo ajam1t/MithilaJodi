@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { AuthBottomNav } from '@/components/AuthBottomNav'
 import { InboxNavLink } from '@/components/InboxNavLink'
 import { NotificationBell } from '@/components/NotificationsNavLink'
+import { MemberMenuButton } from '@/components/MemberMenuButton'
 import { getSessionAccount } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getOnboardingState } from '@/lib/onboarding'
@@ -107,13 +108,14 @@ export default async function MainLayout({ children }: { children: React.ReactNo
         </div>
       </nav>
 
-      {/* Mobile top bar: brand, notifications, settings. */}
+      {/* Mobile top bar: brand, notifications, settings, and the site menu. */}
       <div className="sticky top-0 z-40 bg-cream border-b border-paper-3 shadow-mj-xs lg:hidden">
-        <div className="flex items-center justify-between h-12 pl-4 pr-2">
+        <div className="flex items-center justify-between h-12 pl-4 pr-1">
           <MemberBrand />
           <div className="flex items-center">
             <NotificationBell />
             <SettingsLink />
+            <MemberMenuButton />
           </div>
         </div>
       </div>

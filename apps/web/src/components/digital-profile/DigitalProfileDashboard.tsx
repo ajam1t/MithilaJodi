@@ -28,6 +28,8 @@ type Props = {
   profileViews: number
   siteUrl: string
   preview: ReactNode
+  /** The six-card Profile Gallery, from this link's shared fields. */
+  gallery?: ReactNode
 }
 
 async function api(url: string, method: 'POST' | 'PATCH', body: object) {
@@ -87,7 +89,7 @@ const SUMMARY: Array<{ label: string; keys: string[] }> = [
   { label: 'Contact', keys: ['contact'] },
 ]
 
-export function DigitalProfileDashboard({ firstName, shares, primary, activity, profileViews, siteUrl, preview }: Props) {
+export function DigitalProfileDashboard({ firstName, shares, primary, activity, profileViews, siteUrl, preview, gallery }: Props) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -280,6 +282,9 @@ export function DigitalProfileDashboard({ firstName, shares, primary, activity, 
           )}
         </Card>
       )}
+
+      {/* ── Your Profile Gallery ── what families see first, from this link. */}
+      {gallery && primary?.live && <Card>{gallery}</Card>}
 
       {/* ── Controls ── compact; detail on demand. */}
       {primary && (
