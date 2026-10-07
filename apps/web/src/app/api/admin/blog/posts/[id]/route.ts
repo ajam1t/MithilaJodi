@@ -75,6 +75,7 @@ export async function PATCH(
     status,
     featured,
     cover_url,
+    published_at,
   } = body as {
     title?: string
     slug?: string
@@ -88,6 +89,7 @@ export async function PATCH(
     status?: string
     featured?: boolean
     cover_url?: string
+    published_at?: string | null
   }
 
   if (status && !VALID_STATUSES.includes(status as PostStatus)) {
@@ -119,7 +121,19 @@ export async function PATCH(
     // Do NOT clear published_at when moving away from published
   }
 
-  updates.updated_at = new Date().toISOString()
+  // The publication date, set by an editor. Past or present only — an article
+  // cannot be backdated into the future or given a date it never had.
+  if (published_at !== undefined && published_at !== null) {
+    const t = Date.parse(published_at)
+    if (!Number.isFinite(t) || t > Date.now() + 60_000 || t < Date.parse('2026-01-01')) {
+      return NextResponse.json({ ok: false, message: 'Publish date must be a real date, not in the future.' }, { status: 400 })
+    }
+    updates.published_at = new Date(t).toISOString()
+  }
+
+  // updated_at is not set here: the database moves it only when the title,
+  // excerpt, body or cover actually change (migration 20261008000002), so a
+  // status or Featured toggle never makes an article look revised.
 
   const { error: updateError } = await supabase
     .from('blog_posts')

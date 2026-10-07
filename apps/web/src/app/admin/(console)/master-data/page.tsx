@@ -192,7 +192,7 @@ export default function AdminMasterDataPage() {
   })
 
   return (
-    <div className="p-4 sm:p-8 max-w-5xl">
+    <div className="max-w-5xl">
       <h1 className="font-serif text-xl sm:text-2xl text-ink mb-4">Master Data</h1>
 
       {/* Category picker */}

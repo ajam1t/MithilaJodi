@@ -30,11 +30,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  const isAdmin = ADMIN_PATHS.some(p => pathname.startsWith(p))
-  if (isAdmin && !hasSession) {
+  // The console has its own sign-in (no member registration on it). This is
+  // only the fast cookie check; the role is verified server-side on every
+  // console page and admin API.
+  const isAdmin = ADMIN_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'))
+  if (isAdmin && pathname !== '/admin/login' && !hasSession) {
     const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    url.searchParams.set('next', pathname)
+    url.pathname = '/admin/login'
+    url.search = ''
     return NextResponse.redirect(url)
   }
 

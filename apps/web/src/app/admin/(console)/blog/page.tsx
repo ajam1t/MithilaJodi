@@ -100,7 +100,7 @@ export default function AdminBlogPage() {
   }
 
   return (
-    <div className="p-4 sm:p-8 max-w-6xl">
+    <div className="max-w-6xl">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
           <h1 className="font-serif text-xl sm:text-2xl text-ink">Blog Posts</h1>

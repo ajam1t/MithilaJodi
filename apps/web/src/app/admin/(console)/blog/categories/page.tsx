@@ -312,7 +312,7 @@ export default function AdminBlogCategoriesPage() {
   }
 
   return (
-    <div className="p-4 sm:p-8 max-w-4xl">
+    <div className="max-w-4xl">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
           <h1 className="font-serif text-xl sm:text-2xl text-ink">Blog Categories</h1>

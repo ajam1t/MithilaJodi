@@ -189,7 +189,7 @@ export default function AdminShowcasePage() {
   }
 
   return (
-    <div className="p-4 sm:p-8 max-w-4xl">
+    <div className="max-w-4xl">
       <h1 className="font-serif text-xl sm:text-2xl text-ink mb-1">Search Showcase</h1>
       <p className="text-sm text-ink-soft mb-5">
         Shown to logged-out visitors on Search Profiles (max {MAX}).

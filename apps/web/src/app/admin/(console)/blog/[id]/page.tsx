@@ -29,6 +29,13 @@ function toSlug(title: string) {
   return title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-')
 }
 
+/** ISO → value for <input type="datetime-local"> in the browser's zone. */
+function toLocalInput(iso: string): string {
+  const d = new Date(iso)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
 function StatusBadge({ status }: { status: Post['status'] }) {
   const cls =
     status === 'published'
@@ -65,6 +72,7 @@ export default function AdminEditBlogPostPage() {
   const [categoryId, setCategoryId] = useState<string>('')
   const [authorName, setAuthorName] = useState('')
   const [featured, setFeatured] = useState(false)
+  const [publishedAt, setPublishedAt] = useState('')
   const [seoTitle, setSeoTitle] = useState('')
   const [seoDescription, setSeoDescription] = useState('')
   const [keywords, setKeywords] = useState('')
@@ -90,6 +98,7 @@ export default function AdminEditBlogPostPage() {
           setCategoryId(p.category_id ? String(p.category_id) : '')
           setAuthorName(p.author_name ?? '')
           setFeatured(p.featured ?? false)
+          setPublishedAt(p.published_at ? toLocalInput(p.published_at) : '')
           setSeoTitle(p.seo_title ?? '')
           setSeoDescription(p.seo_description ?? '')
           setKeywords((p.keywords ?? []).join(', '))
@@ -148,6 +157,7 @@ export default function AdminEditBlogPostPage() {
           : [],
         featured,
         cover_url: coverUrl || null,
+        ...(publishedAt ? { published_at: new Date(publishedAt).toISOString() } : {}),
       }
       if (statusOverride !== undefined) {
         body.status = statusOverride
@@ -215,7 +225,7 @@ export default function AdminEditBlogPostPage() {
   }
 
   return (
-    <div className="p-4 sm:p-8 max-w-6xl">
+    <div className="max-w-6xl">
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <Link href="/admin/blog" className="text-sm text-ink-soft hover:text-ink transition-colors">
           ← Blog Posts
@@ -231,6 +241,25 @@ export default function AdminEditBlogPostPage() {
             <span>Published: {formatDate(post.published_at)}</span>
           )}
           <span>Created: {formatDate(post.created_at)}</span>
+          {post.updated_at && <span>Last content edit: {formatDate(post.updated_at)}</span>}
+        </div>
+      )}
+
+      {post && (
+        <div className="mb-5 flex flex-wrap items-end gap-3 rounded-mj-sm border border-paper-3 bg-white px-3 py-3">
+          <label className="text-xs font-medium text-ink">
+            Publish date (IST)
+            <input
+              type="datetime-local"
+              value={publishedAt}
+              max={toLocalInput(new Date().toISOString())}
+              onChange={e => setPublishedAt(e.target.value)}
+              className="mt-1 block rounded-mj-sm border border-paper-3 px-2 py-1.5 text-sm"
+            />
+          </label>
+          <p className="max-w-md text-xs text-ink-soft">
+            Saved with the article. Set when it first went live; it cannot be in the future. The &ldquo;Updated&rdquo; date is automatic — it changes only when the title, excerpt, text or cover changes.
+          </p>
         </div>
       )}
 
