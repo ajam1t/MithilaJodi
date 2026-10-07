@@ -4,6 +4,7 @@ import { getCommunityLabels, labelFor } from '@/lib/communityLabels'
 import { formatPartnerPreferences } from '@/lib/partnerPreferences'
 import type { PartnerPreferencesDisplay } from '@/types/profile'
 import { sanitiseFields } from '@/lib/digitalProfile'
+import { approvedPhotoUrls } from '@/lib/photoAccess'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -178,22 +179,7 @@ export async function loadSharedProfile(
   // The owner minted this link deliberately, so the share's own setting governs
   // rather than their connections-only photo preference — that preference is
   // about strangers browsing search, not about a link they chose to send.
-  const photos: string[] = []
-  if (granted.has('photos')) {
-    const { data: rows } = await admin
-      .from('profile_photos')
-      .select('storage_path, is_primary, display_order')
-      .eq('profile_id', p.id)
-      .eq('status', 'approved')
-      .order('is_primary', { ascending: false })
-      .order('display_order', { ascending: true })
-      .limit(5)
-    const paths = (rows ?? []).map((r: any) => r.storage_path).filter(Boolean)
-    if (paths.length > 0) {
-      const { data: signed } = await admin.storage.from('profile-photos').createSignedUrls(paths, 3600)
-      for (const s of signed ?? []) if (s?.signedUrl) photos.push(s.signedUrl)
-    }
-  }
+  const photos: string[] = granted.has('photos') ? await approvedPhotoUrls(admin, p.id) : []
 
   // ── Partner preferences ──
   let preferences: PartnerPreferencesDisplay | null = null

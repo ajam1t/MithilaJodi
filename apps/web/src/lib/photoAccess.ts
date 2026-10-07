@@ -93,3 +93,35 @@ export async function canViewPhotos(
   const allowed = await filterPhotoViewable(admin, viewerProfileId, [ownerProfileId])
   return allowed.has(ownerProfileId)
 }
+
+/**
+ * Signed URLs for a profile's approved photographs, primary first, then in the
+ * owner's display order. The one loader for every gallery that shows a member's
+ * photos (shared Digital Profile, member profile page).
+ *
+ * This only fetches — it does not decide who may see them. Callers gate it:
+ * the member page with canViewPhotos, a shared link with its 'photos' section.
+ * Pending and rejected photos never appear; URLs expire after an hour.
+ */
+export async function approvedPhotoUrls(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  admin: any,
+  profileId: string,
+  limit = 5,
+): Promise<string[]> {
+  const { data: rows } = await admin
+    .from('profile_photos')
+    .select('storage_path, is_primary, display_order')
+    .eq('profile_id', profileId)
+    .eq('status', 'approved')
+    .order('is_primary', { ascending: false })
+    .order('display_order', { ascending: true })
+    .limit(limit)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const paths = (rows ?? []).map((r: any) => r.storage_path as string).filter(Boolean)
+  if (paths.length === 0) return []
+  const { data: signed } = await admin.storage.from('profile-photos').createSignedUrls(paths, 3600)
+  const urls: string[] = []
+  for (const s of signed ?? []) if (s?.signedUrl) urls.push(s.signedUrl)
+  return urls
+}

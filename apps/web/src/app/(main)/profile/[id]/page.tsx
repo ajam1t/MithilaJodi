@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { after } from 'next/server'
 import { getSessionAccount } from '@/lib/auth'
-import { canViewPhotos } from '@/lib/photoAccess'
+import { approvedPhotoUrls, canViewPhotos } from '@/lib/photoAccess'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getCommunityLabels, labelFor } from '@/lib/communityLabels'
 import { getLocationIndex } from '@/lib/locationIndex'
@@ -83,15 +83,6 @@ async function fetchProfileView(profileId: string, viewerAccountId: string, prev
     }
   }
 
-  // Primary photo
-  const { data: photo } = await admin
-    .from('profile_photos')
-    .select('storage_path')
-    .eq('profile_id', profileId)
-    .eq('is_primary', true)
-    .eq('status', 'approved')
-    .maybeSingle()
-
   // Photo privacy: a member who limits photographs to accepted connections
   // shows one here only to those connections. The rest of the profile is
   // unaffected — this withholds the photograph, not the profile.
@@ -99,15 +90,11 @@ async function fetchProfileView(profileId: string, viewerAccountId: string, prev
   // connected with — that is what most people who open your profile see.
   const photoAllowed = await canViewPhotos(admin, isSelf ? null : myProfileId, profileId)
 
-  let photoUrl: string | null = null
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (photoAllowed && photo && (photo as any).storage_path) {
-    const { data: signed } = await admin.storage
-      .from('profile-photos')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .createSignedUrl((photo as any).storage_path, 3600)
-    photoUrl = signed?.signedUrl ?? null
-  }
+  // Every approved photograph, primary first — the same loader and order as
+  // the Digital Profile, so the gallery here matches it. Nothing is fetched at
+  // all when the owner keeps photos for connections and this viewer is not one.
+  const photos = photoAllowed ? await approvedPhotoUrls(admin, profileId) : []
+  const photoUrl: string | null = photos[0] ?? null
 
   // Relationship state (requires viewer to have a profile)
   let interestSent: { id: string; status: string } | null = null
@@ -148,6 +135,17 @@ async function fetchProfileView(profileId: string, viewerAccountId: string, prev
     interestReceived = receivedRes.data ? { id: (receivedRes.data as any).id, status: (receivedRes.data as any).status } : null
     shortlisted = !!shortRes.data
     blocked = !!blockRes.data
+  }
+
+  // An accepted interest in either direction is a match (as on /p and in the
+  // Inbox); the conversation it opened is where "Message" goes.
+  const matched = interestSent?.status === 'accepted' || interestReceived?.status === 'accepted'
+  let conversationId: string | null = null
+  if (matched && myProfileId) {
+    const [a, b] = myProfileId < profileId ? [myProfileId, profileId] : [profileId, myProfileId]
+    const { data: conv } = await admin.from('conversations').select('id').eq('profile_a', a).eq('profile_b', b).maybeSingle()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    conversationId = (conv as any)?.id ?? null
   }
 
   // ── Match score ───────────────────────────────────────────────────────────
@@ -282,6 +280,9 @@ async function fetchProfileView(profileId: string, viewerAccountId: string, prev
     family_expectations: p.family_expectations ?? null,
     family_introduction: p.family_introduction ?? null,
     photo_url: photoUrl,
+    photos,
+    matched,
+    conversationId,
     myProfileId,
     interestSent,
     interestReceived,
@@ -302,7 +303,9 @@ async function fetchProfileView(profileId: string, viewerAccountId: string, prev
       diet: labelFor(labels, 'diet', p.diet as string | null),
       about_snippet: p.about_me ? String(p.about_me).slice(0, 200) : null,
       profile_complete: (p.profile_complete as number) ?? 0,
-      profile_status: p.profile_status as string,
+      // Internal moderation state is not a family-facing detail: empty, so the
+      // gallery deck leaves the field out (as on a Digital Profile).
+      profile_status: '',
       native_place_name: nativeName,
       current_loc_name: currentName,
       has_photo: !!photoUrl,
@@ -359,7 +362,9 @@ export default async function ProfileViewPage({
 
   return (
     <Suspense fallback={null}>
-      <ProfileViewClient data={data} />
+      {/* Keyed by member: going from one profile to another never reuses the
+          previous member's client state (interest, shortlist, gallery). */}
+      <ProfileViewClient key={data.id} data={data} />
     </Suspense>
   )
 }

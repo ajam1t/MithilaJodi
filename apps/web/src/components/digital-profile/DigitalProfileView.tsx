@@ -2,8 +2,7 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import '@/styles/digital-profile.css'
 import type { SharedProfile } from '@/lib/profileShare'
-import { SharedPhotoCarousel } from '@/components/SharedPhotoCarousel'
-import { DemoPortrait } from '@/components/digital-profile/DemoPortrait'
+import { ProfilePhotos } from '@/components/digital-profile/ProfilePhotos'
 import { ProfileGallery } from '@/components/digital-profile/ProfileGallery'
 
 /**
@@ -148,20 +147,7 @@ export function DigitalProfileView({
       </header>
 
       {/* ── Photographs: the one place they appear. */}
-      {photos.length > 1 ? (
-        <div className="dp-rise" style={{ ['--i' as string]: 1 }}>
-          <SharedPhotoCarousel photos={photos} name={p.displayName} />
-        </div>
-      ) : (photos.length === 1 || mode === 'demo') && (
-        <figure className="dp-rise mx-auto w-[72%] max-w-[300px]" style={{ ['--i' as string]: 1 }}>
-          <div className="aspect-[4/5] overflow-hidden rounded-[20px] border border-gold/45 bg-paper-2 shadow-mj-sm">
-            {photos[0] ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={photos[0]} alt={`${p.displayName}, photograph`} className="h-full w-full object-cover object-[center_30%]" />
-            ) : <DemoPortrait />}
-          </div>
-        </figure>
-      )}
+      <ProfilePhotos photos={photos} name={p.displayName} demo={mode === 'demo'} style={{ ['--i' as string]: 1 }} />
 
       {p.about && (
         <Panel h={h} title={aboutTitle(p.gender)} i={2}>

@@ -1,3 +1,4 @@
+import '@/styles/digital-profile.css'
 import ProfileCardGallery3D from '@/components/ProfileCardGallery3D'
 import type { SharedProfile } from '@/lib/profileShare'
 import type { SearchCard } from '@/types/profile'
@@ -8,7 +9,10 @@ import type { SearchCard } from '@/types/profile'
  * gallery. One component for the public link, the owner's preview and the
  * owner's dashboard.
  *
- * Privacy: it is built ONLY from SharedProfile, the projection lib/profileShare
+ * Also the gallery on another member's profile page (/profile/[id]), fed that
+ * member's card instead — same component, same deck.
+ *
+ * Privacy: on a Digital Profile it is built ONLY from SharedProfile, the projection lib/profileShare
  * produces after applying the link's section choices. A field the owner did
  * not share is null here, and the deck hides empty fields — and whole faces
  * like "Looking for" when the section is off — so the gallery can never show
@@ -59,23 +63,32 @@ export function toGalleryCard(p: SharedProfile, id: string): SearchCard {
 
 type Level = 'h2' | 'h3' | 'h4'
 
+type Source =
+  /** A Digital Profile: the link's shared projection. */
+  | { profile: SharedProfile; id: string; card?: never }
+  /**
+   * The member profile page: the viewed member's card, built server-side by
+   * /profile/[id] under the same visibility and photo rules as the rest of that
+   * page (and carrying the viewer's match score for the Match face).
+   */
+  | { card: SearchCard; profile?: never; id?: never }
+
 export function ProfileGallery({
-  profile, id, title = 'Profile Gallery', subtitle = 'The details families see first.', h: H = 'h2', bare = false,
-}: {
-  profile: SharedProfile
-  id: string
+  title = 'Profile Gallery', subtitle = 'The details families see first.', h: H = 'h2', bare = false, ...source
+}: Source & {
   title?: string
   subtitle?: string
   h?: Level
   /** No panel chrome — for pages that frame it themselves. */
   bare?: boolean
 }) {
+  const card = source.card ?? toGalleryCard(source.profile!, source.id!)
   const body = (
     <>
       <H className={bare ? 'font-serif text-[20px] text-maroon' : 'dp-panel-title'}>{title}</H>
       <p className={`text-ink-soft ${bare ? 'mt-0.5 text-[13px]' : 'mb-2 text-[12.5px]'}`}>{subtitle}</p>
       <div className={bare ? 'mt-3' : ''}>
-        <ProfileCardGallery3D profile={toGalleryCard(profile, id)} variant="deck" />
+        <ProfileCardGallery3D key={card.id} profile={card} variant="deck" />
       </div>
     </>
   )
