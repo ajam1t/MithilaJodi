@@ -1,64 +1,81 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
+import { ArticleGrid, FeaturedArticle } from '@/components/journal/ArticleCard'
+import { JournalCTA } from '@/components/journal/ArticleParts'
+import { Breadcrumbs, CategoryNav, Pagination, breadcrumbJsonLd, type Crumb } from '@/components/journal/Navigation'
+import { AstrologyToolsSection, ContentPillars, EmptyState, SectionHeading } from '@/components/journal/Sections'
 import { createAdminClient } from '@/lib/supabase/server'
 import { SITE_URL, stripBrandSuffix } from '@/lib/constants'
+import { CATEGORY_INTRO, START_HERE, ctaFor } from '@/lib/journal'
+import { card, getJournalCategories, getJournalPosts, pick, type JournalPost } from '@/lib/journalData'
 
 export const dynamic = 'force-dynamic'
 
-const BASE = SITE_URL
+const PER_PAGE = 12
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
+/** Per-category lead story, where the editors have a clear first read. */
+const FEATURED_GUIDE: Record<string, { slug: string; label: string }> = {
+  'horoscope-marriage': { slug: 'kundli-matching-explained', label: 'Featured Astrology Guide' },
+}
+
+/** Guides from other pillars that sit naturally beside a category. */
+const RELATED_READING: Record<string, { title: string; slugs: string[] }> = {
+  'horoscope-marriage': {
+    title: 'Related marriage guides',
+    slugs: ['gotra-marriage-compatibility', 'family-questions-before-marriage', 'why-gotra-matters-in-marriage'],
+  },
+}
+
+type CategoryRow = { id: number; name: string; slug: string; description: string | null; seo_title: string | null; seo_description: string | null }
+
+async function getCategory(slug: string): Promise<CategoryRow | null> {
+  const supabase = await createAdminClient()
+  const { data } = await supabase
+    .from('blog_categories')
+    .select('id, name, slug, description, seo_title, seo_description')
+    .eq('slug', slug)
+    .eq('is_active', true)
+    .maybeSingle()
+  return (data as CategoryRow | null) ?? null
+}
+
+function pageFrom(v: string | string[] | undefined) {
+  const n = Number(Array.isArray(v) ? v[0] : v)
+  return Number.isInteger(n) && n > 1 ? n : 1
 }
 
 // ── Metadata ─────────────────────────────────────────────────────────────────
 
-export async function generateMetadata(
-  { params }: { params: Promise<{ category: string }> }
-): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: {
+  params: Promise<{ category: string }>
+  searchParams: Promise<{ page?: string | string[] }>
+}): Promise<Metadata> {
   const { category: categorySlug } = await params
+  const page = pageFrom((await searchParams).page)
+  const c = await getCategory(categorySlug)
+  // noindex: a missing category still renders 200, which would otherwise be
+  // indexed as a soft 404.
+  if (!c) return { title: 'Category Not Found', robots: { index: false, follow: true } }
+
   const supabase = await createAdminClient()
-
-  const { data: cat } = await supabase
-    .from('blog_categories')
-    .select('id, name, slug, seo_title, seo_description')
-    .eq('slug', categorySlug)
-    .eq('is_active', true)
-    .single()
-
-  if (!cat) {
-    // noindex: a missing category still renders 200, which would otherwise be
-    // indexed as a soft 404.
-    return { title: 'Category Not Found', robots: { index: false, follow: true } }
-  }
-
-  // A category with nothing published in it is an empty listing — there is
-  // nothing on the page for a search engine to rank, so asking for it to be
-  // indexed only spends crawl budget and lands the URL in Search Console under
-  // "Discovered – currently not indexed". `follow` stays on so any links the
-  // page does carry are still traversed, and the page becomes indexable again
-  // by itself the moment it has a post.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const c = cat as any
-
-  const { count: publishedCount } = await supabase
+  const { count } = await supabase
     .from('blog_posts')
     .select('id', { count: 'exact', head: true })
     .eq('status', 'published')
     .eq('category_id', c.id)
 
-  const isEmpty = (publishedCount ?? 0) === 0
-  const canonical = `${BASE}/blogs/${c.slug}`
-  const title = stripBrandSuffix(c.seo_title ?? `${c.name} — Blog`)
-  const description = c.seo_description ?? `Articles about ${c.name} on the Mithila Jodi Journal.`
+  // An empty category is noindexed (nothing to rank; it only spends crawl
+  // budget) and becomes indexable by itself the moment it has a post.
+  const isEmpty = (count ?? 0) === 0
+  const path = `/blogs/${c.slug}${page > 1 ? `?page=${page}` : ''}`
+  const canonical = `${SITE_URL}${path}`
+  const base = stripBrandSuffix(c.seo_title ?? `${c.name} — Mithila Jodi Journal`)
+  const title = page > 1 ? `${base} — Page ${page}` : base
+  const description = c.seo_description ?? CATEGORY_INTRO[c.slug] ?? `Articles about ${c.name} on the Mithila Jodi Journal.`
 
   return {
     title,
@@ -67,182 +84,129 @@ export async function generateMetadata(
     ...(isEmpty ? { robots: { index: false, follow: true } } : {}),
     openGraph: {
       type: 'website',
-      images: ['/og-card.png'],
+      siteName: 'Mithila Jodi',
+      locale: 'en_IN',
       url: canonical,
-      title,
+      title: `${title} | Mithila Jodi`,
       description,
-      },
+      images: [{ url: '/og-card.png', width: 1200, height: 630, alt: 'Mithila Jodi Journal' }],
+    },
+    twitter: { card: 'summary_large_image', title: `${title} | Mithila Jodi`, description, images: ['/og-card.png'] },
   }
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// ── Page ─────────────────────────────────────────────────────────────────────
 
-export default async function CategoryPage(
-  { params }: { params: Promise<{ category: string }> }
-) {
+export default async function CategoryPage({ params, searchParams }: {
+  params: Promise<{ category: string }>
+  searchParams: Promise<{ page?: string | string[] }>
+}) {
   const { category: categorySlug } = await params
-  const supabase = await createAdminClient()
+  const page = pageFrom((await searchParams).page)
+  const cat = await getCategory(categorySlug)
+  if (!cat) notFound()
 
-  // Fetch category
-  const { data: catData } = await supabase
-    .from('blog_categories')
-    .select('id, name, slug, description, seo_title')
-    .eq('slug', categorySlug)
-    .eq('is_active', true)
-    .single()
+  const posts = (await getJournalPosts()).map(card)
+  const categories = await getJournalCategories(posts)
+  const inCategory = posts.filter(p => p.category?.slug === cat.slug)
 
-  if (!catData) notFound()
+  // Lead story: the editors' pick, else a featured or Start Here guide, else the newest.
+  const pinned = FEATURED_GUIDE[cat.slug]
+  const featured: JournalPost | undefined =
+    (pinned && pick(inCategory, [pinned.slug])[0]) ||
+    inCategory.find(p => p.featured) ||
+    pick(inCategory, START_HERE)[0] ||
+    inCategory[0]
+  const rest = inCategory.filter(p => p.id !== featured?.id)
+  const pages = Math.max(1, Math.ceil(rest.length / PER_PAGE))
+  if (page > pages) redirect(`/blogs/${cat.slug}`)
+  const shown = rest.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+  const first = page === 1
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const cat = catData as any
+  const related = RELATED_READING[cat.slug]
+  const relatedPosts = related ? pick(posts, related.slugs) : []
+  const intro = CATEGORY_INTRO[cat.slug] ?? cat.description
+  const isAstrology = cat.slug === 'horoscope-marriage'
 
-  // Fetch published posts in this category
-  const { data: postsData } = await supabase
-    .from('blog_posts')
-    .select(
-      `id, title, slug, excerpt, author_name, published_at, featured, cover_url,
-       blog_categories(id, name, slug)`
-    )
-    .eq('status', 'published')
-    .eq('category_id', cat.id)
-    .order('featured', { ascending: false })
-    .order('published_at', { ascending: false })
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const posts: any[] = postsData ?? []
-
-  // All active categories for the chip nav
-  const { data: catsData } = await supabase
-    .from('blog_categories')
-    .select('id, name, slug')
-    .eq('is_active', true)
-    .order('sort_order', { ascending: true })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const categories: any[] = catsData ?? []
-
-  const canonical = `${BASE}/blogs/${cat.slug}`
-
-  const breadcrumbJsonLd = {
+  const crumbs: Crumb[] = [
+    { name: 'Home', href: '/' },
+    { name: 'Journal', href: '/blogs' },
+    { name: cat.name, href: `/blogs/${cat.slug}` },
+  ]
+  const listed = first && featured ? [featured, ...shown] : shown
+  const collectionJsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: BASE },
-      { '@type': 'ListItem', position: 2, name: 'Blog', item: `${BASE}/blogs` },
-      { '@type': 'ListItem', position: 3, name: cat.name, item: canonical },
-    ],
+    '@type': 'CollectionPage',
+    url: `${SITE_URL}/blogs/${cat.slug}`,
+    name: `${cat.name} — Mithila Jodi Journal`,
+    ...(intro ? { description: intro } : {}),
+    inLanguage: 'en-IN',
+    isPartOf: { '@id': `${SITE_URL}/blogs#collection` },
+    mainEntity: {
+      '@type': 'ItemList',
+      numberOfItems: listed.length,
+      itemListElement: listed.map((p, i) => ({ '@type': 'ListItem', position: i + 1, url: `${SITE_URL}${p.href}`, name: p.title })),
+    },
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
+    <div className="flex min-h-screen flex-col overflow-x-clip bg-paper">
       <MithilaHeader />
-
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd(crumbs)) }} />
+      {listed.length > 0 && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }} />}
 
       <main id="main-content" className="flex-1">
-        {/* ── Breadcrumb ────────────────────────────────────── */}
-        <nav className="wrap pt-6 pb-0" aria-label="Breadcrumb">
-          <ol className="flex flex-wrap items-center gap-1.5 text-[13px] text-ink-soft">
-            <li><Link href="/" className="hover:text-maroon transition-colors">Home</Link></li>
-            <li className="select-none opacity-50">/</li>
-            <li><Link href="/blogs" className="hover:text-maroon transition-colors">Blog</Link></li>
-            <li className="select-none opacity-50">/</li>
-            <li className="text-maroon font-medium">{cat.name}</li>
-          </ol>
-        </nav>
+        <Breadcrumbs items={crumbs} />
 
-        {/* ── Category header ────────────────────────────────── */}
-        <section className="wrap pt-10 pb-8 text-center">
-          <p className="eyebrow mb-3">Mithila Jodi Journal</p>
-          <h1 className="section-heading">{cat.name}</h1>
-          <div className="ornament-line w-24 mx-auto my-5" />
-          {cat.description && (
-            <p className="text-ink-soft text-[15px] sm:text-[16px] leading-relaxed max-w-xl mx-auto">
-              {cat.description}
-            </p>
-          )}
+        <section className="wrap pb-8 pt-10 text-center">
+          <p className="eyebrow mb-3">
+            <Link href="/blogs" className="hover:text-maroon">Mithila Jodi Journal</Link>
+          </p>
+          <h1 className="font-serif text-[32px] leading-tight text-maroon sm:text-[44px]">{cat.name}</h1>
+          <div className="ornament-line mx-auto my-5 w-24" />
+          {intro && <p className="mx-auto max-w-2xl text-[16px] leading-relaxed text-ink-soft">{intro}</p>}
         </section>
 
-        {/* ── Category filter chips ──────────────────────────── */}
-        {categories.length > 0 && (
-          <section className="wrap pb-8">
-            <div className="flex flex-wrap gap-2 justify-center">
-              <Link href="/blogs" className="chip">All</Link>
-              {categories.map((c) => (
-                <Link
-                  key={c.slug}
-                  href={`/blogs/${c.slug}`}
-                  className={c.slug === cat.slug ? 'chip chip-on' : 'chip'}
-                  aria-current={c.slug === cat.slug ? 'page' : undefined}
-                >
-                  {c.name}
-                </Link>
-              ))}
-            </div>
-          </section>
+        <div className="pb-2">
+          <CategoryNav categories={categories} current={cat.slug} />
+        </div>
+
+        {inCategory.length === 0 ? (
+          <section className="wrap py-12"><EmptyState categories={categories} /></section>
+        ) : (
+          <>
+            {first && featured && (
+              <section aria-label={pinned?.label ?? 'Featured guide'} className="wrap pt-8">
+                <FeaturedArticle post={featured} label={pinned?.label ?? 'Featured guide'} />
+              </section>
+            )}
+
+            {first && isAstrology && <AstrologyToolsSection posts={posts} />}
+
+            {shown.length > 0 && (
+              <section aria-labelledby="cat-latest" className="wrap py-12">
+                <SectionHeading id="cat-latest" eyebrow="Latest" title={`More in ${cat.name}`} />
+                <ArticleGrid posts={shown} />
+                <Pagination page={page} pages={pages} hrefFor={n => (n === 1 ? `/blogs/${cat.slug}` : `/blogs/${cat.slug}?page=${n}`)} />
+              </section>
+            )}
+
+            {first && relatedPosts.length > 0 && (
+              <section aria-labelledby="cat-related" className="wrap pb-12">
+                <SectionHeading id="cat-related" eyebrow="Beyond the horoscope" title={related!.title} />
+                <ArticleGrid posts={relatedPosts} />
+              </section>
+            )}
+
+            {first && (
+              <div className="wrap pb-4">
+                <JournalCTA cta={ctaFor(cat.slug, '')} />
+              </div>
+            )}
+          </>
         )}
 
-        {/* ── Article grid ───────────────────────────────────── */}
-        <section className="wrap pb-16">
-          {posts.length === 0 ? (
-            <div className="text-center py-16">
-              <p className="text-ink-soft text-[16px]">No articles in this category yet. Check back soon.</p>
-              <div className="mt-6 flex justify-center gap-4">
-                <Link href="/blogs" className="btn-ghost">← All Articles</Link>
-              </div>
-            </div>
-          ) : (
-            <div data-mj-stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {posts.map((post) => {
-                const catInfo = post.blog_categories
-                const href = catInfo ? `/blogs/${catInfo.slug}/${post.slug}` : `/blogs`
-                return (
-                  <article key={post.id} className="card mj-lift flex flex-col overflow-hidden">
-                    {post.cover_url && (
-                      <div className="mj-zoom aspect-[16/9] overflow-hidden bg-paper-2">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={post.cover_url}
-                          alt={post.title}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
-                      </div>
-                    )}
-                    <div className="p-5 flex flex-col flex-1">
-                      <h2 className="font-serif text-maroon text-[18px] sm:text-[19px] leading-snug mb-2">
-                        <Link href={href} className="hover:underline underline-offset-2">
-                          {post.title}
-                        </Link>
-                      </h2>
-                      {post.excerpt && (
-                        <p className="text-ink-soft text-[14px] leading-relaxed mb-4 line-clamp-3 flex-1">
-                          {post.excerpt}
-                        </p>
-                      )}
-                      <div className="flex items-center justify-between mt-auto pt-3 border-t border-paper-3">
-                        <span className="text-[12px] text-ink-soft">
-                          {post.author_name ?? 'Mithila Jodi Team'}
-                          {post.published_at && (
-                            <> &middot; {formatDate(post.published_at)}</>
-                          )}
-                        </span>
-                        <Link
-                          href={href}
-                          className="text-[13px] font-semibold text-maroon hover:text-terra transition-colors"
-                        >
-                          Read article →
-                        </Link>
-                      </div>
-                    </div>
-                  </article>
-                )
-              })}
-            </div>
-          )}
-        </section>
+        {first && <ContentPillars categories={categories.filter(c => c.slug !== cat.slug)} posts={posts} title="Keep exploring the Journal" />}
       </main>
 
       <MithilaFooter className="pb-16 lg:pb-0" />

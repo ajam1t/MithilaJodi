@@ -188,6 +188,13 @@ export default function BabyNamesPage() {
                 </details>
               ))}
             </div>
+            <div className="mt-12">
+              <h2 className="font-serif text-maroon text-[20px]">Read more</h2>
+              <ul className="mt-3 space-y-2">
+                <li><Link href="/blogs/horoscope-marriage/what-is-nakshatra" className={LINK}>What is Nakshatra?</Link></li>
+                <li><Link href="/blogs/horoscope-marriage/what-is-rashi" className={LINK}>What is Rashi?</Link></li>
+              </ul>
+            </div>
           </div>
         </section>
         <MoreTools current="baby-names" />

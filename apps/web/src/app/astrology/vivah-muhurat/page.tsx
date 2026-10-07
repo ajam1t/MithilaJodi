@@ -201,6 +201,7 @@ export default function VivahMuhuratPage() {
                 <h2 className="font-serif text-maroon text-[20px]">Read more</h2>
                 <ul className="mt-3 space-y-2">
                   <li><Link href="/blogs/horoscope-marriage/kundli-matching-explained" className={LINK}>Kundli Matching Explained</Link></li>
+                  <li><Link href="/blogs/mithila-marriage-traditions/mithila-wedding-rituals" className={LINK}>Traditional Mithila Wedding Rituals Explained</Link></li>
                 </ul>
               </div>
             </div>

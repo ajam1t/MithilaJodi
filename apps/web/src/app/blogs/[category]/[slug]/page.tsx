@@ -1,46 +1,42 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
+import type { ReactNode } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { ReadingProgress } from '@/components/motion/ReadingProgress'
+import { ArticleCover } from '@/components/journal/ArticleCover'
+import {
+  ArticleHeader, ArticleTOCDesktop, ArticleTOCMobile, ArticleToolLinks, JournalCTA, RelatedArticles,
+} from '@/components/journal/ArticleParts'
+import { ArticleShare } from '@/components/journal/ArticleShare'
+import { Breadcrumbs, breadcrumbJsonLd, type Crumb } from '@/components/journal/Navigation'
 import { createAdminClient } from '@/lib/supabase/server'
 import { SITE_URL, stripBrandSuffix } from '@/lib/constants'
+import { ctaFor, extractHeadings, headingId, toolsForArticle, wasUpdated } from '@/lib/journal'
+import { card, getJournalPosts, relatedPosts } from '@/lib/journalData'
 import { organizationJsonLd, organizationRef } from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
 
-const BASE = SITE_URL
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
-}
+const OG_IMAGE = { url: '/og-card.png', width: 1200, height: 630, alt: 'Mithila Jodi Journal' }
 
 // ── Metadata ─────────────────────────────────────────────────────────────────
 
 export async function generateMetadata(
-  { params }: { params: Promise<{ category: string; slug: string }> }
+  { params }: { params: Promise<{ category: string; slug: string }> },
 ): Promise<Metadata> {
   const { category: categorySlug, slug } = await params
   const supabase = await createAdminClient()
-
   const { data } = await supabase
     .from('blog_posts')
-    .select(
-      `title, slug, excerpt, seo_title, seo_description, keywords, cover_url,
-       published_at, updated_at, author_name,
-       blog_categories(slug)`
-    )
+    .select('title, slug, excerpt, seo_title, seo_description, keywords, cover_url, published_at, updated_at, author_name, blog_categories(name, slug)')
     .eq('slug', slug)
     .eq('status', 'published')
-    .single()
+    .maybeSingle()
 
   // noindex: a missing article still renders 200 (soft 404).
   if (!data) return { title: 'Article Not Found', robots: { index: false, follow: true } }
@@ -48,268 +44,158 @@ export async function generateMetadata(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const p = data as any
   const catSlug = p.blog_categories?.slug ?? categorySlug
-  const canonical = `${BASE}/blogs/${catSlug}/${p.slug}`
+  const canonical = `${SITE_URL}/blogs/${catSlug}/${p.slug}`
+  // The root layout's template appends " | Mithila Jodi".
   const title = stripBrandSuffix(p.seo_title ?? p.title)
   const description = p.seo_description ?? p.excerpt ?? ''
-  const keywords = Array.isArray(p.keywords) ? p.keywords : []
+  const keywords: string[] = Array.isArray(p.keywords) ? p.keywords : []
+  const image = p.cover_url ? { url: p.cover_url, alt: p.title } : OG_IMAGE
+  const modified = wasUpdated(p.published_at, p.updated_at) ? p.updated_at : p.published_at
 
   return {
     title,
     description,
     keywords,
     alternates: { canonical },
+    authors: [{ name: p.author_name || 'Mithila Jodi Team' }],
     openGraph: {
       type: 'article',
+      siteName: 'Mithila Jodi',
+      locale: 'en_IN',
       url: canonical,
-      title,
+      title: `${title} | Mithila Jodi`,
       description,
       publishedTime: p.published_at ?? undefined,
-      modifiedTime: p.updated_at ?? undefined,
-      images: [p.cover_url ?? '/og-card.png'],
+      modifiedTime: modified ?? undefined,
+      section: p.blog_categories?.name,
+      tags: keywords,
+      images: [image],
     },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: [p.cover_url ?? '/og-card.png'],
-    },
+    twitter: { card: 'summary_large_image', title: `${title} | Mithila Jodi`, description, images: [image.url] },
   }
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// ── Markdown headings with stable anchors (for the contents list) ────────────
+
+function textOf(node: ReactNode): string {
+  if (node == null || typeof node === 'boolean') return ''
+  if (typeof node === 'string' || typeof node === 'number') return String(node)
+  if (Array.isArray(node)) return node.map(textOf).join('')
+  if (typeof node === 'object' && 'props' in node) return textOf((node as { props: { children?: ReactNode } }).props.children)
+  return ''
+}
+
+const markdownComponents = {
+  h2: ({ children }: { children?: ReactNode }) => <h2 id={headingId(textOf(children))} className="scroll-mt-28">{children}</h2>,
+  h3: ({ children }: { children?: ReactNode }) => <h3 id={headingId(textOf(children))} className="scroll-mt-28">{children}</h3>,
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function ArticlePage(
-  { params }: { params: Promise<{ category: string; slug: string }> }
+  { params }: { params: Promise<{ category: string; slug: string }> },
 ) {
   const { category: categorySlug, slug } = await params
-  const supabase = await createAdminClient()
+  const all = await getJournalPosts()
+  const full = all.find(p => p.slug === slug)
+  if (!full) notFound()
 
-  // Fetch full post
-  const { data: postData } = await supabase
-    .from('blog_posts')
-    .select(
-      `id, title, slug, excerpt, content, cover_url, author_name,
-       seo_title, seo_description, keywords, featured,
-       published_at, created_at, updated_at, category_id,
-       blog_categories(id, name, slug)`
-    )
-    .eq('slug', slug)
-    .eq('status', 'published')
-    .single()
+  // One URL per article: a stale or mistyped category segment moves permanently
+  // to the real one instead of serving a duplicate.
+  if (full.category && full.category.slug !== categorySlug) permanentRedirect(full.href)
 
-  if (!postData) notFound()
+  const post = card(full)
+  const posts = all.map(card)
+  const cat = post.category
+  const canonical = `${SITE_URL}${post.href}`
+  const headings = extractHeadings(full.text)
+  const related = relatedPosts(posts, post, 3)
+  const tools = toolsForArticle(post.slug)
+  // The tool block already ends in the astrology call; one invitation is enough.
+  const cta = tools.length > 0 ? null : ctaFor(cat?.slug, post.slug)
+  const updated = wasUpdated(post.publishedAt, post.updatedAt)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const post = postData as any
-  const cat = post.blog_categories
+  const crumbs: Crumb[] = [
+    { name: 'Home', href: '/' },
+    { name: 'Journal', href: '/blogs' },
+    ...(cat ? [{ name: cat.name, href: `/blogs/${cat.slug}` }] : []),
+    { name: post.title, href: post.href },
+  ]
 
-  // Verify route matches (redirect safety — if slug category differs, still render)
-  const resolvedCatSlug = cat?.slug ?? categorySlug
-
-  // Fetch related posts
-  const { data: relatedData } = await supabase
-    .from('blog_posts')
-    .select(
-      `id, title, slug, excerpt, author_name, published_at, cover_url,
-       blog_categories(id, name, slug)`
-    )
-    .eq('status', 'published')
-    .eq('category_id', post.category_id)
-    .neq('slug', slug)
-    .order('published_at', { ascending: false })
-    .limit(4)
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const related: any[] = relatedData ?? []
-
-  const canonical = `${BASE}/blogs/${resolvedCatSlug}/${post.slug}`
-  const keywords = Array.isArray(post.keywords) ? post.keywords : []
-
+  const isBrand = /^Mithila Jodi/i.test(post.author)
   const articleJsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: post.title,
-    description: post.seo_description ?? post.excerpt ?? '',
-    // An anonymous Organization here created a second, thinly described
-    // "Mithila Jodi" entity competing with the real one. A brand byline now
-    // references the canonical organisation; a named human is a Person.
-    author:
-      !post.author_name || /^Mithila Jodi/i.test(post.author_name)
-        ? organizationRef()
-        : { '@type': 'Person', name: post.author_name },
-    publisher: {
-      ...organizationJsonLd(),
-    },
-    datePublished: post.published_at ?? post.created_at,
-    dateModified: post.updated_at ?? post.published_at ?? post.created_at,
-    mainEntityOfPage: {
-      '@type': 'WebPage',
-      '@id': canonical,
-    },
-    inLanguage: 'en',
+    '@type': 'BlogPosting',
+    '@id': `${canonical}#article`,
+    headline: post.title.slice(0, 110),
+    description: post.excerpt ?? '',
+    // A brand byline references the canonical organisation rather than
+    // creating a second, thinly described "Mithila Jodi" entity.
+    author: isBrand ? organizationRef() : { '@type': 'Person', name: post.author },
+    publisher: organizationJsonLd(),
+    datePublished: post.publishedAt,
+    // Only a genuine revision moves dateModified; otherwise it is the publish date.
+    dateModified: updated ? post.updatedAt : post.publishedAt,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
+    isPartOf: { '@type': 'Blog', '@id': `${SITE_URL}/blogs#blog`, name: 'Mithila Jodi Journal', url: `${SITE_URL}/blogs` },
+    inLanguage: 'en-IN',
+    image: post.coverUrl ?? `${SITE_URL}/og-card.png`,
+    wordCount: full.text.trim().split(/\s+/).length,
+    timeRequired: `PT${post.minutes}M`,
     ...(cat && { articleSection: cat.name }),
-    ...(keywords.length > 0 && { keywords: keywords.join(', ') }),
-    image: post.cover_url ?? `${BASE}/og-card.png`,
-  }
-
-  const breadcrumbJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: BASE },
-      { '@type': 'ListItem', position: 2, name: 'Blog', item: `${BASE}/blogs` },
-      ...(cat ? [{ '@type': 'ListItem', position: 3, name: cat.name, item: `${BASE}/blogs/${cat.slug}` }] : []),
-      { '@type': 'ListItem', position: cat ? 4 : 3, name: post.title, item: canonical },
-    ],
+    ...(post.keywords.length > 0 && { keywords: post.keywords }),
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
-      {/* Only on the long-form pages, where there is genuinely something to
-          indicate progress through. */}
+    <div className="flex min-h-screen flex-col overflow-x-clip bg-paper">
       <ReadingProgress />
       <MithilaHeader />
-
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd(crumbs)) }} />
 
       <main id="main-content" className="flex-1">
-        {/* ── Breadcrumb ─────────────────────────────────────── */}
-        <nav className="wrap pt-6" aria-label="Breadcrumb">
-          <ol className="flex flex-wrap items-center gap-1.5 text-[13px] text-ink-soft">
-            <li><Link href="/" className="hover:text-maroon transition-colors">Home</Link></li>
-            <li className="select-none opacity-50">/</li>
-            <li><Link href="/blogs" className="hover:text-maroon transition-colors">Blog</Link></li>
-            {cat && (
-              <>
-                <li className="select-none opacity-50">/</li>
-                <li>
-                  <Link href={`/blogs/${cat.slug}`} className="hover:text-maroon transition-colors">
-                    {cat.name}
-                  </Link>
-                </li>
-              </>
-            )}
-            <li className="select-none opacity-50">/</li>
-            <li className="text-maroon font-medium line-clamp-1">{post.title}</li>
-          </ol>
-        </nav>
+        <Breadcrumbs items={crumbs} />
 
-        {/* ── Article ────────────────────────────────────────── */}
-        <article className="wrap pt-8 pb-12 max-w-3xl">
-          {/* Category badge */}
-          {cat && (
-            <Link
-              href={`/blogs/${cat.slug}`}
-              className="inline-block mb-4 text-[11px] tracking-[0.3em] uppercase text-terra font-semibold
-                         hover:text-maroon transition-colors"
-            >
-              {cat.name}
-            </Link>
-          )}
+        <article className="wrap pb-12 pt-8">
+          <ArticleHeader post={post} />
 
-          {/* Title */}
-          <h1 className="font-serif text-maroon text-[28px] sm:text-[36px] leading-tight mb-4">
-            {post.title}
-          </h1>
-
-          {/* Meta */}
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-ink-soft mb-6">
-            <span>{post.author_name ?? 'Mithila Jodi Team'}</span>
-            {post.published_at && (
-              <>
-                <span className="opacity-40">·</span>
-                <time dateTime={post.published_at}>{formatDate(post.published_at)}</time>
-              </>
-            )}
-            {post.updated_at && post.updated_at !== post.published_at && (
-              <>
-                <span className="opacity-40">·</span>
-                <span>Updated {formatDate(post.updated_at)}</span>
-              </>
-            )}
+          <div className="mt-8 max-w-3xl overflow-hidden rounded-mj">
+            <ArticleCover coverUrl={post.coverUrl} categorySlug={cat?.slug} title={post.title} ratio="aspect-[5/2] sm:aspect-[3/1]" eager />
           </div>
 
-          <div className="ornament-line w-20 mb-8" />
+          <div className="mt-10 grid gap-12 lg:grid-cols-[minmax(0,48rem)_15rem] lg:justify-between">
+            <div className="min-w-0">
+              <ArticleTOCMobile headings={headings} />
 
-          {/* Cover image */}
-          {post.cover_url && (
-            <div className="mb-8 rounded-mj overflow-hidden aspect-[16/9] bg-paper-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={post.cover_url}
-                alt={post.title}
-                className="w-full h-full object-cover"
-              />
+              <div className="prose-mj">
+                <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                  {full.text}
+                </ReactMarkdown>
+              </div>
+
+              <div className="mt-10 border-t border-paper-3 pt-6">
+                <ArticleShare url={canonical} title={post.title} />
+              </div>
+
+              <ArticleToolLinks tools={tools} />
+              <JournalCTA cta={cta} />
+
+              {cat && (
+                <p className="mt-8 text-[14px]">
+                  <Link href={`/blogs/${cat.slug}`} className="font-semibold text-maroon underline-offset-4 hover:underline">
+                    More in {cat.name} →
+                  </Link>
+                </p>
+              )}
             </div>
-          )}
 
-          {/* Markdown content */}
-          <div className="prose-mj">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {post.content ?? ''}
-            </ReactMarkdown>
+            <aside className="hidden lg:block">
+              <ArticleTOCDesktop headings={headings} />
+            </aside>
           </div>
         </article>
 
-        {/* ── Related articles ───────────────────────────────── */}
-        {related.length > 0 && (
-          <section className="wrap pb-12 max-w-3xl">
-            <div className="border-t border-paper-3 pt-10">
-              <h2 className="font-serif text-maroon text-[22px] mb-6">Related Articles</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {related.map((r) => {
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  const rCat = (r as any).blog_categories
-                  const rHref = rCat ? `/blogs/${rCat.slug}/${r.slug}` : `/blogs`
-                  return (
-                    <Link
-                      key={r.id}
-                      href={rHref}
-                      className="card p-4 flex flex-col gap-1 hover:-translate-y-0.5 transition-transform"
-                    >
-                      <h3 className="font-serif text-maroon text-[16px] leading-snug">
-                        {r.title}
-                      </h3>
-                      {r.excerpt && (
-                        <p className="text-ink-soft text-[13px] line-clamp-2 leading-relaxed">
-                          {r.excerpt}
-                        </p>
-                      )}
-                      {r.published_at && (
-                        <p className="text-[12px] text-ink-soft mt-1">{formatDate(r.published_at)}</p>
-                      )}
-                    </Link>
-                  )
-                })}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* ── CTA ────────────────────────────────────────────── */}
-        <section className="wrap pb-16 max-w-3xl">
-          <div className="card p-8 text-center">
-            <p className="eyebrow mb-3">Ready to begin?</p>
-            <h2 className="font-serif text-maroon text-[24px] mb-2">Find Your Match on Mithila Jodi</h2>
-            <div className="ornament-line w-16 mx-auto my-4" />
-            <p className="text-ink-soft text-[15px] leading-relaxed mb-6 max-w-md mx-auto">
-              Explore Mithila profiles, create your marriage biodata, and connect with families
-              rooted in Maithili heritage.
-            </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              <Link href="/explore" className="btn-ghost">Explore Mithila Profiles</Link>
-              <Link href="/marriage-biodata" className="btn-ghost">Create Your Biodata</Link>
-              <Link href="/register" className="btn-primary">Find Your Match</Link>
-            </div>
-          </div>
-        </section>
+        <RelatedArticles posts={related} />
       </main>
 
       <MithilaFooter className="pb-16 lg:pb-0" />

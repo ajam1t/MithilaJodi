@@ -1,288 +1,162 @@
-import Link from 'next/link'
+import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
-import { createAdminClient } from '@/lib/supabase/server'
+import { ArticleGrid, FeaturedArticle } from '@/components/journal/ArticleCard'
+import { Breadcrumbs, CategoryNav, JournalSearch, Pagination, breadcrumbJsonLd, type Crumb } from '@/components/journal/Navigation'
+import {
+  ContentPillars, EmptyState, MarriageGuide, Mithila101, MithilaCalendar, SectionHeading, StartHere,
+} from '@/components/journal/Sections'
 import { SITE_URL } from '@/lib/constants'
+import { START_HERE, pillarRank } from '@/lib/journal'
+import { card, getJournalCategories, getJournalPosts, pick, searchPosts } from '@/lib/journalData'
 import { pageMetadata } from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
 
-export const metadata = pageMetadata({
-  path: '/blogs',
-  title: 'Blog — Mithila & Maithili Marriage Guides',
-  description:
-    'Articles on Maithili marriage traditions, Mithila culture and Madhubani heritage, plus practical guidance for creating a marriage biodata.',
-})
+const TITLE = 'Mithila Jodi Blog | Mithila Marriage, Culture & Maithili Guide'
+const DESCRIPTION =
+  'Explore Mithila marriage traditions, Maithili culture, Gotra, Mool, family lineage, wedding customs, horoscope, biodata and practical matrimonial guides.'
+const PER_PAGE = 9
+const CRUMBS: Crumb[] = [{ name: 'Home', href: '/' }, { name: 'Journal', href: '/blogs' }]
 
-const breadcrumbJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
-  itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
-    { '@type': 'ListItem', position: 2, name: 'Blog', item: `${SITE_URL}/blogs` },
-  ],
+type Search = { q?: string | string[]; page?: string | string[] }
+
+function readParams(sp: Search) {
+  const q = (Array.isArray(sp.q) ? sp.q[0] : sp.q)?.trim().slice(0, 80) ?? ''
+  const raw = Number(Array.isArray(sp.page) ? sp.page[0] : sp.page)
+  const page = Number.isInteger(raw) && raw > 1 ? raw : 1
+  return { q, page }
 }
 
-/**
- * CollectionPage + ItemList for the article index.
- *
- * This page carried only a BreadcrumbList, while /explore and /festivals — which
- * are the same shape of page, a list of things — both describe themselves as a
- * CollectionPage. The ItemList is built from the posts actually rendered below,
- * so it never claims an article that is not on the page.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function collectionJsonLd(posts: any[]) {
-  return {
+export async function generateMetadata({ searchParams }: { searchParams: Promise<Search> }): Promise<Metadata> {
+  const { q, page } = readParams(await searchParams)
+  const base = pageMetadata({ path: '/blogs', title: TITLE, description: DESCRIPTION, socialTitle: TITLE })
+  // Search results are thin, endless and user-generated: never indexed.
+  if (q) return { ...base, title: { absolute: `Search: ${q} | Mithila Jodi Journal` }, robots: { index: false, follow: true } }
+  if (page > 1) {
+    return {
+      ...base,
+      title: { absolute: `Mithila Jodi Journal — Page ${page} | Mithila Jodi` },
+      alternates: { canonical: `${SITE_URL}/blogs?page=${page}` },
+      openGraph: { ...base.openGraph, url: `${SITE_URL}/blogs?page=${page}` },
+    }
+  }
+  return { ...base, title: { absolute: TITLE } }
+}
+
+export default async function JournalPage({ searchParams }: { searchParams: Promise<Search> }) {
+  const { q, page } = readParams(await searchParams)
+  const all = await getJournalPosts()
+  const posts = all.map(card)
+  const categories = await getJournalCategories(posts)
+
+  // The lead story: a featured guide, chosen by pillar priority (marriage and
+  // tradition first), most recent within it.
+  const featured = [...posts]
+    .filter(p => p.featured)
+    .sort((a, b) => pillarRank(a.category?.slug ?? '') - pillarRank(b.category?.slug ?? ''))[0]
+
+  const results = q ? searchPosts(all, q).map(card) : []
+
+  const latestAll = posts.filter(p => p.id !== featured?.id)
+  const pages = Math.max(1, Math.ceil(latestAll.length / PER_PAGE))
+  if (!q && page > pages) redirect('/blogs')
+  const latest = latestAll.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+  const onFirstPage = !q && page === 1
+
+  const listed = q ? results : onFirstPage && featured ? [featured, ...latest] : latest
+  const collectionJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
     '@id': `${SITE_URL}/blogs#collection`,
     url: `${SITE_URL}/blogs`,
     name: 'Mithila Jodi Journal',
-    description:
-      'Articles on Maithili marriage traditions, Mithila culture and practical matrimonial guidance.',
+    description: DESCRIPTION,
+    inLanguage: 'en-IN',
     isPartOf: { '@id': `${SITE_URL}/#website` },
     mainEntity: {
       '@type': 'ItemList',
-      numberOfItems: posts.length,
-      itemListElement: posts.map((p, i) => ({
-        '@type': 'ListItem',
-        position: i + 1,
-        url: `${SITE_URL}/blogs/${p.blog_categories?.slug}/${p.slug}`,
-        name: p.title,
-      })),
+      numberOfItems: listed.length,
+      itemListElement: listed.map((p, i) => ({ '@type': 'ListItem', position: i + 1, url: `${SITE_URL}${p.href}`, name: p.title })),
     },
   }
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
-}
-
-export default async function BlogIndexPage() {
-  const supabase = await createAdminClient()
-
-  // Fetch published posts — featured first, then by date
-  const { data: postsData } = await supabase
-    .from('blog_posts')
-    .select(
-      `id, title, slug, excerpt, author_name, published_at, featured, cover_url,
-       blog_categories(id, name, slug)`
-    )
-    .eq('status', 'published')
-    .order('featured', { ascending: false })
-    .order('published_at', { ascending: false })
-    .limit(20)
-
-  // Fetch active categories
-  const { data: catsData } = await supabase
-    .from('blog_categories')
-    .select('id, name, slug')
-    .eq('is_active', true)
-    .order('sort_order', { ascending: true })
-
-  // Which categories actually have something published in them. The `limit(20)`
-  // above is a display list, not the full corpus, so this is counted separately
-  // rather than derived from `posts`.
-  const { data: categorisedData } = await supabase
-    .from('blog_posts')
-    .select('blog_categories(slug)')
-    .eq('status', 'published')
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const nonEmpty = new Set<string>(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ((categorisedData ?? []) as any[])
-      .map((r) => r.blog_categories?.slug as string | undefined)
-      .filter((s): s is string => !!s),
-  )
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const posts: any[] = postsData ?? []
-  // Empty categories are not listed. Two of them were being linked from here
-  // while the sitemap deliberately left them out, so search engines discovered
-  // a page with no articles on it, spent crawl budget on it and filed it under
-  // "Discovered – currently not indexed". A category reappears here by itself
-  // as soon as it has a published post.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const categories: any[] = ((catsData ?? []) as any[]).filter((c) => nonEmpty.has(c.slug as string))
 
   return (
-    <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
+    <div className="flex min-h-screen flex-col overflow-x-clip bg-paper">
       <MithilaHeader />
-
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd(posts)) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd(CRUMBS)) }} />
+      {!q && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }} />}
 
       <main id="main-content" className="flex-1">
-        {/* ── Hero header ──────────────────────────────────────── */}
-        <section className="wrap pt-14 pb-8 text-center">
-          <p className="eyebrow mb-3">Mithila Jodi Journal</p>
-          <h1 className="section-heading">Blog</h1>
-          <div className="ornament-line w-24 mx-auto my-5" />
-          <p className="text-ink-soft text-[15px] sm:text-[16px] leading-relaxed max-w-xl mx-auto">
-            Stories, traditions, and guidance on Maithili marriage, Mithila culture, and creating
-            a marriage biodata that honours your heritage.
+        <Breadcrumbs items={CRUMBS} />
+
+        {/* ── Masthead ─────────────────────────────────────────── */}
+        <section className={`wrap text-center ${onFirstPage ? 'pb-8 pt-10 sm:pt-14' : 'pb-6 pt-8'}`}>
+          <p className="eyebrow mb-3">Marriage • Mithila • Family • Culture</p>
+          <h1 className="font-serif text-[36px] leading-tight text-maroon sm:text-[52px]">Mithila Jodi Journal</h1>
+          <div className="ornament-line mx-auto my-5 w-24" />
+          <p className="mx-auto mb-7 max-w-xl text-[16px] leading-relaxed text-ink-soft sm:text-[17px]">
+            Stories, traditions, and practical guides for Mithila families.
           </p>
+          <JournalSearch defaultValue={q} />
         </section>
 
-        {/* ── Category filter chips ─────────────────────────────── */}
-        {categories.length > 0 && (
-          <section className="wrap pb-8">
-            <div className="flex flex-wrap gap-2 justify-center">
-              <Link href="/blogs" className="chip chip-on">
-                All
-              </Link>
-              {categories.map((cat) => (
-                <Link key={cat.slug} href={`/blogs/${cat.slug}`} className="chip">
-                  {cat.name}
-                </Link>
-              ))}
-            </div>
+        <div className="pb-2">
+          <CategoryNav categories={categories} />
+        </div>
+
+        {q ? (
+          /* ── Search results ──────────────────────────────────── */
+          <section aria-labelledby="results" className="wrap py-10">
+            {results.length > 0 ? (
+              <>
+                <SectionHeading id="results" title={`Results for “${q}”`} action={{ href: '/blogs', label: 'Clear search' }} />
+                <ArticleGrid posts={results} />
+              </>
+            ) : (
+              <>
+                <h2 id="results" className="sr-only">Search results</h2>
+                <EmptyState query={q} categories={categories} />
+              </>
+            )}
           </section>
-        )}
+        ) : (
+          <>
+            {onFirstPage && featured && (
+              <section aria-label="Featured story" className="wrap pt-8">
+                <FeaturedArticle post={featured} />
+              </section>
+            )}
 
-        {/* ── Article grid ──────────────────────────────────────── */}
-        <section className="wrap pb-16">
-          {posts.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-ink-soft text-[16px]">Articles are being prepared. Check back soon.</p>
-              <div className="mt-6 flex justify-center gap-4">
-                <Link href="/" className="btn-ghost">← Back to Home</Link>
-                <Link href="/register" className="btn-primary">Create Your Profile Free</Link>
-              </div>
-            </div>
-          ) : (
-            <>
-              {posts[0]?.featured && <FeaturedArticle post={posts[0]} />}
-              <div data-mj-stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {(posts[0]?.featured ? posts.slice(1) : posts).map((post) => (
-                  <ArticleCard key={post.id} post={post} />
-                ))}
-              </div>
-            </>
-          )}
-        </section>
+            {onFirstPage && <StartHere posts={pick(posts, START_HERE)} />}
+
+            {/* ── Latest ──────────────────────────────────────── */}
+            <section aria-labelledby="latest-heading" id="latest" className="wrap scroll-mt-28 py-12">
+              <SectionHeading
+                id="latest-heading"
+                eyebrow="Latest from Mithila Jodi"
+                title={page === 1 ? 'New in the Journal' : `New in the Journal — page ${page}`}
+              />
+              {latest.length > 0 ? <ArticleGrid posts={latest} /> : <EmptyState categories={categories} />}
+              <Pagination page={page} pages={pages} hrefFor={n => (n === 1 ? '/blogs#latest' : `/blogs?page=${n}#latest`)} />
+            </section>
+
+            {onFirstPage && (
+              <>
+                <ContentPillars categories={categories} posts={posts} />
+                <Mithila101 posts={posts} />
+                <MarriageGuide posts={posts} />
+                <MithilaCalendar />
+              </>
+            )}
+          </>
+        )}
       </main>
 
       <MithilaFooter className="pb-16 lg:pb-0" />
       <MobileBottomNav />
     </div>
-  )
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function FeaturedArticle({ post }: { post: any }) {
-  const category = post.blog_categories
-  const href = category ? `/blogs/${category.slug}/${post.slug}` : `/blogs`
-
-  // mj-lift replaces card-hover rather than stacking on it: both set
-  // `transform` on :hover, so keeping both would leave the winner to
-  // stylesheet order. mj-lift is also confined to real hover devices, so a tap
-  // on a phone no longer leaves the card stuck in its hovered state.
-  return (
-    <article className="card mj-lift overflow-hidden mb-8 grid md:grid-cols-2">
-      <div className="mj-zoom relative aspect-[16/10] md:aspect-auto md:min-h-[280px] overflow-hidden bg-paper-2">
-        {post.cover_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={post.cover_url} alt={post.title} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <span className="font-deva text-6xl text-gold/40" aria-hidden="true">✦</span>
-          </div>
-        )}
-        <span className="badge badge-gold absolute top-3 left-3">Featured</span>
-      </div>
-      <div className="p-6 sm:p-8 flex flex-col justify-center">
-        {category && (
-          <Link href={`/blogs/${category.slug}`} className="eyebrow mb-2 hover:text-maroon transition-colors">
-            {category.name}
-          </Link>
-        )}
-        <h2 className="font-serif text-maroon text-[24px] sm:text-[28px] leading-tight mb-3">
-          <Link href={href} className="hover:underline underline-offset-2">
-            {post.title}
-          </Link>
-        </h2>
-        {post.excerpt && (
-          <p className="text-ink-soft text-[15px] leading-relaxed mb-5 line-clamp-3">{post.excerpt}</p>
-        )}
-        <div className="flex items-center gap-3 mt-auto">
-          <Link href={href} className="btn-primary btn-sm">Read article →</Link>
-          <span className="text-[12px] text-ink-soft">
-            {post.author_name ?? 'Mithila Jodi Team'}
-            {post.published_at && <> &middot; {formatDate(post.published_at)}</>}
-          </span>
-        </div>
-      </div>
-    </article>
-  )
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function ArticleCard({ post }: { post: any }) {
-  const category = post.blog_categories
-  const href = category ? `/blogs/${category.slug}/${post.slug}` : `/blogs`
-
-  return (
-    <article className="card mj-lift flex flex-col overflow-hidden">
-      {post.cover_url && (
-        <div className="mj-zoom aspect-[16/9] overflow-hidden bg-paper-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={post.cover_url}
-            alt={post.title}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
-        </div>
-      )}
-      <div className="p-5 flex flex-col flex-1">
-        {category && (
-          <Link
-            href={`/blogs/${category.slug}`}
-            className="inline-block mb-2 text-[11px] tracking-[0.3em] uppercase text-terra font-semibold
-                       hover:text-maroon transition-colors"
-          >
-            {category.name}
-          </Link>
-        )}
-        <h2 className="font-serif text-maroon text-[18px] sm:text-[19px] leading-snug mb-2">
-          <Link href={href} className="hover:underline underline-offset-2">
-            {post.title}
-          </Link>
-        </h2>
-        {post.excerpt && (
-          <p className="text-ink-soft text-[14px] leading-relaxed mb-4 line-clamp-3 flex-1">
-            {post.excerpt}
-          </p>
-        )}
-        <div className="flex items-center justify-between mt-auto pt-3 border-t border-paper-3">
-          <span className="text-[12px] text-ink-soft">
-            {post.author_name ?? 'Mithila Jodi Team'}
-            {post.published_at && (
-              <> &middot; {formatDate(post.published_at)}</>
-            )}
-          </span>
-          <Link
-            href={href}
-            className="text-[13px] font-semibold text-maroon hover:text-terra transition-colors"
-          >
-            Read article →
-          </Link>
-        </div>
-      </div>
-    </article>
   )
 }
