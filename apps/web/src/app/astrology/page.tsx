@@ -21,7 +21,7 @@ export const metadata = pageMetadata({
   path: '/astrology',
   title: 'Vedic Astrology Tools for Mithila Matrimony',
   description:
-    'Kundli matching, nakshatra, rashi, Manglik check, Janam Kundli, and vivah muhurat — Vedic Jyotish tools rooted in Mithila tradition. Free for everyone.',
+    'Eight free tools families use in the marriage conversation: Kundli Match, Compatibility, Manglik, Nakshatra, Rashi, Janam Kundli, Vivah Muhurat and baby names.',
   keywords: [
     'kundli match mithila',
     'kundli matching maithili',
@@ -47,7 +47,7 @@ const jsonLd = [
         url: `${SITE_URL}/astrology`,
         name: 'Vedic Astrology Tools for Mithila Matrimony | Mithila Jodi',
         description:
-          'Kundli matching, nakshatra, rashi, Manglik check, and vivah muhurat tools rooted in Mithila Jyotish tradition.',
+          'Eight free tools families use in the marriage conversation: Kundli Match, Compatibility, Manglik, Nakshatra, Rashi, Janam Kundli, Vivah Muhurat and baby names.',
         breadcrumb: { '@id': `${SITE_URL}/astrology#breadcrumb` },
         publisher: organizationRef(),
         inLanguage: 'en',

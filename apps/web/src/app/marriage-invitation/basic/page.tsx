@@ -8,6 +8,7 @@ import { InvitationMaker } from './InvitationMaker'
 import { TEMPLATES } from '@/lib/invitation'
 import { SITE_URL } from '@/lib/constants'
 import { organizationJsonLd, organizationRef } from '@/lib/seo'
+import { RelatedGuides } from '@/components/journal/RelatedGuides'
 
 const CANONICAL = `${SITE_URL}/marriage-invitation/basic`
 
@@ -270,6 +271,7 @@ export default function BasicInvitationPage() {
                 <Link href="/marriage-biodata" className="btn-primary btn-sm">Create your biodata</Link>
               </div>
             </div>
+            <RelatedGuides className="mt-8 text-left" guides={['mithila-wedding-rituals', 'mithila-marriage-customs']} />
           </div>
         </section>
       </main>

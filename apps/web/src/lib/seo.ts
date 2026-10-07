@@ -179,6 +179,16 @@ export function clamp(text: string, max = 158): string {
   return (lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).replace(/[\s,;:—-]+$/, '') + '…'
 }
 
+/**
+ * What Mithila Jodi is, in one sentence — the same answer everywhere a machine
+ * reads it (Organization and WebSite JSON-LD). Matrimony first; everything else
+ * is listed as what it is: a supporting resource, not the identity. Change it
+ * here, not per page, so search engines and AI assistants never meet two
+ * different descriptions of the same site.
+ */
+export const ENTITY_SUMMARY =
+  'Mithila Jodi is a matrimonial platform for the Mithila (Maithili) community of India. It offers matchmaking, shareable Digital Profiles and marriage biodata in English, Hindi, Maithili and Sanskrit, with supporting wedding invitations, marriage-related astrology tools, guides to Mithila festivals and festival songs, and the Mithila Jodi Journal.'
+
 /** The canonical node id for the organisation, referenced from every page. */
 export const ORGANIZATION_ID = `${SITE_URL}/#organization`
 
@@ -219,8 +229,7 @@ export function organizationJsonLd() {
     },
     image: `${SITE_URL}/og-card.png`,
     slogan: 'जहाँ परंपरा मिले, प्रेम से | Where tradition meets love.',
-    description:
-      'A matrimonial platform for the Mithila (Maithili) community of India, offering shareable Digital Profiles and marriage biodata creation in English, Hindi, Maithili and Sanskrit.',
+    description: ENTITY_SUMMARY,
     // schema.org provides this property specifically to separate an entity from
     // similarly named ones, which is the whole difficulty with this brand name.
     disambiguatingDescription:
@@ -233,12 +242,16 @@ export function organizationJsonLd() {
     // to a specific organisation, and it was missing entirely.
     sameAs: [INSTAGRAM_URL, 'https://www.youtube.com/@mithilajodiofficial'],
     areaServed: { '@type': 'Country', name: 'India' },
+    // Topics the site actually publishes on — each has pages behind it.
     knowsAbout: [
       'Maithil matrimony',
       'Mithila marriage traditions',
-      'Gotra and mool in Mithila',
+      'Gotra, mool and gram in Mithila',
       'Marriage biodata in Maithili',
-    'Shareable matrimonial profiles for Maithil families',
+      'Shareable matrimonial profiles for Maithil families',
+      'Mithila wedding invitations',
+      'Kundli matching for marriage',
+      'Mithila festivals and Maithili festival songs',
       'Maithili culture',
     ],
     telephone: `+${SUPPORT_PHONE_E164}`,

@@ -98,6 +98,7 @@ function HeroArt({ t }: { t: WeddingTheme }) {
 }
 
 export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, opening = 'none', openingKey }: Props) {
+  const CoupleTitle = mode === 'embedded' ? 'p' : 'h1'
   const t = weddingTheme(invite.t)
   const c = invite.c
   const lang: Lang = langOverride ?? invite.l
@@ -153,11 +154,14 @@ export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, openin
           <div className="relative max-w-[560px]">
             <p className={`${face(tr('shubhVivah'))} wd-rise wd-d1 text-[34px] sm:text-[44px] leading-none`} style={{ color: t.gold }}>{tr('shubhVivah')}</p>
             <Border ink={t.heroInk} gold={t.gold} className="wd-rise wd-d2 mx-auto mt-5 !w-40 opacity-70" />
-            <h1 className="wd-display wd-rise wd-d3 mt-6 text-[42px] sm:text-[60px] leading-[1.05]">
+            {/* The couple is the page's H1 on a real invitation. Embedded as a
+                preview inside another page (the builder, the Premium landing's
+                phone mock-ups) it must not be — that page has its own H1. */}
+            <CoupleTitle className="wd-display wd-rise wd-d3 mt-6 text-[42px] sm:text-[60px] leading-[1.05]">
               <span className="block">{inv.brideName}</span>
               <span className="block text-[26px] sm:text-[32px] my-1" aria-label={tr('and')}>❤️</span>
               <span className="block">{inv.groomName}</span>
-            </h1>
+            </CoupleTitle>
             {c.couple.nickname && <p className="wd-rise wd-d3 mt-3 font-hand text-[22px] opacity-90">#{c.couple.nickname.replace(/^#/, '')}</p>}
             {dateIso && (
               <p className="wd-rise wd-d4 mt-6 text-[18px] sm:text-[20px] tracking-wide">

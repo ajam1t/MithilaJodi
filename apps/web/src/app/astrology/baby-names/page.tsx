@@ -20,7 +20,7 @@ export const metadata = pageMetadata({
   path: '/astrology/baby-names',
   title: 'Baby Name Letters by Nakshatra — Naamkaran Syllable',
   description:
-    'Find the traditional first syllable for your baby’s name from the birth nakshatra and pada, see the rashi letters, and check whether a name you like fits. Free, no login.',
+    'Find the traditional first syllable for a baby’s name from the birth nakshatra and pada, see the rashi letters, and check a name you like. Free, no login.',
   keywords: [
     'baby name by nakshatra', 'nakshatra name letters', 'rashi name letters', 'naamkaran', 'baby name syllable',
     'hindu baby names by birth star', 'maithili baby names', 'name akshar by date of birth',

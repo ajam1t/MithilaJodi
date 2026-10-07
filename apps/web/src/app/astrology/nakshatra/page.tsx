@@ -21,7 +21,7 @@ import {
 
 export const metadata = pageMetadata({
   path: '/astrology/nakshatra',
-  title: 'Nakshatra Calculator — Find Your Janma Nakshatra & Pada',
+  title: 'Nakshatra Calculator — Janma Nakshatra & Pada',
   description:
     'Find your Janma nakshatra and pada from date, time and place of birth — with its lord, deity, Gana, Yoni, Nadi, name syllables and the Navatara chart. Free, no login.',
   keywords: [
@@ -60,7 +60,7 @@ const jsonLd = {
       '@type': 'WebPage',
       '@id': `${SITE_URL}/astrology/nakshatra#webpage`,
       url: `${SITE_URL}/astrology/nakshatra`,
-      name: 'Nakshatra Calculator — Find Your Janma Nakshatra & Pada',
+      name: 'Nakshatra Calculator — Janma Nakshatra & Pada',
       description: 'Find your Janma nakshatra and pada with its lord, deity, Gana, Yoni, Nadi, name syllables and Navatara chart.',
       breadcrumb: { '@id': `${SITE_URL}/astrology/nakshatra#breadcrumb` },
       publisher: organizationRef(),

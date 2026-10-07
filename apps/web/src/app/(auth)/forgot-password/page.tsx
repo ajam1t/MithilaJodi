@@ -219,7 +219,7 @@ export default function ForgotPasswordPage() {
         {step === 'mobile' && (
           <>
             <p className="eyebrow mb-2">Forgot Password</p>
-            <h2 className="text-xl font-display text-ink mb-2">Reset your password</h2>
+            <h1 className="text-xl font-display text-ink mb-2">Reset your password</h1>
             <p className="text-sm text-ink-soft mb-6">Enter your registered mobile number to continue.</p>
             <form onSubmit={handleMobileSubmit} noValidate>
               <label className="block mb-1.5">
@@ -249,7 +249,7 @@ export default function ForgotPasswordPage() {
         {step === 'human' && (
           <>
             <p className="eyebrow mb-2">Quick Check</p>
-            <h2 className="text-xl font-display text-ink mb-2">Solve this</h2>
+            <h1 className="text-xl font-display text-ink mb-2">Solve this</h1>
             <p className="text-sm text-ink-soft mb-5">This confirms you&apos;re a real person.</p>
             <div className="rounded-mj bg-paper border border-gold/40 py-4 px-5 mb-5 text-center">
               <p className="text-2xl font-mono font-bold text-maroon tracking-wider">{challengeQ}</p>
@@ -281,7 +281,7 @@ export default function ForgotPasswordPage() {
         {step === 'otp' && (
           <>
             <p className="eyebrow mb-2">Verify OTP</p>
-            <h2 className="text-xl font-display text-ink mb-1">Enter the code</h2>
+            <h1 className="text-xl font-display text-ink mb-1">Enter the code</h1>
             <p className="text-sm text-ink-soft mb-6">Sent to <span className="font-mono text-ink">{maskedMobile}</span></p>
             <div className="mb-2">
               <OtpBoxInput
@@ -314,7 +314,7 @@ export default function ForgotPasswordPage() {
         {step === 'new_password' && (
           <>
             <p className="eyebrow mb-2">New Password</p>
-            <h2 className="text-xl font-display text-ink mb-1">Set a new password</h2>
+            <h1 className="text-xl font-display text-ink mb-1">Set a new password</h1>
             <p className="text-sm text-ink-soft mb-5">Choose a strong password for your account.</p>
             <form onSubmit={handleResetPassword} noValidate>
               <label className="block mb-1.5">

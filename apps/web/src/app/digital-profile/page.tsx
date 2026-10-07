@@ -16,6 +16,7 @@ import { SITE_URL } from '@/lib/constants'
 import {
   breadcrumbJsonLd, canonicalUrl, jsonLdScript, organizationJsonLd, organizationRef, pageMetadata,
 } from '@/lib/seo'
+import { RelatedGuides } from '@/components/journal/RelatedGuides'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,7 +29,7 @@ export const dynamic = 'force-dynamic'
  * is always the bare path, so the member view never competes in search.
  */
 
-const TITLE = 'Digital Profile — Shareable Maithili Matrimonial Profile'
+const TITLE = 'Digital Profile — Shareable Matrimonial Profile'
 const DESCRIPTION =
   'Create a beautiful, private Digital Profile for Mithila and Maithili families. Share it on WhatsApp with one link, choose what it shows, and turn it off any time.'
 
@@ -138,6 +139,13 @@ export default async function DigitalProfilePage({ searchParams }: { searchParam
     <Shell>
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(jsonLd)} />
       <DigitalProfileLanding ctaHref={session ? DIGITAL_PROFILE_PATH : '/register'} member={!!session} />
+      <div className="mx-auto max-w-3xl px-4 pb-12">
+        <RelatedGuides
+          guides={['effective-matrimonial-profile', 'matrimonial-profile-information', 'how-to-create-matrimonial-biodata']}
+          also={[{ href: '/marriage-biodata', label: 'Make a printable marriage biodata' }]}
+          intro="What a good matrimonial profile includes, and how families read one."
+        />
+      </div>
     </Shell>
   )
 }

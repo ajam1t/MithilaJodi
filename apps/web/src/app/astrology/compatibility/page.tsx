@@ -19,7 +19,7 @@ export const metadata = pageMetadata({
   path: '/astrology/compatibility',
   title: 'Horoscope Compatibility — Beyond the 36 Guna',
   description:
-    'Free Vedic horoscope compatibility: the Ashtakoota and Manglik result plus the Lagna and 7th house, Navamsa (D9), where each partner’s planets fall in the other’s chart, and cross-chart aspects — every rule published.',
+    'Horoscope compatibility beyond the 36 Guna: Ashtakoota and Manglik, plus Lagna and 7th house, Navamsa (D9) and cross-chart aspects, with every rule published.',
   keywords: [
     'horoscope compatibility', 'vedic compatibility', 'kundli compatibility', 'navamsa matching',
     '7th house marriage', 'synastry vedic', 'guna milan', 'marriage compatibility astrology',

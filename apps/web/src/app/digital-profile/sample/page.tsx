@@ -13,6 +13,15 @@ export const metadata: Metadata = {
   title: 'Sample Digital Profile',
   description: 'See exactly how a Mithila Jodi Digital Profile looks when a family opens it — a fictional sample.',
   robots: { index: false, follow: true },
+  // Shared on WhatsApp as a demo, so the preview card should say what it is
+  // rather than fall back to the site-wide default.
+  openGraph: {
+    type: 'website',
+    siteName: 'Mithila Jodi',
+    title: 'Sample Digital Profile — Mithila Jodi',
+    description: 'See how a Mithila Jodi Digital Profile looks when a family opens it — a fictional sample.',
+    images: ['/og-card.png'],
+  },
 }
 
 export default function SampleDigitalProfilePage() {

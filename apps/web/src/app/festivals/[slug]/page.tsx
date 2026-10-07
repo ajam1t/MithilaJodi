@@ -10,6 +10,8 @@ import { FestivalCard } from '@/components/festivals/FestivalCard'
 import { FESTIVALS, getFestival, getRelatedFestivals } from '@/lib/festivals'
 import { SITE_URL } from '@/lib/constants'
 import { organizationJsonLd, organizationRef } from '@/lib/seo'
+import { RelatedGuides } from '@/components/journal/RelatedGuides'
+import { FESTIVAL_READING } from '@/lib/journal'
 
 /** Statically generate all 8 festival routes at build time. */
 export function generateStaticParams() {
@@ -303,6 +305,16 @@ export default async function FestivalPage(
               </div>
             </div>
           </section>
+        )}
+
+        {(FESTIVAL_READING[festival.slug]?.length ?? 0) > 0 && (
+          <div className="wrap max-w-3xl pt-10">
+            <RelatedGuides
+              guides={FESTIVAL_READING[festival.slug]}
+              also={festival.songs.length > 0 ? [{ href: `/festival-songs/${festival.slug}`, label: `${festival.name} songs` }] : []}
+              intro="More on the Mithila culture and customs this festival belongs to."
+            />
+          </div>
         )}
 
         {/* ── CTA ─────────────────────────────────────────── */}

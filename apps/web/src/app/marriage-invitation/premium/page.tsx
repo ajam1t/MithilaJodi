@@ -12,13 +12,14 @@ import { loadForEdit } from '@/lib/wedding/invites.server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { SITE_URL } from '@/lib/constants'
 import { organizationJsonLd, organizationRef } from '@/lib/seo'
+import { RelatedGuides } from '@/components/journal/RelatedGuides'
 
 const CANONICAL = `${SITE_URL}/marriage-invitation/premium`
 
-export const metadata: Metadata = {
-  title: 'Premium Mithila Wedding Invitation — Free Wedding Website',
+const META: Metadata = {
+  title: 'Mithila Premium Wedding Invitation Website',
   description:
-    'Create a free interactive Mithila wedding invitation: opening animation, countdown, ceremony timeline from Tilak to Vidai, हमर मिथिला, venue map and WhatsApp replies. One short link, no login.',
+    'A free interactive Mithila wedding invitation: opening animation, countdown, ceremonies from Tilak to Vidai, venue map and WhatsApp replies. One link, no login.',
   keywords: [
     'wedding website maker', 'digital wedding invitation', 'Mithila wedding invitation', 'Maithili wedding invitation',
     'online shaadi invitation link', 'wedding invitation with countdown', 'Madhubani wedding invitation', 'free wedding website India',
@@ -29,6 +30,16 @@ export const metadata: Metadata = {
     title: 'Premium Mithila Wedding Experience — free',
     description: 'Your complete digital wedding story in one link: countdown, ceremonies, हमर मिथिला, venue and WhatsApp replies.',
   },
+}
+
+/**
+ * ?d= / ?i=&k= are edit links: they open one family's invitation in the
+ * builder. The canonical already points at the clean URL, but an edit link
+ * pasted somewhere public must not be indexed at all.
+ */
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const { d, i, k } = await searchParams
+  return d || i || k ? { ...META, robots: { index: false, follow: false } } : META
 }
 
 const FAQS = [
@@ -59,9 +70,17 @@ const jsonLd = {
   '@graph': [
     organizationJsonLd(),
     {
-      '@type': 'WebApplication', '@id': `${CANONICAL}#app`, name: 'Premium Mithila Wedding Experience', url: CANONICAL,
+      '@type': 'WebApplication', '@id': `${CANONICAL}#app`, name: 'Mithila Premium Wedding Invitation', url: CANONICAL,
       applicationCategory: 'DesignApplication', operatingSystem: 'Any (web browser)', isAccessibleForFree: true,
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' }, publisher: organizationRef(),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+        { '@type': 'ListItem', position: 2, name: 'Wedding Invitations', item: `${SITE_URL}/marriage-invitation` },
+        { '@type': 'ListItem', position: 3, name: 'Mithila Premium', item: CANONICAL },
+      ],
     },
     {
       '@type': 'FAQPage', '@id': `${CANONICAL}#faq`,
@@ -142,6 +161,14 @@ export default async function PremiumInvitationPage({ searchParams }: Props) {
                 </details>
               ))}
             </div>
+            <RelatedGuides
+              className="mt-8"
+              guides={['mithila-wedding-rituals', 'mithila-marriage-customs']}
+              also={[
+                { href: '/marriage-invitation/basic', label: 'A simple invitation card instead' },
+                { href: '/astrology/vivah-muhurat', label: 'Find a vivah muhurat' },
+              ]}
+            />
           </div>
         </section>
       </main>

@@ -20,7 +20,7 @@ export const metadata = pageMetadata({
   path: '/astrology/manglik',
   title: 'Manglik Check — Is My Kundli Manglik?',
   description:
-    'Check Manglik (Kuja) dosha from your birth chart: Mars counted from the Lagna and the Moon, Anshik vs full Manglik, the traditional exceptions, and what it means for matching. Free.',
+    'Check Manglik (Kuja) dosha from your birth chart: Mars from the Lagna and the Moon, Anshik vs full Manglik, the traditional exceptions, and what it means for matching.',
   keywords: [
     'manglik check', 'manglik dosha calculator', 'am i manglik', 'kuja dosha', 'anshik manglik',
     'mangal dosha', 'manglik kundli', 'manglik marriage',

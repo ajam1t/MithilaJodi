@@ -7,6 +7,7 @@ import { BiodataBuilder } from './BiodataBuilder'
 import { SITE_URL } from '@/lib/constants'
 import { breadcrumbJsonLd, organizationJsonLd } from '@/lib/seo'
 import { organizationRef } from '@/lib/seo'
+import { RelatedGuides } from '@/components/journal/RelatedGuides'
 
 const CANONICAL = `${SITE_URL}/marriage-biodata`
 
@@ -171,6 +172,17 @@ export default function MarriageBiodataPage() {
             </div>
           </div>
         </section>
+
+        <div className="no-print wrap max-w-3xl pb-10">
+          <RelatedGuides
+            guides={['how-to-create-matrimonial-biodata', 'matrimonial-biodata-mistakes', 'mithila-family-lineage']}
+            also={[
+              { href: '/digital-profile', label: 'Share it as a Digital Profile' },
+              { href: '/blogs/biodata-matrimonial-tips', label: 'All biodata tips' },
+            ]}
+            intro="What families look for in a biodata, and the gotra, mool and gram details it asks for."
+          />
+        </div>
 
         {/* Conversion */}
         <section className="no-print bg-maroon-gradient py-9 sm:py-11">

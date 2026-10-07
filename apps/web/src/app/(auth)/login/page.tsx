@@ -66,7 +66,7 @@ export default function LoginPage() {
         {(
           <>
             <p className="eyebrow mb-2">Log In</p>
-            <h2 className="text-xl font-display text-ink mb-6">Welcome back</h2>
+            <h1 className="text-xl font-display text-ink mb-6">Welcome back</h1>
             <form onSubmit={handlePasswordLogin} noValidate>
               <label className="block mb-4">
                 <span className="text-sm font-medium text-ink">Mobile number</span>

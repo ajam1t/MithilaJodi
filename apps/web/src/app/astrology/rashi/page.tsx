@@ -22,7 +22,7 @@ export const metadata = pageMetadata({
   path: '/astrology/rashi',
   title: 'Rashi Calculator — Find Your Moon Sign (Janma Rashi)',
   description:
-    'Find your Janma rashi — the Vedic Moon sign — from date, time and place of birth, with its lord and element, your Vedic and Western Sun signs, and Moon-sign compatibility. Free.',
+    'Find your Janma rashi, the Vedic Moon sign, from date, time and place of birth — with its lord and element, your Sun signs, and Moon-sign compatibility. Free.',
   keywords: [
     'rashi calculator', 'janma rashi', 'moon sign calculator', 'vedic moon sign', 'rashi by date of birth',
     'vedic vs western sign', 'chandra rashi', 'maithili rashi',

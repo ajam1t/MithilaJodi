@@ -135,7 +135,7 @@ export function toolsForArticle(slug: string): JournalTool[] {
 
 export type JournalCta = { eyebrow: string; title: string; text: string; href: string; label: string } | null
 
-/** One natural next step per article; culture pieces get none. */
+/** One natural next step per article; for culture pieces, a festival guide rather than a product. */
 export function ctaFor(categorySlug: string | null | undefined, postSlug: string): JournalCta {
   if (categorySlug === 'biodata-matrimonial-tips' || /biodata/.test(postSlug)) {
     return { eyebrow: 'Put it into practice', title: 'Create Your Marriage Biodata', text: 'A free, print-ready biodata in English, Hindi, Maithili or Sanskrit.', href: '/marriage-biodata', label: 'Create Your Marriage Biodata →' }
@@ -143,7 +143,10 @@ export function ctaFor(categorySlug: string | null | undefined, postSlug: string
   if (categorySlug === 'horoscope-marriage') {
     return { eyebrow: 'Try it yourself', title: 'Explore Astrology Tools', text: 'Kundli matching, Manglik, Rashi, Nakshatra and more — free, with the method explained.', href: '/astrology', label: 'Explore Astrology Tools →' }
   }
-  if (categorySlug === 'mithila-culture-heritage') return null
+  // Culture pieces get no sales pitch — only the natural next read.
+  if (categorySlug === 'mithila-culture-heritage') {
+    return { eyebrow: 'Keep exploring', title: 'Mithila festivals', text: 'The stories, rituals and songs of the festivals Mithila keeps through the year.', href: '/festivals', label: 'Explore Mithila festivals →' }
+  }
   return { eyebrow: 'When you are ready', title: 'Create Your Mithila Jodi Profile', text: 'A matrimonial profile with gotra, mool and family details — free to create.', href: '/register?start=1', label: 'Create Your Mithila Jodi Profile →' }
 }
 
@@ -191,4 +194,43 @@ export function wasUpdated(published: string | null | undefined, updated: string
 
 export function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' })
+}
+
+// ─── Journal links from static pages ─────────────────────────────────────────
+
+/**
+ * Guides that static (non-database) pages link to: the biodata maker, Digital
+ * Profile, invitations and festival pages. Titles mirror blog_posts.title so
+ * these pages stay static; if an article is renamed or moved, update it here.
+ * Each link was chosen because the article genuinely covers that page's topic
+ * (checked against the article text on 2026-10-07), not to spread links around.
+ */
+export const JOURNAL_GUIDES = {
+  'how-to-create-matrimonial-biodata': { category: 'matrimonial-marriage-guide', title: 'How to Create a Good Matrimonial Biodata' },
+  'matrimonial-biodata-mistakes': { category: 'biodata-matrimonial-tips', title: 'Common Mistakes in Matrimonial Biodata and How to Avoid Them' },
+  'matrimonial-profile-information': { category: 'matrimonial-marriage-guide', title: 'What Information Should a Matrimonial Profile Include?' },
+  'effective-matrimonial-profile': { category: 'biodata-matrimonial-tips', title: 'How to Write an Effective Matrimonial Profile' },
+  'mithila-family-lineage': { category: 'gotra-family-lineage', title: 'Understanding Mithila Family Lineage: Gotra, Mool and Gram' },
+  'mithila-wedding-rituals': { category: 'mithila-marriage-traditions', title: 'Traditional Mithila Wedding Rituals Explained' },
+  'mithila-marriage-customs': { category: 'mithila-marriage-traditions', title: 'Important Customs in a Mithila Marriage' },
+  'what-is-mithila-culture': { category: 'mithila-culture-heritage', title: 'What Is Mithila Culture? A Guide to the Land of Janaki' },
+  'mithila-heritage': { category: 'mithila-culture-heritage', title: 'Understanding Mithila Heritage: History, Art and Traditions' },
+} as const
+
+export type GuideSlug = keyof typeof JOURNAL_GUIDES
+
+export function guideHref(slug: GuideSlug): string {
+  return `/blogs/${JOURNAL_GUIDES[slug].category}/${slug}`
+}
+
+/** Journal reading for each festival guide — articles that discuss that festival or its setting. */
+export const FESTIVAL_READING: Record<string, GuideSlug[]> = {
+  'chhath-puja': ['what-is-mithila-culture', 'mithila-heritage'],
+  'sama-chakeva': ['mithila-heritage', 'what-is-mithila-culture'],
+  'madhushravani': ['what-is-mithila-culture', 'mithila-marriage-customs'],
+  'vivah-panchami': ['mithila-wedding-rituals', 'what-is-mithila-culture'],
+  'kojagara': ['mithila-marriage-customs', 'what-is-mithila-culture'],
+  'diwali': ['what-is-mithila-culture', 'mithila-heritage'],
+  'durga-puja': ['what-is-mithila-culture', 'mithila-heritage'],
+  'holi': ['what-is-mithila-culture', 'mithila-heritage'],
 }

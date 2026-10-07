@@ -15,7 +15,7 @@ import { pageMetadata } from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
 
-const TITLE = 'Mithila Jodi Blog | Mithila Marriage, Culture & Maithili Guide'
+const TITLE = 'Mithila Jodi Journal | Mithila Marriage, Culture & Maithili Guide'
 const DESCRIPTION =
   'Explore Mithila marriage traditions, Maithili culture, Gotra, Mool, family lineage, wedding customs, horoscope, biodata and practical matrimonial guides.'
 const PER_PAGE = 9

@@ -32,7 +32,7 @@ export function generateMetadata() {
     path: '/astrology/vivah-muhurat',
     title: `Vivah Muhurat ${year}–${String(year + 1).slice(2)} — Shubh Marriage Dates`,
     description:
-      'Every auspicious marriage muhurat for the next twelve months, with exact times for your city: nakshatra, tithi, yoga and karana checked, Kharmas, Chaturmas and Guru/Shukra asta excluded, and Guru bal for the couple. Free.',
+      'Auspicious marriage muhurats for the next twelve months with exact times for your city — Kharmas, Chaturmas and Guru/Shukra asta excluded, Guru bal for the couple.',
     keywords: [
       'vivah muhurat', `vivah muhurat ${year}`, `shadi muhurat ${year + 1}`, 'marriage muhurat', 'shubh vivah dates',
       'shaadi ki tareekh', 'vivah muhurat mithila', 'guru bal', 'kharmas', 'chaturmas',

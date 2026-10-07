@@ -10,7 +10,7 @@ import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { InstallBanner } from '@/components/pwa/InstallBanner'
 import { SITE_URL } from '@/lib/constants'
-import { organizationJsonLd } from '@/lib/seo'
+import { ENTITY_SUMMARY, organizationJsonLd } from '@/lib/seo'
 
 const SITE = SITE_URL
 
@@ -21,9 +21,9 @@ const SITE = SITE_URL
 export const revalidate = 900
 
 export const metadata: Metadata = {
-  title: 'Mithila Jodi — Maithili & Mithila Matrimonial',
+  title: { absolute: 'Mithila Jodi | Mithila Matrimonial for Maithili Families' },
   description:
-    'A matrimonial platform for the Maithil community. Browse Mithila bride and groom profiles and build a marriage biodata in Maithili, Hindi, English or Sanskrit.',
+    'A matrimonial platform for Maithil families: find Mithila brides and grooms, share a Digital Profile and make a biodata in Maithili, Hindi, English or Sanskrit.',
   keywords: [
     'Mithila matrimonial', 'Maithili matrimonial', 'Maithil matrimonial',
     'Mithila marriage', 'Maithili marriage', 'Maithil marriage',
@@ -40,13 +40,13 @@ export const metadata: Metadata = {
     images: ['/og-card.png'],
     url: SITE,
     siteName: 'Mithila Jodi',
-    title: 'Mithila Jodi — Maithili Matrimonial & Marriage Biodata',
+    title: 'Mithila Jodi | Mithila Matrimonial for Maithili Families',
     description:
-      'A matrimonial platform rooted in Mithila culture — create a marriage biodata in your language and connect Maithili families across India.',
+      'A matrimonial platform rooted in Mithila culture — find a match, share a Digital Profile and create a marriage biodata in your language.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Mithila Jodi — Maithili Matrimonial & Marriage Biodata',
+    title: 'Mithila Jodi | Mithila Matrimonial for Maithili Families',
     description: 'A matrimonial platform rooted in Mithila culture, for the Maithili community of India.',
   },
 }
@@ -61,6 +61,7 @@ const jsonLd = {
       url: SITE,
       name: 'Mithila Jodi',
       publisher: { '@id': `${SITE}/#organization` },
+      description: ENTITY_SUMMARY,
       inLanguage: ['en', 'hi', 'mai', 'sa'],
     },
   ],

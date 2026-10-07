@@ -34,7 +34,6 @@ const CONTENT_UPDATED = {
   '/legal/terms': '2026-09-07',
   '/legal/privacy': '2026-09-07',
   // Astrology tools — Phase 1 launch date; Kundli Match went live 2026-10-04.
-  '/astrology': '2026-10-05',
   '/astrology/kundli-match': '2026-10-04',
   '/astrology/nakshatra': '2026-10-05',
   '/astrology/manglik': '2026-10-05',
@@ -43,7 +42,24 @@ const CONTENT_UPDATED = {
   '/astrology/vivah-muhurat': '2026-10-05',
   '/astrology/baby-names': '2026-10-05',
   '/astrology/compatibility': '2026-10-05',
-  '/digital-profile': '2026-10-05',
+  '/digital-profile': '2026-10-07',
+  // 2026-10-07: the Journal redesign, and Journal reading lists added to the
+  // biodata maker, invitation pages and every festival guide.
+  '/blogs': '2026-10-07',
+  '/marriage-biodata': '2026-10-07',
+  '/marriage-invitation': '2026-10-07',
+  '/marriage-invitation/basic': '2026-10-07',
+  '/marriage-invitation/premium': '2026-10-07',
+  '/festivals/chhath-puja': '2026-10-07',
+  '/festivals/sama-chakeva': '2026-10-07',
+  '/festivals/madhushravani': '2026-10-07',
+  '/festivals/vivah-panchami': '2026-10-07',
+  '/festivals/kojagara': '2026-10-07',
+  '/festivals/diwali': '2026-10-07',
+  '/festivals/durga-puja': '2026-10-07',
+  '/festivals/holi': '2026-10-07',
+  // Hub description now names all eight tools.
+  '/astrology': '2026-10-07',
   // Everything else last had a substantive content change with the content
   // build on this date. Bump a path here when you actually edit that page.
   DEFAULT: '2026-08-23',
@@ -71,6 +87,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/festivals', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/marriage-invitation', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/marriage-invitation/basic', priority: 0.8, changeFrequency: 'monthly' },
+    // Indexable and linked from the hub, but was missing here.
+    { path: '/marriage-invitation/premium', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/digital-profile', priority: 0.9, changeFrequency: 'monthly' },
     { path: '/marriage-biodata', priority: 0.9, changeFrequency: 'monthly' },
     { path: '/about', priority: 0.6, changeFrequency: 'monthly' },

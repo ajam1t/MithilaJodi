@@ -37,7 +37,9 @@ export async function generateMetadata(
   // boundary rather than trusting every festival to come out short enough.
   const description = clamp(
     `Listen to ${festival.songs.length} Maithili ${short} geet — ` +
-    `${festival.songs.slice(0, 2).map((s) => s.title).join(', ')} and more. ` +
+    // Two distinct titles: a lyrical upload of the same song ("Kelwa Ke Paat
+    // Par (Lyrical)") would otherwise name the one song twice.
+    `${[...new Set(festival.songs.map((s) => s.title.replace(/\s*\((lyrical|lyrics|audio|video)\)\s*$/i, '')))].slice(0, 2).join(', ')} and more. ` +
     'Plays in your browser, no app needed.',
     158,
   )

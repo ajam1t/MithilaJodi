@@ -23,7 +23,7 @@ const DEFINITION =
 
 export const metadata: Metadata = pageMetadata({
   path: '/about',
-  title: 'About — Matrimony for the Mithila & Maithili Community',
+  title: 'About — Matrimony for the Mithila Community',
   socialTitle: 'About Mithila Jodi — a matrimonial platform made for Mithila',
   description:
     'Mithila Jodi is a matrimonial platform for the Mithila and Maithili community — matchmaking, digital profiles, marriage biodata and wedding tools in one place.',

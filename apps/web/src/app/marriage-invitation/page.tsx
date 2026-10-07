@@ -7,6 +7,7 @@ import { MithilaBorder } from '@/components/home/MithilaBorder'
 import { InvitationChooser } from '@/components/wedding/InvitationChooser'
 import { SITE_URL } from '@/lib/constants'
 import { organizationJsonLd, organizationRef } from '@/lib/seo'
+import { RelatedGuides } from '@/components/journal/RelatedGuides'
 
 /**
  * /marriage-invitation — the entry to Wedding Invitations. The visitor's
@@ -18,9 +19,9 @@ import { organizationJsonLd, organizationRef } from '@/lib/seo'
 const CANONICAL = `${SITE_URL}/marriage-invitation`
 
 export const metadata: Metadata = {
-  title: 'Wedding Invitations — Free Card Maker & Mithila Premium',
+  title: 'Wedding Invitations — Free Card & Mithila Premium',
   description:
-    'Create a free wedding invitation your way: a Mithila-inspired invitation card to download, or a Mithila Premium wedding webpage with countdown, ceremonies and WhatsApp replies. No login.',
+    'Make a free wedding invitation: a Mithila-inspired card to download, or a Mithila Premium wedding webpage with countdown, ceremonies and WhatsApp replies.',
   keywords: [
     'wedding invitation maker', 'wedding invitation card maker', 'free wedding invitation card', 'Mithila wedding invitation',
     'Madhubani wedding invitation', 'Maithili wedding invitation', 'digital wedding invitation', 'wedding website maker',
@@ -160,6 +161,11 @@ export default function WeddingInvitationsPage() {
               <Link href="/marriage-biodata" className="text-maroon underline underline-offset-2">Marriage biodata</Link>{' · '}
               <Link href="/astrology/vivah-muhurat" className="text-maroon underline underline-offset-2">Vivah muhurat</Link>
             </p>
+            <RelatedGuides
+              className="mt-8"
+              guides={['mithila-wedding-rituals', 'mithila-marriage-customs']}
+              intro="The ceremonies a Mithila invitation announces, from Tilak to Vidai."
+            />
           </div>
         </section>
       </main>
