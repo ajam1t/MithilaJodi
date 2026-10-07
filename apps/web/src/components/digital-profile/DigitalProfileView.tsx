@@ -5,7 +5,6 @@ import type { SharedProfile } from '@/lib/profileShare'
 import { SharedPhotoCarousel } from '@/components/SharedPhotoCarousel'
 import ProfileCardGallery3D from '@/components/ProfileCardGallery3D'
 import { DemoPortrait } from '@/components/digital-profile/DemoPortrait'
-import { DIGITAL_PROFILE_PATH } from '@/lib/digitalProfile'
 import type { SearchCard } from '@/types/profile'
 
 /**
@@ -101,14 +100,25 @@ function toCard(p: SharedProfile, id: string): SearchCard {
 
 // ─── The profile ────────────────────────────────────────────────────────────
 
+/**
+ * Who is looking. The profile itself — every field shown — is identical for
+ * all three; only the call to action around it differs.
+ *   visitor  not signed in: invited to join (the growth loop's last step)
+ *   member   signed in, someone else's profile: the `connection` action
+ *   owner    the member's own link
+ */
+export type ProfileAudience = 'visitor' | 'member' | 'owner'
+
 export function DigitalProfileView({
-  profile: p, profileId, mode, viewerIsMember = false, nested = false,
+  profile: p, profileId, mode, audience = 'visitor', connection, nested = false,
 }: {
   profile: SharedProfile
   /** Only used for a signed-in visitor's link to the full member profile. */
   profileId: string | null
   mode: ProfileMode
-  viewerIsMember?: boolean
+  audience?: ProfileAudience
+  /** For a signed-in member: Send Interest / Interest Sent / It's a Match. */
+  connection?: ReactNode
   /** Inside another page (the landing): headings step down below that page's H1. */
   nested?: boolean
 }) {
@@ -144,12 +154,7 @@ export function DigitalProfileView({
         </section>
       )}
 
-      {mode === 'public' && viewerIsMember && profileId && (
-        <section className="rounded-mj border border-maroon/30 bg-maroon/[0.05] px-4 py-3 text-center">
-          <p className="text-[13.5px] leading-snug text-ink">You&rsquo;re signed in — open the full profile to shortlist or send an interest.</p>
-          <Link href={`/profile/${profileId}`} className="btn-primary mt-2.5 inline-flex px-5 py-2 text-[14px]">View on Mithila Jodi</Link>
-        </section>
-      )}
+      {mode === 'public' && audience === 'member' && connection}
 
       {/* Hero */}
       <section className="dp-hero dp-rise rounded-[22px] px-5 pb-7 pt-8 text-center shadow-mj" style={{ ['--i' as string]: 1 }}>
@@ -301,7 +306,7 @@ export function DigitalProfileView({
           <Fact label="Email" value={p.contact.email} />
           <Fact label="Address" value={p.contact.address} />
         </Panel>
-      ) : mode !== 'demo' ? (
+      ) : mode !== 'demo' && audience === 'visitor' ? (
         <section className="rounded-mj border border-gold/40 bg-gold/[0.07] px-4 py-4 text-center">
           <p className="font-serif text-[17px] leading-snug text-maroon">Interested in this profile?</p>
           <p className="mt-1.5 text-[13.5px] leading-relaxed text-ink-soft">
@@ -327,13 +332,17 @@ export function DigitalProfileView({
           <p className="mx-auto mt-2 max-w-sm text-[12px] leading-relaxed text-ink-soft">
             Shared privately by a member. Please do not forward it without asking them first.
           </p>
-          <div className="mx-auto mt-4 max-w-sm rounded-mj border border-gold/35 bg-cream px-4 py-4">
-            <p className="font-serif text-[16px] text-maroon">Your story deserves a profile like this</p>
-            <p className="mt-1 text-[12.5px] leading-relaxed text-ink-soft">Create your own Digital Profile — free, and you decide what it shows.</p>
-            <Link href={DIGITAL_PROFILE_PATH} className="btn-primary mt-3 inline-flex px-4 py-2 text-[13.5px]">
-              Create your own Digital Profile
-            </Link>
-          </div>
+          {/* The growth loop's last step: someone a member shared with joins,
+              and gets a Digital Profile of their own to share. */}
+          {audience === 'visitor' && (
+            <div className="mx-auto mt-5 max-w-sm rounded-mj border border-gold/40 bg-cream px-5 py-5 shadow-mj-xs">
+              <p className="font-serif text-[20px] leading-tight text-maroon">Looking for your Jodi?</p>
+              <p className="mt-1.5 text-[13.5px] leading-relaxed text-ink-soft">Create your free Mithila Jodi profile.</p>
+              <Link href="/register?start=1" className="btn-primary mt-4 inline-flex px-6 py-2.5 text-[14.5px]">
+                Join Mithila Jodi →
+              </Link>
+            </div>
+          )}
         </footer>
       )}
     </div>

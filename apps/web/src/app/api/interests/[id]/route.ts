@@ -122,7 +122,7 @@ export async function PATCH(
     const sender = (pair ?? []).find((r: any) => r.id === iv.from_profile) as any
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const accepter = (pair ?? []).find((r: any) => r.id === iv.to_profile) as any
-    const chatUrl = conversationId ? `/messages/${conversationId}` : '/interests?tab=mutual'
+    const chatUrl = conversationId ? `/messages/${conversationId}` : '/inbox?tab=mutual'
 
     if (sender && typedAction === 'accept') {
       await notify(admin, {

@@ -26,7 +26,7 @@ export default async function WelcomePage() {
   const admin = await createAdminClient()
   const state = await getOnboardingState(admin, account.id)
 
-  if (state.complete) redirect('/profile')
+  if (state.complete) redirect('/home')
 
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">

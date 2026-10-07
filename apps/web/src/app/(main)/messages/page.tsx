@@ -1,15 +1,6 @@
-import { Suspense } from 'react'
-import MessagesContent from './MessagesContent'
+import { redirect } from 'next/navigation'
 
-// The (main) layout supplies robots: noindex. This exists only so the browser
-// tab, history entry and bookmark say what the page is, instead of every member
-// page reading as the site's default title.
-export const metadata = { title: 'Messages' }
-
-export default function MessagesPage() {
-  return (
-    <Suspense fallback={null}>
-      <MessagesContent />
-    </Suspense>
-  )
+/** The conversation list is the Inbox's Messages tab; threads stay at /messages/[id]. */
+export default function MessagesRedirect() {
+  redirect('/inbox')
 }

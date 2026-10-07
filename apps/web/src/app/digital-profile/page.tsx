@@ -90,6 +90,7 @@ export default async function DigitalProfilePage({ searchParams }: { searchParam
           shares={data.shares}
           primary={data.primary}
           activity={data.activity}
+          profileViews={data.profileViews}
           siteUrl={SITE_URL}
           preview={preview}
         />

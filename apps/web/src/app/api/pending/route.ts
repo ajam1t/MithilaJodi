@@ -4,6 +4,7 @@ import { getSessionAccount } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/server'
 import { findOwnProfileId } from '@/lib/ownProfile'
 import { liveFilter, syncAutomaticNotifications } from '@/lib/notifications'
+import { countUnreadMessages } from '@/lib/memberActivity'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -25,7 +26,7 @@ import { liveFilter, syncAutomaticNotifications } from '@/lib/notifications'
 export async function GET() {
   const session = await getSessionAccount()
   if (!session) {
-    return NextResponse.json({ ok: true, interests: 0, whatsapp: 0, notifications: 0 })
+    return NextResponse.json({ ok: true, interests: 0, whatsapp: 0, notifications: 0, messages: 0 })
   }
 
   const admin = await createAdminClient()
@@ -41,10 +42,10 @@ export async function GET() {
   )
 
   if (!myProfileId) {
-    return NextResponse.json({ ok: true, interests: 0, whatsapp: 0, notifications: (notificationsRes as any).count ?? 0 })
+    return NextResponse.json({ ok: true, interests: 0, whatsapp: 0, notifications: (notificationsRes as any).count ?? 0, messages: 0 })
   }
 
-  const [interestsRes, whatsappRes] = await Promise.all([
+  const [interestsRes, whatsappRes, messages] = await Promise.all([
     admin
       .from('interests')
       .select('id', { count: 'exact', head: true })
@@ -55,6 +56,7 @@ export async function GET() {
       .select('id', { count: 'exact', head: true })
       .eq('owner_profile_id', myProfileId)
       .eq('status', 'pending'),
+    countUnreadMessages(admin, myProfileId),
   ])
 
   return NextResponse.json({
@@ -62,5 +64,6 @@ export async function GET() {
     interests: (interestsRes as any).count ?? 0,
     whatsapp: (whatsappRes as any).count ?? 0,
     notifications: (notificationsRes as any).count ?? 0,
+    messages,
   })
 }

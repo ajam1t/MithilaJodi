@@ -127,13 +127,13 @@ export type NotificationView = {
 function legacyCopy(type: string, p: any): Pick<NotificationView, 'title' | 'message' | 'icon' | 'cta_label' | 'cta_url'> {
   switch (type) {
     case 'interest_received':
-      return { title: 'New interest received', message: p?.from_name ? `${p.from_name} sent you an interest.` : 'Someone sent you an interest.', icon: 'heart', cta_label: 'View Interest', cta_url: '/interests?tab=received' }
+      return { title: 'New interest received', message: p?.from_name ? `${p.from_name} sent you an interest.` : 'Someone sent you an interest.', icon: 'heart', cta_label: 'View Interest', cta_url: '/inbox?tab=interests' }
     case 'interest_accepted':
-      return { title: 'Your interest was accepted ❤️', message: 'You can now message each other.', icon: 'heart', cta_label: 'View Match', cta_url: '/interests?tab=mutual' }
+      return { title: 'Your interest was accepted ❤️', message: 'You can now message each other.', icon: 'heart', cta_label: 'View Match', cta_url: '/inbox?tab=mutual' }
     case 'interest_declined':
       return { title: 'An update on your interest', message: 'One of the interests you sent was not taken forward. New members join every week.', icon: 'bell', cta_label: 'Explore Profiles', cta_url: '/search' }
     case 'new_message':
-      return { title: 'You have a new message', message: p?.preview ? `“${String(p.preview).slice(0, 80)}”` : 'Open your messages to reply.', icon: 'chat', cta_label: 'Open Messages', cta_url: p?.conversation_id ? `/messages/${p.conversation_id}` : '/messages' }
+      return { title: 'You have a new message', message: p?.preview ? `“${String(p.preview).slice(0, 80)}”` : 'Open your messages to reply.', icon: 'chat', cta_label: 'Open Messages', cta_url: p?.conversation_id ? `/messages/${p.conversation_id}` : '/inbox' }
     case 'photo_approved':
       return { title: 'Your photo is live', message: 'Your photo was approved and now appears on your profile.', icon: 'check', cta_label: 'View Profile', cta_url: '/profile' }
     case 'photo_rejected':
@@ -230,8 +230,6 @@ const SYNC_EVERY_MIN = 30
 const FIRST_SYNC_LOOKBACK_DAYS = 3
 /** New members older than this are not "new" any more. */
 const NEW_MEMBER_WINDOW_DAYS = 7
-/** Score at or above which a new member counts as "matching your preferences". */
-const NEW_MATCH_MIN_SCORE = 65
 const CITY_RADIUS_KM = 40
 const UNREAD_AFTER_HOURS = 24
 
@@ -336,13 +334,14 @@ async function syncUnreadReminders(admin: any, me: any): Promise<void> {
 }
 
 /**
- * New members since the last sync: at most one "matching your preferences"
- * and one "from your city" per day, each about a different person.
+ * New opposite-gender members who joined after `fromIso`, scored against `me`
+ * with the same scoreMatch search uses, best first. Never includes anyone on
+ * either side of a block, or anyone the scoring itself blocks. Shared by the
+ * notification sync and the member Home's "New Matches" count.
  */
-async function syncNewMembers(admin: any, me: any, since: number): Promise<void> {
+export async function scoreNewMembers(admin: any, me: any, fromIso: string): Promise<Array<{ p: any; score: number }>> {
   const wanted = oppositeGender(me.gender)
-  if (!wanted) return
-  const from = new Date(Math.max(since, Date.now() - NEW_MEMBER_WINDOW_DAYS * 86_400_000)).toISOString()
+  if (!wanted) return []
 
   const { data: fresh } = await admin
     .from('profiles')
@@ -352,11 +351,11 @@ async function syncNewMembers(admin: any, me: any, since: number): Promise<void>
     .eq('discoverable', true)
     .is('deleted_at', null)
     .neq('account_id', me.account_id)
-    .gt('created_at', from)
+    .gt('created_at', fromIso)
     .order('created_at', { ascending: false })
     .limit(40)
   let pool: any[] = fresh ?? []
-  if (pool.length === 0) return
+  if (pool.length === 0) return []
 
   // Never point anyone at a profile on either side of a block.
   const { data: blocks } = await admin
@@ -366,7 +365,7 @@ async function syncNewMembers(admin: any, me: any, since: number): Promise<void>
   const blocked = new Set<string>()
   for (const b of blocks ?? []) blocked.add(b.blocker_id === me.id ? b.blocked_id : b.blocker_id)
   pool = pool.filter(p => !blocked.has(p.id))
-  if (pool.length === 0) return
+  if (pool.length === 0) return []
 
   const [{ data: myPrefs }, { data: theirPrefs }, index] = await Promise.all([
     admin.from('profile_preferences').select(SCORE_PREF_COLUMNS).eq('profile_id', me.id).maybeSingle(),
@@ -377,12 +376,27 @@ async function syncNewMembers(admin: any, me: any, since: number): Promise<void>
   const viewer = toScoreProfile(me)
   const vPrefs = toScorePrefs(myPrefs)
 
-  const scored = pool
+  return pool
     .map(p => ({ p, r: scoreMatch(viewer, vPrefs, toScoreProfile(p), toScorePrefs(prefsBy.get(p.id)), index) }))
     .filter(x => x.r.blockers.length === 0)
     .sort((a, b) => b.r.score - a.r.score)
+    .map(x => ({ p: x.p, score: x.r.score }))
+}
 
-  const best = scored.find(x => x.r.score >= NEW_MATCH_MIN_SCORE)
+/** Score at or above which a new member counts as "matching your preferences". */
+export const NEW_MATCH_SCORE = 65
+
+/**
+ * New members since the last sync: at most one "matching your preferences"
+ * and one "from your city" per day, each about a different person.
+ */
+async function syncNewMembers(admin: any, me: any, since: number): Promise<void> {
+  const from = new Date(Math.max(since, Date.now() - NEW_MEMBER_WINDOW_DAYS * 86_400_000)).toISOString()
+  const scored = await scoreNewMembers(admin, me, from)
+  if (scored.length === 0) return
+  const index = await getLocationIndex(admin)
+
+  const best = scored.find(x => x.score >= NEW_MATCH_SCORE)
   if (best) {
     await notify(admin, {
       accountId: me.account_id,

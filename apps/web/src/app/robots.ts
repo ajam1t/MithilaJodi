@@ -22,6 +22,9 @@ export default function robots(): MetadataRoute.Robots {
           '/settings',
           '/search',         // auth-gated member search
           '/profile',        // own profile + /profile/[id] (auth-gated, private)
+          '/home',
+          '/inbox',
+          '/notifications',
           '/messages',
           '/interests',
           '/shortlists',

@@ -4,7 +4,9 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
 import { findOwnProfileId } from '@/lib/ownProfile'
 import { loadSharedProfile, loadSharePreviewName } from '@/lib/profileShare'
-import { DigitalProfileView } from '@/components/digital-profile/DigitalProfileView'
+import { DigitalProfileView, type ProfileAudience } from '@/components/digital-profile/DigitalProfileView'
+import { ProfileConnect, type ConnectState } from '@/components/digital-profile/ProfileConnect'
+import { canBeMatched } from '@/lib/matchEligibility'
 import { OpenBeacon } from '@/components/digital-profile/OpenBeacon'
 import { DIGITAL_PROFILE_PATH } from '@/lib/digitalProfile'
 import { SITE_URL } from '@/lib/constants'
@@ -45,6 +47,46 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+/**
+ * The signed-in member's standing with this profile, from the interests table:
+ * nothing yet, sent, received, or mutual. Members who cannot be matched (same
+ * gender) get only the link to the full profile.
+ */
+async function connectionFor(admin: any, viewerProfileId: string | null, targetId: string, displayName: string) {
+  const firstName = displayName.split(' ')[0] || 'them'
+  if (!viewerProfileId) {
+    return (
+      <section className="rounded-mj border border-maroon/25 bg-cream px-4 py-4 text-center">
+        <p className="text-[13.5px] text-ink">Complete your own profile to send an interest.</p>
+        <Link href="/profile/edit" className="btn-primary mt-2.5 inline-flex px-5 py-2 text-[14px]">Complete Profile</Link>
+      </section>
+    )
+  }
+  const [{ data: pair }, { data: rows }] = await Promise.all([
+    admin.from('profiles').select('id, gender').in('id', [viewerProfileId, targetId]),
+    admin.from('interests')
+      .select('from_profile, to_profile, status')
+      .or(`and(from_profile.eq.${viewerProfileId},to_profile.eq.${targetId}),and(from_profile.eq.${targetId},to_profile.eq.${viewerProfileId})`),
+  ])
+  const gender = (id: string) => (pair ?? []).find((r: any) => r.id === id)?.gender
+  let state: ConnectState = canBeMatched(gender(viewerProfileId), gender(targetId)) ? 'none' : 'unavailable'
+  for (const r of rows ?? []) {
+    if (r.status === 'accepted') { state = 'match'; break }
+    if (r.status === 'sent') state = r.from_profile === viewerProfileId ? 'sent' : 'received'
+  }
+
+  let conversationId: string | null = null
+  if (state === 'match') {
+    const [a, b] = viewerProfileId < targetId ? [viewerProfileId, targetId] : [targetId, viewerProfileId]
+    const { data: conv } = await admin.from('conversations').select('id').eq('profile_a', a).eq('profile_b', b).maybeSingle()
+    conversationId = conv?.id ?? null
+  }
+  // Keyed so moving between two shared links never carries one person's state to the next.
+  return <ProfileConnect key={`${targetId}:${state}`} profileId={targetId} firstName={firstName} initial={state} conversationId={conversationId} />
+}
+
 function Unavailable({ title, body }: { title: string; body: string }) {
   return (
     <main id="main-content" className="min-h-screen bg-paper">
@@ -78,20 +120,27 @@ export default async function SharedProfilePage({ params }: Props) {
     return <Unavailable title="Profile not available" body="This link is not valid, or the profile is no longer active." />
   }
 
-  // Signed in? Only used to offer the full member profile, and to recognise the
-  // owner — whose own visits are previews, not opens. The projection itself is
-  // identical for everyone, so a failure here degrades to the visitor view.
-  let viewerIsMember = false
-  let viewerIsOwner = false
+  // Who is looking. The projection itself is identical for everyone; this only
+  // picks the call to action — join (visitor), connect (member) — and keeps
+  // the owner's own visits out of the open count. A failure here degrades to
+  // the visitor view.
+  let audience: ProfileAudience = 'visitor'
+  let connection: React.ReactNode = null
   try {
     const session = await getSessionAccount()
     if (session) {
-      viewerIsMember = true
-      viewerIsOwner = (await findOwnProfileId(admin, session.id)) === result.profileId
+      const viewerProfileId = await findOwnProfileId(admin, session.id)
+      if (viewerProfileId === result.profileId) {
+        audience = 'owner'
+      } else {
+        audience = 'member'
+        connection = await connectionFor(admin, viewerProfileId, result.profileId, result.profile.displayName)
+      }
     }
   } catch (err) {
     console.error('[p/token] session probe failed:', err)
   }
+  const viewerIsOwner = audience === 'owner'
 
   return (
     <main id="main-content" className="min-h-screen bg-paper">
@@ -105,7 +154,8 @@ export default async function SharedProfilePage({ params }: Props) {
         profile={result.profile}
         profileId={result.profileId}
         mode="public"
-        viewerIsMember={viewerIsMember && !viewerIsOwner}
+        audience={audience}
+        connection={connection}
       />
       {!viewerIsOwner && <OpenBeacon token={token} />}
     </main>

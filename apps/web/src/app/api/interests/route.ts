@@ -26,7 +26,7 @@ async function notifyInterestReceived(admin: any, toAccountId: string, me: any):
     title: 'New interest received',
     message: `${name} sent you an interest.`,
     ctaLabel: 'View Interest',
-    ctaUrl: '/interests?tab=received',
+    ctaUrl: '/inbox?tab=interests',
     payload: { from_profile_id: me.id, from_name: name },
     // A withdraw-and-resend within a day is one interest, not two.
     dedupeKey: `interest_received:${me.id}`,

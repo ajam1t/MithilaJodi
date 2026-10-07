@@ -11,7 +11,7 @@ function getSafeNextPath(): string | null {
 
 function getPostLoginPath(role?: string): string {
   const next = getSafeNextPath()
-  return next && (role === 'admin' || role === 'moderator') ? next : '/profile'
+  return next && (role === 'admin' || role === 'moderator') ? next : '/home'
 }
 
 export default function LoginPage() {

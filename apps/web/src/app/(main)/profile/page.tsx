@@ -495,62 +495,6 @@ export default function ProfilePage() {
           question they had already answered. It is still stated where it is
           actually load-bearing — /pricing, /help and the Terms. */}
 
-      {/* ── Shareable links ── placed above the gallery because "send my
-          biodata to a family" is one of the most common things a member wants
-          to do, and it had no home anywhere before. */}
-      {profile && (
-        <div className="border-b border-ink/10">
-          <div className="max-w-2xl mx-auto px-4 py-5">
-            {/* Link management lives on the Digital Profile dashboard now — one
-                place for the link, its sections, expiry and activity. */}
-            <section className="card p-5" aria-label="Your Digital Profile">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-terra">Digital Profile</p>
-              <h2 className="mt-1 font-serif text-[18px] leading-tight text-maroon">Share your profile with one link</h2>
-              <p className="mt-1 text-[13px] leading-relaxed text-ink-soft">
-                Send it on WhatsApp, choose what it shows, set an expiry and see when it is opened.
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Link href="/digital-profile" className="btn-primary px-4 py-2 text-[13.5px]">Open my Digital Profile</Link>
-                <Link href="/digital-profile#preview" className="btn-ghost px-4 py-2 text-[13.5px]">Preview as visitor</Link>
-              </div>
-            </section>
-
-            {/* Marriage Biodata left the mobile bottom nav for Notifications
-                (2026-10-07); this is its home on the member's own profile. */}
-            <section className="mt-4 flex items-center gap-3 rounded-mj border border-gold/35 bg-cream p-4" aria-label="Marriage Biodata">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-paper-2 text-maroon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8L14 2.5Zm0 0V8h5.5M8.5 13h7m-7 3.5h5" />
-                </svg>
-              </span>
-              <div className="min-w-0 flex-1">
-                <h2 className="font-serif text-[16px] leading-tight text-maroon">Marriage Biodata</h2>
-                <p className="mt-0.5 text-[12.5px] leading-snug text-ink-soft">Create a PDF biodata to print or share with family.</p>
-              </div>
-              <Link href="/biodata" className="btn-ghost shrink-0 px-3.5 py-2 text-[13px]">Open</Link>
-            </section>
-
-            {/* Below the share card, not above it: sharing a biodata is what a
-                member came here to do, and the completion checklist higher up is
-                what we actually want them to finish. This is a quiet extra. */}
-            <JoinCommunityCard className="mt-4" />
-          </div>
-        </div>
-      )}
-
-      {/* ── 3D Profile Gallery ── */}
-      {profile && cardProfile && (
-        <div className="border-b border-ink/10">
-          <div className="max-w-2xl mx-auto px-4 py-5">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft mb-1">Your Profile Gallery</h3>
-            <p className="mb-3 text-xs text-ink-soft">
-              {galleryFaceCount(cardProfile)} rotating views of the details families see first.
-            </p>
-            <ProfileCardGallery3D profile={cardProfile} />
-          </div>
-        </div>
-      )}
-
       {/* ── Tab content ── */}
       {!profile ? (
         <div className="max-w-2xl mx-auto px-4 py-10 text-center">
@@ -748,6 +692,67 @@ export default function ProfilePage() {
 
         </div>
       )}
+      {/* ── 3D Profile Gallery ── */}
+      {profile && cardProfile && (
+        <div className="border-b border-ink/10">
+          <div className="max-w-2xl mx-auto px-4 py-5">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft mb-1">Your Profile Gallery</h3>
+            <p className="mb-3 text-xs text-ink-soft">
+              {galleryFaceCount(cardProfile)} rotating views of the details families see first.
+            </p>
+            <ProfileCardGallery3D profile={cardProfile} />
+          </div>
+        </div>
+      )}
+
+      {/* ── Account & tools ── Profile is account management. The Digital
+          Profile has its own destination in the nav, so it is not repeated
+          here; Marriage Biodata lives with the other tools. */}
+      {profile && (
+        <div className="border-t border-ink/10">
+          <div className="max-w-2xl mx-auto px-4 py-5 space-y-4">
+            <section className="card divide-y divide-paper-3 overflow-hidden" aria-label="Account">
+              {[
+                { href: '/profile/edit', title: 'Edit profile', sub: 'Personal, community and family details' },
+                { href: '/profile/preferences', title: 'Partner preferences', sub: 'Who you are hoping to meet' },
+                { href: '/settings', title: 'Account settings', sub: 'Privacy, notifications, password and account' },
+              ].map(r => (
+                <Link key={r.href} href={r.href} className="flex items-center gap-3 px-4 py-3.5 hover:bg-paper transition-colors">
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[14.5px] font-medium text-ink">{r.title}</span>
+                    <span className="block text-[12.5px] text-ink-soft">{r.sub}</span>
+                  </span>
+                  <span aria-hidden="true" className="text-ink-soft">›</span>
+                </Link>
+              ))}
+            </section>
+
+            <section aria-label="Tools">
+              <h2 className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-soft">Tools</h2>
+              <div className="flex items-center gap-3 rounded-mj border border-gold/35 bg-cream p-4">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-paper-2 text-maroon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8L14 2.5Zm0 0V8h5.5M8.5 13h7m-7 3.5h5" />
+                  </svg>
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-serif text-[16px] leading-tight text-maroon">Marriage Biodata</h3>
+                  <p className="mt-0.5 text-[12.5px] leading-snug text-ink-soft">Create a PDF biodata to print or share with family.</p>
+                </div>
+                <Link href="/biodata" className="btn-ghost shrink-0 px-3.5 py-2 text-[13px]">Open</Link>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2 px-1 text-[13px]">
+                <Link href="/astrology" className="text-maroon hover:underline">Astrology tools</Link>
+                <span className="text-ink-soft" aria-hidden="true">·</span>
+                <Link href="/marriage-invitation" className="text-maroon hover:underline">Wedding invitation</Link>
+              </div>
+            </section>
+
+            <JoinCommunityCard />
+          </div>
+        </div>
+      )}
+
     </main>
   )
 }

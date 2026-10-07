@@ -3,8 +3,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { AuthBottomNav } from '@/components/AuthBottomNav'
-import { MatchesNavLink } from '@/components/MatchesNavLink'
-import { NotificationsNavLink } from '@/components/NotificationsNavLink'
+import { InboxNavLink } from '@/components/InboxNavLink'
+import { NotificationBell } from '@/components/NotificationsNavLink'
 import { getSessionAccount } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getOnboardingState } from '@/lib/onboarding'
@@ -36,9 +36,20 @@ export const metadata: Metadata = {
  */
 function MemberBrand() {
   return (
-    <Link href="/" className="flex items-center gap-2 shrink-0" aria-label="Mithila Jodi — home">
+    <Link href="/home" className="flex items-center gap-2 shrink-0" aria-label="Mithila Jodi — your home">
       <Image src="/logo-mark.png" alt="" width={40} height={37} priority className="h-8 w-auto object-contain" />
       <span className="font-serif font-bold text-[19px] text-maroon leading-none tracking-tight">Mithila Jodi</span>
+    </Link>
+  )
+}
+
+function SettingsLink() {
+  return (
+    <Link href="/settings" className="grid h-10 w-10 place-items-center rounded-full text-ink-soft hover:text-maroon transition-colors" aria-label="Settings">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+      </svg>
     </Link>
   )
 }
@@ -55,53 +66,28 @@ export default async function MainLayout({ children }: { children: React.ReactNo
 
   return (
     <>
-      {/* Top nav — hidden on mobile, visible from lg breakpoint */}
-      <nav className="sticky top-0 z-40 bg-cream border-b border-paper-3 shadow-mj-xs hidden lg:block">
+      {/* Top nav — desktop. Same five destinations as the mobile bottom nav
+          (Home · Digital Profile · Search · Inbox · Profile), then the extras. */}
+      <nav className="sticky top-0 z-40 bg-cream border-b border-paper-3 shadow-mj-xs hidden lg:block" aria-label="Member navigation">
         <div className="wrap flex items-center justify-between h-14">
           <MemberBrand />
           <div className="flex items-center gap-1">
-            <Link
-              href="/search"
-              className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
-            >
-              Search
-            </Link>
-            <Link
-              href="/messages"
-              className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
-            >
-              Messages
-            </Link>
-            <MatchesNavLink />
-            <NotificationsNavLink />
-            <Link
-              href="/shortlists"
-              className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
-            >
-              Shortlist
-            </Link>
-            <Link
-              href="/biodata"
-              className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
-            >
-              Biodata
-            </Link>
-            <Link
-              href="/settings"
-              className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
-            >
-              Settings
-            </Link>
-            <Link
-              href="/profile"
-              className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
-            >
-              My Profile
-            </Link>
-
-            {/* Content pages — members reached the member area and previously
-                had no way back to Festivals / Songs / Invitation from here. */}
+            {[
+              { href: '/home', label: 'Home' },
+              { href: '/digital-profile', label: 'Digital Profile' },
+              { href: '/search', label: 'Search' },
+            ].map(({ href, label }) => (
+              <Link key={href} href={href} className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors">{label}</Link>
+            ))}
+            <InboxNavLink />
+            <Link href="/profile" className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors">Profile</Link>
             <span className="mx-1 h-4 w-px bg-paper-3" aria-hidden="true" />
+            <Link href="/shortlists" className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors">Shortlist</Link>
+            <Link href="/biodata" className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors">Biodata</Link>
+
+            {/* Content pages, on wide screens: members previously had no way
+                back to Festivals / Songs / Invitation from here. */}
+            <span className="mx-1 hidden h-4 w-px bg-paper-3 xl:block" aria-hidden="true" />
             {[
               { href: '/festivals', label: 'Festivals' },
               { href: '/festival-songs', label: 'Songs' },
@@ -110,25 +96,25 @@ export default async function MainLayout({ children }: { children: React.ReactNo
               <Link
                 key={href}
                 href={href}
-                className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink-soft hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
+                className="hidden xl:inline-flex px-3 py-1.5 text-sm font-medium text-ink-soft hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"
               >
                 {label}
               </Link>
             ))}
+            <NotificationBell />
+            <SettingsLink />
           </div>
         </div>
       </nav>
 
-      {/* Mobile top bar — only on mobile */}
+      {/* Mobile top bar: brand, notifications, settings. */}
       <div className="sticky top-0 z-40 bg-cream border-b border-paper-3 shadow-mj-xs lg:hidden">
-        <div className="flex items-center justify-between h-12 px-4">
+        <div className="flex items-center justify-between h-12 pl-4 pr-2">
           <MemberBrand />
-          <Link href="/settings" className="p-2 text-ink-soft hover:text-maroon transition-colors" aria-label="Settings">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-            </svg>
-          </Link>
+          <div className="flex items-center">
+            <NotificationBell />
+            <SettingsLink />
+          </div>
         </div>
       </div>
 

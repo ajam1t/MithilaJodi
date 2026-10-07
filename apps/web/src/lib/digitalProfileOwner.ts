@@ -44,6 +44,8 @@ export type OwnerDashboard =
       primary: OwnerShare | null
       activity: LinkActivity | null
       preview: ShareLoadResult | null
+      /** Members who viewed the profile inside Mithila Jodi, last 30 days. */
+      profileViews: number
     }
 
 function toShare(s: any): OwnerShare {
@@ -97,39 +99,65 @@ async function loadActivity(admin: any, share: OwnerShare): Promise<LinkActivity
   }
 }
 
+/**
+ * Every member with a profile has a Digital Profile: their first link is
+ * created the first time anything needs it (this dashboard, the member Home),
+ * with a one-year expiry. Only when the profile has NEVER had a link — a
+ * member who turned theirs off keeps it off; nothing re-mints it behind them.
+ */
+async function loadSharesEnsuringFirst(admin: any, profileId: string): Promise<any[]> {
+  const { data: rows } = await admin
+    .from('profile_shares')
+    .select(SHARE_COLS)
+    .eq('profile_id', profileId)
+    .order('created_at', { ascending: false })
+  if (rows && rows.length > 0) return rows
+
+  const { data: created } = await admin
+    .from('profile_shares')
+    .insert({
+      profile_id: profileId,
+      token: generateShareToken(),
+      fields: DEFAULT_SHARE_FIELDS,
+      expires_at: new Date(Date.now() + 365 * 864e5).toISOString(),
+    })
+    .select(SHARE_COLS)
+    .single()
+  return created ? [created] : []
+}
+
+/** The member's live primary link (creating their first if needed), or null. */
+export async function ensurePrimaryShare(admin: any, profileId: string): Promise<OwnerShare | null> {
+  const shares = (await loadSharesEnsuringFirst(admin, profileId)).map(toShare)
+  return shares.find(s => s.live) ?? null
+}
+
+/** In-app profile views in the last 30 days: one per viewer per week (see notifyProfileViewed). */
+export async function countProfileViews(admin: any, accountId: string): Promise<number> {
+  const { count } = await admin
+    .from('notifications')
+    .select('id', { count: 'exact', head: true })
+    .eq('account_id', accountId)
+    .eq('type', 'profile_viewed')
+    .gte('created_at', new Date(Date.now() - 30 * 864e5).toISOString())
+  return count ?? 0
+}
+
 export async function loadOwnerDashboard(admin: any, accountId: string): Promise<OwnerDashboard> {
   const profileId = await findOwnProfileId(admin, accountId)
   if (!profileId) return { status: 'no-profile' }
 
   const { data: prof } = await admin.from('profiles').select('first_name').eq('id', profileId).maybeSingle()
 
-  let { data: rows } = await admin
-    .from('profile_shares')
-    .select(SHARE_COLS)
-    .eq('profile_id', profileId)
-    .order('created_at', { ascending: false })
-
-  // A member's first link is simply there, as it always has been. Only when the
-  // profile has never had one — a member who turned theirs off keeps it off.
-  if (!rows || rows.length === 0) {
-    const { data: created } = await admin
-      .from('profile_shares')
-      .insert({
-        profile_id: profileId,
-        token: generateShareToken(),
-        fields: DEFAULT_SHARE_FIELDS,
-        expires_at: new Date(Date.now() + 365 * 864e5).toISOString(),
-      })
-      .select(SHARE_COLS)
-      .single()
-    rows = created ? [created] : []
-  }
+  const rows = await loadSharesEnsuringFirst(admin, profileId)
 
   const shares: OwnerShare[] = (rows ?? []).map(toShare)
   const primary = shares.find(s => s.live) ?? shares[0] ?? null
-  const [activity, preview] = primary
-    ? await Promise.all([loadActivity(admin, primary), loadSharedProfile(admin, primary.token, { ownerPreview: true })])
-    : [null, null]
+  const [activity, preview, profileViews] = await Promise.all([
+    primary ? loadActivity(admin, primary) : null,
+    primary ? loadSharedProfile(admin, primary.token, { ownerPreview: true }) : null,
+    countProfileViews(admin, accountId),
+  ])
 
-  return { status: 'ok', firstName: prof?.first_name ?? '', shares, primary, activity, preview }
+  return { status: 'ok', firstName: prof?.first_name ?? '', shares, primary, activity, preview, profileViews }
 }

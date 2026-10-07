@@ -148,7 +148,7 @@ export default function ThreadContent() {
       <main id="main-content" className="min-h-screen bg-paper">
         <div className="wrap py-16 text-center">
           <p className="text-ink-soft text-sm">{error}</p>
-          <Link href="/messages" className="text-maroon underline text-sm mt-3 inline-block">
+          <Link href="/inbox" className="text-maroon underline text-sm mt-3 inline-block">
             Back to messages
           </Link>
         </div>
@@ -160,7 +160,7 @@ export default function ThreadContent() {
     <div className="flex flex-col bg-paper" style={{ height: 'calc(100vh - 56px)' }}>
       {/* Header */}
       <div className="border-b border-paper-3 bg-cream px-4 py-3 flex items-center gap-3 shrink-0">
-        <Link href="/messages" className="text-ink-soft hover:text-ink text-lg leading-none">
+        <Link href="/inbox" className="text-ink-soft hover:text-ink text-lg leading-none">
           ←
         </Link>
         {partner && (() => {

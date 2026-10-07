@@ -390,14 +390,14 @@ export function ProfileCard3D({
                     </Link>
                     {isMatch ? (
                       <Link
-                        href="/interests?tab=mutual"
+                        href="/inbox?tab=mutual"
                         className={cn(cn('flex items-center justify-center gap-1.5 rounded-mj-sm font-semibold border transition-all', compact ? 'py-1.5 text-[12px]' : 'py-2 text-[13px]'), 'bg-gold/15 border-gold text-maroon')}
                       >
                         It&rsquo;s a Match! <span aria-hidden="true">❤️</span>
                       </Link>
                     ) : theyAsked ? (
                       <Link
-                        href="/interests?tab=received"
+                        href="/inbox?tab=interests"
                         className={cn(cn('flex items-center justify-center gap-1.5 rounded-mj-sm font-semibold border transition-all', compact ? 'py-1.5 text-[12px]' : 'py-2 text-[13px]'), 'bg-cream border-maroon/40 text-maroon hover:bg-maroon/5')}
                       >
                         <HeartIcon /> Respond

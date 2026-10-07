@@ -280,8 +280,8 @@ export function WelcomeFlow({ initial }: { initial: OnboardingState }) {
                 Our team reviews photos before they appear to other members, usually within a day.
                 You can add more or change it any time from your profile.
               </p>
-              <Link href="/profile" className="btn-primary w-full justify-center py-2.5 text-sm mt-4">
-                Go to my profile
+              <Link href="/home" className="btn-primary w-full justify-center py-2.5 text-sm mt-4">
+                Continue to Mithila Jodi
               </Link>
               <Link href="/profile/edit" className="btn-ghost w-full justify-center py-2.5 text-sm mt-2">
                 Complete the rest of my profile

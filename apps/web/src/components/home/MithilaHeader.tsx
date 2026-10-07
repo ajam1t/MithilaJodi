@@ -40,13 +40,13 @@ const MEMBER_CONTENT_LINKS: NavLink[] = [
   { href: '/blogs', label: 'Blogs' },
 ]
 
+// Signed in: the same five destinations as the member bottom nav.
 const AUTH_NAV_LINKS = [
-  { href: '/search', label: 'Search' },
-  { href: '/messages', label: 'Messages' },
-  { href: '/interests', label: 'Interests' },
-  { href: '/shortlists', label: 'Shortlist' },
+  { href: '/home', label: 'Home' },
   { href: '/digital-profile', label: 'Digital Profile' },
-  { href: '/profile', label: 'My Profile' },
+  { href: '/search', label: 'Search' },
+  { href: '/inbox', label: 'Inbox' },
+  { href: '/profile', label: 'Profile' },
 ]
 
 /* Subtle Mithila-inspired floral line-art for the header edges (mobile). */

@@ -400,7 +400,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
               {data.interestReceived?.status === 'sent' && !isMutual && (
                 <p className="text-xs bg-maroon/10 text-maroon px-3 py-1.5 rounded-mj-sm">
                   This person has sent you an interest.{' '}
-                  <Link href="/interests" className="underline font-medium">View in Interests</Link>
+                  <Link href="/inbox?tab=interests" className="underline font-medium">Respond in Inbox</Link>
                 </p>
               )}
             </div>

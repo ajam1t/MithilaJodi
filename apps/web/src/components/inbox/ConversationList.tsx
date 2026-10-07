@@ -33,7 +33,11 @@ function timeAgo(iso: string): string {
   return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
 }
 
-export default function MessagesContent() {
+/**
+ * The member's conversations — the Messages tab of the Inbox. Lifted from the
+ * old /messages page unchanged in behaviour: same API, same thread links.
+ */
+export function ConversationList() {
   const [conversations, setConversations] = useState<ConversationItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -50,11 +54,7 @@ export default function MessagesContent() {
   }, [])
 
   return (
-    <main id="main-content" className="min-h-screen bg-paper">
-      <div className="wrap py-8">
-        <div className="max-w-2xl mx-auto space-y-5">
-          <h1 className="font-serif text-3xl text-ink">Messages</h1>
-
+        <div className="space-y-3">
           {error && (
             <div className="rounded-mj-sm bg-red-50 border border-red-200 px-4 py-3 text-red-700 text-sm">
               {error}
@@ -77,10 +77,10 @@ export default function MessagesContent() {
             <div className="card p-10 text-center">
               <p className="text-ink-soft text-sm">No conversations yet.</p>
               <p className="text-xs text-ink-soft mt-1">
-                Conversations open when both parties accept each other&apos;s interest.
+                A conversation opens when an interest becomes mutual.
               </p>
-              <Link href="/interests" className="text-maroon text-sm underline mt-3 inline-block">
-                View interests
+              <Link href="/inbox?tab=interests" className="text-maroon text-sm underline mt-3 inline-block">
+                See your interests
               </Link>
             </div>
           ) : (
@@ -150,7 +150,5 @@ export default function MessagesContent() {
             </div>
           )}
         </div>
-      </div>
-    </main>
   )
 }

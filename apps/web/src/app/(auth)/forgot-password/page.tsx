@@ -200,7 +200,7 @@ export default function ForgotPasswordPage() {
       })
       const data: { ok: boolean; message?: string } = await res.json()
       if (!data.ok) { setError(data.message ?? 'Could not reset password. Please try again.'); return }
-      window.location.href = '/profile'
+      window.location.href = '/home'
     } catch {
       setError('Network error. Please check your connection and try again.')
     } finally {

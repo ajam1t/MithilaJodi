@@ -1,15 +1,14 @@
-import { Suspense } from 'react'
-import InterestsContent from './InterestsContent'
+import { redirect } from 'next/navigation'
 
-// The (main) layout supplies robots: noindex. This exists only so the browser
-// tab, history entry and bookmark say what the page is, instead of every member
-// page reading as the site's default title.
-export const metadata = { title: 'Your Matches' }
-
-export default function InterestsPage() {
-  return (
-    <Suspense fallback={null}>
-      <InterestsContent />
-    </Suspense>
-  )
+/**
+ * Interests now live in the Inbox (Messages | Interests | Mutual). This keeps
+ * every old link working — bookmarks, and notifications stored before the
+ * move, which point at /interests?tab=received|sent|mutual.
+ */
+export default async function InterestsRedirect({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const { tab } = await searchParams
+  if (tab === 'mutual') redirect('/inbox?tab=mutual')
+  if (tab === 'sent') redirect('/inbox?tab=interests&view=sent')
+  if (tab === 'foryou') redirect('/home')
+  redirect('/inbox?tab=interests')
 }
