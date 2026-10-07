@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ProfileCardGallery3D, { galleryFaceCount } from '@/components/ProfileCardGallery3D'
-import { JoinCommunityCard } from '@/components/whatsapp/JoinCommunity'
 import { Spinner } from '@/components/ui'
 import type { SearchCard, PartnerPreferencesDisplay } from '@/types/profile'
 
@@ -102,35 +101,6 @@ const TIMELINE_LABELS: Record<string, string> = {
   no_rush:         'No rush',
 }
 
-function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
-  if (!value) return null
-  return (
-    <div className="flex items-start justify-between gap-3 py-2 border-b border-ink/5 last:border-0">
-      <dt className="text-xs text-ink-soft uppercase tracking-wide shrink-0 w-28">{label}</dt>
-      <dd className="text-sm text-ink text-right">{value}</dd>
-    </div>
-  )
-}
-
-function CompletionRing({ pct }: { pct: number }) {
-  const r = 18, circ = 2 * Math.PI * r
-  return (
-    <div className="relative w-12 h-12 shrink-0">
-      <svg className="w-full h-full -rotate-90" viewBox="0 0 44 44">
-        <circle cx="22" cy="22" r={r} fill="none" stroke="currentColor" strokeWidth="3" className="text-ink/10" />
-        <circle cx="22" cy="22" r={r} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"
-          className="text-maroon transition-all duration-500"
-          strokeDasharray={circ}
-          strokeDashoffset={circ - (circ * pct) / 100}
-        />
-      </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-maroon">
-        {pct}%
-      </span>
-    </div>
-  )
-}
-
 /**
  * The profile-completion checklist shown on the member's own profile.
  *
@@ -160,101 +130,106 @@ const CHECKLIST: { label: string; section: string; has: (p: Profile) => boolean 
   { label: 'About you',        section: 'about',     has: p => !!p.about_me },
 ]
 
-function TickIcon() {
-  return (
-    <svg viewBox="0 0 20 20" className="w-4 h-4 shrink-0 text-green-600" fill="currentColor" aria-hidden="true">
-      <path fillRule="evenodd" d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.42 0L3.3 9.7a1 1 0 011.4-1.4l3.1 3.1 6.8-6.8a1 1 0 011.4 0z" clipRule="evenodd" />
-    </svg>
-  )
+// ─── Presentation ────────────────────────────────────────────────────────────
+
+/** Uppercase section label used across the page. */
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8A6516]">{children}</h2>
 }
 
-function CompletionChecklist({ profile, photoCount }: { profile: Profile; photoCount: number }) {
-  const rows = CHECKLIST.map(c => ({ ...c, done: c.has(profile) }))
-  const done = rows.filter(r => r.done).length
-  const pct = Math.round((done / rows.length) * 100)
-  const missing = rows.filter(r => !r.done)
-  const firstMissing = missing[0]
-
-  // Everything counted is filled. Either applaud, or — because a photo is not
-  // one of the twelve scored fields yet strongly drives interest — nudge for a
-  // richer gallery.
-  if (missing.length === 0) {
-    if (photoCount >= 3) {
-      return (
-        <div className="mt-4 flex items-center gap-2 rounded-mj border border-green-200 bg-green-50/70 px-4 py-2.5">
-          <TickIcon />
-          <p className="text-[13px] font-medium text-green-800">Your profile is complete — you&rsquo;re all set to be seen by the community.</p>
-        </div>
-      )
-    }
-    return (
-      <div className="mt-4 rounded-mj border border-gold/40 bg-paper/70 px-4 py-3">
-        <div className="flex items-center gap-2">
-          <TickIcon />
-          <p className="text-[13px] font-medium text-ink">All details added. One more thing to stand out:</p>
-        </div>
-        <Link href="/profile/edit#photos" className="mt-1.5 inline-block text-[13px] font-medium text-maroon underline underline-offset-2">
-          Add more photos ({photoCount}/3) — profiles with three photos get noticed more
-        </Link>
-      </div>
-    )
-  }
-
+function Row({ label, value }: { label: string; value: string | null | undefined }) {
+  if (!value) return null
   return (
-    <div className="mt-4 rounded-mj border border-gold/40 bg-paper/70 p-4">
-      <div className="flex items-baseline justify-between gap-2">
-        <h2 className="font-serif text-[15px] text-maroon">Complete your profile</h2>
-        <span className="text-xs font-semibold text-maroon">{pct}%</span>
-      </div>
-
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-ink/10"
-        role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Profile completion">
-        <div className="h-full rounded-full bg-maroon transition-all duration-500" style={{ width: `${pct}%` }} />
-      </div>
-
-      <p className="mt-2 text-xs leading-relaxed text-ink-soft">
-        Completed profiles appear higher in search and receive more interests.{' '}
-        {missing.length === 1 ? 'Just one detail left.' : `${missing.length} details left.`}
-      </p>
-
-      <ul className="mt-3 grid grid-cols-1 gap-x-4 gap-y-1.5 sm:grid-cols-2">
-        {rows.map(r => (
-          <li key={r.label}>
-            {r.done ? (
-              <span className="flex items-center gap-2 text-[13px] text-ink-soft">
-                <TickIcon />
-                <span className="line-through">{r.label}</span>
-              </span>
-            ) : (
-              <Link href={`/profile/edit#${r.section}`}
-                className="group flex items-center gap-2 text-[13px] text-ink hover:text-maroon">
-                <span className="h-4 w-4 shrink-0 rounded-full border border-ink/30 group-hover:border-maroon" aria-hidden="true" />
-                <span className="underline-offset-2 group-hover:underline">{r.label}</span>
-              </Link>
-            )}
-          </li>
-        ))}
-      </ul>
-
-      {firstMissing && (
-        <Link href={`/profile/edit#${firstMissing.section}`}
-          className="mt-3.5 inline-flex w-full items-center justify-center rounded-mj bg-maroon px-4 py-2 text-sm font-medium text-gold-lt transition-colors hover:bg-maroon/90 sm:w-auto">
-          Finish my profile →
-        </Link>
-      )}
+    <div className="flex items-start justify-between gap-4 py-2.5">
+      <dt className="shrink-0 text-[12.5px] text-ink-soft">{label}</dt>
+      <dd className="text-right text-[14px] leading-snug text-ink">{value}</dd>
     </div>
   )
 }
 
+/** A titled group of rows. Renders nothing when every row is empty. */
+function Group({ title, rows, children, roots = false }: {
+  title: string
+  rows?: Array<[string, string | null | undefined]>
+  children?: React.ReactNode
+  roots?: boolean
+}) {
+  const filled = (rows ?? []).filter(([, v]) => !!v)
+  if (filled.length === 0 && !children) return null
+  return (
+    <section className={`rounded-[18px] border p-4 sm:p-5 ${roots ? 'border-gold/40 bg-[#FFFBF3]' : 'border-gold/25 bg-cream'}`} aria-label={title}>
+      <Eyebrow>{title}</Eyebrow>
+      {roots && <div className="mt-2 h-px w-12 bg-gradient-to-r from-gold to-transparent" aria-hidden="true" />}
+      {filled.length > 0 && (
+        <dl className="mt-1.5 divide-y divide-gold/15">
+          {filled.map(([l, v]) => <Row key={l} label={l} value={v} />)}
+        </dl>
+      )}
+      {children}
+    </section>
+  )
+}
+
+/** A small ring: present, not the hero. */
+function CompletionBadge({ pct }: { pct: number }) {
+  const r = 15, circ = 2 * Math.PI * r
+  return (
+    <div className="flex shrink-0 flex-col items-center">
+      <div className="relative h-10 w-10">
+        <svg className="h-full w-full -rotate-90" viewBox="0 0 36 36" aria-hidden="true">
+          <circle cx="18" cy="18" r={r} fill="none" stroke="currentColor" strokeWidth="2.5" className="text-gold/25" />
+          <circle cx="18" cy="18" r={r} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
+            className={pct >= 100 ? 'text-green' : 'text-maroon'} strokeDasharray={circ} strokeDashoffset={circ - (circ * pct) / 100} />
+        </svg>
+        <span className="absolute inset-0 grid place-items-center text-[10.5px] font-bold text-ink">{pct}%</span>
+      </div>
+      <span className="mt-1 text-[10px] leading-none text-ink-soft">Complete</span>
+    </div>
+  )
+}
+
+const ICON = {
+  lock: 'M6 11h12v9.5H6V11Zm2.5 0V8a3.5 3.5 0 0 1 7 0v3',
+  bell: 'M18 8.5a6 6 0 1 0-12 0c0 6.5-2.5 8.5-2.5 8.5h17S18 15 18 8.5M10.3 20.5a1.9 1.9 0 0 0 3.4 0',
+  gear: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7.4-1.5 1.6 1.2-2 3.4-1.9-.7a7 7 0 0 1-1.7 1l-.3 2h-4l-.3-2a7 7 0 0 1-1.7-1l-1.9.7-2-3.4 1.6-1.2a7 7 0 0 1 0-2l-1.6-1.2 2-3.4 1.9.7a7 7 0 0 1 1.7-1l.3-2h4l.3 2a7 7 0 0 1 1.7 1l1.9-.7 2 3.4-1.6 1.2a7 7 0 0 1 0 2Z',
+  eye: 'M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Zm10 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z',
+}
+
+function Glyph({ d, className = 'h-[18px] w-[18px]' }: { d: string; className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={className}>
+      <path d={d} />
+    </svg>
+  )
+}
+
+const TABS: Array<{ id: Tab; label: string }> = [
+  { id: 'about', label: 'About' },
+  { id: 'community', label: 'Community' },
+  { id: 'preferences', label: 'Preferences' },
+  { id: 'photos', label: 'Photos' },
+]
+
+// ─── Page ────────────────────────────────────────────────────────────────────
+
+/**
+ * The member's own profile: "this is me, and this is where I manage it".
+ * Identity first, then the details in tabs, the gallery of how families see
+ * the profile, and the account rows. No promotional cards — Digital Profile,
+ * Biodata and the WhatsApp community all have their own homes.
+ */
 export default function ProfilePage() {
   const router = useRouter()
   const [account, setAccount] = useState<AccountInfo | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [photos, setPhotos] = useState<Photo[]>([])
   const [prefs, setPrefs] = useState<Preferences | null>(null)
-  // The same preferences with id arrays resolved and values formatted, for the
-  // "Looking for" face of the 3D gallery.
+  // The same preferences with id arrays resolved and values formatted — read by
+  // the Preferences tab and the gallery's "Looking for" face.
   const [prefsDisplay, setPrefsDisplay] = useState<PartnerPreferencesDisplay | null>(null)
+  const [photoVisibility, setPhotoVisibility] = useState<string | null>(null)
+  // Option keys → labels ("maithil_brahmin" → "Maithil Brahmin"), from master data.
+  const [labels, setLabels] = useState<Record<string, Record<string, string>>>({})
   const [tab, setTab] = useState<Tab>('about')
   const [loading, setLoading] = useState(true)
   const [logoutLoading, setLogoutLoading] = useState(false)
@@ -263,19 +238,6 @@ export default function ProfilePage() {
     current_loc_name: string | null
     job_loc_name: string | null
   }>({ native_place_name: null, current_loc_name: null, job_loc_name: null })
-  const [stickyVisible, setStickyVisible] = useState(false)
-  const headerRef = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    const el = headerRef.current
-    if (!el) return
-    const io = new IntersectionObserver(
-      ([entry]) => setStickyVisible(!entry.isIntersecting),
-      { rootMargin: '-56px 0px 0px 0px', threshold: 0 },
-    )
-    io.observe(el)
-    return () => io.disconnect()
-  }, [loading])
 
   useEffect(() => {
     Promise.all([
@@ -289,6 +251,7 @@ export default function ProfilePage() {
         setAccount(authData.account ?? null)
         if (profileData.profile) setProfile(profileData.profile)
         setPhotos(profileData.photos ?? [])
+        setPhotoVisibility(profileData.private?.photo_visibility ?? null)
         setLocationNames({
           native_place_name: profileData.native_place_name ?? null,
           current_loc_name: profileData.current_loc_name ?? null,
@@ -299,6 +262,19 @@ export default function ProfilePage() {
       })
       .catch(() => router.replace('/login'))
       .finally(() => setLoading(false))
+
+    // Master data only (labels), never profile data — so it does not hold up the page.
+    fetch('/api/options?types=caste,sub_caste,gotra,mool,religion')
+      .then(r => r.json())
+      .then(j => {
+        if (!j?.ok) return
+        const out: Record<string, Record<string, string>> = {}
+        for (const [type, list] of Object.entries(j.options as Record<string, Array<{ value: string; label: string }>>)) {
+          out[type] = Object.fromEntries(list.map(o => [o.value, o.label]))
+        }
+        setLabels(out)
+      })
+      .catch(() => { /* fall back to humanised keys */ })
   }, [router])
 
   async function handleLogout() {
@@ -318,23 +294,24 @@ export default function ProfilePage() {
 
   if (!account) return null
 
+  const L = (type: string, v: string | null | undefined) => (v ? labels[type]?.[v] ?? humanize(v) : null)
   const primaryPhoto = photos.find(p => p.is_primary) ?? photos[0] ?? null
-  const displayName = profile
-    ? [profile.first_name, profile.last_name].filter(Boolean).join(' ') || 'No name yet'
-    : null
+  const displayName = profile ? [profile.first_name, profile.last_name].filter(Boolean).join(' ') || 'No name yet' : null
+  // The stored score computeCompletion() writes — the one search ranks by.
   const pct = profile?.profile_complete ?? 0
-
+  const missing = profile ? CHECKLIST.filter(c => !c.has(profile)) : []
   const ownPhotoUrl = primaryPhoto?.signed_url ?? null
+  const visible = !!profile?.discoverable && profile?.profile_status === 'active'
 
   const cardProfile: SearchCard | null = profile ? {
     id: profile.id,
-    display_name: [profile.first_name, profile.last_name].filter(Boolean).join(' ') || 'Your Profile',
+    display_name: displayName || 'Your Profile',
     gender: profile.gender ?? '',
-    age: profile.dob ? Math.floor((Date.now() - new Date(profile.dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 0,
+    age: profile.dob ? age(profile.dob) : 0,
     religion: null,
-    caste: profile.caste,
-    self_gotra: profile.self_gotra,
-    mool: profile.mool,
+    caste: L('caste', profile.caste),
+    self_gotra: L('gotra', profile.self_gotra),
+    mool: L('mool', profile.mool),
     gram: profile.gram,
     height_cm: profile.height_cm,
     diet: profile.diet,
@@ -353,9 +330,7 @@ export default function ProfilePage() {
     institution: profile.institution,
     smoking: profile.smoking,
     drinking: profile.drinking,
-    maternal_gotra: profile.maternal_gotra,
-    // Was hardcoded null, so "Work city" was blank on the gallery's Career face
-    // for every member — the API had been returning this all along.
+    maternal_gotra: L('gotra', profile.maternal_gotra),
     job_loc_name: locationNames.job_loc_name,
     marriage_timeline: profile.marriage_timeline,
     marital_status: profile.marital_status,
@@ -364,395 +339,301 @@ export default function ProfilePage() {
     preferences: prefsDisplay,
   } : null
 
+  const education = profile && [
+    [profile.degree, profile.specialization].filter(Boolean).join(', '),
+    profile.institution,
+    profile.passing_year ? `Class of ${profile.passing_year}` : null,
+    profile.education_detail,
+  ].filter(Boolean) as string[]
+  const career = profile && [
+    profile.job_title,
+    profile.employer,
+    profile.profession_detail,
+    [humanize(profile.industry), humanize(profile.employment_type), humanize(profile.work_type), profile.experience_years != null ? `${profile.experience_years} yrs experience` : null].filter(Boolean).join(' · '),
+  ].filter(Boolean) as string[]
+
   return (
-    <main className="min-h-screen bg-paper">
+    <main id="main-content" className="min-h-screen bg-paper">
+      <div className="mx-auto max-w-2xl px-4 pb-4 pt-5">
 
-      {/* ── Compact sticky identity bar (appears when main header scrolls out) ── */}
-      <div
-        className={[
-          'fixed left-0 right-0 z-30 bg-cream border-b border-paper-3 shadow-mj-xs transition-all duration-200',
-          'top-12 lg:top-14',
-          stickyVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none',
-        ].join(' ')}
-        aria-hidden={!stickyVisible}
-      >
-        <div className="max-w-2xl mx-auto px-4 py-2 flex items-center gap-3">
-          <div className="shrink-0 w-10 h-10 rounded-full overflow-hidden border border-ink/10 bg-paper flex items-center justify-center">
-            {primaryPhoto?.signed_url ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={primaryPhoto.signed_url} alt="" className="w-full h-full object-cover object-[center_35%]" />
-            ) : (
-              <span className="text-base font-serif text-ink-soft">
-                {profile?.first_name?.[0]?.toUpperCase() ?? '?'}
-              </span>
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-serif text-sm text-ink leading-tight truncate">
-              {displayName ?? 'Complete Your Profile'}
-            </p>
-            {profile?.dob && (
-              <p className="text-[11px] text-ink-soft leading-tight truncate">
-                {age(profile.dob)} yrs
-                {profile.gender ? ` · ${profile.gender === 'male' ? 'Male' : 'Female'}` : ''}
-              </p>
-            )}
-          </div>
-          {profile && (
-            <span className="shrink-0 text-[10px] font-semibold text-maroon bg-paper border border-gold border-opacity-40 rounded-full px-2 py-0.5">
-              {pct}%
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* ── Profile header ── */}
-      <div ref={headerRef} className="bg-cream border-b border-ink/10">
-        <div className="max-w-2xl mx-auto px-4 py-5">
-          <div className="flex items-start gap-4">
-
-            {/* Avatar */}
-            <div className="shrink-0 w-20 h-20 rounded-full overflow-hidden border-2 border-ink/10 bg-paper flex items-center justify-center">
-              {primaryPhoto?.signed_url ? (
-                <img src={primaryPhoto.signed_url} alt={displayName ?? 'Profile'}
-                  className="w-full h-full object-cover object-[center_35%]" />
+        {/* ── Identity ── */}
+        <section className="rounded-[22px] border border-gold/30 bg-cream p-4 shadow-mj-xs sm:p-5" aria-label="Your profile">
+          <div className="flex items-center gap-4">
+            <div className="relative h-[84px] w-[84px] shrink-0 overflow-hidden rounded-full bg-paper-2 ring-2 ring-gold/50 ring-offset-2 ring-offset-cream">
+              {ownPhotoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={ownPhotoUrl} alt={displayName ?? 'Your photo'} className="h-full w-full object-cover object-[center_30%]" />
               ) : (
-                <span className="text-3xl font-serif text-ink-soft">
+                <span className="grid h-full w-full place-items-center font-serif text-[32px] text-maroon/70">
                   {profile?.first_name?.[0]?.toUpperCase() ?? '?'}
                 </span>
               )}
             </div>
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate font-serif text-[23px] leading-tight text-maroon">{displayName ?? 'Complete your profile'}</h1>
+              {profile?.dob && (
+                <p className="mt-0.5 text-[13.5px] text-ink-soft">
+                  {age(profile.dob)} yrs{profile.gender ? ` · ${profile.gender === 'male' ? 'Male' : 'Female'}` : ''}
+                </p>
+              )}
+              {profile && (
+                <Link href="/profile/edit#visibility" className="mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-ink/10 bg-paper px-2.5 py-1 text-[12px] font-medium text-ink hover:border-gold/60">
+                  <span aria-hidden="true">{visible ? '🟢' : '⚪'}</span>
+                  {visible ? 'Profile visible' : profile.profile_status && profile.profile_status !== 'active' ? `Profile ${profile.profile_status.replace(/_/g, ' ')}` : 'Profile hidden'}
+                  <span aria-hidden="true" className="text-ink-soft">›</span>
+                  <span className="sr-only">— change who can see your profile</span>
+                </Link>
+              )}
+            </div>
+            {profile && <CompletionBadge pct={pct} />}
+          </div>
 
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  {!profile ? (
-                    <h1 className="font-serif text-xl text-ink">Complete Your Profile</h1>
-                  ) : (
-                    <>
-                      <h1 className="font-serif text-xl text-ink leading-tight truncate">{displayName}</h1>
-                      {profile.dob && (
-                        <p className="text-sm text-ink-soft mt-0.5">
-                          {age(profile.dob)} yrs{profile.gender ? ` · ${profile.gender === 'male' ? 'Male' : 'Female'}` : ''}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-2 mt-1.5">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium
-                          ${profile.discoverable ? 'bg-green-100 text-green-700' : 'bg-ink/10 text-ink-soft'}`}>
-                          {profile.discoverable ? 'Visible' : 'Hidden'}
-                        </span>
-                        {profile.profile_status && profile.profile_status !== 'active' && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 capitalize">
-                            {profile.profile_status.replace(/_/g, ' ')}
-                          </span>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
+          <Link href="/profile/edit" className="mt-4 flex min-h-[48px] w-full items-center justify-center rounded-full bg-maroon-gradient text-[15px] font-semibold text-cream shadow-mj-xs transition active:scale-[0.99]">
+            {profile ? 'Edit Profile' : 'Create Profile'}
+          </Link>
 
-                {/* Completion ring */}
-                <CompletionRing pct={pct} />
+          {profile && (
+            <Link href={`/profile/${profile.id}?preview=1`} className="mt-2.5 flex items-center justify-center gap-2 py-1.5 text-[13.5px] font-medium text-maroon hover:underline hover:underline-offset-4">
+              <Glyph d={ICON.eye} className="h-4 w-4" /> Preview how others see you →
+            </Link>
+          )}
+
+          {/* Completion: a quiet line when done, a clear next step when not. */}
+          {profile && (pct >= 100 ? (
+            <p className="mt-2 flex items-center justify-center gap-1.5 text-[12.5px] text-green">
+              <span aria-hidden="true">✓</span>
+              {visible ? 'Your profile is visible to the Mithila Jodi community.' : 'Your profile is complete.'}
+            </p>
+          ) : (
+            <div className="mt-3 rounded-mj-sm border border-gold/35 bg-[#FFF8EC] p-3.5">
+              <p className="text-[14px] font-semibold text-ink">Your profile is {pct}% complete.</p>
+              <p className="mt-0.5 text-[13px] text-ink-soft">Add a few more details to help families discover you.</p>
+              {missing.length > 0 && (
+                <p className="mt-1.5 text-[12.5px] text-ink-soft">Still to add: {missing.map(m => m.label).join(', ')}.</p>
+              )}
+              <Link href={`/profile/edit#${missing[0]?.section ?? 'basic'}`} className="mt-2.5 inline-flex items-center gap-1 text-[13.5px] font-semibold text-maroon">
+                Complete Profile →
+              </Link>
+            </div>
+          ))}
+        </section>
+      </div>
+
+      {!profile ? (
+        <div className="mx-auto max-w-2xl px-4 py-8 text-center">
+          <p className="text-[14px] text-ink-soft">Add your details to start matching with families.</p>
+        </div>
+      ) : (
+        <>
+          {/* ── Tabs ── scroll sideways rather than shrinking the text. */}
+          <div className="mx-auto max-w-2xl px-4">
+            <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="flex min-w-max gap-1 border-b border-gold/25" role="tablist" aria-label="Profile sections">
+                {TABS.map(t => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={tab === t.id}
+                    onClick={() => setTab(t.id)}
+                    className={`-mb-px whitespace-nowrap border-b-2 px-3.5 py-3 text-[13.5px] font-semibold tracking-wide transition-colors ${
+                      tab === t.id ? 'border-maroon text-maroon' : 'border-transparent text-ink-soft hover:text-ink'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
 
-          {/* Action buttons */}
-          <div className="flex gap-2 mt-4">
-            <Link href="/profile/edit"
-              className="flex-1 text-center text-sm font-medium py-2 rounded-mj bg-maroon text-gold-lt hover:bg-maroon/90 transition-colors">
-              {profile ? 'Edit Profile' : 'Create Profile'}
-            </Link>
-            <button type="button" onClick={handleLogout} disabled={logoutLoading}
-              className="px-4 text-sm font-medium py-2 rounded-mj border border-ink/20 text-ink-soft hover:text-ink hover:border-ink/40 transition-colors disabled:opacity-50">
-              {logoutLoading ? '…' : 'Log Out'}
-            </button>
-          </div>
-
-          {profile && <CompletionChecklist profile={profile} photoCount={photos.length} />}
-        </div>
-
-        {/* Tab bar */}
-        {profile && (
-          <div className="flex border-t border-ink/10 max-w-2xl mx-auto">
-            {(['about', 'community', 'preferences', 'photos'] as Tab[]).map(t => (
-              <button key={t} type="button"
-                onClick={() => setTab(t)}
-                className={`flex-1 py-3 text-xs font-medium uppercase tracking-wide transition-colors border-b-2
-                  ${tab === t
-                    ? 'border-maroon text-maroon'
-                    : 'border-transparent text-ink-soft hover:text-ink'}`}>
-                {t === 'preferences' ? 'Prefs' : t.charAt(0).toUpperCase() + t.slice(1)}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* The "free for all members" banner used to sit here. Removed: a member
-          who is already signed in has nothing to decide about pricing, so it
-          was taking the most valuable space on their own profile to answer a
-          question they had already answered. It is still stated where it is
-          actually load-bearing — /pricing, /help and the Terms. */}
-
-      {/* ── Tab content ── */}
-      {!profile ? (
-        <div className="max-w-2xl mx-auto px-4 py-10 text-center">
-          <p className="text-ink-soft text-sm mb-6">Add your details to start matching with families.</p>
-          <Link href="/profile/edit" className="btn-primary inline-block">Create Profile</Link>
-        </div>
-      ) : (
-        <div className="max-w-2xl mx-auto px-4 py-5 space-y-4">
-
-          {/* ── About tab ── */}
-          {tab === 'about' && (
-            <>
-              {profile.about_me && (
-                <section className="card p-4">
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft mb-2">About Me</h3>
-                  <p className="text-sm text-ink leading-relaxed">{profile.about_me}</p>
-                </section>
-              )}
-
-              {(profile.education_detail || profile.degree || profile.specialization || profile.institution || profile.passing_year) && (
-                <section className="card p-4">
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft mb-3">Education</h3>
-                  <dl>
-                    <InfoRow label="Education" value={profile.education_detail} />
-                    <InfoRow label="Degree" value={profile.degree} />
-                    <InfoRow label="Specialization" value={profile.specialization} />
-                    <InfoRow label="Institution" value={profile.institution} />
-                    <InfoRow label="Passing Year" value={profile.passing_year ? String(profile.passing_year) : null} />
-                  </dl>
-                </section>
-              )}
-
-              {(profile.profession_detail || profile.employer || profile.job_title || profile.employment_type || profile.industry || profile.work_type || profile.experience_years != null) && (
-                <section className="card p-4">
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft mb-3">Career</h3>
-                  <dl>
-                    <InfoRow label="Job Title" value={profile.job_title} />
-                    <InfoRow label="Profession" value={profile.profession_detail} />
-                    <InfoRow label="Company" value={profile.employer} />
-                    <InfoRow label="Employment" value={humanize(profile.employment_type)} />
-                    <InfoRow label="Industry" value={humanize(profile.industry)} />
-                    <InfoRow label="Work Type" value={humanize(profile.work_type)} />
-                    <InfoRow label="Experience" value={profile.experience_years != null ? `${profile.experience_years} yrs` : null} />
-                  </dl>
-                </section>
-              )}
-
-              <section className="card p-4">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft mb-3">Personal Details</h3>
-                <dl>
-                  <InfoRow label="Height" value={profile.height_cm ? formatHeight(profile.height_cm) : null} />
-                  <InfoRow label="Marital Status" value={humanize(profile.marital_status)} />
-                  <InfoRow label="Mother Tongue" value={humanize(profile.mother_tongue)} />
-                  <InfoRow label="Diet" value={profile.diet ? profile.diet.replace(/_/g, ' ') : null} />
-                  <InfoRow label="Smoking" value={profile.smoking} />
-                  <InfoRow label="Drinking" value={profile.drinking} />
-                  <InfoRow label="Looking to marry" value={profile.marriage_timeline ? TIMELINE_LABELS[profile.marriage_timeline] : null} />
-                  <InfoRow label="Profile for" value={profile.profile_for ? profile.profile_for.replace(/_/g, ' ') : null} />
-                </dl>
-                {!profile.height_cm && !profile.diet && (
-                  <p className="text-xs text-ink-soft mt-2">
-                    <Link href="/profile/edit" className="text-maroon hover:underline">Add personal details</Link> to improve your profile.
-                  </p>
+          <div key={tab} className="mx-auto max-w-2xl space-y-3 px-4 py-4 animate-[fadeIn_.25s_ease] motion-reduce:animate-none" role="tabpanel">
+            {tab === 'about' && (
+              <>
+                {profile.about_me && (
+                  <Group title="About Me">
+                    <p className="mt-2 whitespace-pre-wrap text-[14.5px] leading-relaxed text-ink">{profile.about_me}</p>
+                  </Group>
                 )}
-              </section>
-
-              {(profile.managed_by || profile.family_type || profile.family_values || profile.parents_info || profile.siblings_info || profile.family_expectations || profile.family_introduction || profile.family_about) && (
-                <section className="card p-4">
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft mb-3">Family</h3>
-                  <dl>
-                    <InfoRow label="Managed By" value={humanize(profile.managed_by)} />
-                    <InfoRow label="Family Type" value={humanize(profile.family_type)} />
-                    <InfoRow label="Family Values" value={humanize(profile.family_values)} />
-                    <InfoRow label="Parents" value={profile.parents_info} />
-                    <InfoRow label="Siblings" value={profile.siblings_info} />
-                    <InfoRow label="Expectations" value={profile.family_expectations} />
-                  </dl>
-                  {profile.family_introduction && (
-                    <p className="text-sm text-ink leading-relaxed mt-3">{profile.family_introduction}</p>
-                  )}
-                  {profile.family_about && (
-                    <p className="text-sm text-ink leading-relaxed mt-3">{profile.family_about}</p>
-                  )}
-                </section>
-              )}
-            </>
-          )}
-
-          {/* ── Community tab ── */}
-          {tab === 'community' && (
-            <section className="card p-4">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft mb-3">Community & Heritage</h3>
-              <dl>
-                <InfoRow label="Caste" value={profile.caste} />
-                <InfoRow label="Sub-caste" value={profile.sub_caste} />
-                <InfoRow label="Self Gotra" value={profile.self_gotra} />
-                <InfoRow label="Maternal Gotra" value={profile.maternal_gotra} />
-                <InfoRow label="Mool" value={profile.mool} />
-                <InfoRow label="Gram" value={profile.gram} />
-              </dl>
-              {!profile.self_gotra && !profile.caste && (
-                <p className="text-xs text-ink-soft mt-2">
-                  <Link href="/profile/edit" className="text-maroon hover:underline">Add community details</Link> for gotra-safe matching.
-                </p>
-              )}
-            </section>
-          )}
-
-          {/* ── Preferences tab ── */}
-          {tab === 'preferences' && (
-            <section className="card p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Partner Preferences</h3>
-                <Link href="/profile/preferences" className="text-xs text-maroon hover:underline">Edit</Link>
-              </div>
-
-              {!prefs ? (
-                <div className="text-center py-6">
-                  <p className="text-sm text-ink-soft mb-3">You haven&apos;t set any partner preferences yet.</p>
-                  <Link href="/profile/preferences"
-                    className="text-sm text-maroon font-medium border border-maroon/30 rounded-mj px-4 py-2 hover:bg-maroon/5 transition-colors">
-                    Set Preferences
-                  </Link>
-                </div>
-              ) : (
-                <dl>
-                  {(prefs.pref_age_min || prefs.pref_age_max) && (
-                    <InfoRow label="Age Range"
-                      value={`${prefs.pref_age_min ?? '—'} to ${prefs.pref_age_max ?? '—'} years`} />
-                  )}
-                  <InfoRow label="Gender" value={prefs.pref_gender ? (prefs.pref_gender === 'male' ? 'Male' : 'Female') : null} />
-                  {prefs.pref_caste?.length ? (
-                    <InfoRow label="Caste" value={prefs.pref_caste.join(', ')} />
-                  ) : null}
-                  <InfoRow label="Gotra safe" value={prefs.pref_gotra_safe ? 'Yes (exclude same gotra)' : 'No preference'} />
-                  {prefs.pref_diet?.length ? (
-                    <InfoRow label="Diet" value={prefs.pref_diet.join(', ')} />
-                  ) : null}
-                  {prefs.pref_notes && (
-                    <div className="pt-2 mt-2 border-t border-ink/5">
-                      <dt className="text-xs text-ink-soft uppercase tracking-wide mb-1">Notes</dt>
-                      <dd className="text-sm text-ink leading-relaxed">{prefs.pref_notes}</dd>
-                    </div>
-                  )}
-                </dl>
-              )}
-            </section>
-          )}
-
-          {/* ── Photos tab ── */}
-          {tab === 'photos' && (
-            <section className="card p-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft">My Photos</h3>
-                <Link href="/profile/edit" className="text-xs text-maroon hover:underline">Manage</Link>
-              </div>
-
-              {photos.length === 0 ? (
-                <div className="text-center py-6">
-                  <p className="text-sm text-ink-soft mb-3">No photos yet. Add a photo so families can recognise you.</p>
-                  <Link href="/profile/edit"
-                    className="text-sm text-maroon font-medium border border-maroon/30 rounded-mj px-4 py-2 hover:bg-maroon/5 transition-colors">
-                    Add Photo
-                  </Link>
-                </div>
-              ) : (
-                <div className="grid grid-cols-3 gap-2">
-                  {photos.map(photo => (
-                    <div key={photo.id}
-                      className="aspect-square rounded-mj-sm overflow-hidden border border-ink/10 bg-cream relative">
-                      {photo.signed_url ? (
-                        <img src={photo.signed_url} alt="Profile photo"
-                          className="w-full h-full object-cover object-[center_35%]" loading="lazy" decoding="async" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-ink-soft text-xs">
-                          No preview
-                        </div>
-                      )}
-                      {photo.status === 'pending_moderation' && (
-                        <div className="absolute inset-0 bg-ink/30 flex items-center justify-center">
-                          <span className="text-white text-[9px] font-medium text-center leading-tight px-1">
-                            Under review
-                          </span>
-                        </div>
-                      )}
-                      {photo.is_primary && photo.status === 'approved' && (
-                        <div className="absolute top-1 left-1 bg-maroon text-white text-[9px] px-1 rounded">★</div>
-                      )}
-                    </div>
+                <Group title="Personal Details" rows={[
+                  ['Height', profile.height_cm ? formatHeight(profile.height_cm) : null],
+                  ['Marital status', humanize(profile.marital_status)],
+                  ['Mother tongue', humanize(profile.mother_tongue)],
+                  ['Diet', humanize(profile.diet)],
+                  ['Smoking', humanize(profile.smoking)],
+                  ['Drinking', humanize(profile.drinking)],
+                  ['Looking to marry', profile.marriage_timeline ? TIMELINE_LABELS[profile.marriage_timeline] ?? null : null],
+                  ['Profile for', humanize(profile.profile_for)],
+                ]} />
+                {((education?.length ?? 0) > 0 || (career?.length ?? 0) > 0) && (
+                  <Group title="Education & Career">
+                    {education && education.length > 0 && (
+                      <div className="mt-2.5">
+                        <p className="text-[12px] text-ink-soft">Education</p>
+                        <p className="mt-0.5 text-[14.5px] font-medium text-ink">{education[0]}</p>
+                        {education.slice(1).map(l => <p key={l} className="text-[13px] text-ink-soft">{l}</p>)}
+                      </div>
+                    )}
+                    {career && career.length > 0 && (
+                      <div className="mt-3 border-t border-gold/15 pt-3">
+                        <p className="text-[12px] text-ink-soft">Career</p>
+                        <p className="mt-0.5 text-[14.5px] font-medium text-ink">{career[0]}</p>
+                        {career.slice(1).map(l => <p key={l} className="text-[13px] text-ink-soft">{l}</p>)}
+                      </div>
+                    )}
+                  </Group>
+                )}
+                <Group title="Location" rows={[
+                  ['Lives in', locationNames.current_loc_name],
+                  ['Works in', locationNames.job_loc_name],
+                  ['Native place', locationNames.native_place_name],
+                ]} />
+                <Group title="Family Background" rows={[
+                  ['Profile managed by', humanize(profile.managed_by)],
+                  ['Family type', humanize(profile.family_type)],
+                  ['Family values', humanize(profile.family_values)],
+                  ['Parents', profile.parents_info],
+                  ['Siblings', profile.siblings_info],
+                  ['Expectations', profile.family_expectations],
+                ]}>
+                  {[profile.family_introduction, profile.family_about].filter(Boolean).map(t => (
+                    <p key={t} className="mt-2.5 whitespace-pre-wrap text-[14px] leading-relaxed text-ink">{t}</p>
                   ))}
+                </Group>
+              </>
+            )}
+
+            {tab === 'community' && (
+              (profile.caste || profile.self_gotra || profile.maternal_gotra || profile.mool || profile.gram || locationNames.native_place_name) ? (
+                <Group title="Mithila Roots" roots rows={[
+                  ['Community', L('caste', profile.caste)],
+                  ['Sub-caste', L('sub_caste', profile.sub_caste)],
+                  ['Gotra', L('gotra', profile.self_gotra)],
+                  ['Maternal gotra', L('gotra', profile.maternal_gotra)],
+                  ['Mool', L('mool', profile.mool)],
+                  ['Native village', profile.gram],
+                  ['Native place', locationNames.native_place_name],
+                ]} />
+              ) : (
+                <div className="rounded-[18px] border border-gold/40 bg-[#FFFBF3] p-5 text-center">
+                  <p className="font-serif text-[17px] text-maroon">Add your Mithila roots</p>
+                  <p className="mt-1 text-[13px] text-ink-soft">Gotra, mool and native village help families find gotra-safe matches.</p>
+                  <Link href="/profile/edit#community" className="btn-primary mt-3 inline-flex px-5 py-2 text-[14px]">Add community details</Link>
                 </div>
-              )}
+              )
+            )}
+
+            {tab === 'preferences' && (
+              prefsDisplay || prefs ? (
+                <Group title="Partner Preferences" rows={prefsDisplay ? [
+                  ['Preferred age', prefsDisplay.ageRange],
+                  ['Looking for', prefsDisplay.lookingFor],
+                  ['Community', prefsDisplay.community],
+                  ['Marital status', prefsDisplay.maritalStatus],
+                  ['Education', prefsDisplay.education],
+                  ['Occupation', prefsDisplay.profession],
+                  ['Location', prefsDisplay.location],
+                  ['Diet', prefsDisplay.diet],
+                  ['Marriage timeline', prefsDisplay.marriageTimeline],
+                  ['Manglik', prefsDisplay.manglik],
+                  ['Children', prefsDisplay.children],
+                  ['Living arrangement', prefsDisplay.livingArrangement],
+                  ['Career', prefsDisplay.career],
+                  ['Gotra', prefsDisplay.gotraSafe ? 'Gotra-safe matches only' : null],
+                ] : [
+                  ['Preferred age', prefs && (prefs.pref_age_min || prefs.pref_age_max) ? `${prefs.pref_age_min ?? '—'} to ${prefs.pref_age_max ?? '—'} years` : null],
+                  ['Gotra', prefs?.pref_gotra_safe ? 'Gotra-safe matches only' : null],
+                ]}>
+                  {(prefsDisplay?.notes ?? prefs?.pref_notes) && (
+                    <p className="mt-2.5 border-t border-gold/15 pt-2.5 text-[13.5px] leading-relaxed text-ink">{prefsDisplay?.notes ?? prefs?.pref_notes}</p>
+                  )}
+                  <Link href="/profile/preferences" className="mt-3 inline-flex text-[13.5px] font-semibold text-maroon">Edit preferences →</Link>
+                </Group>
+              ) : (
+                <div className="rounded-[18px] border border-gold/25 bg-cream p-5 text-center">
+                  <p className="font-serif text-[17px] text-maroon">Who are you hoping to meet?</p>
+                  <p className="mt-1 text-[13px] text-ink-soft">Your preferences shape the matches we suggest.</p>
+                  <Link href="/profile/preferences" className="btn-primary mt-3 inline-flex px-5 py-2 text-[14px]">Set preferences</Link>
+                </div>
+              )
+            )}
+
+            {tab === 'photos' && (
+              <section className="rounded-[18px] border border-gold/25 bg-cream p-4 sm:p-5" aria-label="Your photos">
+                <div className="flex items-center justify-between gap-3">
+                  <Eyebrow>Your Photos</Eyebrow>
+                  <span className="text-[12px] text-ink-soft">{photos.length} of 5</span>
+                </div>
+                {photos.length === 0 ? (
+                  <p className="mt-3 text-[13.5px] text-ink-soft">No photos yet. Add one so families can recognise you.</p>
+                ) : (
+                  <ul className="mt-3 grid grid-cols-3 gap-2">
+                    {photos.map(photo => (
+                      <li key={photo.id} className="relative aspect-[4/5] overflow-hidden rounded-mj-sm border border-gold/20 bg-paper-2">
+                        {photo.signed_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={photo.signed_url} alt="" className="h-full w-full object-cover object-[center_30%]" loading="lazy" decoding="async" />
+                        ) : (
+                          <span className="grid h-full w-full place-items-center text-[11px] text-ink-soft">No preview</span>
+                        )}
+                        {photo.status === 'pending_moderation' && (
+                          <span className="absolute inset-x-0 bottom-0 bg-ink/60 py-1 text-center text-[10.5px] font-medium text-white">Under review</span>
+                        )}
+                        {photo.status === 'rejected' && (
+                          <span className="absolute inset-x-0 bottom-0 bg-error-fg/80 py-1 text-center text-[10.5px] font-medium text-white">Not approved</span>
+                        )}
+                        {photo.is_primary && photo.status === 'approved' && (
+                          <span className="absolute left-1.5 top-1.5 rounded-full bg-maroon px-1.5 py-0.5 text-[10px] font-semibold text-cream">Main</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <p className="mt-3 text-[12.5px] text-ink-soft">
+                  {photoVisibility === 'connected' ? 'Visible to your accepted connections only.' : 'Visible to all members.'}
+                </p>
+                <Link href="/profile/edit#photos-section" className="btn-ghost mt-3 flex min-h-[44px] w-full justify-center text-[14px]">
+                  Manage photos
+                </Link>
+                <p className="mt-1.5 text-center text-[11.5px] text-ink-soft">Add, remove, reorder, choose your main photo and who can see them.</p>
+              </section>
+            )}
+          </div>
+
+          {/* ── How families see you ── */}
+          {cardProfile && (
+            <section className="mx-auto max-w-2xl px-4 pb-2 pt-4" aria-labelledby="gallery-heading">
+              <h2 id="gallery-heading" className="font-serif text-[20px] text-maroon">Your Profile Gallery</h2>
+              <p className="mt-0.5 text-[13px] text-ink-soft">How your details are presented to families — {galleryFaceCount(cardProfile)} views.</p>
+              <div className="mt-3">
+                <ProfileCardGallery3D profile={cardProfile} variant="deck" />
+              </div>
             </section>
           )}
-
-        </div>
-      )}
-      {/* ── 3D Profile Gallery ── */}
-      {profile && cardProfile && (
-        <div className="border-b border-ink/10">
-          <div className="max-w-2xl mx-auto px-4 py-5">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft mb-1">Your Profile Gallery</h3>
-            <p className="mb-3 text-xs text-ink-soft">
-              {galleryFaceCount(cardProfile)} rotating views of the details families see first.
-            </p>
-            <ProfileCardGallery3D profile={cardProfile} />
-          </div>
-        </div>
+        </>
       )}
 
-      {/* ── Account & tools ── Profile is account management. The Digital
-          Profile has its own destination in the nav, so it is not repeated
-          here; Marriage Biodata lives with the other tools. */}
-      {profile && (
-        <div className="border-t border-ink/10">
-          <div className="max-w-2xl mx-auto px-4 py-5 space-y-4">
-            <section className="card divide-y divide-paper-3 overflow-hidden" aria-label="Account">
-              {[
-                { href: '/profile/edit', title: 'Edit profile', sub: 'Personal, community and family details' },
-                { href: '/profile/preferences', title: 'Partner preferences', sub: 'Who you are hoping to meet' },
-                { href: '/settings', title: 'Account settings', sub: 'Privacy, notifications, password and account' },
-              ].map(r => (
-                <Link key={r.href} href={r.href} className="flex items-center gap-3 px-4 py-3.5 hover:bg-paper transition-colors">
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[14.5px] font-medium text-ink">{r.title}</span>
-                    <span className="block text-[12.5px] text-ink-soft">{r.sub}</span>
-                  </span>
-                  <span aria-hidden="true" className="text-ink-soft">›</span>
-                </Link>
-              ))}
-            </section>
-
-            <section aria-label="Tools">
-              <h2 className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-soft">Tools</h2>
-              <div className="flex items-center gap-3 rounded-mj border border-gold/35 bg-cream p-4">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-paper-2 text-maroon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8L14 2.5Zm0 0V8h5.5M8.5 13h7m-7 3.5h5" />
-                  </svg>
-                </span>
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-serif text-[16px] leading-tight text-maroon">Marriage Biodata</h3>
-                  <p className="mt-0.5 text-[12.5px] leading-snug text-ink-soft">Create a PDF biodata to print or share with family.</p>
-                </div>
-                <Link href="/biodata" className="btn-ghost shrink-0 px-3.5 py-2 text-[13px]">Open</Link>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-2 px-1 text-[13px]">
-                <Link href="/astrology" className="text-maroon hover:underline">Astrology tools</Link>
-                <span className="text-ink-soft" aria-hidden="true">·</span>
-                <Link href="/marriage-invitation" className="text-maroon hover:underline">Wedding invitation</Link>
-              </div>
-            </section>
-
-            <JoinCommunityCard />
-          </div>
+      {/* ── Account ── */}
+      <section className="mx-auto max-w-2xl px-4 pb-8 pt-5" aria-labelledby="account-heading">
+        <h2 id="account-heading" className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8A6516]">Account</h2>
+        <div className="divide-y divide-gold/15 overflow-hidden rounded-[18px] border border-gold/25 bg-cream">
+          {[
+            { href: '/profile/edit#visibility', label: 'Privacy & Visibility', icon: ICON.lock },
+            { href: '/notifications', label: 'Notifications', icon: ICON.bell },
+            { href: '/settings', label: 'Account Settings', icon: ICON.gear },
+          ].map(r => (
+            <Link key={r.href} href={r.href} className="flex min-h-[52px] items-center gap-3 px-4 transition-colors hover:bg-paper active:bg-paper-2">
+              <span className="text-maroon"><Glyph d={r.icon} /></span>
+              <span className="flex-1 text-[14.5px] text-ink">{r.label}</span>
+              <span aria-hidden="true" className="text-ink-soft">›</span>
+            </Link>
+          ))}
         </div>
-      )}
-
+        <button type="button" onClick={handleLogout} disabled={logoutLoading}
+          className="mt-3 w-full rounded-full py-3 text-[14px] font-medium text-ink-soft transition-colors hover:text-maroon disabled:opacity-60">
+          {logoutLoading ? 'Logging out…' : 'Log out'}
+        </button>
+      </section>
     </main>
   )
 }

@@ -50,6 +50,10 @@ type ProfileData = {
   family_introduction: string | null
   photo_url: string | null
   myProfileId: string | null
+  /** The owner previewing their own profile (from /profile): no actions. */
+  preview?: boolean
+  /** In a preview, whether the profile is currently hidden from members. */
+  previewHidden?: boolean
   interestSent: { id: string; status: string } | null
   interestReceived: { id: string; status: string } | null
   shortlisted: boolean
@@ -337,6 +341,17 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
       <div className="wrap py-8">
         <div className="max-w-2xl mx-auto space-y-5">
 
+          {/* Owner preview: what another member sees, nothing they could do. */}
+          {data.preview && (
+            <div className="rounded-mj border border-gold/40 bg-[#FFF8EC] px-4 py-3">
+              <p className="text-[13.5px] font-semibold text-maroon">Preview — this is how other members see your profile.</p>
+              {data.previewHidden && (
+                <p className="mt-1 text-[12.5px] text-ink-soft">Your profile is hidden right now, so members cannot open it until you make it visible.</p>
+              )}
+              <Link href="/profile" className="mt-1.5 inline-block text-[13px] font-medium text-maroon underline underline-offset-2">← Back to my profile</Link>
+            </div>
+          )}
+
           {/* Flash message */}
           {msg && (
             <div className={`rounded-mj-sm px-4 py-3 text-sm ${
@@ -408,6 +423,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
 
           {/* WhatsApp — only after an interest between us has been accepted.
               #whatsapp is the Matches page's "WhatsApp" link target. */}
+          {!data.preview && (
           <div id="whatsapp" className="scroll-mt-24">
             <WhatsAppConnect
               profileId={data.id}
@@ -418,6 +434,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
               }
             />
           </div>
+          )}
 
           {/* About */}
           {data.about_me && (
@@ -493,7 +510,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
           )}
 
           {/* Actions */}
-          {data.myProfileId && !data.blocked && (
+          {!data.preview && data.myProfileId && !data.blocked && (
             <div className="card p-5 space-y-3">
               <h2 className="font-semibold text-ink text-sm">Actions</h2>
               <div className="flex flex-wrap gap-3">
@@ -600,7 +617,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
             </div>
           )}
 
-          {data.blocked && (
+          {!data.preview && data.blocked && (
             <div className="card p-4 text-sm text-ink-soft">
               You have blocked this profile.{' '}
               <button
@@ -620,7 +637,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
             </div>
           )}
 
-          {!data.myProfileId && (
+          {!data.preview && !data.myProfileId && (
             <div className="card p-4 text-sm text-center text-ink-soft">
               <Link href="/profile/edit" className="text-maroon underline">Complete your profile</Link>
               {' '}to send interests and shortlist profiles.

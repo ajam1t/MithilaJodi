@@ -14,7 +14,7 @@ import ProfileViewClient from './ProfileViewClient'
 
 export const dynamic = 'force-dynamic'
 
-async function fetchProfileView(profileId: string, viewerAccountId: string) {
+async function fetchProfileView(profileId: string, viewerAccountId: string, preview = false) {
   const admin = await createAdminClient()
 
   // Viewer's own profile. The full row, not just the id: it is what the match
@@ -30,20 +30,23 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const myProfileId: string | null = (myProfile as any)?.id ?? null
 
-  // Redirect to own profile page if viewing self
-  if (myProfileId === profileId) redirect('/profile')
+  // Your own profile lives at /profile. The one exception is ?preview=1 from
+  // there: "Preview how others see you" renders your profile through this same
+  // member view, with every action and relationship detail left out.
+  const isSelf = myProfileId === profileId
+  if (isSelf && !preview) redirect('/profile')
 
-  // Fetch the target profile (only active+discoverable or exact id match for admin)
-  const { data: profile } = await admin
+  // Fetch the target profile (only active+discoverable — except your own
+  // preview, which shows you your profile even while it is hidden).
+  let profileQuery = admin
     .from('profiles')
     .select(
       'id, account_id, first_name, last_name, gender, dob, religion, caste, sub_caste, self_gotra, mool, gram, height_cm, diet, about_me, family_about, profile_complete, profile_status, discoverable, native_place_id, current_loc_id, employer, profession_detail, education_detail, smoking, drinking, maternal_gotra, job_loc_id, marriage_timeline, marital_status, mother_tongue, degree, specialization, institution, passing_year, job_title, employment_type, industry, work_type, experience_years, family_type, managed_by, family_values, parents_info, siblings_info, family_expectations, family_introduction'
     )
     .eq('id', profileId)
-    .eq('discoverable', true)
-    .eq('profile_status', 'active')
     .is('deleted_at', null)
-    .maybeSingle()
+  if (!isSelf) profileQuery = profileQuery.eq('discoverable', true).eq('profile_status', 'active')
+  const { data: profile } = await profileQuery.maybeSingle()
 
   if (!profile) return null
 
@@ -92,7 +95,9 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
   // Photo privacy: a member who limits photographs to accepted connections
   // shows one here only to those connections. The rest of the profile is
   // unaffected — this withholds the photograph, not the profile.
-  const photoAllowed = await canViewPhotos(admin, myProfileId, profileId)
+  // In your own preview, photos follow the rule for a member you have not
+  // connected with — that is what most people who open your profile see.
+  const photoAllowed = await canViewPhotos(admin, isSelf ? null : myProfileId, profileId)
 
   let photoUrl: string | null = null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -110,7 +115,7 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
   let shortlisted = false
   let blocked = false
 
-  if (myProfileId) {
+  if (myProfileId && !isSelf) {
     const [sentRes, receivedRes, shortRes, blockRes] = await Promise.all([
       admin
         .from('interests')
@@ -185,7 +190,7 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
   // match score, this does not need two sides to compare.
   let theirPreferencesDisplay: PartnerPreferencesDisplay | null = null
 
-  if (myProfileId) {
+  if (myProfileId && !isSelf) {
     const [{ data: myPrefs }, { data: theirPrefs }, locationIndex] = await Promise.all([
       admin.from('profile_preferences').select('*').eq('profile_id', myProfileId).maybeSingle(),
       admin.from('profile_preferences').select('*').eq('profile_id', profileId).maybeSingle(),
@@ -209,7 +214,7 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
     }
   }
 
-  if (!myProfileId) {
+  if (!myProfileId || isSelf) {
     theirPreferencesDisplay = await formatPartnerPreferences(
       admin,
       (await admin.from('profile_preferences').select('*').eq('profile_id', profileId).maybeSingle()).data,
@@ -230,6 +235,9 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
 
   return {
     id: profileId,
+    /** Owner previewing their own profile: render it with no actions at all. */
+    preview: isSelf,
+    previewHidden: isSelf && (p.discoverable !== true || p.profile_status !== 'active'),
     display_name: displayName,
     gender: p.gender,
     age,
@@ -324,14 +332,17 @@ async function fetchProfileView(profileId: string, viewerAccountId: string) {
 
 export default async function ProfileViewPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ preview?: string }>
 }) {
   const session = await getSessionAccount()
   if (!session) redirect(`/login?next=/profile/${(await params).id}`)
 
   const { id } = await params
-  const data = await fetchProfileView(id, session.id)
+  const { preview } = await searchParams
+  const data = await fetchProfileView(id, session.id, preview === '1')
 
   if (!data) {
     return (

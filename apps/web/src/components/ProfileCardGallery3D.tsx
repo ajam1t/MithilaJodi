@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import Image from 'next/image'
 import type { SearchCard } from '@/types/profile'
@@ -8,7 +8,17 @@ import type { SearchCard } from '@/types/profile'
 type ProfileCardGallery3DProps = {
   profile: SearchCard
   autoRotate?: boolean
+  /**
+   * 'classic' (default) is the look used on shared Digital Profiles and member
+   * profile pages. 'deck' is the member's own Profile page: one clearly
+   * readable card with its neighbours subdued behind it, quieter framing, and
+   * empty fields left out instead of saying "Not provided".
+   */
+  variant?: 'classic' | 'deck'
 }
+
+/** Set by the 'deck' variant: hide fields with nothing in them. */
+const HideEmpty = createContext(false)
 
 const BASE_CARDS = ['Profile', 'Career', 'Lifestyle', 'Roots', 'Marriage'] as const
 const ROTATE_MS = 4800
@@ -45,10 +55,31 @@ function humanize(value: string | null | undefined) {
 }
 
 function Field({ label, value }: { label: string; value: string | number | null | undefined }) {
+  const hideEmpty = useContext(HideEmpty)
+  if (hideEmpty && (value == null || value === '')) return null
   return (
     <div className="flex items-start justify-between gap-3 border-b border-gold/15 py-2 last:border-0">
       <span className="shrink-0 text-[10px] uppercase tracking-wide text-ink-soft">{label}</span>
       <span className="text-right text-[13px] leading-snug text-ink">{text(value)}</span>
+    </div>
+  )
+}
+
+/** Deck: neighbours sit behind the centre card, quieter, and only one each side. */
+function deckStyleForOffset(offset: number) {
+  const side = Math.sign(offset)
+  switch (Math.abs(offset)) {
+    case 0: return { transform: 'translateX(0) translateZ(60px) rotateY(0deg) scale(1)', opacity: 1, zIndex: 30 }
+    case 1: return { transform: `translateX(${side * 60}%) translateZ(0) rotateY(${-side * 16}deg) scale(.84)`, opacity: .38, zIndex: 20 }
+    default: return { transform: `translateX(${side * 90}%) translateZ(-60px) rotateY(${-side * 20}deg) scale(.7)`, opacity: 0, zIndex: 10 }
+  }
+}
+
+function DeckFrame({ children, active }: { children: ReactNode; active: boolean }) {
+  return (
+    <div className={`flex h-full w-full flex-col overflow-hidden rounded-[20px] border bg-cream transition-shadow ${active ? 'border-gold/60 shadow-mj-sm' : 'border-gold/25'}`}>
+      <div className="h-[3px] shrink-0 bg-gradient-to-r from-maroon via-gold to-maroon" />
+      <div className="min-h-0 flex-1 px-4 py-4">{children}</div>
     </div>
   )
 }
@@ -251,8 +282,9 @@ export function galleryFaceCount(profile: SearchCard): number {
   return facesFor(profile).length
 }
 
-export default function ProfileCardGallery3D({ profile, autoRotate = true }: ProfileCardGallery3DProps) {
+export default function ProfileCardGallery3D({ profile, autoRotate = true, variant = 'classic' }: ProfileCardGallery3DProps) {
   const CARDS: readonly string[] = facesFor(profile)
+  const deck = variant === 'deck'
 
   const [active, setActive] = useState(0)
   const [paused, setPaused] = useState(false)
@@ -305,42 +337,71 @@ export default function ProfileCardGallery3D({ profile, autoRotate = true }: Pro
         aria-roledescription="carousel"
         aria-label={`Your profile information cards. Showing ${CARDS[active]}.`}
       >
-        <div className="relative mx-auto h-[330px] max-w-[620px] sm:h-[370px]" style={{ transformStyle: 'preserve-3d' }}>
+        <div className={`relative mx-auto max-w-[620px] ${deck ? 'h-[350px] sm:h-[380px]' : 'h-[330px] sm:h-[370px]'}`} style={{ transformStyle: 'preserve-3d' }}>
           {CARDS.map((label, index) => {
-            const style = styleForOffset(offsetFor(index, active, CARDS.length))
+            const offset = offsetFor(index, active, CARDS.length)
+            const style = deck ? deckStyleForOffset(offset) : styleForOffset(offset)
             const isActive = index === active
             return (
               <div
                 key={label}
-                className="absolute left-1/2 top-1/2 h-[290px] w-[190px] sm:h-[330px] sm:w-[220px]"
+                className={`absolute left-1/2 top-1/2 ${deck ? 'h-[320px] w-[228px] sm:h-[350px] sm:w-[250px]' : 'h-[290px] w-[190px] sm:h-[330px] sm:w-[220px]'}`}
                 style={{
                   transform: `translate(-50%, -50%) ${style.transform}`,
                   opacity: style.opacity,
                   zIndex: style.zIndex,
                   transition: reducedMotion.current ? 'none' : 'transform .6s cubic-bezier(.2,.7,.2,1), opacity .6s ease',
                   transformStyle: 'preserve-3d',
-                  pointerEvents: 'auto',
+                  pointerEvents: deck && Math.abs(offset) > 1 ? 'none' : 'auto',
                 }}
                 onClick={() => { if (!isActive) { setStopped(true); setActive(index) } }}
                 aria-hidden={!isActive}
               >
-                <CardFrame active={isActive}><Face card={label} profile={profile} /></CardFrame>
+                {deck
+                  ? <DeckFrame active={isActive}><HideEmpty.Provider value><Face card={label} profile={profile} /></HideEmpty.Provider></DeckFrame>
+                  : <CardFrame active={isActive}><Face card={label} profile={profile} /></CardFrame>}
               </div>
             )
           })}
         </div>
       </div>
 
-      <div className="mt-2 flex items-center justify-center gap-4">
-        <button type="button" onClick={() => stopAndNavigate(-1)} className="rounded-full border border-gold/40 p-1.5 text-maroon hover:border-gold focus:outline-none focus:ring-1 focus:ring-gold" aria-label="Previous information card">←</button>
-        <div className="flex items-center gap-1.5" aria-label="Choose profile information card">
-          {CARDS.map((label, index) => (
-            <button key={label} type="button" onClick={() => { setStopped(true); setActive(index) }} aria-label={label} aria-current={active === index} className={`rounded-full transition-all ${active === index ? 'h-2 w-5 bg-maroon' : 'h-2 w-2 bg-gold/50 hover:bg-gold'}`} />
-          ))}
+      {deck ? (
+        <>
+          <div className="mt-3 flex items-center justify-center gap-4">
+            <button type="button" onClick={() => stopAndNavigate(-1)} aria-label="Previous card"
+              className="grid h-10 w-10 place-items-center rounded-full border border-gold/40 bg-cream text-maroon transition-colors hover:border-gold active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40">
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true"><path d="m15 6-6 6 6 6" /></svg>
+            </button>
+            <div className="flex items-center gap-1.5" role="group" aria-label="Choose a card">
+              {CARDS.map((label, index) => (
+                <button key={label} type="button" onClick={() => { setStopped(true); setActive(index) }} aria-label={label} aria-current={active === index}
+                  className={`h-2 rounded-full transition-all ${active === index ? 'w-5 bg-maroon' : 'w-2 bg-gold/45 hover:bg-gold'}`} />
+              ))}
+            </div>
+            <button type="button" onClick={() => stopAndNavigate(1)} aria-label="Next card"
+              className="grid h-10 w-10 place-items-center rounded-full border border-gold/40 bg-cream text-maroon transition-colors hover:border-gold active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40">
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
+            </button>
+          </div>
+          <p className="mt-2 text-center text-[12px] text-ink-soft" aria-live="polite">
+            {active + 1} / {CARDS.length} · <span className="font-medium text-maroon">{CARDS[active]}</span>
+          </p>
+        </>
+      ) : (
+        <>
+        <div className="mt-2 flex items-center justify-center gap-4">
+          <button type="button" onClick={() => stopAndNavigate(-1)} className="rounded-full border border-gold/40 p-1.5 text-maroon hover:border-gold focus:outline-none focus:ring-1 focus:ring-gold" aria-label="Previous information card">←</button>
+          <div className="flex items-center gap-1.5" aria-label="Choose profile information card">
+            {CARDS.map((label, index) => (
+              <button key={label} type="button" onClick={() => { setStopped(true); setActive(index) }} aria-label={label} aria-current={active === index} className={`rounded-full transition-all ${active === index ? 'h-2 w-5 bg-maroon' : 'h-2 w-2 bg-gold/50 hover:bg-gold'}`} />
+            ))}
+          </div>
+          <button type="button" onClick={() => stopAndNavigate(1)} className="rounded-full border border-gold/40 p-1.5 text-maroon hover:border-gold focus:outline-none focus:ring-1 focus:ring-gold" aria-label="Next information card">→</button>
         </div>
-        <button type="button" onClick={() => stopAndNavigate(1)} className="rounded-full border border-gold/40 p-1.5 text-maroon hover:border-gold focus:outline-none focus:ring-1 focus:ring-gold" aria-label="Next information card">→</button>
-      </div>
-      <p className="mt-1.5 text-center text-[11px] text-ink-soft">{active + 1} / {CARDS.length} · <span className="text-maroon">{CARDS[active]}</span> · swipe or use arrows</p>
+        <p className="mt-1.5 text-center text-[11px] text-ink-soft">{active + 1} / {CARDS.length} · <span className="text-maroon">{CARDS[active]}</span> · swipe or use arrows</p>
+        </>
+      )}
     </div>
   )
 }
