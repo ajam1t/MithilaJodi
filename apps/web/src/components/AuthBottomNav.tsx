@@ -42,7 +42,7 @@ const tabs: Tab[] = [
     // A person on a card with a link — "my profile, to share", not a document.
     href: '/digital-profile',
     label: 'Digital Profile',
-    matchPaths: ['/digital-profile'],
+    matchPaths: ['/digital-profile', '/p'],
     icon: (active) => (
       <svg width="22" height="22" viewBox="0 0 24 24" {...stroke(active)}>
         <rect x="3" y="4" width="12.5" height="16" rx="2.2" />

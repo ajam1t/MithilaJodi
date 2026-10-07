@@ -10,9 +10,10 @@ import { useCallback, useEffect, useRef, useState } from 'react'
  * stacked behind, which is also how the profile card gallery already behaves —
  * so the shared page feels like the same product.
  *
- * Rendered only when there is more than one photograph; a single photo already
- * appears in the header and a one-item carousel would be a control that does
- * nothing.
+ * Rendered only when there is more than one photograph — DigitalProfileView
+ * shows a single photo in a plain frame, since a one-item carousel would be a
+ * control that does nothing. This is the only place a shared profile's photos
+ * appear; the identity header above it deliberately has none.
  */
 export function SharedPhotoCarousel({ photos, name }: { photos: string[]; name: string }) {
   const [active, setActive] = useState(0)
@@ -41,7 +42,7 @@ export function SharedPhotoCarousel({ photos, name }: { photos: string[]; name: 
   return (
     <section aria-label={`Photographs of ${name}`} className="select-none">
       <div
-        className="relative h-[300px] sm:h-[340px]"
+        className="relative h-[340px] sm:h-[400px]"
         style={{ perspective: '1100px' }}
         onPointerDown={e => { pointerStart.current = e.clientX }}
         onPointerUp={e => {
@@ -65,7 +66,7 @@ export function SharedPhotoCarousel({ photos, name }: { photos: string[]; name: 
             <div
               key={src}
               aria-hidden={!isActive}
-              className="absolute left-1/2 top-0 h-full w-[62%] sm:w-[54%] -translate-x-1/2 transition-all duration-500 ease-out"
+              className="absolute left-1/2 top-0 h-full w-[66%] sm:w-[52%] -translate-x-1/2 transition-all duration-500 ease-out"
               style={{
                 transform: `translateX(calc(-50% + ${offset * 38}%)) translateZ(${-depth * 90}px) rotateY(${offset * -22}deg) scale(${isActive ? 1 : 0.9})`,
                 opacity: depth >= 3 ? 0 : 1 - depth * 0.22,
@@ -73,7 +74,7 @@ export function SharedPhotoCarousel({ photos, name }: { photos: string[]; name: 
                 pointerEvents: isActive ? 'auto' : 'none',
               }}
             >
-              <div className="h-full w-full overflow-hidden rounded-mj border-2 border-gold/50 bg-paper-2 shadow-mj">
+              <div className="h-full w-full overflow-hidden rounded-[20px] border border-gold/50 bg-paper-2 shadow-mj-sm">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={src}
@@ -89,7 +90,9 @@ export function SharedPhotoCarousel({ photos, name }: { photos: string[]; name: 
 
       <div className="mt-3 flex items-center justify-center gap-3">
         <button type="button" onClick={() => take(-1)} aria-label="Previous photograph"
-          className="grid h-8 w-8 place-items-center rounded-full border border-gold/50 text-maroon transition-colors hover:bg-maroon hover:text-gold-lt">←</button>
+          className="grid h-10 w-10 place-items-center rounded-full border border-gold/50 bg-cream text-maroon transition-colors hover:border-gold active:scale-95">
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true"><path d="m15 6-6 6 6 6" /></svg>
+        </button>
         <div className="flex gap-1.5" role="tablist" aria-label="Choose a photograph">
           {photos.map((src, i) => (
             <button key={src} type="button" role="tab" aria-selected={i === active}
@@ -99,10 +102,12 @@ export function SharedPhotoCarousel({ photos, name }: { photos: string[]; name: 
           ))}
         </div>
         <button type="button" onClick={() => take(1)} aria-label="Next photograph"
-          className="grid h-8 w-8 place-items-center rounded-full border border-gold/50 text-maroon transition-colors hover:bg-maroon hover:text-gold-lt">→</button>
+          className="grid h-10 w-10 place-items-center rounded-full border border-gold/50 bg-cream text-maroon transition-colors hover:border-gold active:scale-95">
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
+        </button>
       </div>
       <p className="mt-1.5 text-center text-[11px] text-ink-soft">
-        {active + 1} / {photos.length} · swipe or use the arrows
+        {active + 1} / {photos.length}
       </p>
     </section>
   )

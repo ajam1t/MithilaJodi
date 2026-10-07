@@ -8,6 +8,8 @@ import { DigitalProfileView, type ProfileAudience } from '@/components/digital-p
 import { ProfileConnect, type ConnectState } from '@/components/digital-profile/ProfileConnect'
 import { canBeMatched } from '@/lib/matchEligibility'
 import { OpenBeacon } from '@/components/digital-profile/OpenBeacon'
+import { MithilaHeader } from '@/components/home/MithilaHeader'
+import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { DIGITAL_PROFILE_PATH } from '@/lib/digitalProfile'
 import { SITE_URL } from '@/lib/constants'
 
@@ -87,9 +89,26 @@ async function connectionFor(admin: any, viewerProfileId: string | null, targetI
   return <ProfileConnect key={`${targetId}:${state}`} profileId={targetId} firstName={firstName} initial={state} conversationId={conversationId} />
 }
 
+/**
+ * The site's own header and bottom nav around a shared profile. Both adapt to
+ * who is looking — the public nav for a visitor, the member nav (with Digital
+ * Profile highlighted) for a signed-in member — so nobody is pushed into a
+ * dashboard just by opening a link.
+ */
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <MithilaHeader />
+      {children}
+      <MobileBottomNav />
+    </>
+  )
+}
+
 function Unavailable({ title, body }: { title: string; body: string }) {
   return (
-    <main id="main-content" className="min-h-screen bg-paper">
+    <Shell>
+    <main id="main-content" className="min-h-screen bg-paper pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0">
       <div className="mx-auto max-w-md px-4 py-20 text-center">
         <div className="ornament-line mx-auto mb-5 w-14" />
         <h1 className="font-serif text-[24px] leading-tight text-maroon">{title}</h1>
@@ -100,6 +119,7 @@ function Unavailable({ title, body }: { title: string; body: string }) {
         </div>
       </div>
     </main>
+    </Shell>
   )
 }
 
@@ -143,11 +163,19 @@ export default async function SharedProfilePage({ params }: Props) {
   const viewerIsOwner = audience === 'owner'
 
   return (
-    <main id="main-content" className="min-h-screen bg-paper">
+    <Shell>
+    <main id="main-content" className="min-h-screen bg-paper pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0">
+      {/* The owner sees their profile exactly as others do; the only
+          difference is this one compact note with their two actions. */}
       {viewerIsOwner && (
-        <div className="bg-maroon px-4 py-2.5 text-center text-[13px] text-cream">
-          This is your Digital Profile, exactly as visitors see it. Your own visits are not counted.{' '}
-          <Link href={DIGITAL_PROFILE_PATH} className="font-semibold text-gold-lt underline underline-offset-2">Manage sharing</Link>
+        <div className="mx-auto max-w-2xl px-4 pt-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-mj border border-gold/35 bg-cream px-4 py-3">
+            <p className="text-[13px] text-ink">This is how your profile appears to others. <span className="text-ink-soft">Your own visits are not counted.</span></p>
+            <span className="flex gap-2">
+              <Link href="/profile/edit" className="btn-primary px-4 py-1.5 text-[13px]">Edit Profile</Link>
+              <Link href={DIGITAL_PROFILE_PATH} className="btn-ghost px-4 py-1.5 text-[13px]">Manage sharing</Link>
+            </span>
+          </div>
         </div>
       )}
       <DigitalProfileView
@@ -159,5 +187,6 @@ export default async function SharedProfilePage({ params }: Props) {
       />
       {!viewerIsOwner && <OpenBeacon token={token} />}
     </main>
+    </Shell>
   )
 }

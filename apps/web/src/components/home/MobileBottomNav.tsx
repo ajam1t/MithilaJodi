@@ -19,6 +19,8 @@ export function MobileBottomNav() {
     if (href === '/') return pathname === '/'
     // Join / Login covers the whole sign-in group, not just /register.
     if (href === '/register') return ['/register', '/login', '/forgot-password'].some(p => pathname.startsWith(p))
+    // A shared profile (/p/…) is a Digital Profile.
+    if (href === '/digital-profile') return pathname.startsWith('/digital-profile') || pathname.startsWith('/p/')
     return pathname.startsWith(href)
   }
 
