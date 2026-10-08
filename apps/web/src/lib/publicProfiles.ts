@@ -155,7 +155,6 @@ export async function getPublicShowcaseProfiles(): Promise<SearchCard[]> {
         'profile_status',
         'native_place_id',
         'current_loc_id',
-        'employer',
         'profession_detail',
         'education_detail',
         'smoking',
@@ -217,11 +216,8 @@ export async function getPublicShowcaseProfiles(): Promise<SearchCard[]> {
     for (const row of (accountRows ?? [])) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const acct = row as any
-      if (
-        acct.deleted_at === null &&
-        acct.account_status !== 'banned' &&
-        acct.account_status !== 'deleted'
-      ) {
+      // Only usable accounts — a suspended member leaves the public showcase too.
+      if (acct.deleted_at === null && acct.account_status === 'active') {
         inGoodStanding.add(acct.id as string)
       }
     }
@@ -340,7 +336,9 @@ export async function getPublicShowcaseProfiles(): Promise<SearchCard[]> {
       has_photo: hasPhoto,
       primary_photo_url: signedUrlByProfile.get(p.id as string) ?? null,
       verified: verifiedSet.has(p.id as string),
-      employer: (p.employer as string | null) ?? null,
+      // The employer's name is not published on the open web: next to a full
+      // name, city and photo it pinpoints a workplace. Members still see it.
+      employer: null,
       profession_detail: (p.profession_detail as string | null) ?? null,
       education_detail: (p.education_detail as string | null) ?? null,
       smoking: (p.smoking as string | null) ?? null,

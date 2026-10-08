@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (account.account_status === 'banned' || account.account_status === 'deleted') {
+    if (account.account_status !== 'active' && account.account_status !== 'pending_verification') {
       return NextResponse.json({ ok: false, message: 'Account is not available.' }, { status: 403 })
     }
 
@@ -77,6 +77,10 @@ export async function POST(request: NextRequest) {
       console.error('[password/reset] update error:', updateError.message)
       return NextResponse.json({ ok: false, message: 'Could not reset password. Please try again.' }, { status: 500 })
     }
+
+    // Everywhere else is signed out: a reset is often how someone recovers an
+    // account another person was using.
+    await admin.from('account_sessions').update({ revoked_at: new Date().toISOString() }).eq('account_id', account.id).is('revoked_at', null)
 
     const token = generateSessionToken()
     const sessionTokenHash = hashSessionToken(token)

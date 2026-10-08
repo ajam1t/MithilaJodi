@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
+import { refreshPublicShowcase } from '@/lib/showcaseCache'
 
 export async function PATCH(
   request: NextRequest,
@@ -65,6 +66,7 @@ export async function PATCH(
       payload: { profile_id: photo.profile_id },
     })
 
+    refreshPublicShowcase()
     return NextResponse.json({ ok: true })
   }
 
@@ -109,6 +111,7 @@ export async function PATCH(
     },
   })
 
+  refreshPublicShowcase()
   return NextResponse.json({ ok: true })
 }
 
@@ -162,5 +165,6 @@ export async function DELETE(
     },
   })
 
+  refreshPublicShowcase()
   return NextResponse.json({ ok: true })
 }

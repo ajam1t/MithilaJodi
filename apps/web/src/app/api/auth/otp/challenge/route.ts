@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { createOtpService } from '@/lib/services/otp/OtpService'
 import { INDIA_MOBILE_RE, toE164 } from '@/lib/constants'
+import { rateLimit } from '@/lib/astrology/server/rateLimit'
 
 export async function POST(request: NextRequest) {
+  // Per-IP ceiling on top of the per-mobile limits (abuse and brute force).
+  const limited = rateLimit(request, 'otp-challenge', { limit: 10, windowMs: 15 * 60_000 })
+  if (!limited.ok) {
+    return NextResponse.json({ ok: false, message: 'Too many attempts. Please wait a few minutes and try again.' }, { status: 429 })
+  }
   let body: unknown
   try {
     body = await request.json()

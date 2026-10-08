@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
+import { refreshPublicShowcase } from '@/lib/showcaseCache'
 
 export async function PATCH(
   request: NextRequest,
@@ -101,6 +102,7 @@ export async function PATCH(
       },
     })
 
+    refreshPublicShowcase()
     return NextResponse.json({ ok: true, membership })
   }
 
@@ -127,5 +129,6 @@ export async function PATCH(
     payload: { new_status: account_status, reason: reason ?? null },
   })
 
+  refreshPublicShowcase()
   return NextResponse.json({ ok: true })
 }

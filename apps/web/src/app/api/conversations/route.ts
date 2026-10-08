@@ -56,15 +56,21 @@ export async function GET() {
   // Step 6: batch-fetch partner names
   const { data: partnerProfilesData } = await admin
     .from('profiles')
-    .select('id, first_name, last_name')
+    .select('id, first_name, last_name, deleted_at, profile_status, accounts(account_status, deleted_at)')
     .in('id', uniquePartnerIds)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const partnerProfiles: any[] = partnerProfilesData ?? []
   const profileMap = new Map<string, { first_name: string; last_name: string | null }>()
+  // Partners who have left (deleted, deactivated, suspended) show as "Member"
+  // with no photo; their thread history stays.
+  const live = new Set<string>()
   for (const p of partnerProfiles) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const row = p as any
+    const acct = Array.isArray(row.accounts) ? row.accounts[0] : row.accounts
+    if (row.deleted_at || row.profile_status === 'deleted' || row.profile_status === 'deactivated' || !acct || acct.deleted_at || acct.account_status !== 'active') continue
+    live.add(row.id as string)
     profileMap.set(row.id as string, {
       first_name: row.first_name as string,
       last_name: (row.last_name as string | null) ?? null,
@@ -77,7 +83,7 @@ export async function GET() {
     .select('profile_id, storage_path')
     .eq('is_primary', true)
     .eq('status', 'approved')
-    .in('profile_id', uniquePartnerIds)
+    .in('profile_id', uniquePartnerIds.filter(id => live.has(id)).concat(['00000000-0000-0000-0000-000000000000']))
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const photos: any[] = photosData ?? []

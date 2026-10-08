@@ -47,10 +47,17 @@ export async function filterPhotoViewable(
   const allowed = new Set<string>()
   if (ownerProfileIds.length === 0) return allowed
 
-  const { data: rows } = await admin
+  const { data: rows, error: settingsError } = await admin
     .from('profile_private')
     .select('profile_id, photo_visibility')
     .in('profile_id', ownerProfileIds)
+
+  // Fail closed: if the settings cannot be read, show no photographs rather
+  // than treating every owner as "visible to all".
+  if (settingsError) {
+    console.error('[photoAccess] settings read failed:', settingsError.message)
+    return allowed
+  }
 
   // profile_private rows are optional; a missing row means no restriction set.
   const restricted = new Set<string>()
@@ -68,15 +75,18 @@ export async function filterPhotoViewable(
   const ids = [...restricted]
   const { data: accepted } = await admin
     .from('interests')
-    .select('from_profile_id, to_profile_id')
+    // The columns are from_profile / to_profile. The old *_id names made this
+    // query error every time, so accepted connections never saw a
+    // connections-only member's photos.
+    .select('from_profile, to_profile')
     .eq('status', 'accepted')
     .or(
-      `and(from_profile_id.eq.${viewerProfileId},to_profile_id.in.(${ids.join(',')})),` +
-      `and(to_profile_id.eq.${viewerProfileId},from_profile_id.in.(${ids.join(',')}))`,
+      `and(from_profile.eq.${viewerProfileId},to_profile.in.(${ids.join(',')})),` +
+      `and(to_profile.eq.${viewerProfileId},from_profile.in.(${ids.join(',')}))`,
     )
 
-  for (const row of (accepted ?? []) as { from_profile_id: string; to_profile_id: string }[]) {
-    const other = row.from_profile_id === viewerProfileId ? row.to_profile_id : row.from_profile_id
+  for (const row of (accepted ?? []) as { from_profile: string; to_profile: string }[]) {
+    const other = row.from_profile === viewerProfileId ? row.to_profile : row.from_profile
     if (restricted.has(other)) allowed.add(other)
   }
 

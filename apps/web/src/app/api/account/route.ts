@@ -4,6 +4,7 @@ import { getSessionAccount } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/server'
 import { SESSION_COOKIE } from '@/lib/constants'
 import { cookies } from 'next/headers'
+import { refreshPublicShowcase } from '@/lib/showcaseCache'
 
 // DELETE /api/account — soft-deactivate the authenticated user's account
 export async function DELETE(request: NextRequest) {
@@ -25,7 +26,10 @@ export async function DELETE(request: NextRequest) {
     .update({ account_status: 'deactivated', deleted_at: new Date().toISOString() })
     .eq('id', session.id)
 
-  if (accountErr) return NextResponse.json({ ok: false, message: accountErr.message }, { status: 500 })
+  if (accountErr) {
+    console.error('[account DELETE] update error:', accountErr.message)
+    return NextResponse.json({ ok: false, message: 'Could not deactivate your account right now. Please try again.' }, { status: 500 })
+  }
 
   // Deactivate profile (if exists)
   await supabase
@@ -52,5 +56,6 @@ export async function DELETE(request: NextRequest) {
   const cookieStore = await cookies()
   cookieStore.delete(SESSION_COOKIE)
 
+  refreshPublicShowcase()
   return NextResponse.json({ ok: true, message: 'Your account has been deactivated. Your data is retained per our Privacy Policy.' })
 }

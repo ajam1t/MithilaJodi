@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { audit, requireAdminApi, type AdminPerm } from '@/lib/adminAuth'
+import { refreshPublicShowcase } from '@/lib/showcaseCache'
 
 /*
  * Member actions from Admin → Members → member.
@@ -55,7 +56,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (account.account_status === 'deleted' && action !== 'revoke_dp') {
     return NextResponse.json({ ok: false, message: 'This member was deleted. Deleted members cannot be changed here.' }, { status: 409 })
   }
-  const { data: profile } = await admin.from('profiles').select('id, discoverable, profile_status').eq('account_id', id).is('deleted_at', null).maybeSingle()
+  const { data: profile } = await admin.from('profiles').select('id, discoverable, profile_status, visibility').eq('account_id', id).is('deleted_at', null).maybeSingle()
   const now = new Date().toISOString()
   const fail = (what: string, err: { message: string } | null) => {
     console.error(`[admin members ${action}] ${what}:`, err?.message)
@@ -80,8 +81,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     case 'hide':
     case 'show': {
       if (!profile) return NextResponse.json({ ok: false, message: 'This member has no profile yet.' }, { status: 409 })
-      const discoverable = action === 'show'
-      const { error } = await admin.from('profiles').update({ discoverable }).eq('id', profile.id)
+      // Hide is sticky (admin_hidden survives the member's next save). Show only
+      // lifts the admin hide — a member who chose Private stays private.
+      const discoverable = action === 'show' ? profile.visibility !== 'private' : false
+      const { error } = await admin.from('profiles').update({ discoverable, admin_hidden: action === 'hide' }).eq('id', profile.id)
       if (error) return fail('update profile', error)
       await audit(actor.id, 'member_visibility', { type: 'profile', id: profile.id }, { discoverable, reason }, request)
       break
@@ -107,5 +110,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       break
     }
   }
+  refreshPublicShowcase()
   return NextResponse.json({ ok: true })
 }

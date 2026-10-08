@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
+import { refreshPublicShowcase } from '@/lib/showcaseCache'
 
 // ── PATCH: update sort_order and/or is_active for a showcase entry (admin only) ──
 export async function PATCH(
@@ -52,6 +53,7 @@ export async function PATCH(
     payload: update,
   })
 
+  refreshPublicShowcase()
   return NextResponse.json({ ok: true })
 }
 
@@ -86,5 +88,6 @@ export async function DELETE(
     payload: {},
   })
 
+  refreshPublicShowcase()
   return NextResponse.json({ ok: true })
 }

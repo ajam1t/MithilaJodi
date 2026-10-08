@@ -11,6 +11,9 @@ import { getLocationIndex } from '@/lib/locationIndex'
 import { scoreMatch, type MatchResult } from '@/lib/matchScore'
 import { SCORE_COLUMNS, SCORE_PREF_COLUMNS, toScoreProfile, toScorePrefs } from '@/lib/matchInputs'
 
+const DAILY_INTEREST_LIMIT = 30
+const DECLINE_COOLDOWN_MS = 90 * 86_400_000
+
 function toDisplayName(firstName: string, lastName: string | null): string {
   if (lastName) return `${firstName} ${lastName}`
   return firstName
@@ -82,17 +85,52 @@ export async function GET() {
   ])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const received: any[] = receivedRes.data ?? []
+  let received: any[] = receivedRes.data ?? []
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sent: any[] = sentRes.data ?? []
+  let sent: any[] = sentRes.data ?? []
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mutual: any[] = mutualRes.data ?? []
+  let mutual: any[] = mutualRes.data ?? []
 
   const otherIds = new Set<string>()
   for (const r of received) otherIds.add(r.from_profile as string)
   for (const s of sent) otherIds.add(s.to_profile as string)
   for (const m of mutual) {
     otherIds.add(m.from_profile === myId ? m.to_profile : m.from_profile)
+  }
+
+  // Leave out anyone on the other side of a block (either direction) and
+  // anyone whose profile or account is gone (deleted, deactivated, suspended,
+  // banned): their name and photo must not keep appearing in these lists, and
+  // a pending interest from a removed member cannot be acted on.
+  if (otherIds.size > 0) {
+    const all = [...otherIds]
+    const [{ data: blk }, { data: st }] = await Promise.all([
+      admin
+        .from('blocks')
+        .select('blocker_id, blocked_id')
+        .or(`and(blocker_id.eq.${myId},blocked_id.in.(${all.join(',')})),and(blocked_id.eq.${myId},blocker_id.in.(${all.join(',')}))`),
+      admin
+        .from('profiles')
+        .select('id, deleted_at, profile_status, accounts!inner(account_status, deleted_at)')
+        .in('id', all),
+    ])
+    const gone = new Set<string>()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const b of (blk ?? []) as any[]) gone.add(b.blocker_id === myId ? b.blocked_id : b.blocker_id)
+    const seen = new Set<string>()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const r of (st ?? []) as any[]) {
+      seen.add(r.id)
+      const acct = Array.isArray(r.accounts) ? r.accounts[0] : r.accounts
+      if (r.deleted_at || r.profile_status === 'deleted' || r.profile_status === 'deactivated' || !acct || acct.deleted_at || acct.account_status !== 'active') gone.add(r.id)
+    }
+    for (const id of all) if (!seen.has(id)) gone.add(id)
+    if (gone.size > 0) {
+      for (const id of gone) otherIds.delete(id)
+      received = received.filter(r => !gone.has(r.from_profile))
+      sent = sent.filter(r => !gone.has(r.to_profile))
+      mutual = mutual.filter(m => !gone.has(m.from_profile === myId ? m.to_profile : m.from_profile))
+    }
   }
 
   // ── Batch-fetch display data for the other profiles ──
@@ -297,7 +335,7 @@ export async function POST(request: NextRequest) {
 
   const { data: myProfile } = await admin
     .from('profiles')
-    .select('id, first_name, last_name, gender')
+    .select('id, first_name, last_name, gender, profile_status')
     .eq('account_id', session.id)
     .is('deleted_at', null)
     .neq('profile_status', 'deleted')
@@ -308,6 +346,22 @@ export async function POST(request: NextRequest) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const me = myProfile as any
+
+  // Only a live profile can reach out (a draft awaiting review, or one an admin
+  // took down, cannot).
+  if (me.profile_status !== 'active') {
+    return NextResponse.json({ ok: false, message: 'Your profile needs to be active before you can send interests.' }, { status: 403 })
+  }
+
+  // A daily ceiling, so interests stay considered rather than sprayed.
+  const { count: sentToday } = await admin
+    .from('interests')
+    .select('id', { count: 'exact', head: true })
+    .eq('from_profile', me.id)
+    .gte('sent_at', new Date(Date.now() - 86_400_000).toISOString())
+  if ((sentToday ?? 0) >= DAILY_INTEREST_LIMIT) {
+    return NextResponse.json({ ok: false, message: `You can send up to ${DAILY_INTEREST_LIMIT} interests a day. Please try again tomorrow.`, code: 'DAILY_LIMIT' }, { status: 429 })
+  }
 
   if (me.id === to_profile_id) {
     return NextResponse.json({ ok: false, message: 'Cannot send interest to yourself' }, { status: 400 })
@@ -380,13 +434,19 @@ export async function POST(request: NextRequest) {
       // resetting it to 'sent'. If it is still pending or accepted, block.
       const { data: existing } = await admin
         .from('interests')
-        .select('id, status')
+        .select('id, status, responded_at')
         .eq('from_profile', me.id)
         .eq('to_profile', to_profile_id)
         .maybeSingle()
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const ex = existing as any
+      // A "no" is respected: after a decline the same member cannot be asked
+      // again for 90 days (re-sending used to be possible immediately, which
+      // turned a decline into a daily notification).
+      if (ex?.status === 'declined' && ex.responded_at && Date.now() - new Date(ex.responded_at).getTime() < DECLINE_COOLDOWN_MS) {
+        return NextResponse.json({ ok: false, message: 'This member declined your earlier interest. You can send another after some time has passed.', code: 'RECENTLY_DECLINED' }, { status: 409 })
+      }
       if (ex && (ex.status === 'declined' || ex.status === 'withdrawn')) {
         const { data: revived, error: reviveError } = await admin
           .from('interests')

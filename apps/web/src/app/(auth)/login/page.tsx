@@ -11,7 +11,10 @@ function getSafeNextPath(): string | null {
 
 function getPostLoginPath(role?: string): string {
   const next = getSafeNextPath()
-  return next && (role === 'admin' || role === 'moderator') ? next : '/home'
+  // The console has its own sign-in; a member-login session never carries
+  // admin rights (lib/auth.ts), so send staff there rather than to a 404.
+  if (next?.startsWith('/admin') && (role === 'admin' || role === 'moderator')) return '/admin/login'
+  return '/home'
 }
 
 export default function LoginPage() {

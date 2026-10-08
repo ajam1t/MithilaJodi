@@ -5,6 +5,7 @@ import { createOtpService } from '@/lib/services/otp/OtpService'
 import { establishAccountSession } from '@/lib/authFlow'
 import { issuePasswordReset } from '@/lib/passwordReset'
 import { INDIA_MOBILE_RE, SESSION_COOKIE, SESSION_DAYS, toE164 } from '@/lib/constants'
+import { rateLimit } from '@/lib/astrology/server/rateLimit'
 
 const VerifySchema = z.object({
   mobile: z.string(),
@@ -21,6 +22,11 @@ const OTP_REASON_MESSAGES: Record<string, string> = {
 }
 
 export async function POST(request: NextRequest) {
+  // Per-IP ceiling on top of the per-mobile limits (abuse and brute force).
+  const limited = rateLimit(request, 'otp-verify', { limit: 20, windowMs: 15 * 60_000 })
+  if (!limited.ok) {
+    return NextResponse.json({ ok: false, message: 'Too many attempts. Please wait a few minutes and try again.' }, { status: 429 })
+  }
   let body: unknown
   try {
     body = await request.json()

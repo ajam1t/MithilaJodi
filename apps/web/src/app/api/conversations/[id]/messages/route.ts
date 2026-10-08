@@ -28,7 +28,7 @@ export async function POST(
   // Step 3: get my profile ID
   const { data: myProfileRow } = await admin
     .from('profiles')
-    .select('id')
+    .select('id, profile_status')
     .eq('account_id', session.id)
     .neq('profile_status', 'deleted')
     .is('deleted_at', null)
@@ -37,6 +37,10 @@ export async function POST(
     .maybeSingle()
 
   if (!myProfileRow) return NextResponse.json({ ok: false, message: 'Profile not found' }, { status: 404 })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ((myProfileRow as any).profile_status !== 'active') {
+    return NextResponse.json({ ok: false, message: 'Your profile is not active, so messages cannot be sent right now.' }, { status: 403 })
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const myProfileId = (myProfileRow as any).id as string

@@ -382,8 +382,11 @@ export async function GET(request: NextRequest) {
       .select(PROFILE_COLUMNS)
       // Security: server-enforced visibility gates
       .eq('discoverable', true)
-      .neq('profile_status', 'deleted')
-      .neq('profile_status', 'deactivated')
+      // Only live profiles: drafts awaiting moderation, admin-rejected and
+      // deactivated profiles never appear (same rule as /profile/[id] and
+      // sending an interest). A member's own Private choice always wins.
+      .eq('profile_status', 'active')
+      .or('visibility.is.null,visibility.neq.private')
       .is('deleted_at', null)
       // Security: exclude the authenticated user's own profiles
       .neq('account_id', session!.id)
@@ -577,11 +580,8 @@ export async function GET(request: NextRequest) {
   for (const acct of (accountRows ?? [])) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const a = acct as any
-    if (
-      a.account_status !== 'banned' &&
-      a.account_status !== 'deleted' &&
-      a.deleted_at === null
-    ) {
+    // Only usable accounts: suspended (and banned/deleted) members drop out.
+    if (a.account_status === 'active' && a.deleted_at === null) {
       validAccountIds.add(a.id as string)
     }
   }

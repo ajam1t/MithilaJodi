@@ -63,6 +63,18 @@ export class OtpService {
     const hash = await bcrypt.hash(otp, 10)
     const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000)
 
+    // Send FIRST. A code is only stored once it has actually reached the phone:
+    // storing it before a failed send left a live, unguessed code behind that
+    // anyone could then brute-force through /otp/verify.
+    let sent: { success: boolean; error?: string }
+    try {
+      sent = await this.provider.send(mobile, otp)
+    } catch (e) {
+      console.error('[OtpService] provider send failed:', e instanceof Error ? e.message : 'unknown')
+      return { sent: false, error: 'Could not send the OTP right now.' }
+    }
+    if (!sent.success) return { sent: false, error: sent.error }
+
     // Invalidate any existing unexpired challenges for this mobile
     await supabaseAdmin
       .from('otp_challenges')
@@ -85,8 +97,7 @@ export class OtpService {
       return { sent: false, error: 'Failed to create OTP challenge' }
     }
 
-    const result = await this.provider.send(mobile, otp)
-    return { sent: result.success, error: result.error }
+    return { sent: true }
   }
 
   async verify(
@@ -95,33 +106,29 @@ export class OtpService {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabaseAdmin: SupabaseClient<any>
   ): Promise<OtpVerifyResult> {
-    const { data: challenge, error } = await supabaseAdmin
-      .from('otp_challenges')
-      .select('*')
-      .eq('mobile', mobile)
-      .eq('used', false)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single()
+    // Take one attempt slot atomically (migration 20261008000003). Reading the
+    // count and writing count + 1 let parallel guesses all slip under the limit.
+    const { data: rows, error } = await supabaseAdmin.rpc('otp_consume_attempt', { p_mobile: mobile, p_max: MAX_ATTEMPTS })
+    const challenge = Array.isArray(rows) ? rows[0] : null
 
-    if (error || !challenge) {
+    if (error) {
+      console.error('[OtpService] consume attempt failed:', error.message)
       return { valid: false, reason: 'invalid' }
     }
-
-    if (new Date(challenge.expires_at as string) < new Date()) {
-      return { valid: false, reason: 'expired' }
+    if (!challenge) {
+      // No live challenge, expired, already used, or out of attempts. Tell the
+      // two apart only by whether a recent challenge exists.
+      const { data: last } = await supabaseAdmin
+        .from('otp_challenges')
+        .select('attempts, expires_at, used')
+        .eq('mobile', mobile)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (last && !last.used && new Date(last.expires_at as string) < new Date()) return { valid: false, reason: 'expired' }
+      if (last && !last.used && (last.attempts as number) >= MAX_ATTEMPTS) return { valid: false, reason: 'max_attempts' }
+      return { valid: false, reason: 'invalid' }
     }
-
-    const attempts = challenge.attempts as number
-    if (attempts >= MAX_ATTEMPTS) {
-      return { valid: false, reason: 'max_attempts' }
-    }
-
-    // Increment attempt count before checking (prevents race condition)
-    await supabaseAdmin
-      .from('otp_challenges')
-      .update({ attempts: attempts + 1 })
-      .eq('id', challenge.id)
 
     const valid = await bcrypt.compare(otp, challenge.otp_hash as string)
 
@@ -130,10 +137,14 @@ export class OtpService {
     }
 
     // Mark as used on success
-    await supabaseAdmin
+    // Single use: only the request that flips used=false→true wins.
+    const { data: claimed } = await supabaseAdmin
       .from('otp_challenges')
       .update({ used: true })
       .eq('id', challenge.id)
+      .eq('used', false)
+      .select('id')
+    if (!claimed || claimed.length === 0) return { valid: false, reason: 'invalid' }
 
     return { valid: true }
   }

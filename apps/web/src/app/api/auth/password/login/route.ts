@@ -3,11 +3,20 @@ import bcrypt from 'bcryptjs'
 import { createAdminClient } from '@/lib/supabase/server'
 import { generateSessionToken, hashSessionToken, sessionExpiresAt } from '@/lib/session'
 import { INDIA_MOBILE_RE, SESSION_COOKIE, SESSION_DAYS, toE164 } from '@/lib/constants'
+import { rateLimit } from '@/lib/astrology/server/rateLimit'
 
 const MAX_ATTEMPTS = 5
 const LOCK_MINUTES = 15
 
+const GENERIC = 'Incorrect mobile number or password. If you have not set a password yet, use “Forgot password”.'
+
 export async function POST(request: NextRequest) {
+  // Per-IP ceiling so one client cannot spray guesses or lock many accounts.
+  const limited = rateLimit(request, 'password-login', { limit: 20, windowMs: 15 * 60_000 })
+  if (!limited.ok) {
+    return NextResponse.json({ ok: false, message: 'Too many sign-in attempts. Please wait a few minutes.' }, { status: 429 })
+  }
+
   let body: unknown
   try { body = await request.json() } catch {
     return NextResponse.json({ ok: false, message: 'Invalid request body' }, { status: 400 })
@@ -45,15 +54,9 @@ export async function POST(request: NextRequest) {
     // Return the same message whether account exists or not (anti-enumeration)
     if (!account || account.account_status === 'banned' || account.account_status === 'deleted') {
       await new Promise(r => setTimeout(r, 300 + Math.random() * 200)) // timing parity
-      return NextResponse.json({ ok: false, message: 'Incorrect mobile or password' }, { status: 401 })
+      return NextResponse.json({ ok: false, message: GENERIC }, { status: 401 })
     }
 
-    if (account.account_status === 'suspended') {
-      return NextResponse.json(
-        { ok: false, message: 'This account is temporarily suspended. Contact support.' },
-        { status: 403 },
-      )
-    }
 
     if (account.locked_until && new Date(account.locked_until as string) > new Date()) {
       const lockedUntil = new Date(account.locked_until as string)
@@ -64,29 +67,32 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // No password set yet: the same answer as a wrong password, so this page
+    // cannot be used to learn how (or whether) a number is registered.
     if (!account.password_hash) {
-      return NextResponse.json(
-        { ok: false, message: 'This account uses OTP login. Use "Login with OTP" instead.' },
-        { status: 400 },
-      )
+      await bcrypt.compare(password, '$2a$10$CwTycUXWue0Thq9StjUM0uJ8.l1eUrS6.Ck/E4mxKn7Ul6KqxNz0a')
+      return NextResponse.json({ ok: false, message: GENERIC }, { status: 401 })
     }
 
     const valid = await bcrypt.compare(password, account.password_hash as string)
 
     if (!valid) {
-      const attempts = (account.failed_login_attempts as number ?? 0) + 1
-      const updates: Record<string, unknown> = { failed_login_attempts: attempts }
-      if (attempts >= MAX_ATTEMPTS) {
-        updates.locked_until = new Date(Date.now() + LOCK_MINUTES * 60 * 1000).toISOString()
-      }
-      await admin.from('accounts').update(updates).eq('id', account.id)
-
-      const remaining = Math.max(0, MAX_ATTEMPTS - attempts)
-      const msg = attempts >= MAX_ATTEMPTS
-        ? `Too many failed attempts. Account locked for ${LOCK_MINUTES} minutes.`
-        : `Incorrect mobile or password.${remaining > 0 ? ` ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.` : ''}`
-
+      // Atomic increment (migration 20261008000003): parallel wrong guesses can
+      // no longer slip past the lockout by all reading the same count.
+      const { data: attempts } = await admin.rpc('register_failed_login', { p_account: account.id, p_max: MAX_ATTEMPTS, p_lock_minutes: LOCK_MINUTES })
+      const msg = Number(attempts) >= MAX_ATTEMPTS
+        ? `Too many failed attempts. Try again in ${LOCK_MINUTES} minutes, or reset your password.`
+        : GENERIC
       return NextResponse.json({ ok: false, message: msg }, { status: 401 })
+    }
+
+    // Suspended accounts cannot sign in (checked only after the password, so
+    // the status of a number is never revealed to someone who doesn't own it).
+    if (account.account_status === 'suspended') {
+      return NextResponse.json(
+        { ok: false, message: 'This account is temporarily suspended. Contact support.' },
+        { status: 403 },
+      )
     }
 
     // Success — reset rate limit counters

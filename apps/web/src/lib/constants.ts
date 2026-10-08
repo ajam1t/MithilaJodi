@@ -95,7 +95,9 @@ export function stripBrandSuffix(title: string): string {
    alongside real members' photographs, and would count against that profile's
    five-photo limit. This is already served, immutable and cached, and it looks
    right in every environment including a fresh local database. */
-export const OFFICIAL_AVATAR_SRC = '/favicon-512.png'
+// 192px (43 KB) is sharp at the 40–48px avatar size on 3x screens; the 512px
+// file is 273 KB and was loaded raw for every official conversation row.
+export const OFFICIAL_AVATAR_SRC = '/favicon-192.png'
 
 export const SUPPORT_EMAIL = 'contact@mithilajodi.com'
 export const SUPPORT_PHONE_DISPLAY = '+91 8757569525'

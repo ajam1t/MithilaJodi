@@ -131,7 +131,8 @@ export async function POST(
 
   if (error) {
     console.error('[admin/master-data/[type] POST] error:', error.message)
-    return NextResponse.json({ ok: false, message: error.message }, { status: 500 })
+    console.error('[admin master-data] db error:', error.message)
+    return NextResponse.json({ ok: false, message: error.code === '23505' ? 'That value already exists.' : 'Could not save. Please try again.' }, { status: 500 })
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

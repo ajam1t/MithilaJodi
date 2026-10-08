@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { nanoid } from 'nanoid'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
+import { sniffImage } from '@/lib/imageSniff'
 
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
 const MAX_BYTES = 5 * 1024 * 1024
@@ -43,8 +44,11 @@ export async function POST(
     await admin.from('profile_photos').update({ is_primary: false }).eq('profile_id', id).eq('is_primary', true)
   }
 
-  const storagePath = `admin/${profile.account_id}/${id}/${nanoid()}.${extensionFor(file.type)}`
-  const { error: uploadError } = await admin.storage.from('profile-photos').upload(storagePath, await file.arrayBuffer(), { contentType: file.type, upsert: false })
+  const bytes = await file.arrayBuffer()
+  const realType = sniffImage(bytes)
+  if (!realType) return NextResponse.json({ ok: false, message: 'That file is not a JPEG, PNG, WebP or HEIC photo.' }, { status: 400 })
+  const storagePath = `admin/${profile.account_id}/${id}/${nanoid()}.${extensionFor(realType)}`
+  const { error: uploadError } = await admin.storage.from('profile-photos').upload(storagePath, bytes, { contentType: realType, upsert: false })
   if (uploadError) {
     console.error('[admin/profiles photo] upload error:', uploadError.message)
     return NextResponse.json({ ok: false, message: 'Photo upload failed.' }, { status: 500 })

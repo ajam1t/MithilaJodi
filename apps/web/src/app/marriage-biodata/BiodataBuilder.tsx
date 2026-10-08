@@ -337,6 +337,7 @@ export function BiodataBuilder() {
                 <input
                   ref={fileRef}
                   type="file"
+                  aria-label="Choose a photo for the biodata (optional)"
                   accept="image/*"
                   onChange={e => pickPhoto(e.target.files?.[0])}
                   className="text-[12.5px] text-ink-soft file:mr-2 file:rounded-mj-sm file:border file:border-gold/40 file:bg-cream file:px-3 file:py-1.5 file:text-[12.5px] file:text-maroon"

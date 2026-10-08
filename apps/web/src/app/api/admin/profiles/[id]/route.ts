@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
+import { refreshPublicShowcase } from '@/lib/showcaseCache'
 
 const PROFILE_FIELDS = [
   'profile_for', 'first_name', 'last_name', 'gender', 'dob', 'religion', 'caste', 'sub_caste',
@@ -124,6 +125,7 @@ export async function PATCH(
       target_id: id,
       payload: { fields: Object.keys(profileData), private_fields: Object.keys(privateData), preference_fields: Object.keys(preferenceData) },
     })
+    refreshPublicShowcase()
     return NextResponse.json({ ok: true })
   }
 
@@ -156,7 +158,10 @@ export async function PATCH(
 
     const { error } = await admin
       .from('profiles')
-      .update({ profile_status: 'suspended', status_reason: statusReason })
+      // 'suspended' is not a profile_status value, so this update always failed.
+      // A suspended profile is taken out of search and kept as-is; the account
+      // itself is suspended from Members → member (which also signs them out).
+      .update({ profile_status: 'deactivated', discoverable: false, admin_hidden: true, status_reason: statusReason })
       .eq('id', id)
 
     if (error) {
@@ -193,6 +198,7 @@ export async function PATCH(
     })
   }
 
+  refreshPublicShowcase()
   return NextResponse.json({ ok: true })
 }
 
@@ -231,5 +237,6 @@ export async function DELETE(
     payload: {},
   })
 
+  refreshPublicShowcase()
   return NextResponse.json({ ok: true })
 }

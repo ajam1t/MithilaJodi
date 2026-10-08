@@ -63,6 +63,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: false, message: 'Could not update password. Please try again.' }, { status: 500 })
     }
 
+    // Keep this device signed in; sign out every other one.
+    await admin.from('account_sessions').update({ revoked_at: new Date().toISOString() })
+      .eq('account_id', account.id).is('revoked_at', null).neq('id', account.session_id)
+
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('[password/change] error:', err)

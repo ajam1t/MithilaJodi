@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
+import { rateLimit } from '@/lib/astrology/server/rateLimit'
 
 const ALLOWED_REASONS = new Set([
   'General Enquiry',
@@ -15,6 +16,13 @@ const ALLOWED_REASONS = new Set([
 ])
 
 export async function POST(req: NextRequest) {
+  // Unauthenticated form: cap submissions per IP so it cannot be used to flood
+  // the support inbox.
+  const limited = rateLimit(req, 'contact', { limit: 5, windowMs: 30 * 60_000 })
+  if (!limited.ok) {
+    return NextResponse.json({ error: 'You have sent several messages already. Please try again a little later, or email us directly.' }, { status: 429 })
+  }
+
   let body: Record<string, unknown>
   try {
     body = await req.json()
@@ -31,8 +39,11 @@ export async function POST(req: NextRequest) {
   if (!fullName || fullName.length < 2 || fullName.length > 100) {
     return NextResponse.json({ error: 'Full name is required (2–100 characters).' }, { status: 400 })
   }
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!email || email.length > 200 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: 'A valid email address is required.' }, { status: 400 })
+  }
+  if (mobile && (mobile.length > 20 || !/^[+\d\s()-]+$/.test(mobile))) {
+    return NextResponse.json({ error: 'Please enter a valid mobile number, or leave it blank.' }, { status: 400 })
   }
   if (!ALLOWED_REASONS.has(reason)) {
     return NextResponse.json({ error: 'Please select a valid reason.' }, { status: 400 })

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
+import { refreshPublicShowcase } from '@/lib/showcaseCache'
 
 export async function DELETE(
   _request: NextRequest,
@@ -50,6 +51,7 @@ export async function DELETE(
   // Remove from Storage (best-effort)
   await admin.storage.from('profile-photos').remove([p.storage_path])
 
+  refreshPublicShowcase()
   return NextResponse.json({ ok: true })
 }
 
@@ -100,5 +102,6 @@ export async function PATCH(
     .update({ is_primary: true })
     .eq('id', photoId)
 
+  refreshPublicShowcase()
   return NextResponse.json({ ok: true })
 }

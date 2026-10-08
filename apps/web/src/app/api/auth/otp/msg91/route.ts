@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { establishAccountSession } from '@/lib/authFlow'
 import { issuePasswordReset } from '@/lib/passwordReset'
 import { INDIA_MOBILE_RE, SESSION_COOKIE, SESSION_DAYS, toE164 } from '@/lib/constants'
+import { rateLimit } from '@/lib/astrology/server/rateLimit'
 
 // MSG91 server-side access-token verification endpoint (from the MSG91 dashboard).
 const MSG91_VERIFY_URL = 'https://control.msg91.com/api/v5/widget/verifyAccessToken'
@@ -24,6 +25,11 @@ const VerifySchema = z.object({
  * trusted until MSG91 confirms it here.
  */
 export async function POST(request: NextRequest) {
+  // Per-IP ceiling on top of the per-mobile limits (abuse and brute force).
+  const limited = rateLimit(request, 'otp-msg91', { limit: 20, windowMs: 15 * 60_000 })
+  if (!limited.ok) {
+    return NextResponse.json({ ok: false, message: 'Too many attempts. Please wait a few minutes and try again.' }, { status: 429 })
+  }
   const authkey = process.env.MSG91_AUTHKEY
   if (!authkey) {
     console.error('[otp/msg91] MSG91_AUTHKEY is not configured on the server')
@@ -91,11 +97,13 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // Hardening: if MSG91 echoes the verified number, ensure it matches the one the
-  // client submitted (prevents pairing a valid token with a different mobile).
-  if (verifiedIdentifier) {
-    const verifiedLast10 = verifiedIdentifier.replace(/\D/g, '').slice(-10)
-    if (verifiedLast10 && verifiedLast10 !== digits) {
+  // MSG91 echoes the verified number; it must match the one the client submitted.
+  // Fail closed: without the verified number we cannot prove the token belongs
+  // to this mobile, and a token for one's own number could otherwise be paired
+  // with someone else's.
+  {
+    const verifiedLast10 = (verifiedIdentifier ?? '').replace(/\D/g, '').slice(-10)
+    if (verifiedLast10 !== digits) {
       console.warn('[otp/msg91] verified identifier does not match submitted mobile')
       return NextResponse.json(
         { ok: false, message: 'OTP verification failed. Please try again.' },

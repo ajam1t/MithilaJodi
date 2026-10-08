@@ -604,7 +604,7 @@ const VISIBILITY_OPTIONS = [
   {
     value: 'public' as const,
     label: 'Public — anyone can see it',
-    help: 'May be shown on our homepage and Explore page, which do not require an account, and in member search. Your name, photo and community details are visible there; your date of birth, contact details and address are never included.',
+    help: 'May be shown on our homepage and Explore page, which do not require an account, and in member search. Your name, photo, community details and a short work and education summary are visible there; your employer’s name, date of birth, contact details and address are never included.',
   },
   {
     value: 'members' as const,
@@ -1930,7 +1930,9 @@ export default function ProfileEditPage() {
               <div className="col-span-2 text-xs text-ink-soft bg-paper border border-paper-3 rounded-mj-sm p-3">
                 The contact details above are private. They are never shown to other members,
                 whatever your profile visibility is set to, and neither is your registered mobile.
-                Members talk to each other through Mithila Jodi messages.
+                Members talk to each other through Mithila Jodi messages. The one exception is a
+                Digital Profile link you create with &ldquo;Contact&rdquo; switched on: it shows
+                your contact number here, or your registered mobile if you have not entered one.
               </div>
 
               {/* Photo visibility is a separate axis from profile visibility:

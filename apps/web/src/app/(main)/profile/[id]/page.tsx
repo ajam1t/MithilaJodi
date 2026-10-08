@@ -54,6 +54,19 @@ async function fetchProfileView(profileId: string, viewerAccountId: string, prev
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const p = profile as any
 
+  if (!isSelf) {
+    // A member who has blocked the viewer, or whose account is not usable
+    // (suspended, banned, deactivated, deleted), is simply "not found".
+    const [{ data: blockedMe }, { data: owner }] = await Promise.all([
+      myProfileId
+        ? admin.from('blocks').select('blocker_id').eq('blocker_id', profileId).eq('blocked_id', myProfileId).maybeSingle()
+        : Promise.resolve({ data: null }),
+      admin.from('accounts').select('account_status, deleted_at').eq('id', p.account_id).maybeSingle(),
+    ])
+    if (blockedMe) return null
+    if (!owner || owner.deleted_at || owner.account_status !== 'active') return null
+  }
+
   // "Someone viewed your profile" — after the response, so it never slows the
   // page; deduped per viewer per week inside notifyProfileViewed.
   // Conversion funnel: this member opened someone's profile.

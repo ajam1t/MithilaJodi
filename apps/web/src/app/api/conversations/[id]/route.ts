@@ -56,18 +56,23 @@ export async function GET(
 
   const { data: partnerRow } = await admin
     .from('profiles')
-    .select('id, first_name, last_name')
+    .select('id, first_name, last_name, deleted_at, profile_status, accounts(account_status, deleted_at)')
     .eq('id', partnerId)
     .maybeSingle()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pr = partnerRow as any
-  const partnerName = pr
+  const pAcct = Array.isArray(pr?.accounts) ? pr.accounts[0] : pr?.accounts
+  // A blocked thread, or a partner who has left (deleted, deactivated,
+  // suspended), keeps its history but no longer shows their name or photo.
+  const partnerGone = conv.status === 'blocked' || !pr || pr.deleted_at || pr.profile_status === 'deleted' ||
+    pr.profile_status === 'deactivated' || !pAcct || pAcct.deleted_at || pAcct.account_status !== 'active'
+  const partnerName = !partnerGone && pr
     ? (pr.last_name ? `${pr.first_name} ${pr.last_name as string}` : (pr.first_name as string))
     : 'Member'
 
   let partnerPhotoUrl: string | null = null
-  const { data: partnerPhoto } = await admin
+  const { data: partnerPhoto } = partnerGone ? { data: null } : await admin
     .from('profile_photos')
     .select('storage_path')
     .eq('profile_id', partnerId)

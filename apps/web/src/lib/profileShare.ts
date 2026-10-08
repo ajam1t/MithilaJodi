@@ -163,7 +163,8 @@ export async function loadSharedProfile(
     .eq('id', p.account_id)
     .maybeSingle()
   if (!account) return { status: 'missing' }
-  if (account.deleted_at || account.account_status === 'banned' || account.account_status === 'deleted') {
+  // Suspended, banned, deactivated or deleted owners: the link shows nothing.
+  if (account.deleted_at || account.account_status !== 'active') {
     return { status: 'missing' }
   }
 
@@ -337,7 +338,7 @@ export async function loadSharePreviewName(admin: any, token: string): Promise<s
     .select('account_status, deleted_at')
     .eq('id', p.account_id)
     .maybeSingle()
-  if (!account || account.deleted_at || account.account_status === 'banned' || account.account_status === 'deleted') return null
+  if (!account || account.deleted_at || account.account_status !== 'active') return null
 
   const name = [p.first_name, p.last_name].filter(Boolean).join(' ').trim()
   return name || null

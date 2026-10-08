@@ -18,7 +18,10 @@ export async function GET() {
     .eq('account_id', session.id)
     .order('created_at', { ascending: false })
 
-  if (error) return NextResponse.json({ ok: false, message: error.message }, { status: 500 })
+  if (error) {
+    console.error('[legal/consents] db error:', error.message)
+    return NextResponse.json({ ok: false, message: 'Could not load or save your consent. Please try again.' }, { status: 500 })
+  }
   return NextResponse.json({ ok: true, consents: data ?? [] })
 }
 
@@ -51,6 +54,9 @@ export async function POST(request: NextRequest) {
       user_agent: ua,
     })
 
-  if (error) return NextResponse.json({ ok: false, message: error.message }, { status: 500 })
+  if (error) {
+    console.error('[legal/consents] db error:', error.message)
+    return NextResponse.json({ ok: false, message: 'Could not load or save your consent. Please try again.' }, { status: 500 })
+  }
   return NextResponse.json({ ok: true })
 }

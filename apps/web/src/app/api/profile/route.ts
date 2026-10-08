@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
 import { isFreeAccessMode } from '@/lib/membership'
+import { refreshPublicShowcase } from '@/lib/showcaseCache'
 
 const ProfileSchema = z.object({
   profile_for: z.enum(['self', 'son', 'daughter', 'sibling', 'other']).default('self'),
@@ -86,14 +87,14 @@ const ProfileSchema = z.object({
   pref_age_min: z.coerce.number().int().min(18).max(100).optional().nullable(),
   pref_age_max: z.coerce.number().int().min(18).max(100).optional().nullable(),
   pref_gender: z.enum(['male', 'female', 'any', '']).optional().nullable(),
-  pref_caste: z.array(z.string().max(100)).optional().nullable(),
+  pref_caste: z.array(z.string().max(100)).max(50).optional().nullable(),
   pref_gotra_safe: z.boolean().optional().nullable(),
-  pref_education: z.array(z.coerce.number().int().positive()).optional().nullable(),
-  pref_location: z.array(z.coerce.number().int().positive()).optional().nullable(),
-  pref_diet: z.array(z.string().max(100)).optional().nullable(),
+  pref_education: z.array(z.coerce.number().int().positive()).max(50).optional().nullable(),
+  pref_location: z.array(z.coerce.number().int().positive()).max(100).optional().nullable(),
+  pref_diet: z.array(z.string().max(100)).max(20).optional().nullable(),
   pref_notes: z.string().max(1000).optional().nullable(),
-  pref_profession: z.array(z.string().max(100)).optional().nullable(),
-  pref_marital_status: z.array(z.string().max(100)).optional().nullable(),
+  pref_profession: z.array(z.string().max(100)).max(50).optional().nullable(),
+  pref_marital_status: z.array(z.string().max(100)).max(20).optional().nullable(),
   pref_children: z.string().max(100).optional().nullable(),
   pref_living_arrangement: z.string().max(100).optional().nullable(),
   pref_career: z.string().max(500).optional().nullable(),
@@ -367,7 +368,7 @@ export async function PUT(request: NextRequest) {
 
   const { data: existing } = await admin
     .from('profiles')
-    .select('id, profile_status')
+    .select('id, profile_status, status_reason, admin_hidden')
     .eq('account_id', account.id)
     .is('deleted_at', null)
     .order('updated_at', { ascending: false })
@@ -376,10 +377,14 @@ export async function PUT(request: NextRequest) {
 
   if (existing) {
     // In free mode, promote a draft to active on save; never override a
-    // deactivated/banned/active status here.
+    // deactivated/banned/active status here. A draft that carries a reason was
+    // put back by an admin (rejected) — saving must not quietly republish it.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const currentStatus = (existing as any).profile_status as string
-    const promotedStatus = freeMode && currentStatus === 'draft' ? 'active' : currentStatus
+    const ex = existing as any
+    const currentStatus = ex.profile_status as string
+    const promotedStatus = freeMode && currentStatus === 'draft' && !ex.status_reason ? 'active' : currentStatus
+    // An admin "hide from search" outlives the member's own visibility choice.
+    const discoverable = ex.admin_hidden ? false : discoverableDefault
 
     const { error } = await admin
       .from('profiles')
@@ -429,7 +434,7 @@ export async function PUT(request: NextRequest) {
         family_introduction:  data.family_introduction   || null,
         passing_year:     data.passing_year     ?? null,
         experience_years: data.experience_years ?? null,
-        discoverable: discoverableDefault,
+        discoverable,
         ...visibilityPatch,
         profile_status: promotedStatus,
         profile_complete: profileCompletion,
@@ -447,6 +452,7 @@ export async function PUT(request: NextRequest) {
       console.error('[profile PUT] private/preferences update error:', privateError)
       return NextResponse.json({ ok: false, message: 'Profile saved, but private details could not be saved.' }, { status: 500 })
     }
+    refreshPublicShowcase()
     return NextResponse.json({ ok: true, profile_id: existing.id })
   }
 
@@ -519,6 +525,7 @@ export async function PUT(request: NextRequest) {
     console.error('[profile PUT] private/preferences create error:', privateError)
     return NextResponse.json({ ok: false, message: 'Profile created, but private details could not be saved.' }, { status: 500 })
   }
+  refreshPublicShowcase()
   return NextResponse.json({ ok: true, profile_id: newProfile.id }, { status: 201 })
 }
 

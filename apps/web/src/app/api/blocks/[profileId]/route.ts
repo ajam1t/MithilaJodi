@@ -74,6 +74,9 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     admin
       .from('conversations')
       .update({ status: 'blocked', updated_at: new Date().toISOString() })
+      // Only an open thread becomes 'blocked'. A thread an admin closed stays
+      // closed — otherwise block + unblock would reopen it.
+      .eq('status', 'open')
       .or(
         `and(profile_a.eq.${myId},profile_b.eq.${profileId}),and(profile_a.eq.${profileId},profile_b.eq.${myId})`,
       ),

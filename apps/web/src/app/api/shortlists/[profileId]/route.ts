@@ -31,14 +31,30 @@ export async function POST(_request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ ok: false, message: 'Cannot shortlist yourself' }, { status: 400 })
   }
 
-  const { data: targetProfile } = await admin
-    .from('profiles')
-    .select('id')
-    .eq('id', profileId)
-    .is('deleted_at', null)
-    .maybeSingle()
+  if (!/^[0-9a-f-]{36}$/i.test(profileId)) return NextResponse.json({ ok: false, message: 'Profile not found' }, { status: 404 })
 
-  if (!targetProfile) return NextResponse.json({ ok: false, message: 'Profile not found' }, { status: 404 })
+  // Same bar as viewing or sending an interest: only a live, discoverable
+  // profile, with no block either way. Otherwise the shortlist would reveal
+  // the name of a hidden, private, suspended or blocking member.
+  const [{ data: targetProfile }, { data: blk }] = await Promise.all([
+    admin
+      .from('profiles')
+      .select('id, accounts!inner(account_status, deleted_at)')
+      .eq('id', profileId)
+      .is('deleted_at', null)
+      .eq('profile_status', 'active')
+      .eq('discoverable', true)
+      .maybeSingle(),
+    admin.from('blocks').select('blocker_id')
+      .or(`and(blocker_id.eq.${myId},blocked_id.eq.${profileId}),and(blocker_id.eq.${profileId},blocked_id.eq.${myId})`)
+      .limit(1),
+  ])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tAcct = (targetProfile as any)?.accounts
+  const acct = Array.isArray(tAcct) ? tAcct[0] : tAcct
+  if (!targetProfile || !acct || acct.deleted_at || acct.account_status !== 'active' || (blk ?? []).length > 0) {
+    return NextResponse.json({ ok: false, message: 'Profile not found' }, { status: 404 })
+  }
 
   const { error } = await admin
     .from('shortlists')

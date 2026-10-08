@@ -41,10 +41,13 @@ export async function POST(request: NextRequest) {
     .from('legal_consents')
     .update({
       withdrawn_at: new Date().toISOString(),
-      withdrawal_reason: typeof reason === 'string' ? reason.trim() || null : null,
+      withdrawal_reason: typeof reason === 'string' ? reason.trim().slice(0, 500) || null : null,
     })
     .eq('id', existing.id)
 
-  if (error) return NextResponse.json({ ok: false, message: error.message }, { status: 500 })
+  if (error) {
+    console.error('[legal/consents/withdraw] db error:', error.message)
+    return NextResponse.json({ ok: false, message: 'Could not record the withdrawal. Please try again.' }, { status: 500 })
+  }
   return NextResponse.json({ ok: true })
 }

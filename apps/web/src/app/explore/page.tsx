@@ -81,6 +81,8 @@ export default async function ExplorePage() {
             </p>
           </header>
 
+          {/* Cards title each profile with an h3; this keeps the outline h1 → h2 → h3. */}
+          <h2 className="sr-only">Profiles</h2>
           <ExploreGrid initialProfiles={initialProfiles} initialError={loadError} />
         </section>
 

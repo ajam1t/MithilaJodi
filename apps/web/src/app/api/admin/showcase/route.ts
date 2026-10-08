@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
+import { refreshPublicShowcase } from '@/lib/showcaseCache'
 
 // Strip PostgREST filter-syntax special chars from a free-text search term.
 function sanitize(raw: string): string {
@@ -212,6 +213,7 @@ export async function POST(request: NextRequest) {
     .maybeSingle()
 
   if (existing) {
+    refreshPublicShowcase()
     return NextResponse.json({ ok: true, message: 'Already in showcase' })
   }
 
@@ -246,5 +248,6 @@ export async function POST(request: NextRequest) {
     payload: { sort_order: nextSort },
   })
 
+  refreshPublicShowcase()
   return NextResponse.json({ ok: true })
 }

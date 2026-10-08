@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { nanoid } from 'nanoid'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
+import { sniffImage } from '@/lib/imageSniff'
+import { refreshPublicShowcase } from '@/lib/showcaseCache'
 
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
 const MAX_BYTES = 5 * 1024 * 1024  // 5 MB
@@ -124,14 +126,23 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const ext = extFor(file.type)
+  const bytes = await file.arrayBuffer()
+  // Trust the bytes, not the browser's label.
+  const realType = sniffImage(bytes)
+  if (!realType) {
+    return NextResponse.json(
+      { ok: false, message: 'That file is not a JPEG, PNG, WebP or HEIC photo.' },
+      { status: 400 }
+    )
+  }
+
+  const ext = extFor(realType)
   const photoFileId = nanoid()
   const storagePath = `${account.id}/${profile.id}/${photoFileId}.${ext}`
 
-  const bytes = await file.arrayBuffer()
   const { error: uploadError } = await admin.storage
     .from('profile-photos')
-    .upload(storagePath, bytes, { contentType: file.type, upsert: false })
+    .upload(storagePath, bytes, { contentType: realType, upsert: false })
 
   if (uploadError) {
     console.error('[photos POST] storage upload error:', uploadError.message)
@@ -160,5 +171,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, message: 'Failed to save photo record.' }, { status: 500 })
   }
 
+  refreshPublicShowcase()
   return NextResponse.json({ ok: true, photo_id: photo.id }, { status: 201 })
 }

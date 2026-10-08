@@ -327,7 +327,8 @@ export function ProfileCard3D({
               Stretching this instead let the photograph dictate the split, and a
               tall photograph clipped the "View profile" / "Details" buttons. */}
           <div className={cn('flex-shrink-0 flex flex-col', compact ? 'px-3 pt-2 pb-2.5' : 'px-4 pt-3 pb-3.5')}>
-            <Link href={`/profile/${profile.id}`} className="group">
+            {/* Padding out, margin back: a ≥24px tap target with no layout change. */}
+            <Link href={`/profile/${profile.id}`} className="group -my-1 block py-1">
               <h3 className={cn('font-serif text-maroon leading-tight group-hover:text-terra transition-colors truncate', compact ? 'text-[17px]' : 'text-[19px]')}>
                 {profile.display_name}
               </h3>
@@ -479,7 +480,7 @@ export function ProfileCard3D({
             <button
               type="button"
               onClick={() => setFlipped(false)}
-              className="text-[12px] font-semibold text-ink-soft hover:text-maroon flex items-center gap-1"
+              className="-mx-2 -my-2 flex items-center gap-1 px-2 py-2 text-[12px] font-semibold text-ink-soft hover:text-maroon"
               aria-label="Back to photo"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
