@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
 import { refreshPublicShowcase } from '@/lib/showcaseCache'
+import { syncDiscoverabilityForProfile } from '@/lib/discoverability'
 
 export async function PATCH(
   request: NextRequest,
@@ -111,6 +112,9 @@ export async function PATCH(
     },
   })
 
+  // A rejected photo no longer counts towards the onboarding minimum.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await syncDiscoverabilityForProfile(admin, (photo as any).profile_id)
   refreshPublicShowcase()
   return NextResponse.json({ ok: true })
 }
@@ -165,6 +169,8 @@ export async function DELETE(
     },
   })
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await syncDiscoverabilityForProfile(admin, (photo as any).profile_id)
   refreshPublicShowcase()
   return NextResponse.json({ ok: true })
 }

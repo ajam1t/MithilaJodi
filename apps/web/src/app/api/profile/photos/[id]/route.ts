@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
 import { refreshPublicShowcase } from '@/lib/showcaseCache'
+import { syncDiscoverability } from '@/lib/discoverability'
 
 export async function DELETE(
   _request: NextRequest,
@@ -37,6 +38,25 @@ export async function DELETE(
     return NextResponse.json({ ok: false, message: 'Not authorized.' }, { status: 403 })
   }
 
+  // One photo is part of the onboarding minimum. Removing the last one would
+  // hide the profile and send the member back through /welcome, so ask for the
+  // replacement first. (Replacing in /welcome uploads the new photo, then
+  // removes the old one.)
+  if (p.status === 'approved' || p.status === 'pending_moderation') {
+    const { count: others } = await admin
+      .from('profile_photos')
+      .select('id', { count: 'exact', head: true })
+      .eq('profile_id', p.profile_id)
+      .in('status', ['approved', 'pending_moderation'])
+      .neq('id', p.id)
+    if ((others ?? 0) === 0) {
+      return NextResponse.json(
+        { ok: false, message: 'Your profile needs at least one photo. Add another photo first, then remove this one.' },
+        { status: 409 },
+      )
+    }
+  }
+
   // Soft-delete in DB
   const { error: updateError } = await admin
     .from('profile_photos')
@@ -51,6 +71,7 @@ export async function DELETE(
   // Remove from Storage (best-effort)
   await admin.storage.from('profile-photos').remove([p.storage_path])
 
+  await syncDiscoverability(admin, account.id)
   refreshPublicShowcase()
   return NextResponse.json({ ok: true })
 }

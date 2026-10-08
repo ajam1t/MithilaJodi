@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useRef, useId } from 'react'
 import { useRouter } from 'next/navigation'
 import { LocationPicker } from '@/components/LocationPicker'
+import { MasterCombo, type Option } from '@/components/profile/MasterCombo'
+import { GramField } from '@/components/profile/GramField'
 
 
 type PhotoRow = {
@@ -189,91 +191,11 @@ const EMPTY_FORM: FormData = {
 }
 
 
-type Option = { value: string; label: string }
 type OptionsMap = Record<string, Option[]>
 
 // A <select> driven by master-data options. If the profile's stored value is
 // not present in the (active) options list, it is appended so the user never
 // silently loses a value an admin later deactivated.
-/**
- * Gram (ancestral village), findable by PIN code.
- *
- * A Mithila village is frequently not in any place database, and a member often
- * cannot spell it the way a search index would. What they do know is the PIN
- * code. India Post lists every post office under a PIN, and for rural Mithila
- * those names *are* the villages — so entering the PIN turns an unanswerable
- * question into picking your own village off a short list.
- *
- * Typing the name directly still works; the field stores free text either way.
- */
-function GramField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const inputId = useId()
-  const pinId = useId()
-  const [pin, setPin] = useState('')
-  const [places, setPlaces] = useState<string[]>([])
-  const [note, setNote] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
-
-  async function lookup() {
-    const q = pin.trim()
-    if (!/^[1-9][0-9]{5}$/.test(q)) { setNote('Enter a six-digit PIN code.'); setPlaces([]); return }
-    setBusy(true); setNote(null); setPlaces([])
-    try {
-      const j = await fetch(`/api/pincode?pin=${q}`).then(r => r.json())
-      if (j.ok && Array.isArray(j.places) && j.places.length > 0) {
-        setPlaces(j.places as string[])
-        setNote(`${[j.district, j.state].filter(Boolean).join(', ')} — pick your village.`)
-      } else {
-        setNote(j.message ?? 'No villages found for that PIN code.')
-      }
-    } catch {
-      setNote('Could not look that up just now — type the name instead.')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return (
-    <div>
-      <label htmlFor={inputId} className="block text-sm font-medium text-ink mb-1">Gram (Ancestral Village)</label>
-      <input id={inputId} type="text" value={value} maxLength={100}
-        onChange={e => onChange(e.target.value)}
-        placeholder="Type your village, or find it by PIN code below"
-        className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
-
-      <div className="mt-2 flex items-end gap-2">
-        <div className="w-[136px]">
-          <label htmlFor={pinId} className="block text-xs text-ink-soft mb-1">Find by PIN code</label>
-          <input id={pinId} type="text" inputMode="numeric" maxLength={6} value={pin}
-            onChange={e => setPin(e.target.value.replace(/\D/g, ''))}
-            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); lookup() } }}
-            placeholder="847211"
-            className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
-        </div>
-        <button type="button" onClick={lookup} disabled={busy || pin.length !== 6}
-          className="rounded-mj-sm border border-maroon px-3 py-2 text-sm font-medium text-maroon transition-colors hover:bg-maroon hover:text-gold-lt disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-maroon">
-          {busy ? 'Looking…' : 'Find'}
-        </button>
-      </div>
-
-      {note && <p className="mt-1.5 text-xs text-ink-soft">{note}</p>}
-
-      {places.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {places.map(p => (
-            <button key={p} type="button" onClick={() => { onChange(p); setPlaces([]); setNote(null) }}
-              className={`rounded-pill border px-2.5 py-1 text-[12.5px] transition-colors ${
-                value === p ? 'border-maroon bg-maroon text-gold-lt'
-                            : 'border-ink/20 text-ink-soft hover:border-maroon hover:text-maroon'}`}>
-              {p}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
 /**
  * Multi-select as toggleable chips over a master list.
  *
@@ -373,133 +295,6 @@ function MultiLocation({
       <p className="mt-1 text-xs text-ink-soft">
         {chosen.length === 0 ? 'No location preference — matches anywhere in India.' : `${chosen.length} added`}
       </p>
-    </div>
-  )
-}
-
-/**
- * A searchable picker over a master list that stores the option *key*.
- *
- * This replaces CommunitySearch for the community fields. CommunitySearch wrote
- * `label_en` into the form, so profiles ended up holding display text
- * ('Kashyap', 'Hindu') while the option lists are keyed by slug ('kashyapa',
- * 'hindu'). Every one of those fields then rendered a duplicate entry, because
- * the select prepends an unmatched value as its own option — the reported
- * "Hindu listed twice", which was really happening to caste, gotra and mool too.
- *
- * It also accepts a filtered subset, which is how choosing a mool narrows the
- * gotra list to the gotras that mool actually belongs to.
- */
-function MasterCombo({
-  label, value, onChange, opts, hint, placeholder = 'Type to search…', allowOther = true,
-  allowCustom = false,
-}: {
-  label: string
-  value: string
-  onChange: (v: string) => void
-  opts: Option[]
-  hint?: string
-  placeholder?: string
-  allowOther?: boolean
-  /**
-   * Let the member keep what they typed when it is not in the list.
-   *
-   * For Mool specifically: the Panji records far more mools than any list we
-   * hold, and spellings vary between families, so a closed list means some
-   * people simply cannot state theirs. A typed value is stored verbatim —
-   * their spelling of their own mool is not ours to normalise — and read paths
-   * fall back to title-casing an unknown value, so it still displays properly.
-   */
-  allowCustom?: boolean
-}) {
-  const inputId = useId()
-  const [query, setQuery] = useState('')
-  const [open, setOpen] = useState(false)
-
-  const selected = opts.find(o => o.value === value)
-  // A value with no matching option is legacy free text; show it as typed
-  // rather than silently blanking what the member previously saved.
-  const display = selected?.label ?? value ?? ''
-
-  const q = query.trim().toLowerCase()
-  const matches = (q ? opts.filter(o => o.label.toLowerCase().includes(q)) : opts).slice(0, 60)
-
-  const typed = query.trim()
-  // Offer the typed text only when it is not already an option, so the list
-  // never shows "Use Sarisab" next to the real Sarisab entry.
-  const canUseTyped =
-    allowCustom && typed.length > 1 && !opts.some(o => o.label.toLowerCase() === typed.toLowerCase())
-  const commitTyped = () => { onChange(typed); setOpen(false) }
-
-  return (
-    <div className="relative">
-      <label htmlFor={inputId} className="block text-sm font-medium text-ink mb-1">{label}</label>
-      <input
-        id={inputId}
-        type="text"
-        value={open ? query : display}
-        placeholder={placeholder}
-        autoComplete="off"
-        role="combobox"
-        aria-expanded={open}
-        aria-controls={`${inputId}-list`}
-        className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-ink text-sm focus:outline-none focus:border-maroon bg-white"
-        onFocus={() => { setQuery(''); setOpen(true) }}
-        onChange={e => { setQuery(e.target.value); setOpen(true) }}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
-        onKeyDown={e => {
-          // Enter keeps what was typed, so a member entering a mool by hand does
-          // not have to reach for the mouse to confirm it.
-          if (e.key === 'Enter' && canUseTyped) { e.preventDefault(); commitTyped() }
-          if (e.key === 'Escape') setOpen(false)
-        }}
-      />
-      {value && !open && (
-        <button type="button" onClick={() => onChange('')}
-          className="absolute right-2 top-[34px] text-ink-soft hover:text-maroon text-sm leading-none"
-          aria-label={`Clear ${label}`}>×</button>
-      )}
-      {open && (
-        <ul id={`${inputId}-list`} role="listbox"
-          className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-mj-sm border border-ink/20 bg-white shadow-mj-xs">
-          {/* Keeping what was typed comes first when nothing matched — that is
-              the only useful action at that point. */}
-          {canUseTyped && matches.length === 0 && (
-            <li role="option" aria-selected={false}
-              className="cursor-pointer px-3 py-2 text-sm text-ink hover:bg-cream"
-              onMouseDown={commitTyped}>
-              Use &ldquo;<span className="font-medium text-maroon">{typed}</span>&rdquo;
-            </li>
-          )}
-          {matches.length === 0 && !canUseTyped && (
-            <li className="px-3 py-2 text-sm text-ink-soft">No match in the list.</li>
-          )}
-          {matches.map(o => (
-            <li key={o.value} role="option" aria-selected={o.value === value}
-              className={`cursor-pointer px-3 py-2 text-sm hover:bg-cream ${o.value === value ? 'text-maroon font-medium' : 'text-ink'}`}
-              onMouseDown={() => { onChange(o.value); setOpen(false) }}>
-              {o.label}
-            </li>
-          ))}
-          {/* Also offered below the matches, so a member whose mool merely
-              resembles a listed one can still enter their own spelling. */}
-          {canUseTyped && matches.length > 0 && (
-            <li role="option" aria-selected={false}
-              className="cursor-pointer border-t border-paper-3 px-3 py-2 text-sm text-ink hover:bg-cream"
-              onMouseDown={commitTyped}>
-              Use &ldquo;<span className="font-medium text-maroon">{typed}</span>&rdquo; instead
-            </li>
-          )}
-          {allowOther && !opts.some(o => o.value === 'other') && (
-            <li role="option" aria-selected={value === 'other'}
-              className="cursor-pointer border-t border-paper-3 px-3 py-2 text-sm text-ink-soft hover:bg-cream"
-              onMouseDown={() => { onChange('other'); setOpen(false) }}>
-              Not listed / Other
-            </li>
-          )}
-        </ul>
-      )}
-      {hint && <p className="mt-1 text-xs text-ink-soft">{hint}</p>}
     </div>
   )
 }
@@ -1794,10 +1589,12 @@ export default function ProfileEditPage() {
                     className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm focus:outline-none focus:border-maroon" />
                 </div>
                 <div>
-                  <label htmlFor="pref-gender" className="block text-sm font-medium text-ink mb-1">Looking for</label>
+                  <label htmlFor="pref-gender" className="block text-sm font-medium text-ink mb-1">Looking for *</label>
                   <select id="pref-gender" value={form.pref_gender} onChange={e => set('pref_gender', e.target.value)}
                     className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm bg-white focus:outline-none focus:border-maroon">
-                    <option value="">Any</option>
+                    {/* Required since the registration redesign — part of the
+                        onboarding minimum, so there is no "Any". */}
+                    <option value="" disabled>Choose…</option>
                     <option value="female">A bride (female)</option>
                     <option value="male">A groom (male)</option>
                   </select>

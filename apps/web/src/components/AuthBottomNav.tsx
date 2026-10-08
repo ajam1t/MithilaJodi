@@ -100,7 +100,7 @@ export function AuthBottomNav() {
   return (
     <nav
       aria-label="Member navigation"
-      className="fixed bottom-0 left-0 right-0 z-40 border-t border-gold/30 bg-cream shadow-[0_-4px_16px_-6px_rgba(58,20,12,0.18)] lg:hidden"
+      className="mj-bottom-nav fixed bottom-0 left-0 right-0 z-40 border-t border-gold/30 bg-cream shadow-[0_-4px_16px_-6px_rgba(58,20,12,0.18)] lg:hidden"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <div className="h-[2px] w-full bg-gradient-to-r from-cream via-gold to-cream" aria-hidden="true" />

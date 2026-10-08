@@ -700,3 +700,12 @@ footer :focus-visible {
    pure-CSS path here driven by `animation-timeline: scroll(root block)`, which
    was removed along with the scroll reveals — see the note at the top of the
    motion section. */
+
+/* While the on-screen keyboard is up, the fixed bottom nav would ride on top
+   of it (Android resizes the viewport) and cover the form's own button. Hide
+   it whenever a text field has focus on a touch device. */
+@media (max-width: 1023px) and (pointer: coarse) {
+  body:has(input:focus:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='button']):not([type='submit']), textarea:focus) .mj-bottom-nav {
+    display: none;
+  }
+}

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { audit, requireAdminApi, type AdminPerm } from '@/lib/adminAuth'
 import { refreshPublicShowcase } from '@/lib/showcaseCache'
+import { syncDiscoverability } from '@/lib/discoverability'
 
 /*
  * Member actions from Admin → Members → member.
@@ -82,10 +83,20 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     case 'show': {
       if (!profile) return NextResponse.json({ ok: false, message: 'This member has no profile yet.' }, { status: 409 })
       // Hide is sticky (admin_hidden survives the member's next save). Show only
-      // lifts the admin hide — a member who chose Private stays private.
-      const discoverable = action === 'show' ? profile.visibility !== 'private' : false
-      const { error } = await admin.from('profiles').update({ discoverable, admin_hidden: action === 'hide' }).eq('id', profile.id)
+      // lifts the admin hide — a member who chose Private, or a new member who
+      // has not finished joining, stays hidden.
+      const { error } = action === 'hide'
+        ? await admin.from('profiles').update({ discoverable: false, admin_hidden: true }).eq('id', profile.id)
+        // Restore the member's own choice; the sync then applies the onboarding
+        // rule (which leaves pre-redesign members visible).
+        : await admin.from('profiles').update({ admin_hidden: false, discoverable: profile.visibility !== 'private' }).eq('id', profile.id)
       if (error) return fail('update profile', error)
+      let discoverable = false
+      if (action === 'show') {
+        await syncDiscoverability(admin, id)
+        const { data: after } = await admin.from('profiles').select('discoverable').eq('id', profile.id).maybeSingle()
+        discoverable = !!after?.discoverable
+      }
       await audit(actor.id, 'member_visibility', { type: 'profile', id: profile.id }, { discoverable, reason }, request)
       break
     }

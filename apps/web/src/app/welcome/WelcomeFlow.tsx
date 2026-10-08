@@ -1,357 +1,546 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { LocationPicker } from '@/components/LocationPicker'
 import { JoinCommunityButton } from '@/components/whatsapp/JoinCommunity'
-import type { OnboardingState } from '@/lib/onboarding'
+import { JoinProgress } from '@/components/auth/JoinProgress'
+import { MasterCombo, type Option } from '@/components/profile/MasterCombo'
+import { GramField } from '@/components/profile/GramField'
+import { PhotoPicker } from '@/components/profile/PhotoPicker'
+import { COMPLETION_CHECKS, POINTS_PER_CHECK, type CompletionField } from '@/lib/profileCompletion'
+import { track } from '@/lib/track'
+import type { RegStep } from '@/lib/analytics'
+import type { OnboardingState, OnboardingStep } from '@/lib/onboarding'
 
 /**
- * The required onboarding form.
+ * Join steps 2–5, after the account exists (/register is step 1):
  *
- * Two steps, in the order the information becomes possible to collect: the
- * profile row has to exist before a photo can be attached to it.
+ *   2 About you — who it is for, name, bride/groom, date of birth, marital
+ *                 status, looking for
+ *   3 Mithila   — current city, community, gotra; mool, sub-caste, maternal
+ *                 gotra and gram optional, offered only where they apply
+ *   4 Photo     — one photo, adjusted before upload
+ *   5 Ready     — profile strength and the "+X%" next steps
  *
- * It writes through the same PUT /api/profile and POST /api/profile/photos that
- * the full editor uses, so there is no second code path that could accept a
- * profile the editor would reject.
+ * Each step saves through PATCH /api/onboarding, which writes only that
+ * step's columns — so a member sent back here to fill something new keeps
+ * everything else they already entered. The profile stays hidden from every
+ * discovery surface until the photo step is done (lib/discoverability.ts).
  */
 
-const MAX_PHOTO_BYTES = 5 * 1024 * 1024
-const MAX_DIM = 1200
+export type WelcomeOptions = {
+  caste: Option[]
+  gotra: Option[]
+  mool: Option[]
+  sub_caste: Option[]
+  marital_status: Option[]
+  moolGotra: Record<string, string[]>
+}
 
-/** Youngest permitted date of birth — the API enforces 18+ as well. */
-function maxDob(): string {
+type Step = OnboardingStep | 'ready'
+const STEP_NO: Record<Step, 2 | 3 | 4 | 5> = { about: 2, mithila: 3, photo: 4, ready: 5 }
+const DRAFT_KEY = 'mj-welcome-draft'
+
+const reg = (k: RegStep) => track('reg_step', { k })
+
+const PROFILE_FOR: Array<[string, string]> = [['self', 'Myself'], ['son', 'My son'], ['daughter', 'My daughter'], ['sibling', 'My sibling'], ['other', 'Relative / friend']]
+const MARITAL_FALLBACK: Option[] = [
+  { value: 'never_married', label: 'Never married' }, { value: 'divorced', label: 'Divorced' },
+  { value: 'widowed', label: 'Widowed' }, { value: 'awaiting_divorce', label: 'Awaiting divorce' },
+]
+
+/** Mool and sub-caste come from the Panji tradition — offered where they apply. */
+const PANJI_CASTES = new Set(['brahmin', 'maithil_brahmin', 'other_brahmin', 'kayastha'])
+const SUBCASTE_CASTES = new Set(['brahmin', 'maithil_brahmin', 'other_brahmin'])
+const isPanji = (c: string) => PANJI_CASTES.has(c) || /maithil|brahm|karn|kayast/i.test(c)
+const hasSubCaste = (c: string) => SUBCASTE_CASTES.has(c) || /maithil|brahm/i.test(c)
+
+function dobBounds() {
   const d = new Date()
-  d.setFullYear(d.getFullYear() - 18)
-  return d.toISOString().slice(0, 10)
+  const iso = (y: number) => new Date(Date.UTC(d.getFullYear() - y, d.getMonth(), d.getDate())).toISOString().slice(0, 10)
+  return { max: iso(18), min: iso(80) }
 }
 
-/**
- * Downscale before upload. Phone cameras produce 4–8 MB files that would be
- * rejected by the 5 MB limit, which reads to the member as "my photo is not
- * allowed" rather than "it is too big".
- */
-function compress(file: File): Promise<File> {
-  if (file.type === 'image/heic' || file.type === 'image/heif') return Promise.resolve(file)
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file)
-    const img = new Image()
-    img.onload = () => {
-      URL.revokeObjectURL(url)
-      let { width: w, height: h } = img
-      if (w > MAX_DIM || h > MAX_DIM) {
-        const r = Math.min(MAX_DIM / w, MAX_DIM / h)
-        w = Math.round(w * r); h = Math.round(h * r)
-      }
-      const canvas = document.createElement('canvas')
-      canvas.width = w; canvas.height = h
-      canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
-      canvas.toBlob(
-        blob => blob
-          ? resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }))
-          : reject(new Error('Could not process that image')),
-        'image/jpeg', 0.85,
-      )
-    }
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not read that image')) }
-    img.src = url
-  })
+type Draft = Record<string, string | number | null>
+
+function readDraft(): Draft {
+  try { return JSON.parse(sessionStorage.getItem(DRAFT_KEY) ?? '{}') as Draft } catch { return {} }
 }
 
-export function WelcomeFlow({ initial }: { initial: OnboardingState }) {
+/* ── Small building blocks ─────────────────────────────────────────────── */
+
+function Chips({ name, label, value, onChange, options, error, hint, cols = 'grid-cols-2', required }: {
+  name: string; label: string; value: string; onChange: (v: string) => void
+  options: Array<[string, string]>; error?: string; hint?: string; cols?: string; required?: boolean
+}) {
+  return (
+    <fieldset aria-describedby={error ? `${name}-err` : hint ? `${name}-hint` : undefined} aria-invalid={error ? true : undefined}>
+      <legend className="mb-1.5 block text-sm font-medium text-ink">
+        {label}{required && <span className="text-terra" aria-hidden="true"> *</span>}
+      </legend>
+      <div className={`grid ${cols} gap-2`}>
+        {options.map(([v, l]) => (
+          <label key={v}
+            className={`flex min-h-[44px] cursor-pointer items-center justify-center rounded-mj-sm border px-2 py-2 text-center text-[13.5px] font-medium transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-gold ${
+              value === v ? 'border-maroon bg-maroon text-cream' : error ? 'border-terra/60 bg-white text-ink' : 'border-ink/20 bg-white text-ink hover:border-maroon'}`}>
+            <input type="radio" name={name} value={v} checked={value === v} onChange={() => onChange(v)} className="sr-only" />
+            {l}
+          </label>
+        ))}
+      </div>
+      {error && <p id={`${name}-err`} role="alert" className="mt-1 text-xs text-terra">{error}</p>}
+      {hint && <p id={`${name}-hint`} className="mt-1 text-xs text-ink-soft">{hint}</p>}
+    </fieldset>
+  )
+}
+
+function TextField({ id, label, value, onChange, error, hint, required, ...rest }: {
+  id: string; label: string; value: string; onChange: (v: string) => void; error?: string; hint?: string; required?: boolean
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'id'>) {
+  return (
+    <div>
+      <label htmlFor={id} className="mb-1 block text-sm font-medium text-ink">
+        {label}{required && <span className="text-terra" aria-hidden="true"> *</span>}
+      </label>
+      <input id={id} value={value} onChange={e => onChange(e.target.value)}
+        aria-invalid={error ? true : undefined} aria-required={required || undefined}
+        aria-describedby={[error && `${id}-err`, hint && `${id}-hint`].filter(Boolean).join(' ') || undefined}
+        className={`w-full rounded-mj-sm border bg-white px-3 py-2.5 text-base text-ink focus:outline-none sm:py-2 sm:text-sm ${error ? 'border-terra' : 'border-ink/20 focus:border-maroon'}`}
+        {...rest} />
+      {error && <p id={`${id}-err`} role="alert" className="mt-1 text-xs text-terra">{error}</p>}
+      {hint && <p id={`${id}-hint`} className="mt-1 text-xs text-ink-soft">{hint}</p>}
+    </div>
+  )
+}
+
+function ActionBar({ children }: { children: React.ReactNode }) {
+  // Sticky so the main button stays reachable on a long step, above the
+  // keyboard on phones that resize the viewport for it.
+  return (
+    <div className="sticky bottom-0 z-10 -mx-5 mt-5 border-t border-paper-3 bg-cream/95 px-5 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:pb-0 sm:pt-0 sm:backdrop-blur-none">
+      {children}
+    </div>
+  )
+}
+
+/* ── The flow ──────────────────────────────────────────────────────────── */
+
+export function WelcomeFlow({ initial, options }: { initial: OnboardingState; options: WelcomeOptions }) {
   const v = initial.values
-  // Start on the photo step if the details are already saved — someone returning
-  // to finish should not have to re-confirm what they already entered.
-  const detailsDone = !initial.missing.some(m => m === 'name' || m === 'gender' || m === 'dob')
-  const [step, setStep] = useState<1 | 2>(detailsDone ? 2 : 1)
+  const returning = !!initial.profileId && !initial.complete
+  const [step, setStep] = useState<Step>(initial.complete ? 'ready' : initial.resumeStep ?? 'about')
 
   const [profileFor, setProfileFor] = useState(v.profileFor ?? 'self')
   const [firstName, setFirstName] = useState(v.firstName ?? '')
   const [lastName, setLastName] = useState(v.lastName ?? '')
   const [gender, setGender] = useState(v.gender ?? '')
   const [dob, setDob] = useState(v.dob ?? '')
-  const [caste, setCaste] = useState(v.caste ?? '')
+  const [marital, setMarital] = useState(v.maritalStatus ?? '')
+  const [lookingFor, setLookingFor] = useState(v.lookingFor ?? '')
+  const lookingTouched = useRef(!!v.lookingFor)
+
   const [locId, setLocId] = useState<number | null>(v.currentLocId)
   const [locName, setLocName] = useState(v.currentLocName ?? '')
+  const [caste, setCaste] = useState(v.caste ?? '')
+  const [gotra, setGotra] = useState(v.gotra ?? '')
+  const [subCaste, setSubCaste] = useState(v.subCaste ?? '')
+  const [mool, setMool] = useState(v.mool ?? '')
+  const [maternalGotra, setMaternalGotra] = useState(v.maternalGotra ?? '')
+  const [gram, setGram] = useState(v.gram ?? '')
+  const [moreOpen, setMoreOpen] = useState(!!(v.mool || v.subCaste || v.maternalGotra || v.gram))
+  const [restored, setRestored] = useState(false)
+
+  // Saved values win; an unsaved draft from this tab (refresh, accidental
+  // back) fills whatever has not been saved yet, so nothing typed is lost.
+  // Read after mount — the server render has no sessionStorage.
+  useEffect(() => {
+    const dr = readDraft()
+    const str = (k: string) => (typeof dr[k] === 'string' ? (dr[k] as string) : '')
+    if (!v.firstName && str('firstName')) setFirstName(str('firstName'))
+    if (!v.lastName && str('lastName')) setLastName(str('lastName'))
+    if (!v.profileFor && str('profileFor')) setProfileFor(str('profileFor'))
+    if (!v.gender && str('gender')) setGender(str('gender'))
+    if (!v.dob && str('dob')) setDob(str('dob'))
+    if (!v.maritalStatus && str('marital')) setMarital(str('marital'))
+    if (!v.lookingFor && str('lookingFor')) setLookingFor(str('lookingFor'))
+    if (!v.currentLocId && typeof dr.locId === 'number') { setLocId(dr.locId); setLocName(str('locName')) }
+    if (!v.caste && str('caste')) setCaste(str('caste'))
+    if (!v.gotra && str('gotra')) setGotra(str('gotra'))
+    if (!v.subCaste && str('subCaste')) setSubCaste(str('subCaste'))
+    if (!v.mool && str('mool')) setMool(str('mool'))
+    if (!v.maternalGotra && str('maternalGotra')) setMaternalGotra(str('maternalGotra'))
+    if (!v.gram && str('gram')) setGram(str('gram'))
+    setRestored(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const [photoCount, setPhotoCount] = useState(initial.photoCount)
-  const [preview, setPreview] = useState<string | null>(null)
-  const [uploading, setUploading] = useState(false)
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null)
+  const [strength, setStrength] = useState(initial.strength)
+  const [completionMissing, setCompletionMissing] = useState<CompletionField[]>(initial.completionMissing)
+
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-  const fileRef = useRef<HTMLInputElement>(null)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [formError, setFormError] = useState('')
+  const topRef = useRef<HTMLDivElement>(null)
+  const tracked = useRef(new Set<string>())
+  const once = (k: RegStep) => { if (!tracked.current.has(k)) { tracked.current.add(k); reg(k) } }
 
-  async function saveDetails(e: React.FormEvent) {
-    e.preventDefault()
-    setError('')
-    if (!firstName.trim()) { setError('Please enter a name.'); return }
-    if (!gender) { setError('Please choose bride or groom.'); return }
-    if (!dob) { setError('Please enter a date of birth.'); return }
+  useEffect(() => {
+    if (step === 'about') once('about_started')
+    if (step === 'mithila') once('mithila_started')
+    topRef.current?.scrollIntoView({ block: 'start' })
+  }, [step])
 
-    setSaving(true)
+  useEffect(() => {
+    if (!restored) return // never overwrite the draft before it has been read
     try {
-      const res = await fetch('/api/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          profile_for: profileFor,
-          first_name: firstName.trim(),
-          last_name: lastName.trim() || null,
-          gender,
-          dob,
-          religion: 'Hindu',
-          caste: caste.trim() || null,
-          current_loc_id: locId,
-        }),
-      })
-      const j = await res.json().catch(() => ({}))
-      if (!res.ok || !j.ok) { setError(j.message ?? 'Could not save. Please try again.'); return }
-      setStep(2)
-    } catch {
-      setError('Network error. Please try again.')
-    } finally { setSaving(false) }
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ profileFor, firstName, lastName, gender, dob, marital, lookingFor, locId, locName, caste, gotra, subCaste, mool, maternalGotra, gram }))
+    } catch { /* storage blocked */ }
+  }, [restored, profileFor, firstName, lastName, gender, dob, marital, lookingFor, locId, locName, caste, gotra, subCaste, mool, maternalGotra, gram])
+
+  // Son → groom, daughter → bride; "looking for" follows unless changed by hand.
+  function chooseProfileFor(p: string) {
+    setProfileFor(p)
+    if (p === 'son') chooseGender('male')
+    if (p === 'daughter') chooseGender('female')
+  }
+  function chooseGender(g: string) {
+    setGender(g)
+    clearErr('gender')
+    if (!lookingTouched.current) { setLookingFor(g === 'male' ? 'female' : 'male'); clearErr('lookingFor') }
+  }
+  const clearErr = (k: string) => setErrors(e => { if (!e[k]) return e; const n = { ...e }; delete n[k]; return n })
+
+  function focusFirstError(errs: Record<string, string>) {
+    const first = Object.keys(errs)[0]
+    if (!first) return
+    // A timeout, not requestAnimationFrame (which never fires in a background
+    // tab or some in-app webviews); an instant scroll for the same reason.
+    setTimeout(() => {
+      const el = document.querySelector<HTMLElement>(`[data-field="${first}"] input:not([type=radio]), [data-field="${first}"] [role="combobox"], [data-field="${first}"] input`)
+      el?.closest('[data-field]')?.scrollIntoView({ block: 'center' })
+      el?.focus({ preventScroll: true })
+    }, 0)
   }
 
-  async function upload(file: File | undefined) {
-    if (!file) return
-    setError('')
-    if (!file.type.startsWith('image/')) { setError('Please choose an image file.'); return }
-
-    setUploading(true)
+  async function save(body: Record<string, unknown>): Promise<boolean> {
+    setSaving(true)
+    setFormError('')
     try {
-      let toSend = file
-      try { toSend = await compress(file) } catch { /* send the original */ }
-      if (toSend.size > MAX_PHOTO_BYTES) {
-        setError('That photo is too large even after resizing. Please pick another.')
-        return
-      }
-
-      setPreview(URL.createObjectURL(file))
-      const body = new FormData()
-      body.append('photo', toSend)
-      const res = await fetch('/api/profile/photos', { method: 'POST', body })
+      const res = await fetch('/api/onboarding', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      if (res.status === 401) { window.location.href = '/login?next=/welcome'; return false }
       const j = await res.json().catch(() => ({}))
-      if (!res.ok || !j.ok) {
-        setError(j.message ?? 'Could not upload that photo. Please try again.')
-        setPreview(null)
-        return
-      }
-      setPhotoCount(c => c + 1)
+      if (!res.ok || !j.ok) { setFormError(j.message ?? 'Could not save. Please try again.'); return false }
+      if (typeof j.strength === 'number') setStrength(j.strength)
+      if (Array.isArray(j.completionMissing)) setCompletionMissing(j.completionMissing)
+      return true
     } catch {
-      setError('Upload failed. Please check your connection and try again.')
-      setPreview(null)
+      setFormError('No connection — nothing was lost. Please try again.')
+      return false
     } finally {
-      setUploading(false)
-      if (fileRef.current) fileRef.current.value = ''
+      setSaving(false)
     }
   }
 
+  async function submitAbout(e: React.FormEvent) {
+    e.preventDefault()
+    if (saving) return
+    const errs: Record<string, string> = {}
+    if (!firstName.trim()) errs.firstName = 'Please enter a first name.'
+    if (!gender) errs.gender = 'Please choose bride or groom.'
+    const { max, min } = dobBounds()
+    if (!dob) errs.dob = 'Please enter the date of birth.'
+    else if (dob > max) errs.dob = 'Members must be at least 18 years old.'
+    else if (dob < min) errs.dob = 'Please check the year of birth.'
+    if (!marital) errs.marital = 'Please choose a marital status.'
+    if (!lookingFor) errs.lookingFor = 'Please choose who you are looking for.'
+    setErrors(errs)
+    if (Object.keys(errs).length) { focusFirstError(errs); return }
+    const ok = await save({
+      step: 'about', profile_for: profileFor, first_name: firstName.trim(), last_name: lastName.trim() || null,
+      gender, dob, marital_status: marital, looking_for: lookingFor,
+    })
+    if (ok) { reg('about_done'); setStep(initial.complete ? 'ready' : 'mithila') }
+  }
+
+  async function submitMithila(e: React.FormEvent) {
+    e.preventDefault()
+    if (saving) return
+    const errs: Record<string, string> = {}
+    if (!locId) errs.location = 'Please choose your current city from the list.'
+    if (!caste.trim()) errs.caste = 'Please choose your community.'
+    if (!gotra.trim()) errs.gotra = 'Please choose your gotra — “Not listed / Other” is fine if you are unsure.'
+    setErrors(errs)
+    if (Object.keys(errs).length) { focusFirstError(errs); return }
+    const ok = await save({
+      step: 'mithila', current_loc_id: locId, caste, self_gotra: gotra,
+      sub_caste: hasSubCaste(caste) ? subCaste || null : null,
+      mool: isPanji(caste) ? mool || null : null,
+      maternal_gotra: maternalGotra || null,
+      gram: gram.trim() || null,
+    })
+    if (ok) { reg('mithila_done'); setStep(photoCount > 0 ? 'ready' : 'photo') }
+  }
+
+  async function upload(file: File) {
+    setSaving(true)
+    setFormError('')
+    try {
+      const body = new FormData()
+      body.append('photo', file)
+      const res = await fetch('/api/profile/photos', { method: 'POST', body })
+      const j = await res.json().catch(() => ({}))
+      if (!res.ok || !j.ok) { setFormError(j.message ?? 'Could not upload that photo. Please try again.'); return }
+      setUploadedUrl(URL.createObjectURL(file))
+      setPhotoCount(c => c + 1)
+      reg('photo_done')
+      reg('completed')
+      try { sessionStorage.removeItem(DRAFT_KEY) } catch { /* ignore */ }
+      // A refresh keeps the Ready screen instead of jumping to /home.
+      window.history.replaceState(null, '', '/welcome?done=1')
+      setStep('ready')
+    } catch {
+      setFormError('Upload failed — check your connection and try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Mool → gotra, as in the profile editor: narrow the list to the gotras the
+  // chosen mool belongs to, and fill it when there is exactly one.
+  const linkedGotras = mool ? options.moolGotra[mool] ?? [] : []
+  const gotraOpts = linkedGotras.length > 0 ? options.gotra.filter(o => linkedGotras.includes(o.value) || o.value === 'other') : options.gotra
+  const maritalOpts = (options.marital_status.length ? options.marital_status : MARITAL_FALLBACK).map(o => [o.value, o.label] as [string, string])
+  const { max: dobMax, min: dobMin } = dobBounds()
+  const nextSteps = COMPLETION_CHECKS.filter(c => completionMissing.includes(c.field) && c.why)
+  const firstSection = nextSteps[0]?.section
+
+  const heading: Record<Step, [string, string]> = {
+    about: ['Tell us about the person', 'The basics families look at first. Only the age is shown — never the date of birth.'],
+    mithila: ['Your Mithila roots', 'Community and gotra make matching meaningful — and keep it gotra-safe.'],
+    photo: ['Add one clear photo', 'Profiles with a photo are the ones families open. One is all you need to begin.'],
+    ready: ['Your Mithila Jodi profile is ready', 'Members can now find you. A fuller profile gets noticed — and trusted — sooner.'],
+  }
+
   return (
-    <div className="max-w-lg mx-auto px-4 py-8">
-      <header className="text-center mb-6">
-        <p className="eyebrow mb-1.5">Step {step} of 2</p>
-        <h1 className="font-serif text-maroon text-[24px] sm:text-[28px] leading-tight">
-          {step === 1 ? 'Tell us who this profile is for' : 'Add a photo'}
-        </h1>
-        <div className="ornament-line w-14 mx-auto mt-2.5" />
-        <p className="text-ink-soft text-[13.5px] leading-relaxed mt-3">
-          {step === 1
-            ? 'These few details are required so families can see a real profile rather than an empty one.'
-            : 'A profile with a photo is the difference between being considered and being skipped. Your photo is reviewed by our team before it appears to anyone.'}
-        </p>
-      </header>
+    <div ref={topRef} className="mx-auto max-w-lg scroll-mt-4 px-4 pb-10 pt-5 sm:pt-8">
+      <JoinProgress current={STEP_NO[step]} className="mb-5" />
 
-      <div className="h-1.5 rounded-full bg-paper-3 overflow-hidden mb-6" aria-hidden="true">
-        <div className="h-full bg-maroon rounded-full transition-all duration-500" style={{ width: step === 1 ? '50%' : '100%' }} />
-      </div>
-
-      {error && (
-        <p className="mb-4 rounded-mj-sm bg-error-soft border border-error/30 px-3.5 py-2.5 text-[13.5px] text-error-fg">
-          {error}
+      {returning && step !== 'ready' && (
+        <p className="mb-4 rounded-mj-sm border border-gold/40 bg-cream px-3.5 py-2.5 text-[13.5px] text-ink" role="status">
+          <span className="font-semibold text-maroon">Welcome back.</span> Let&apos;s finish your profile — what you saved before is filled in.
         </p>
       )}
 
-      {step === 1 ? (
-        <form onSubmit={saveDetails} className="card p-5 space-y-4">
-          <div>
-            <span className="block text-sm font-medium text-ink mb-1.5">This profile is for</span>
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-              {(['self', 'son', 'daughter', 'sibling', 'other'] as const).map(opt => (
-                <label
-                  key={opt}
-                  className={`flex items-center justify-center py-2 px-2 border rounded-mj-sm cursor-pointer text-[13px] font-medium transition-colors ${
-                    profileFor === opt ? 'border-maroon bg-maroon text-cream' : 'border-ink/20 text-ink hover:border-maroon'
-                  }`}
-                >
-                  <input type="radio" name="profile_for" value={opt} checked={profileFor === opt}
-                    onChange={() => setProfileFor(opt)} className="sr-only" />
-                  {opt.charAt(0).toUpperCase() + opt.slice(1)}
-                </label>
-              ))}
-            </div>
+      <header className="mb-5">
+        <h1 className="font-serif text-[24px] leading-tight text-maroon sm:text-[28px]">{heading[step][0]}</h1>
+        <p className="mt-1.5 text-[13.5px] leading-relaxed text-ink-soft">{heading[step][1]}</p>
+      </header>
+
+      {formError && (
+        <p role="alert" className="mb-4 rounded-mj-sm border border-error/30 bg-error-soft px-3.5 py-2.5 text-[13.5px] text-error-fg">{formError}</p>
+      )}
+
+      {step === 'about' && (
+        <form onSubmit={submitAbout} noValidate className="card space-y-5 p-5">
+          <div data-field="profileFor">
+            <Chips name="profile_for" label="This profile is for" value={profileFor} onChange={chooseProfileFor}
+              options={PROFILE_FOR} cols="grid-cols-2 sm:grid-cols-3" />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="w-first" className="block text-sm font-medium text-ink mb-1">First name *</label>
-              <input id="w-first" required maxLength={100} value={firstName}
-                onChange={e => setFirstName(e.target.value)} placeholder="Priya"
-                className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon bg-white" />
-            </div>
-            <div>
-              <label htmlFor="w-last" className="block text-sm font-medium text-ink mb-1">Last name</label>
-              <input id="w-last" maxLength={100} value={lastName}
-                onChange={e => setLastName(e.target.value)} placeholder="Jha"
-                className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon bg-white" />
-            </div>
+          <div className="grid grid-cols-1 gap-4 min-[400px]:grid-cols-2" data-field="firstName">
+            <TextField id="w-first" label="First name" required value={firstName} maxLength={100} autoComplete="given-name"
+              onChange={x => { setFirstName(x); clearErr('firstName') }} error={errors.firstName} placeholder="e.g. Priya" />
+            <TextField id="w-last" label="Surname" value={lastName} maxLength={100} autoComplete="family-name"
+              onChange={setLastName} placeholder="e.g. Jha" />
           </div>
 
-          <div>
-            <span className="block text-sm font-medium text-ink mb-1.5">Bride or groom *</span>
-            <div className="grid grid-cols-2 gap-2">
-              {([['female', 'Bride'], ['male', 'Groom']] as const).map(([value, label]) => (
-                <label
-                  key={value}
-                  className={`flex items-center justify-center py-2.5 border rounded-mj-sm cursor-pointer text-sm font-medium transition-colors ${
-                    gender === value ? 'border-maroon bg-maroon text-cream' : 'border-ink/20 text-ink hover:border-maroon'
-                  }`}
-                >
-                  <input type="radio" name="gender" value={value} checked={gender === value}
-                    onChange={() => setGender(value)} className="sr-only" />
-                  {label}
-                </label>
-              ))}
-            </div>
+          <div data-field="gender">
+            <Chips name="gender" label="Bride or groom" required value={gender} onChange={chooseGender} error={errors.gender}
+              options={[['female', 'Bride'], ['male', 'Groom']]} />
           </div>
 
-          <div>
-            <label htmlFor="w-dob" className="block text-sm font-medium text-ink mb-1">Date of birth *</label>
-            <input id="w-dob" type="date" required value={dob} max={maxDob()}
-              onChange={e => setDob(e.target.value)}
-              className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon bg-white" />
-            <p className="text-[11.5px] text-ink-soft mt-1">
-              Members must be 18 or older. Your date of birth is never shown — only your age.
-            </p>
+          <div data-field="dob">
+            <TextField id="w-dob" type="date" label="Date of birth" required value={dob} max={dobMax} min={dobMin}
+              onChange={x => { setDob(x); clearErr('dob') }} error={errors.dob}
+              hint="Members must be 18 or older. Only the age appears on the profile." />
           </div>
 
-          {/* Recommended rather than required: these two carry most of the
-              matching value, but blocking on them would turn a two-minute
-              signup into an interrogation. */}
-          <div className="pt-1 border-t border-paper-3">
-            <p className="text-[12px] font-semibold uppercase tracking-wide text-ink-soft mb-2.5 mt-3">
-              Recommended
-            </p>
-            <div className="space-y-3">
-              <div>
-                <label htmlFor="w-caste" className="block text-sm font-medium text-ink mb-1">Caste</label>
-                <input id="w-caste" maxLength={100} value={caste}
-                  onChange={e => setCaste(e.target.value)} placeholder="e.g. Maithil Brahmin"
-                  className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon bg-white" />
-              </div>
-              <LocationPicker
-                label="Current city"
-                value={locId}
-                initialName={locName}
-                hint="Where you live now. Used for “same city” matching."
-                onChange={(id, name) => { setLocId(id); setLocName(name) }}
-              />
-            </div>
+          <div data-field="marital">
+            <Chips name="marital" label="Marital status" required value={marital} onChange={x => { setMarital(x); clearErr('marital') }}
+              error={errors.marital} options={maritalOpts} />
           </div>
 
-          <button type="submit" disabled={saving} className="btn-primary w-full justify-center py-2.5 text-sm disabled:opacity-60">
-            {saving ? 'Saving…' : 'Continue to photo'}
-          </button>
+          <div data-field="lookingFor">
+            <Chips name="looking_for" label="Looking for" required value={lookingFor}
+              onChange={x => { lookingTouched.current = true; setLookingFor(x); clearErr('lookingFor') }}
+              error={errors.lookingFor} options={[['female', 'A bride'], ['male', 'A groom']]}
+              hint="Decides whose profiles you are shown." />
+          </div>
+
+          <ActionBar>
+            <button type="submit" disabled={saving} className="btn-primary w-full justify-center py-3 text-[15px] disabled:opacity-60">
+              {saving ? 'Saving…' : 'Continue'}
+            </button>
+          </ActionBar>
         </form>
-      ) : (
-        <div className="card p-5">
-          {photoCount > 0 ? (
-            <div className="text-center">
-              <div className="mx-auto mb-3 h-28 w-28 rounded-full overflow-hidden border-[3px] border-green/50 bg-paper-2">
-                {preview ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={preview} alt="The photo you just uploaded" className="h-full w-full object-cover" />
-                ) : (
-                  <span className="grid h-full w-full place-items-center font-serif text-3xl text-maroon/60">✓</span>
+      )}
+
+      {step === 'mithila' && (
+        <form onSubmit={submitMithila} noValidate className="card space-y-5 p-5">
+          <div data-field="location">
+            <LocationPicker label="Current city *" value={locId} initialName={locName}
+              hint={errors.location ? undefined : 'Where you live now — used for nearby matches.'}
+              onChange={(id, name) => { setLocId(id); setLocName(name); clearErr('location') }} />
+            {errors.location && <p role="alert" className="mt-1 text-xs text-terra">{errors.location}</p>}
+          </div>
+
+          <div data-field="caste">
+            <MasterCombo label="Community / caste" required value={caste} opts={options.caste} allowCustom
+              placeholder="Search, e.g. Maithil Brahmin" error={errors.caste}
+              hint={errors.caste ? undefined : 'Not in the list? Type it and choose “Use …”.'}
+              onChange={x => { setCaste(x); clearErr('caste') }} />
+          </div>
+
+          <div data-field="gotra">
+            <MasterCombo label="Gotra" required value={gotra} opts={gotraOpts} error={errors.gotra}
+              placeholder="Search, e.g. Kashyap"
+              hint={errors.gotra ? undefined : 'Used to flag same-gotra matches. Not sure? Choose “Not listed / Other” — you can change it later.'}
+              onChange={x => { setGotra(x); clearErr('gotra') }} />
+          </div>
+
+          <div className="rounded-mj-sm border border-paper-3 bg-paper-2/40">
+            <button type="button" aria-expanded={moreOpen} aria-controls="w-more" onClick={() => setMoreOpen(o => !o)}
+              className="flex w-full items-center justify-between px-3.5 py-3 text-left">
+              <span>
+                <span className="block text-sm font-medium text-ink">More Mithila details</span>
+                <span className="block text-[12px] text-ink-soft">Optional · {isPanji(caste) ? 'mool, ' : ''}{hasSubCaste(caste) ? 'sub-caste, ' : ''}maternal gotra, gram</span>
+              </span>
+              <span aria-hidden="true" className={`text-maroon transition-transform ${moreOpen ? 'rotate-180' : ''}`}>⌄</span>
+            </button>
+            {moreOpen && (
+              <div id="w-more" className="space-y-4 border-t border-paper-3 px-3.5 pb-4 pt-3.5">
+                {isPanji(caste) && (
+                  <MasterCombo label="Mool" value={mool} opts={options.mool} allowCustom placeholder="Search, or type your mool…"
+                    hint="Families who keep the Panji use it to check for close relation."
+                    onChange={x => {
+                      setMool(x)
+                      const linked = options.moolGotra[x] ?? []
+                      if (linked.length === 1 && !gotra) { setGotra(linked[0]); clearErr('gotra') }
+                    }} />
                 )}
+                {hasSubCaste(caste) && (
+                  <MasterCombo label="Sub-caste" value={subCaste} opts={options.sub_caste} onChange={setSubCaste} />
+                )}
+                <MasterCombo label="Maternal gotra" value={maternalGotra} opts={options.gotra} onChange={setMaternalGotra}
+                  hint="Many families check the mother's gotra too." />
+                <GramField label="Gram (ancestral village)" value={gram} onChange={setGram} />
               </div>
-              <p className="font-serif text-[18px] text-maroon">Photo received</p>
-              <p className="text-[13px] text-ink-soft leading-relaxed mt-1.5">
-                Our team reviews photos before they appear to other members, usually within a day.
-                You can add more or change it any time from your profile.
-              </p>
-              <Link href="/home" className="btn-primary w-full justify-center py-2.5 text-sm mt-4">
-                Continue to Mithila Jodi
-              </Link>
-              <Link href="/profile/edit" className="btn-ghost w-full justify-center py-2.5 text-sm mt-2">
-                Complete the rest of my profile
-              </Link>
+            )}
+          </div>
 
-              {/* Optional, and deliberately last. Onboarding is already complete
-                  by the time this renders — the two buttons above are the way
-                  forward — so this can be ignored entirely and nothing is
-                  blocked. It is an external link, not a step. */}
-              <div className="mt-5 border-t border-paper-3 pt-4 text-left">
-                <p className="font-serif text-[16px] text-maroon">🎉 Welcome to Mithila Jodi!</p>
-                <p className="mt-1 text-[12.5px] leading-relaxed text-ink-soft">
-                  Join our WhatsApp Community to stay updated with Mithila Jodi announcements
-                  and community activities.
-                </p>
-                <JoinCommunityButton size="sm" className="mt-3 w-full" />
-              </div>
+          <ActionBar>
+            <div className="flex gap-2.5">
+              <button type="button" onClick={() => setStep('about')} disabled={saving} className="btn-ghost justify-center px-4 py-3 text-sm">Back</button>
+              <button type="submit" disabled={saving} className="btn-primary flex-1 justify-center py-3 text-[15px] disabled:opacity-60">
+                {saving ? 'Saving…' : 'Continue'}
+              </button>
             </div>
-          ) : (
-            <>
-              <label
-                htmlFor="w-photo"
-                className="block rounded-mj-sm border-2 border-dashed border-gold/50 bg-paper-2/50 px-4 py-8 text-center cursor-pointer hover:border-gold transition-colors"
-              >
-                <span className="block font-serif text-[17px] text-maroon">
-                  {uploading ? 'Uploading…' : 'Choose a photo'}
-                </span>
-                <span className="block text-[12.5px] text-ink-soft mt-1.5">
-                  A clear photo of your face. JPEG, PNG, WebP or HEIC.
-                </span>
-                <input
-                  id="w-photo" ref={fileRef} type="file" accept="image/*" className="sr-only"
-                  disabled={uploading}
-                  onChange={e => upload(e.target.files?.[0])}
-                />
-              </label>
+          </ActionBar>
+        </form>
+      )}
 
-              <ul className="mt-4 space-y-1.5 text-[12.5px] text-ink-soft">
-                <li>· Reviewed by our team before anyone sees it.</li>
-                <li>· You choose whether it is visible to all members or only to your matches.</li>
-                <li>· You can replace or remove it at any time.</li>
-              </ul>
-
-              {!detailsDone && (
-                <button type="button" onClick={() => setStep(1)} className="btn-ghost w-full justify-center py-2 text-[13px] mt-4">
-                  Back to details
-                </button>
-              )}
-            </>
-          )}
+      {step === 'photo' && (
+        <div className="card p-5">
+          <PhotoPicker busy={saving} onConfirm={upload} onPicked={() => once('photo_started')} />
+          <ul className="mt-5 space-y-1.5 border-t border-paper-3 pt-4 text-[12.5px] leading-relaxed text-ink-soft">
+            <li>· Our team reviews every photo before other members see it.</li>
+            <li>· Photos are stored privately and only ever shared through short-lived links.</li>
+            <li>· Later you can choose who sees it — all members, or only accepted matches — and replace it any time.</li>
+          </ul>
+          <button type="button" onClick={() => setStep('mithila')} disabled={saving} className="btn-ghost mt-4 w-full justify-center py-2 text-[13px]">
+            Back
+          </button>
         </div>
       )}
 
-      {/* An escape hatch matters: the gate redirects every member page here, so
-          without this someone who is not ready would have no way out but to
-          clear cookies. Logout is POST-only, so this cannot be a link. */}
-      <p className="text-center text-[12px] text-ink-soft mt-5">
-        Not ready to continue?{' '}
-        <button
-          type="button"
-          onClick={async () => {
-            await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {})
-            window.location.href = '/'
-          }}
-          className="text-maroon hover:underline"
-        >
-          Log out
-        </button>{' '}
-        — your progress is saved.
-      </p>
+      {step === 'ready' && (
+        <div className="card p-5">
+          <div className="flex items-center gap-4">
+            <div className="h-20 w-16 shrink-0 overflow-hidden rounded-mj-sm border-2 border-gold/60 bg-paper-2">
+              {uploadedUrl ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={uploadedUrl} alt="Your new profile photo" className="h-full w-full object-cover" />
+              ) : (
+                <span className="grid h-full w-full place-items-center font-serif text-2xl text-maroon/70" aria-hidden="true">✓</span>
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="flex items-baseline justify-between text-sm">
+                <span className="font-medium text-ink">Profile strength</span>
+                <span className="font-semibold tabular-nums text-maroon">{strength}%</span>
+              </p>
+              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-paper-3" role="progressbar" aria-valuenow={strength} aria-valuemin={0} aria-valuemax={100} aria-label="Profile strength">
+                <div className="h-full rounded-full bg-maroon transition-all duration-700" style={{ width: `${strength}%` }} />
+              </div>
+              {uploadedUrl && <p className="mt-1.5 text-[12px] text-ink-soft">Photo received — it appears once our team has reviewed it, usually within a day.</p>}
+            </div>
+          </div>
+
+          {nextSteps.length > 0 && (
+            <div className="mt-5">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-terra">Next steps</p>
+              <ul className="mt-2 divide-y divide-paper-3 rounded-mj-sm border border-paper-3 bg-white">
+                {nextSteps.slice(0, 4).map(c => (
+                  <li key={c.field}>
+                    <Link href={`/profile/edit#${c.section}`} onClick={() => reg('profile_completion_started')}
+                      className="flex items-center gap-3 px-3.5 py-3 hover:bg-cream">
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-medium text-ink">{c.label}</span>
+                        <span className="block text-[12px] leading-snug text-ink-soft">{c.why}</span>
+                      </span>
+                      <span className="shrink-0 rounded-pill bg-gold/15 px-2 py-0.5 text-[12px] font-semibold text-maroon">+{POINTS_PER_CHECK}%</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <Link href={`/profile/edit${firstSection ? `#${firstSection}` : ''}`} onClick={() => reg('profile_completion_started')}
+            className="btn-primary mt-5 w-full justify-center py-3 text-[15px]">
+            Complete my profile
+          </Link>
+          <div className="mt-2.5 grid grid-cols-2 gap-2.5">
+            <Link href="/profile" className="btn-ghost justify-center py-2.5 text-sm">View my profile</Link>
+            <Link href="/search" className="btn-ghost justify-center py-2.5 text-sm">Explore profiles</Link>
+          </div>
+
+          {/* Optional and deliberately last — onboarding is already complete. */}
+          <div className="mt-5 border-t border-paper-3 pt-4">
+            <p className="text-[12.5px] leading-relaxed text-ink-soft">
+              Join our WhatsApp Community for Mithila Jodi announcements and community activities.
+            </p>
+            <JoinCommunityButton size="sm" className="mt-3 w-full" />
+          </div>
+        </div>
+      )}
+
+      {/* The gate redirects every member page here, so there must be a way
+          out. Logout is POST-only, so this cannot be a link. */}
+      {step !== 'ready' && (
+        <p className="mt-5 text-center text-[12px] text-ink-soft">
+          Need to stop?{' '}
+          <button type="button"
+            onClick={async () => { await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {}); window.location.href = '/' }}
+            className="text-maroon hover:underline">
+            Log out
+          </button>{' '}
+          — everything you saved is kept, and you&apos;ll continue here next time.
+        </p>
+      )}
     </div>
   )
 }

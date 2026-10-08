@@ -4,6 +4,8 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
 import { isFreeAccessMode } from '@/lib/membership'
 import { refreshPublicShowcase } from '@/lib/showcaseCache'
+import { syncDiscoverability } from '@/lib/discoverability'
+import { computeCompletion } from '@/lib/profileCompletion'
 
 const ProfileSchema = z.object({
   profile_for: z.enum(['self', 'son', 'daughter', 'sibling', 'other']).default('self'),
@@ -158,27 +160,6 @@ function deriveIncome(
   return { income_min_lpa: min ?? null, income_max_lpa: max ?? null }
 }
 
-function computeCompletion(data: z.infer<typeof ProfileSchema>): number {
-  // Field-based completeness. Discoverability is NOT gated on this value
-  // (it is driven by membership/free-access), so this is purely a quality
-  // signal shown on the profile ring and used to sort search results.
-  const checks = [
-    !!data.first_name,
-    !!data.gender,
-    !!data.dob,
-    !!data.caste,
-    !!data.self_gotra,
-    !!data.mother_tongue,
-    !!data.marital_status,
-    !!data.native_place_id,
-    !!data.current_loc_id,
-    !!data.height_cm,
-    !!data.diet,
-    !!data.about_me,
-  ]
-  const done = checks.filter(Boolean).length
-  return Math.round((done / checks.length) * 100)
-}
 
 export async function GET() {
   const account = await getSessionAccount()
@@ -347,6 +328,18 @@ export async function PUT(request: NextRequest) {
     )
   }
 
+  // The onboarding minimum (lib/onboarding.ts) cannot be removed from the full
+  // editor either — clearing one would hide the profile and send the member
+  // back through /welcome, so say so here instead.
+  const requiredMissing =
+    !data.marital_status ? 'Marital status is required.' :
+    !data.current_loc_id ? 'Current city is required — choose it from the suggestions list.' :
+    !String(data.caste ?? '').trim() ? 'Community / caste is required.' :
+    !String(data.self_gotra ?? '').trim() ? 'Gotra is required — choose “Not listed / Other” if you are unsure.' :
+    data.pref_gender !== 'male' && data.pref_gender !== 'female' ? 'Please choose who you are looking for — a bride or a groom.' :
+    null
+  if (requiredMissing) return NextResponse.json({ ok: false, message: requiredMissing }, { status: 400 })
+
   const profileCompletion = computeCompletion(data)
 
   // Free-access/testing mode: profiles are self-serve — they go live immediately
@@ -362,7 +355,6 @@ export async function PUT(request: NextRequest) {
   const visibility =
     data.visibility ??
     (data.discoverable === false ? 'private' : freeMode ? 'members' : 'private')
-  const discoverableDefault = visibility !== 'private'
   const canWriteVisibility = await hasVisibilityColumn(admin)
   const visibilityPatch = canWriteVisibility ? { visibility } : {}
 
@@ -383,9 +375,6 @@ export async function PUT(request: NextRequest) {
     const ex = existing as any
     const currentStatus = ex.profile_status as string
     const promotedStatus = freeMode && currentStatus === 'draft' && !ex.status_reason ? 'active' : currentStatus
-    // An admin "hide from search" outlives the member's own visibility choice.
-    const discoverable = ex.admin_hidden ? false : discoverableDefault
-
     const { error } = await admin
       .from('profiles')
       .update({
@@ -434,7 +423,6 @@ export async function PUT(request: NextRequest) {
         family_introduction:  data.family_introduction   || null,
         passing_year:     data.passing_year     ?? null,
         experience_years: data.experience_years ?? null,
-        discoverable,
         ...visibilityPatch,
         profile_status: promotedStatus,
         profile_complete: profileCompletion,
@@ -452,6 +440,8 @@ export async function PUT(request: NextRequest) {
       console.error('[profile PUT] private/preferences update error:', privateError)
       return NextResponse.json({ ok: false, message: 'Profile saved, but private details could not be saved.' }, { status: 500 })
     }
+    // Visibility, admin hide and the onboarding minimum decide `discoverable`.
+    await syncDiscoverability(admin, account.id)
     refreshPublicShowcase()
     return NextResponse.json({ ok: true, profile_id: existing.id })
   }
@@ -506,7 +496,8 @@ export async function PUT(request: NextRequest) {
       family_introduction:  data.family_introduction   || null,
       passing_year:     data.passing_year     ?? null,
       experience_years: data.experience_years ?? null,
-      discoverable: discoverableDefault,
+      // Hidden until syncDiscoverability (below) confirms the onboarding minimum.
+      discoverable: false,
       ...visibilityPatch,
       profile_complete: profileCompletion,
       profile_status: freeMode ? 'active' : 'draft',
@@ -525,6 +516,7 @@ export async function PUT(request: NextRequest) {
     console.error('[profile PUT] private/preferences create error:', privateError)
     return NextResponse.json({ ok: false, message: 'Profile created, but private details could not be saved.' }, { status: 500 })
   }
+  await syncDiscoverability(admin, account.id)
   refreshPublicShowcase()
   return NextResponse.json({ ok: true, profile_id: newProfile.id }, { status: 201 })
 }
@@ -556,7 +548,9 @@ async function savePrivateAndPreferences(admin: Awaited<ReturnType<typeof create
     profile_id: profileId,
     pref_age_min: data.pref_age_min ?? null,
     pref_age_max: data.pref_age_max ?? null,
-    pref_gender: data.pref_gender || null,
+    // 'any' is not a stored value (the column is male/female); the check above
+    // means only male/female reach here.
+    pref_gender: data.pref_gender === 'male' || data.pref_gender === 'female' ? data.pref_gender : null,
     pref_caste: data.pref_caste ?? null,
     pref_gotra_safe: data.pref_gotra_safe ?? true,
     pref_education: data.pref_education ?? null,

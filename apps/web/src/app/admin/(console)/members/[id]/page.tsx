@@ -8,6 +8,7 @@ import { getCommunityLabels, labelFor } from '@/lib/communityLabels'
 import { formatPartnerPreferences } from '@/lib/partnerPreferences'
 import { isNoExpiry } from '@/lib/digitalProfile'
 import { SITE_URL } from '@/lib/constants'
+import { getOnboardingState, ONBOARDING_FIELDS } from '@/lib/onboarding'
 
 export const metadata = { title: 'Member' }
 export const dynamic = 'force-dynamic'
@@ -45,6 +46,7 @@ export default async function MemberDetailPage({ params }: { params: Promise<{ i
   if (!account || account.role !== 'user' || account.mobile === '0000000000') notFound()
 
   const { data: profile } = await admin.from('profiles').select('*').eq('account_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle()
+  const onboarding = await getOnboardingState(admin, id)
   const p: any = profile
 
   const [labels, sessions, locs, prefsRow, photos, shares, sent, received, convs, msgs, biodata, activity, views] = await Promise.all([
@@ -93,6 +95,9 @@ export default async function MemberDetailPage({ params }: { params: Promise<{ i
             <AccountBadge status={account.account_status} />
             {p && <Badge>{`profile ${humanize(p.profile_status)?.toLowerCase()}`}</Badge>}
             {p && <Badge tone={p.discoverable ? 'good' : 'neutral'}>{p.discoverable ? 'visible in search' : 'hidden from search'}</Badge>}
+            {!onboarding.complete && (
+              <span className="text-[12.5px]">· joining not finished — missing {onboarding.missing.map(m => ONBOARDING_FIELDS[m]).join(', ')}</span>
+            )}
             {account.is_demo && <Badge tone="info">demo</Badge>}
             {account.status_reason && <span className="text-[12.5px]">· {account.status_reason}</span>}
           </span>

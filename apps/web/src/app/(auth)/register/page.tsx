@@ -1,229 +1,193 @@
 'use client'
-import { use, useEffect, useState, useRef } from 'react'
+import { use, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { checkPassword, PASSWORD_RULES } from '@/lib/password'
 import { OtpBoxInput } from '@/components/OtpBoxInput'
 import { OtpSentAnimation } from '@/components/OtpSentAnimation'
-import { AuthProgress } from '@/components/AuthProgress'
 import { AuthWelcome } from '@/components/auth/AuthWelcome'
+import { JoinProgress } from '@/components/auth/JoinProgress'
 import { OTP_LENGTH } from '@/lib/constants'
+import { track } from '@/lib/track'
+import type { RegStep } from '@/lib/analytics'
 import { isMsg91Enabled, ensureMsg91, msg91SendOtp, msg91VerifyOtp, msg91RetryOtp } from '@/lib/msg91'
 
-type Step = 'welcome' | 'mobile' | 'human' | 'sent' | 'otp' | 'password'
+type Step = 'welcome' | 'mobile' | 'sent' | 'otp' | 'password' | 'existing'
 type OtpChannel = 'msg91' | 'server'
 
+/** Matches OTP_TTL_MINUTES on the server; after this the code is treated as expired. */
+const OTP_VALID_MS = 10 * 60 * 1000
+const RESEND_SECONDS = 60
+
+const reg = (k: RegStep) => track('reg_step', { k })
+
 /**
- * /register is the entrance: a welcome screen with two equal ways in. Create
- * Account opens the stepper at /register?start=1 (a real history entry, so
- * browser back returns to the welcome); Welcome Back goes to /login.
+ * /register — step 1 of Join ("Account"): mobile, one-time code, password.
+ *
+ * The account is created when the code is verified (the session system needs
+ * an account to attach to); the profile is built on /welcome and stays hidden
+ * from everyone until the onboarding minimum is met (lib/onboarding.ts).
+ *
+ * The "Quick check" arithmetic step that used to sit between the number and
+ * the code is gone: it was never enforced server-side, so it stopped no bot,
+ * only people. OTP sending is rate-limited per IP and per number instead.
+ *
+ * /register without ?start shows the entrance (Create account / Welcome back);
+ * ?start=1 opens the flow as its own history entry, so Back returns to it.
  */
 export default function RegisterPage({ searchParams }: { searchParams: Promise<{ start?: string }> }) {
   const { start } = use(searchParams)
   const [step, setStep] = useState<Step>(start ? 'mobile' : 'welcome')
-  // Follow the URL: back to /register shows the welcome again; ?start begins the flow.
   useEffect(() => {
     if (!start) setStep('welcome')
     else setStep(s => (s === 'welcome' ? 'mobile' : s))
   }, [start])
-  const [mobile, setMobile]                     = useState('')
-  const [challengeId, setChallengeId]           = useState('')
-  const [challengeQ, setChallengeQ]             = useState('')
-  const [humanAnswer, setHumanAnswer]           = useState('')
-  const [otp, setOtp]                           = useState('')
-  const [otpChannel, setOtpChannel]             = useState<OtpChannel>('server')
-  const [consentTerms, setConsentTerms]         = useState(false)
-  const [consentPrivacy, setConsentPrivacy]     = useState(false)
-  const [password, setPassword]                 = useState('')
-  const [passwordConfirm, setPasswordConfirm]  = useState('')
-  const [showPassword, setShowPassword]         = useState(false)
-  const [loading, setLoading]                   = useState(false)
-  const [error, setError]                       = useState('')
-  const [resendCooldown, setResendCooldown]     = useState(false)
-  const [resendTimer, setResendTimer]           = useState(0)
-  const resendIntervalRef                       = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const maskedMobile = mobile.length === 10
-    ? `+91 ${mobile.slice(0, 5)} ${mobile.slice(5)}`
-    : mobile
+  const [mobile, setMobile] = useState('')
+  const [consent, setConsent] = useState(false)
+  const [otp, setOtp] = useState('')
+  const [otpChannel, setOtpChannel] = useState<OtpChannel>('server')
+  const [sentAt, setSentAt] = useState(0)
+  const [now, setNow] = useState(() => Date.now())
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const verifying = useRef(false)
+  const startedTracked = useRef(false)
 
+  // One clock for both the resend countdown and code expiry.
+  useEffect(() => {
+    if (step !== 'otp' && step !== 'sent') return
+    const t = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(t)
+  }, [step])
+
+  useEffect(() => {
+    if (step !== 'mobile') return
+    if (!startedTracked.current) { startedTracked.current = true; reg('started') }
+    // Load the OTP widget while the number is being typed, not after Continue.
+    if (isMsg91Enabled()) ensureMsg91().catch(() => {})
+  }, [step])
+
+  const maskedMobile = mobile.length === 10 ? `+91 ${mobile.slice(0, 5)} ${mobile.slice(5)}` : mobile
+  const resendIn = Math.max(0, RESEND_SECONDS - Math.floor((now - sentAt) / 1000))
+  const expired = sentAt > 0 && now - sentAt > OTP_VALID_MS
   const strength = checkPassword(password)
-  const progressStep = step === 'mobile' ? 1 : step === 'human' ? 2 : step === 'password' ? 4 : 3
+  const passwordOk = strength.length && strength.uppercase && strength.lowercase && strength.number
 
-  /* ── Step 1: mobile → fetch human challenge ── */
+  async function sendCode(): Promise<boolean> {
+    if (isMsg91Enabled()) {
+      try { await ensureMsg91() } catch { setError('Could not start verification. Please refresh the page and try again.'); return false }
+      try { await msg91SendOtp('91' + mobile) } catch { setError('We could not send a code to that number. Please check it and try again.'); return false }
+      setOtpChannel('msg91')
+      return true
+    }
+    const res = await fetch('/api/auth/otp/challenge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mobile }),
+    })
+    const data: { ok: boolean; message?: string } = await res.json().catch(() => ({ ok: false }))
+    if (!data.ok) { setError(data.message ?? 'We could not send a code. Please try again.'); return false }
+    setOtpChannel('server')
+    return true
+  }
+
   async function handleMobileSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (mobile.length !== 10) { setError('Enter a valid 10-digit mobile number'); return }
+    if (!/^[6-9]\d{9}$/.test(mobile)) { setError('Please enter a valid 10-digit Indian mobile number.'); return }
+    if (!consent) { setError('Please agree to the Terms and Privacy Policy to continue.'); return }
     setError('')
     setLoading(true)
+    reg('mobile_entered')
     try {
-      const res  = await fetch('/api/auth/human/challenge', { method: 'POST' })
-      const data: { ok: boolean; challenge_id?: string; question?: string; message?: string } = await res.json()
-      if (!data.ok) { setError(data.message ?? 'Could not load verification. Please try again.'); return }
-      setChallengeId(data.challenge_id!)
-      setChallengeQ(data.question!)
-      setHumanAnswer('')
-      setStep('human')
-    } catch {
-      setError('Network error. Please check your connection and try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  /* ── Step 2: human verify → send OTP ── */
-  async function handleHumanVerify(e: React.FormEvent) {
-    e.preventDefault()
-    if (!humanAnswer.trim()) { setError('Enter your answer'); return }
-    setError('')
-    setLoading(true)
-    try {
-      const verifyRes  = await fetch('/api/auth/human/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ challenge_id: challengeId, answer: Number(humanAnswer) }),
-      })
-      const verifyData: { ok: boolean; message?: string } = await verifyRes.json()
-      if (!verifyData.ok) { setError(verifyData.message ?? 'Incorrect answer. Please try again.'); return }
-
-      // MSG91 path (production): headless widget behind our own UI.
-      if (isMsg91Enabled()) {
-        try {
-          await ensureMsg91()
-        } catch {
-          setError('Could not start OTP verification. Please refresh and try again.')
-          return
-        }
-        try {
-          await msg91SendOtp('91' + mobile)
-        } catch {
-          setError('Could not send OTP. Please check the number and try again.')
-          return
-        }
-        setOtpChannel('msg91')
-      } else {
-        const otpRes  = await fetch('/api/auth/otp/challenge', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mobile }),
-        })
-        const otpData: { ok: boolean; message?: string } = await otpRes.json()
-        if (!otpData.ok) { setError(otpData.message ?? 'Could not send OTP. Please try again.'); return }
-        setOtpChannel('server')
-      }
-
+      if (!(await sendCode())) return
+      reg('otp_sent')
       setOtp('')
+      setSentAt(Date.now()); setNow(Date.now())
       setStep('sent')
-      startResendCountdown()
-      setTimeout(() => setStep('otp'), 1800)
+      setTimeout(() => setStep(s => (s === 'sent' ? 'otp' : s)), 1200)
     } catch {
       setError('Network error. Please check your connection and try again.')
     } finally {
       setLoading(false)
     }
-  }
-
-  function startResendCountdown() {
-    setResendCooldown(true)
-    setResendTimer(60)
-    if (resendIntervalRef.current) clearInterval(resendIntervalRef.current)
-    resendIntervalRef.current = setInterval(() => {
-      setResendTimer(t => {
-        if (t <= 1) {
-          if (resendIntervalRef.current) clearInterval(resendIntervalRef.current)
-          setResendCooldown(false)
-          return 0
-        }
-        return t - 1
-      })
-    }, 1000)
   }
 
   async function handleResend() {
-    if (resendCooldown) return
+    if (resendIn > 0 && !expired) return
     setError('')
-    startResendCountdown()
+    setOtp('')
     try {
-      if (otpChannel === 'msg91') {
-        await msg91RetryOtp()
-        return
-      }
-      const res = await fetch('/api/auth/otp/challenge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mobile }),
-      })
-      const data: { ok: boolean; message?: string } = await res.json()
-      if (!data.ok) setError(data.message ?? 'Could not resend OTP.')
+      if (otpChannel === 'msg91') await msg91RetryOtp()
+      else if (!(await sendCode())) return
+      setSentAt(Date.now()); setNow(Date.now())
     } catch {
-      setError('Could not resend OTP. Please try again.')
+      setError('Could not send a new code. Please try again in a moment.')
     }
   }
 
-  /* ── Step 4: OTP + consents → create account & session ── */
-  async function handleOtpVerify(e: React.FormEvent) {
-    e.preventDefault()
-    if (otp.length < OTP_LENGTH)   { setError('Enter the OTP'); return }
-    if (!consentTerms)    { setError('Please accept the Terms of Service to continue'); return }
-    if (!consentPrivacy)  { setError('Please accept the Privacy Policy to continue'); return }
+  async function verify(code: string) {
+    if (verifying.current) return // auto-submit and the button can both fire
+    if (code.length < OTP_LENGTH) { setError(`Enter the ${OTP_LENGTH}-digit code.`); return }
+    if (expired) { setError('This code has expired. Send a new one below.'); return }
+    verifying.current = true
     setError('')
     setLoading(true)
     try {
+      let res: Response
       if (otpChannel === 'msg91') {
         let accessToken: string
-        try {
-          accessToken = await msg91VerifyOtp(otp)
-        } catch {
-          setError('Incorrect or expired OTP. Please try again.')
+        try { accessToken = await msg91VerifyOtp(code) } catch {
+          setError('That code did not match or has expired. Check it, or send a new one.')
+          setOtp('')
           return
         }
-        const res  = await fetch('/api/auth/otp/msg91', {
+        res = await fetch('/api/auth/otp/msg91', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mobile, accessToken, intent: 'register', consent_terms: consentTerms, consent_privacy: consentPrivacy }),
+          body: JSON.stringify({ mobile, accessToken, intent: 'register', consent_terms: consent, consent_privacy: consent }),
         })
-        const data: { ok: boolean; message?: string } = await res.json()
-        if (!data.ok) { setError(data.message ?? 'Verification failed. Please try again.'); return }
-        setPassword('')
-        setPasswordConfirm('')
-        setStep('password')
+      } else {
+        res = await fetch('/api/auth/otp/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile, code, intent: 'register', consent_terms: consent, consent_privacy: consent }),
+        })
+      }
+      const data: { ok: boolean; message?: string; is_new?: boolean } = await res.json().catch(() => ({ ok: false }))
+      if (!data.ok) { setError(data.message ?? 'Verification failed. Please try again.'); setOtp(''); return }
+      reg('otp_verified')
+      if (data.is_new === false) {
+        // The number was already registered: the code proved it is theirs, so
+        // they are signed in. /welcome resumes onboarding or forwards to /home.
+        setStep('existing')
+        setTimeout(() => { window.location.href = '/welcome' }, 1600)
         return
       }
-
-      const res  = await fetch('/api/auth/otp/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mobile, code: otp, intent: 'register', consent_terms: consentTerms, consent_privacy: consentPrivacy }),
-      })
-      const data: { ok: boolean; message?: string } = await res.json()
-      if (!data.ok) { setError(data.message ?? 'Verification failed. Please try again.'); return }
-      setPassword('')
-      setPasswordConfirm('')
       setStep('password')
     } catch {
       setError('Network error. Please check your connection and try again.')
     } finally {
+      verifying.current = false
       setLoading(false)
     }
   }
 
-  /* ── Step 5: set password ── */
   async function handleSetPassword(e: React.FormEvent) {
     e.preventDefault()
-    if (!strength.length || !strength.uppercase || !strength.lowercase || !strength.number) {
-      setError('Password does not meet the requirements below.'); return
-    }
-    if (password !== passwordConfirm) { setError('Passwords do not match.'); return }
+    if (!passwordOk) { setError('Your password needs everything ticked below.'); return }
     setError('')
     setLoading(true)
     try {
-      const res  = await fetch('/api/auth/password/set', {
+      const res = await fetch('/api/auth/password/set', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
       })
-      const data: { ok: boolean; message?: string } = await res.json()
-      if (!data.ok) { setError(data.message ?? 'Could not save password. Please try again.'); return }
-      // Straight into required onboarding rather than an empty profile shell.
+      const data: { ok: boolean; message?: string } = await res.json().catch(() => ({ ok: false }))
+      if (!data.ok) { setError(data.message ?? 'Could not save your password. Please try again.'); return }
+      reg('password_set')
       window.location.href = '/welcome'
     } catch {
       setError('Network error. Please check your connection and try again.')
@@ -236,216 +200,138 @@ export default function RegisterPage({ searchParams }: { searchParams: Promise<{
 
   return (
     <div className="w-full max-w-sm motion-safe:animate-fade-in">
+      <div className="card p-5 sm:p-8">
+        <JoinProgress current={1} className="mb-5" />
 
-      <div className="card p-6 sm:p-8">
+        {step === 'sent' && <OtpSentAnimation mobile={maskedMobile} />}
 
-        {step !== 'sent' && <AuthProgress steps={['Mobile', 'Quick check', 'Verify', 'Password']} current={progressStep} />}
-
-        {/* ── Step: sent ── */}
-        {step === 'sent' && (
-          <>
-            <AuthProgress steps={['Mobile', 'Quick check', 'Verify', 'Password']} current={3} />
-            <OtpSentAnimation mobile={maskedMobile} />
-          </>
-        )}
-
-        {/* ── Step 1: mobile ── */}
         {step === 'mobile' && (
           <>
-            <Link href="/register" className="-mt-1 mb-3 inline-flex items-center gap-1 text-[13px] text-ink-soft hover:text-maroon">
-              <span aria-hidden="true">←</span> Back
-            </Link>
-            <p className="eyebrow mb-2">Register</p>
-            <h2 className="text-xl font-display text-ink mb-6">Create your account</h2>
-            <p className="-mt-3 mb-5 text-sm leading-relaxed text-ink-soft">It takes about two minutes. Your mobile number stays private and is only used to secure your account.</p>
+            <h1 className="font-display text-[22px] leading-tight text-ink">Begin your Mithila Jodi profile</h1>
+            <p className="mt-1.5 mb-5 text-sm leading-relaxed text-ink-soft">
+              About three minutes. Your number stays private — it secures your account and is never shown on your profile.
+            </p>
             <form onSubmit={handleMobileSubmit} noValidate>
-              <label className="block mb-1.5">
-                <span className="text-sm font-medium text-ink">Mobile number</span>
-                <div className="mt-1.5 flex items-center border border-ink/20 rounded-mj bg-white overflow-hidden focus-within:ring-2 focus-within:ring-maroon/30">
-                  <span className="px-3 py-3 text-ink-soft text-sm bg-paper border-r border-ink/20 font-mono select-none">+91</span>
-                  <input
-                    type="tel" inputMode="numeric" maxLength={10} autoComplete="tel" aria-label="10-digit mobile number" placeholder="Enter 10-digit number"
-                    value={mobile} autoFocus
-                    onChange={e => { setError(''); setMobile(e.target.value.replace(/\D/g, '').slice(0, 10)) }}
-                    className="flex-1 px-4 py-3 text-ink bg-transparent focus:outline-none text-base font-mono"
-                  />
-                </div>
+              <label htmlFor="reg-mobile" className="block text-sm font-medium text-ink">Mobile number</label>
+              <div className={`mt-1.5 flex items-center overflow-hidden rounded-mj border bg-white focus-within:ring-2 focus-within:ring-maroon/30 ${error && mobile.length !== 10 ? 'border-terra' : 'border-ink/20'}`}>
+                <span className="select-none border-r border-ink/20 bg-paper px-3 py-3 font-mono text-sm text-ink-soft">+91</span>
+                <input
+                  id="reg-mobile" type="tel" inputMode="numeric" maxLength={16} autoComplete="tel-national"
+                  placeholder="10-digit number" value={mobile} autoFocus enterKeyHint="send"
+                  // A pasted +91 / 0 prefix is dropped by keeping the last ten digits.
+                  onChange={e => { setError(''); setMobile(e.target.value.replace(/\D/g, '').slice(-10)) }}
+                  aria-describedby="reg-mobile-hint"
+                  className="flex-1 bg-transparent px-4 py-3 font-mono text-base text-ink focus:outline-none"
+                />
+              </div>
+              <p id="reg-mobile-hint" className="mt-1.5 text-xs text-ink-soft">We&apos;ll send a {OTP_LENGTH}-digit code by SMS.</p>
+
+              <label className="mt-4 flex cursor-pointer items-start gap-3">
+                <input type="checkbox" checked={consent} onChange={e => { setError(''); setConsent(e.target.checked) }}
+                  className="mt-0.5 h-5 w-5 flex-shrink-0 rounded accent-maroon" />
+                <span className="text-[13px] leading-relaxed text-ink-soft">
+                  I agree to the{' '}
+                  <Link href="/legal/terms" target="_blank" className="text-maroon underline-offset-2 hover:underline">Terms of Service</Link>
+                  {' '}and{' '}
+                  <Link href="/legal/privacy" target="_blank" className="text-maroon underline-offset-2 hover:underline">Privacy Policy</Link>,
+                  and consent to Mithila Jodi processing my details to provide matchmaking.
+                </span>
               </label>
+
               {error && <p role="alert" className="mt-3 text-sm text-terra">{error}</p>}
-              <button type="submit" disabled={loading || mobile.length !== 10} className="btn btn-primary w-full mt-5">
-                {loading ? 'Loading…' : 'Continue'}
+              <button type="submit" disabled={loading || mobile.length !== 10 || !consent} className="btn btn-primary mt-5 w-full">
+                {loading ? 'Sending code…' : 'Send code'}
               </button>
             </form>
             <p className="mt-5 text-center text-sm text-ink-soft">
-              Already registered?{' '}
-              <Link href="/login" className="text-maroon font-medium hover:underline">Log in</Link>
+              Already a member?{' '}
+              <Link href="/login" className="font-medium text-maroon hover:underline">Log in</Link>
             </p>
           </>
         )}
 
-        {/* ── Step 2: human verification ── */}
-        {step === 'human' && (
-          <>
-            <p className="eyebrow mb-2">Quick Check</p>
-            <h2 className="text-xl font-display text-ink mb-2">Solve this</h2>
-            <p className="text-sm text-ink-soft mb-5">This confirms you&apos;re a real person.</p>
-            <div className="rounded-mj bg-paper border border-gold/40 py-4 px-5 mb-5 text-center">
-              <p className="text-2xl font-mono font-bold text-maroon tracking-wider">{challengeQ}</p>
-            </div>
-            <form onSubmit={handleHumanVerify} noValidate>
-              <label className="block mb-1.5">
-                <span className="text-sm font-medium text-ink">Your answer</span>
-                <input
-                  type="text" inputMode="numeric" maxLength={6} placeholder="Enter number"
-                  value={humanAnswer} autoFocus
-                  onChange={e => { setError(''); setHumanAnswer(e.target.value.replace(/\D/g, '')) }}
-                  className="mt-1.5 block w-full px-4 py-3 text-center text-xl font-mono border border-ink/20 rounded-mj focus:ring-2 focus:ring-maroon/30 focus:outline-none bg-white text-ink"
-                />
-              </label>
-              {error && <p role="alert" className="mt-3 text-sm text-terra">{error}</p>}
-              <button type="submit" disabled={loading || !humanAnswer.trim()} className="btn btn-primary w-full mt-5">
-                {loading ? 'Verifying…' : 'Send OTP'}
-              </button>
-            </form>
-            <div className="mt-4 text-center">
-              <button type="button" onClick={() => { setStep('mobile'); setError('') }} className="text-sm text-ink-soft hover:text-ink hover:underline">
-                ← Back
-              </button>
-            </div>
-          </>
-        )}
-
-        {/* ── Step 4: OTP + consents ── */}
         {step === 'otp' && (
           <>
-            <p className="eyebrow mb-2">Verify &amp; Agree</p>
-            <h2 className="text-xl font-display text-ink mb-1">Enter the OTP</h2>
-            <p className="text-sm text-ink-soft mb-6">
+            <h1 className="font-display text-[22px] leading-tight text-ink">Enter the code</h1>
+            <p className="mt-1.5 mb-5 text-sm text-ink-soft">
               Sent to <span className="font-mono font-medium text-ink">{maskedMobile}</span>
             </p>
-
-            {/* 6-box OTP input */}
-            <div className="mb-2">
+            <form onSubmit={e => { e.preventDefault(); verify(otp) }} noValidate>
               <OtpBoxInput
                 value={otp}
                 onChange={v => { setError(''); setOtp(v) }}
-                onComplete={() => { if (consentTerms && consentPrivacy) handleOtpVerify({ preventDefault: () => {} } as React.FormEvent) }}
-                disabled={loading}
+                onComplete={v => verify(v)}
+                disabled={loading || expired}
                 hasError={!!error}
                 autoFocus
               />
-            </div>
-
-            {/* Loading dots */}
-            {loading && (
-              <div className="flex justify-center gap-1.5 my-3" aria-hidden="true">
-                {[0, 1, 2].map(i => (
-                  <div key={i} className="w-2 h-2 rounded-full bg-maroon"
-                    style={{ animation: `bounce 0.7s ease-in-out ${i * 0.15}s infinite alternate` }} />
-                ))}
-                <style>{`@keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-5px); } }`}</style>
-              </div>
-            )}
-
-            <form onSubmit={handleOtpVerify} noValidate>
-              <div className="mt-5 space-y-3 border-t border-ink/10 pt-5">
-                <p className="text-xs text-ink-soft font-medium uppercase tracking-wide">Required consents</p>
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input type="checkbox" checked={consentTerms} onChange={e => { setError(''); setConsentTerms(e.target.checked) }} className="mt-0.5 h-4 w-4 rounded accent-maroon flex-shrink-0" />
-                  <span className="text-sm text-ink-soft leading-relaxed">
-                    I have read and agree to the{' '}
-                    <Link href="/legal/terms" target="_blank" className="text-maroon hover:underline">Terms of Service</Link>
-                  </span>
-                </label>
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input type="checkbox" checked={consentPrivacy} onChange={e => { setError(''); setConsentPrivacy(e.target.checked) }} className="mt-0.5 h-4 w-4 rounded accent-maroon flex-shrink-0" />
-                  <span className="text-sm text-ink-soft leading-relaxed">
-                    I have read and agree to the{' '}
-                    <Link href="/legal/privacy" target="_blank" className="text-maroon hover:underline">Privacy Policy</Link>
-                    {' '}and consent to processing of my personal data
-                  </span>
-                </label>
-              </div>
-              {error && <p role="alert" className="mt-3 text-sm text-terra text-center">{error}</p>}
-              <button type="submit" disabled={loading || otp.length < OTP_LENGTH || !consentTerms || !consentPrivacy} className="btn btn-primary w-full mt-5">
-                {loading ? 'Verifying…' : 'Verify & Continue'}
+              <p className="mt-2 min-h-[1.25rem] text-center text-xs text-ink-soft" aria-live="polite">
+                {loading ? 'Checking…' : expired ? 'This code has expired.' : 'The code fills in automatically on most phones.'}
+              </p>
+              {error && <p role="alert" className="mt-1 text-center text-sm text-terra">{error}</p>}
+              <button type="submit" disabled={loading || expired || otp.length < OTP_LENGTH} className="btn btn-primary mt-4 w-full">
+                {loading ? 'Verifying…' : 'Verify'}
               </button>
             </form>
-
             <div className="mt-5 flex items-center justify-between text-sm text-ink-soft">
-              <button type="button" onClick={() => { setStep('mobile'); setOtp(''); setError('') }} className="hover:text-ink hover:underline">
+              <button type="button" onClick={() => { setStep('mobile'); setOtp(''); setError('') }} className="py-1 hover:text-ink hover:underline">
                 ← Change number
               </button>
-              <button type="button" onClick={handleResend} disabled={resendCooldown} className="hover:text-ink hover:underline disabled:opacity-40">
-                {resendCooldown ? `Resend in ${resendTimer}s` : 'Resend OTP'}
+              <button type="button" onClick={handleResend} disabled={resendIn > 0 && !expired}
+                className="py-1 font-medium text-maroon hover:underline disabled:font-normal disabled:text-ink-soft disabled:no-underline">
+                {resendIn > 0 && !expired ? `Resend in ${resendIn}s` : 'Send a new code'}
               </button>
             </div>
           </>
         )}
 
-        {/* ── Step 5: set password ── */}
+        {step === 'existing' && (
+          <div className="py-4 text-center" role="status">
+            <p className="font-display text-[20px] text-maroon">Welcome back</p>
+            <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+              This number already has a Mithila Jodi account, so we&apos;ve signed you in. Taking you to your profile…
+            </p>
+          </div>
+        )}
+
         {step === 'password' && (
           <>
-            <p className="eyebrow mb-2">Set Password</p>
-            <h2 className="text-xl font-display text-ink mb-1">Create a password</h2>
-            <p className="text-sm text-ink-soft mb-5">You&apos;ll use this to log in next time.</p>
+            <h1 className="font-display text-[22px] leading-tight text-ink">Number verified — create a password</h1>
+            <p className="mt-1.5 mb-5 text-sm text-ink-soft">You&apos;ll use it with your mobile number to log in.</p>
             <form onSubmit={handleSetPassword} noValidate>
-              <label className="block mb-1.5">
-                <span className="text-sm font-medium text-ink">Password</span>
-                <div className="mt-1.5 relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password} autoFocus autoComplete="new-password"
-                    onChange={e => { setError(''); setPassword(e.target.value) }}
-                    className="block w-full px-4 py-3 pr-12 border border-ink/20 rounded-mj focus:ring-2 focus:ring-maroon/30 focus:outline-none bg-white text-ink"
-                  />
-                  <button type="button" onClick={() => setShowPassword(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-soft hover:text-ink text-sm">
-                    {showPassword ? 'Hide' : 'Show'}
-                  </button>
-                </div>
-              </label>
-
-              {/* Password strength checklist */}
-              {password.length > 0 && (
-                <ul className="mt-2 space-y-1">
-                  {PASSWORD_RULES.map(rule => {
-                    const passed = strength[rule.key] as boolean
-                    return (
-                      <li key={rule.key} className={`flex items-center gap-2 text-xs ${passed ? 'text-success' : rule.required ? 'text-terra' : 'text-ink-soft'}`}>
-                        <span>{passed ? '✓' : '○'}</span>
-                        <span>{rule.label}{!rule.required && ' (optional)'}</span>
-                      </li>
-                    )
-                  })}
-                </ul>
-              )}
-
-              <label className="block mt-4 mb-1.5">
-                <span className="text-sm font-medium text-ink">Confirm password</span>
+              {/* Lets password managers save the pair. */}
+              <input type="text" name="username" autoComplete="username" value={mobile} readOnly hidden />
+              <label htmlFor="reg-password" className="block text-sm font-medium text-ink">Password</label>
+              <div className="relative mt-1.5">
                 <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={passwordConfirm} autoComplete="new-password"
-                  onChange={e => { setError(''); setPasswordConfirm(e.target.value) }}
-                  className="mt-1.5 block w-full px-4 py-3 border border-ink/20 rounded-mj focus:ring-2 focus:ring-maroon/30 focus:outline-none bg-white text-ink"
+                  id="reg-password" type={showPassword ? 'text' : 'password'} value={password} autoFocus
+                  autoComplete="new-password" enterKeyHint="done" aria-describedby="reg-password-rules"
+                  onChange={e => { setError(''); setPassword(e.target.value) }}
+                  className="block w-full rounded-mj border border-ink/20 bg-white px-4 py-3 pr-16 text-base text-ink focus:outline-none focus:ring-2 focus:ring-maroon/30"
                 />
-              </label>
-              {passwordConfirm.length > 0 && password !== passwordConfirm && (
-                <p className="mt-1 text-xs text-terra">Passwords do not match</p>
-              )}
-
+                <button type="button" onClick={() => setShowPassword(s => !s)} aria-pressed={showPassword}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 px-3 py-2 text-sm text-ink-soft hover:text-ink">
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
+              <ul id="reg-password-rules" className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
+                {PASSWORD_RULES.filter(r => r.required).map(rule => {
+                  const passed = strength[rule.key] as boolean
+                  return (
+                    <li key={rule.key} className={`flex items-center gap-1.5 text-xs ${passed ? 'text-success' : 'text-ink-soft'}`}>
+                      <span aria-hidden="true">{passed ? '✓' : '○'}</span>
+                      <span>{rule.label}</span>
+                    </li>
+                  )
+                })}
+              </ul>
               {error && <p role="alert" className="mt-3 text-sm text-terra">{error}</p>}
-
-              <button
-                type="submit"
-                disabled={loading || !strength.length || !strength.uppercase || !strength.lowercase || !strength.number || password !== passwordConfirm}
-                className="btn btn-primary w-full mt-5"
-              >
-                {loading ? 'Saving…' : 'Complete Registration'}
+              <button type="submit" disabled={loading || !passwordOk} className="btn btn-primary mt-5 w-full">
+                {loading ? 'Saving…' : 'Continue'}
               </button>
             </form>
           </>
         )}
-
       </div>
     </div>
   )

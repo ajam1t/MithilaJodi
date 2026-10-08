@@ -20,9 +20,30 @@ export const EVENT_NAMES = [
   'invitation_card_made', // basic invitation card downloaded or shared
   'song_played', // k = festival slug
   'dp_shared', // a member shares their Digital Profile link; k = channel
+  // Join funnel; k = step (REG_STEPS). Anonymous like every event — never the
+  // number, name or any field value, only which step was reached.
+  'reg_step',
 ] as const
 
 export type EventName = (typeof EVENT_NAMES)[number]
+
+/** `reg_step` dimensions, in funnel order. */
+export const REG_STEPS = [
+  'started', // opened Create account
+  'mobile_entered',
+  'otp_sent',
+  'otp_verified', // account exists from here
+  'password_set',
+  'about_started',
+  'about_done',
+  'mithila_started',
+  'mithila_done',
+  'photo_started',
+  'photo_done',
+  'completed', // onboarding minimum met — profile can be discovered
+  'profile_completion_started', // chose "Complete my profile"
+] as const
+export type RegStep = (typeof REG_STEPS)[number]
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 

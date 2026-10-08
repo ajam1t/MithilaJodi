@@ -110,6 +110,19 @@ export type Funnel = {
 }
 export const getFunnel = cache(async () => rpc<Funnel>('admin_funnel'))
 
+export type RegistrationFunnel = {
+  days: number
+  accounts: number
+  about_done: number
+  mithila_done: number
+  photo_done: number
+  strength_75: number
+  /** Unique browsers per reg_step key. */
+  steps: Record<string, number>
+  steps_since: string | null
+}
+export const getRegistrationFunnel = cache(async (days: number) => rpc<RegistrationFunnel>('admin_registration_funnel', { p_days: days }))
+
 export type MemberRow = {
   account_id: string; profile_id: string | null; name: string; gender: string | null; dob: string | null
   caste: string | null; self_gotra: string | null; mool: string | null; gram: string | null; location: string | null

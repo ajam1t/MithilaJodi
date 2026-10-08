@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
 import { sniffImage } from '@/lib/imageSniff'
 import { refreshPublicShowcase } from '@/lib/showcaseCache'
+import { syncDiscoverability } from '@/lib/discoverability'
 
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
 const MAX_BYTES = 5 * 1024 * 1024  // 5 MB
@@ -171,6 +172,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, message: 'Failed to save photo record.' }, { status: 500 })
   }
 
+  // The first photo can be what completes onboarding and makes the profile visible.
+  await syncDiscoverability(admin, account.id)
   refreshPublicShowcase()
   return NextResponse.json({ ok: true, photo_id: photo.id }, { status: 201 })
 }
