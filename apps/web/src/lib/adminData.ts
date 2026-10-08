@@ -128,6 +128,8 @@ export type MemberRow = {
   caste: string | null; self_gotra: string | null; mool: string | null; gram: string | null; location: string | null
   profile_status: string | null; discoverable: boolean | null; account_status: string; profile_complete: number
   registered_at: string; last_active: string | null; mobile_last4: string
+  /** Full number (migration 000005). Render only for roles allowed to see it. */
+  mobile?: string
 }
 
 export async function getMembers(p: { q?: string; gender?: string; status?: string; sort?: string; page: number; pageSize: number }) {

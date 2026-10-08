@@ -14,7 +14,7 @@ const COPY: Record<Action, { title: string; body: string; cta: string; danger?: 
   delete: { title: 'Delete this member?', body: 'This is a soft delete: the account and profile are marked deleted, the member is signed out, shared links are revoked and the profile leaves search. Data is kept for legal and audit purposes. This cannot be undone from the console.', cta: 'Delete member', danger: true },
 }
 
-export function MemberActions({ accountId, status, hasProfile, discoverable, liveLinks, perms, mobileMasked }: {
+export function MemberActions({ accountId, status, hasProfile, discoverable, liveLinks, perms, mobileMasked, mobileFull }: {
   accountId: string
   status: string
   hasProfile: boolean
@@ -22,6 +22,8 @@ export function MemberActions({ accountId, status, hasProfile, discoverable, liv
   liveLinks: number
   perms: { moderate: boolean; manage: boolean; del: boolean }
   mobileMasked: string
+  /** Shown to admins in full (owner's decision, 2026-10-09); moderators get the masked form. */
+  mobileFull?: string
 }) {
   const router = useRouter()
   const [pending, setPending] = useState<Action | null>(null)
@@ -75,9 +77,21 @@ export function MemberActions({ accountId, status, hasProfile, discoverable, liv
     <div className="space-y-2">
       <div className="mb-3 rounded-lg bg-[#FAF7F2] px-3 py-2 text-[13px]">
         <span className="text-ink-soft">Mobile </span>
-        {contact ? <span className="font-medium text-ink">{contact.mobile}{contact.email ? ` · ${contact.email}` : ''}</span> : <span className="font-medium text-ink">{mobileMasked}</span>}
-        {!contact && perms.manage && (
-          <button type="button" onClick={reveal} className="ml-2 text-[12.5px] font-medium text-maroon hover:underline">Reveal (audited)</button>
+        {mobileFull ? (
+          <>
+            <a href={`tel:${mobileFull.replace(/\s/g, '')}`} className="font-medium tabular-nums text-ink hover:text-maroon">{mobileFull}</a>
+            {contact?.email && <span className="font-medium text-ink"> · {contact.email}</span>}
+            {!contact && perms.manage && (
+              <button type="button" onClick={reveal} className="ml-2 text-[12.5px] font-medium text-maroon hover:underline">Show email (audited)</button>
+            )}
+          </>
+        ) : (
+          <>
+            {contact ? <span className="font-medium text-ink">{contact.mobile}{contact.email ? ` · ${contact.email}` : ''}</span> : <span className="font-medium text-ink">{mobileMasked}</span>}
+            {!contact && perms.manage && (
+              <button type="button" onClick={reveal} className="ml-2 text-[12.5px] font-medium text-maroon hover:underline">Reveal (audited)</button>
+            )}
+          </>
         )}
       </div>
 

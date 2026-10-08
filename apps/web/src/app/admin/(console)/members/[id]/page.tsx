@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { AccountBadge, Badge, PageHeader, Section, Unavailable, ago, fmt, ist } from '@/components/admin/ui'
 import { MemberActions } from '@/components/admin/MemberActions'
+import { formatMobile } from '@/components/admin/format'
 import { can, requireAdminPage } from '@/lib/adminAuth'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getCommunityLabels, labelFor } from '@/lib/communityLabels'
@@ -175,6 +176,7 @@ export default async function MemberDetailPage({ params }: { params: Promise<{ i
               liveLinks={liveShares.length}
               perms={{ moderate: can(session, 'moderate'), manage: can(session, 'manage_members'), del: can(session, 'delete_members') }}
               mobileMasked={`••••••${account.mobile.slice(-4)}`}
+              mobileFull={can(session, 'manage_members') ? formatMobile(account.mobile) : undefined}
             />
           </Section>
 

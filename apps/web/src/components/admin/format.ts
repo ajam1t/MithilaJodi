@@ -1,3 +1,11 @@
+/** "+91 98765 43210" from a stored number (E.164 or bare 10 digits). */
+export function formatMobile(m: string | null | undefined): string {
+  const d = String(m ?? '').replace(/\D/g, '')
+  if (d.length < 10) return String(m ?? '')
+  const ten = d.slice(-10)
+  return `+91 ${ten.slice(0, 5)} ${ten.slice(5)}`
+}
+
 /** Readable names for audit actions (unknown ones fall back to the raw key). */
 const ACTIONS: Record<string, string> = {
   admin_login: 'Signed in to the console',

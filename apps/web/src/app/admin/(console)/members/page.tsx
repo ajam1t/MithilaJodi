@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { AccountBadge, Badge, PageHeader, Section, Unavailable, ago, fmt, ist } from '@/components/admin/ui'
 import { getMembers, getMemberSnapshot, type MemberRow } from '@/lib/adminData'
-import { requireAdminPage } from '@/lib/adminAuth'
+import { can, requireAdminPage } from '@/lib/adminAuth'
+import { formatMobile } from '@/components/admin/format'
 import { getCommunityLabels, labelFor } from '@/lib/communityLabels'
 import { createAdminClient } from '@/lib/supabase/server'
 
@@ -31,7 +32,9 @@ function age(dob: string | null): number | null {
 }
 
 export default async function MembersPage({ searchParams }: { searchParams: Promise<SP> }) {
-  await requireAdminPage('view')
+  const session = await requireAdminPage('view')
+  // Admins see full numbers (owner's decision, 2026-10-09); moderators, masked.
+  const fullMobile = can(session, 'manage_members')
   const sp = await searchParams
   const page = Math.max(1, Number(sp.page) || 1)
   const q = (sp.q ?? '').trim().slice(0, 80)
@@ -65,7 +68,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
 
       <form method="get" className="mb-4 grid gap-2 rounded-xl border border-[#E8E1D5] bg-white p-3 sm:grid-cols-[1fr_auto_auto_auto_auto]" role="search">
         <label className="sr-only" htmlFor="m-q">Search members</label>
-        <input id="m-q" name="q" defaultValue={q} placeholder="Name, profile ID, place, gotra, mool, gram, or last 4 digits of mobile" className={field} />
+        <input id="m-q" name="q" defaultValue={q} placeholder="Name, profile ID, place, gotra, mool, gram, or mobile number" className={field} />
         <select name="gender" defaultValue={sp.gender ?? ''} className={field} aria-label="Gender">
           <option value="">Any gender</option><option value="female">Female</option><option value="male">Male</option>
         </select>
@@ -80,7 +83,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
 
       <Section
         title={data ? `${fmt(data.total)} ${data.total === 1 ? 'member' : 'members'}${q || sp.gender || sp.status ? ' match' : ''}` : 'Members'}
-        description="Contact details are masked here. Open a member to see more; revealing a mobile number is recorded in the audit log."
+        description={fullMobile ? 'Open a member for their full details and admin actions.' : 'Mobile numbers are masked for moderators. Open a member for more.'}
       >
         {!data ? <Unavailable>The member directory could not be loaded. Try again in a moment.</Unavailable>
           : data.rows.length === 0 ? <Unavailable title="No members match">Try fewer filters, or search by a different word.</Unavailable>
@@ -107,7 +110,9 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
                         <td className="px-5 py-2.5">
                           <Link href={`/admin/members/${r.account_id}`} className="font-medium text-ink hover:text-maroon">{r.name || 'No profile yet'}</Link>
                           <span className="block text-[12px] text-ink-soft">
-                            {[r.gender, age(r.dob) ? `${age(r.dob)} yrs` : null, `••••${r.mobile_last4}`].filter(Boolean).join(' · ')}
+                            {[r.gender, age(r.dob) ? `${age(r.dob)} yrs` : null].filter(Boolean).join(' · ')}
+                            {(r.gender || age(r.dob)) && ' · '}
+                            <span className="whitespace-nowrap tabular-nums">{fullMobile && r.mobile ? formatMobile(r.mobile) : `••••${r.mobile_last4}`}</span>
                           </span>
                         </td>
                         <td className="px-3 py-2.5 text-ink">{r.location ?? <span className="text-ink-soft">—</span>}</td>

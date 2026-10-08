@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import type { AdminPerm } from '@/lib/adminAuth'
 import { ADMIN_NAV, type NavGroup } from './nav'
@@ -82,7 +83,8 @@ export function AdminShell({ perms, roleLabel, identity, attention, children }: 
           </button>
 
           <Link href="/admin" className="flex shrink-0 items-center gap-2">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-maroon font-serif text-[15px] text-white" aria-hidden="true">MJ</span>
+            {/* The official mark, never redrawn or recoloured (see scripts/brand-assets.js). */}
+            <Image src="/logo-mark.png" alt="" width={40} height={37} priority className="h-9 w-auto shrink-0 object-contain" />
             <span className="leading-tight">
               <span className="block text-[14.5px] font-semibold text-ink">Mithila Jodi</span>
               <span className="block text-[11px] text-ink-soft">Admin Console</span>
