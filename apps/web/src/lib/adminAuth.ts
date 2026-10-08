@@ -46,7 +46,12 @@ export function can(session: Pick<SessionAccount, 'role'> | null, perm: AdminPer
 export async function requireAdminPage(perm: AdminPerm = 'view'): Promise<SessionAccount> {
   const session = await getSessionAccount()
   if (!session) redirect('/admin/login')
-  if (!isAdminRole(session.role)) notFound()
+  if (!isAdminRole(session.role)) {
+    // A staff account signed in through the member login has no admin rights
+    // in that session — send it to the console sign-in rather than a 404.
+    if (session.staff) redirect('/admin/login?from=member')
+    notFound()
+  }
   if (!can(session, perm)) redirect('/admin?denied=1')
   return session
 }

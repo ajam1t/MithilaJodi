@@ -10,6 +10,8 @@ export type SessionAccount = {
   role: string
   account_status: string
   session_id: string
+  /** The account is admin/moderator, even if this session is a member session. */
+  staff: boolean
 }
 
 export async function getSessionAccount(): Promise<SessionAccount | null> {
@@ -74,5 +76,6 @@ export async function getSessionAccount(): Promise<SessionAccount | null> {
     role,
     account_status: acct.account_status,
     session_id: session.id,
+    staff,
   }
 }

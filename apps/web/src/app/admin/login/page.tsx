@@ -7,9 +7,10 @@ export const metadata = { title: 'Sign in' }
 export const dynamic = 'force-dynamic'
 
 /** Admin Console sign-in. No registration, no member sign-up link. */
-export default async function AdminLoginPage() {
+export default async function AdminLoginPage({ searchParams }: { searchParams: Promise<{ from?: string }> }) {
   const session = await getSessionAccount()
   if (session && isAdminRole(session.role)) redirect('/admin')
+  const fromMember = (await searchParams).from === 'member' && !!session?.staff
 
   return (
     <main id="main-content" className="grid min-h-screen place-items-center bg-[#FAF7F2] px-4 py-10">
@@ -19,6 +20,11 @@ export default async function AdminLoginPage() {
           <p className="mt-3 text-[15px] font-semibold text-ink">Mithila Jodi</p>
           <h1 className="text-[22px] font-semibold text-ink">Admin Console</h1>
         </div>
+        {fromMember && (
+          <p role="status" className="mb-4 rounded-lg border border-[#E8D9B5] bg-[#FBF5E6] px-4 py-3 text-[13px] leading-relaxed text-ink">
+            You are signed in to the member site. Admin access needs a separate Admin Console sign-in.
+          </p>
+        )}
         <div className="rounded-xl border border-[#E8E1D5] bg-white p-6 shadow-[0_12px_32px_-18px_rgba(43,33,28,0.25)]">
           <AdminLoginForm />
         </div>
