@@ -18,7 +18,7 @@ export default async function AdminLoginPage({ searchParams }: { searchParams: P
       <div className="w-full max-w-[380px]">
         <div className="mb-6 text-center">
           {/* The official lockup, unaltered — it already carries the name. */}
-          <Image src="/logo.png" alt="Mithila Jodi" width={707} height={615} priority className="mx-auto h-auto w-[150px]" />
+          <Image src="/logo.png" alt="Mithila Jodi" width={707} height={615} sizes="150px" priority className="mx-auto h-auto w-[150px]" />
           <h1 className="mt-2 text-[22px] font-semibold text-ink">Admin Console</h1>
         </div>
         {fromMember && (
