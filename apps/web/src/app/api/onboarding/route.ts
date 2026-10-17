@@ -6,6 +6,8 @@ import { isFreeAccessMode } from '@/lib/membership'
 import { syncDiscoverability } from '@/lib/discoverability'
 import { refreshPublicShowcase } from '@/lib/showcaseCache'
 import { COMPLETION_SELECT, computeCompletion } from '@/lib/profileCompletion'
+import { minAgeError, yearsAgo } from '@/lib/ageRules'
+import { oppositeGender } from '@/lib/matchEligibility'
 
 /*
  * Saves one /welcome step. Unlike PUT /api/profile — which writes the whole
@@ -15,7 +17,8 @@ import { COMPLETION_SELECT, computeCompletion } from '@/lib/profileCompletion'
  * any of it.
  *
  *   about   → name, who the profile is for, gender, date of birth, marital
- *             status, and "looking for" (profile_preferences.pref_gender).
+ *             status, and "looking for" (profile_preferences.pref_gender,
+ *             always the opposite gender).
  *             Creates the profile row the first time.
  *   mithila → current city, community, gotra, and the optional Mithila details.
  *
@@ -26,15 +29,16 @@ import { COMPLETION_SELECT, computeCompletion } from '@/lib/profileCompletion'
 const text = (max: number) => z.string().trim().max(max)
 const optionalText = (max: number) => z.string().trim().max(max).nullable().optional()
 
+// "Looking for" is not asked: matching is bride ↔ groom only (lib/matchEligibility),
+// so it is always the opposite of `gender` and is derived below.
 const AboutSchema = z.object({
   step: z.literal('about'),
   profile_for: z.enum(['self', 'son', 'daughter', 'sibling', 'other']),
   first_name: text(100).min(1, 'Please enter a first name.'),
-  last_name: optionalText(100),
+  last_name: text(100).min(1, 'Please enter a surname.'),
   gender: z.enum(['male', 'female'], { message: 'Please choose bride or groom.' }),
   dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Please enter a date of birth.'),
   marital_status: text(40).min(1, 'Please choose a marital status.'),
-  looking_for: z.enum(['male', 'female'], { message: 'Please choose who you are looking for.' }),
 })
 
 const MithilaSchema = z.object({
@@ -53,13 +57,11 @@ const Body = z.discriminatedUnion('step', [AboutSchema, MithilaSchema])
 
 const MARITAL = new Set(['never_married', 'divorced', 'widowed', 'awaiting_divorce'])
 
-function ageOk(dob: string): boolean {
-  const d = new Date(dob + 'T00:00:00Z')
-  if (Number.isNaN(d.getTime())) return false
-  const now = new Date()
-  const min = new Date(Date.UTC(now.getUTCFullYear() - 18, now.getUTCMonth(), now.getUTCDate()))
-  const max = new Date(Date.UTC(now.getUTCFullYear() - 80, now.getUTCMonth(), now.getUTCDate()))
-  return d <= min && d >= max
+/** Null when the date of birth is acceptable; otherwise the message. */
+function dobError(dob: string, gender: string): string | null {
+  if (Number.isNaN(new Date(dob + 'T00:00:00Z').getTime())) return 'Please enter a valid date of birth.'
+  if (dob < yearsAgo(80)) return 'Please check the year of birth.'
+  return minAgeError(dob, gender)
 }
 
 const bad = (message: string) => NextResponse.json({ ok: false, message }, { status: 400 })
@@ -87,7 +89,8 @@ export async function PATCH(request: NextRequest) {
   let profileId: string | null = existing?.id ?? null
 
   if (data.step === 'about') {
-    if (!ageOk(data.dob)) return bad('Members must be at least 18. Please check the date of birth.')
+    const ageProblem = dobError(data.dob, data.gender)
+    if (ageProblem) return bad(ageProblem)
     if (!MARITAL.has(data.marital_status)) return bad('Please choose a marital status.')
 
     const fields = {
@@ -135,7 +138,7 @@ export async function PATCH(request: NextRequest) {
     // Only pref_gender is written — any other partner preferences stay as they are.
     const { error: prefError } = await admin
       .from('profile_preferences')
-      .upsert({ profile_id: profileId, pref_gender: data.looking_for, updated_at: new Date().toISOString() }, { onConflict: 'profile_id' })
+      .upsert({ profile_id: profileId, pref_gender: oppositeGender(data.gender), updated_at: new Date().toISOString() }, { onConflict: 'profile_id' })
     if (prefError) {
       console.error('[onboarding about] preferences:', prefError.message)
       return NextResponse.json({ ok: false, message: 'Saved, but “looking for” could not be stored. Please try again.' }, { status: 500 })

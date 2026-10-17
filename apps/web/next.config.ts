@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    // Short sign-up link for WhatsApp posts and ads. Temporary (307), so it
+    // can be pointed elsewhere later without browsers having cached it.
+    return [{ source: '/join', destination: '/register?start=1', permanent: false }]
+  },
   async headers() {
     return [
       {

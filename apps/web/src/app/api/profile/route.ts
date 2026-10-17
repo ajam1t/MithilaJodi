@@ -6,6 +6,7 @@ import { isFreeAccessMode } from '@/lib/membership'
 import { refreshPublicShowcase } from '@/lib/showcaseCache'
 import { syncDiscoverability } from '@/lib/discoverability'
 import { computeCompletion } from '@/lib/profileCompletion'
+import { minAgeError } from '@/lib/ageRules'
 
 const ProfileSchema = z.object({
   profile_for: z.enum(['self', 'son', 'daughter', 'sibling', 'other']).default('self'),
@@ -307,12 +308,10 @@ export async function PUT(request: NextRequest) {
     }
   }
 
-  // Validate DOB: must be at least 18 years old
-  const dob = new Date(data.dob)
-  const minDob = new Date()
-  minDob.setFullYear(minDob.getFullYear() - 18)
-  if (dob > minDob) {
-    return NextResponse.json({ ok: false, message: 'You must be at least 18 years old.' }, { status: 400 })
+  // Minimum age: 21 for a groom, 18 for a bride (lib/ageRules).
+  const ageProblem = minAgeError(data.dob, data.gender)
+  if (ageProblem) {
+    return NextResponse.json({ ok: false, message: ageProblem }, { status: 400 })
   }
 
   // Cross-field check zod cannot express per-field: an inverted preferred age

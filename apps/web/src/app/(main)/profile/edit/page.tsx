@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { LocationPicker } from '@/components/LocationPicker'
 import { MasterCombo, type Option } from '@/components/profile/MasterCombo'
 import { GramField } from '@/components/profile/GramField'
+import { latestDob } from '@/lib/ageRules'
 
 
 type PhotoRow = {
@@ -1111,7 +1112,7 @@ export default function ProfileEditPage() {
                 <div>
                   <label className="block text-sm font-medium text-ink mb-1">Date of Birth *</label>
                   <input required type="date" value={form.dob}
-                    max={new Date(Date.now() - 18 * 365.25 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+                    max={latestDob(form.gender)}
                     onChange={e => set('dob', e.target.value)}
                     className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon" />
                 </div>
