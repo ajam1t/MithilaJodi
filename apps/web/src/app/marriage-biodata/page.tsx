@@ -39,9 +39,9 @@ export const metadata: Metadata = {
 }
 
 const STEPS = [
-  { n: '1', title: 'Fill what you want to share', body: 'Every field is optional. Sections you leave blank are left out of the document entirely — no empty rows, no placeholders.' },
-  { n: '2', title: 'Pick your language', body: 'Maithili, Hindi, English or Sanskrit. This sets the headings; names and places stay exactly as you type them, Devanagari included.' },
-  { n: '3', title: 'Download the PDF', body: 'One click opens your browser’s print dialog — choose "Save as PDF" for a clean A4 page you can print or send on WhatsApp.' },
+  { n: '1', title: 'Choose a design', body: 'Mithila Heritage, Royal Maroon, Minimal Elegance or Contemporary Mithila — pick the one that feels right. You can change it any time.' },
+  { n: '2', title: 'Add your details, in any language', body: 'Every field is optional and sections you leave blank are left out of the document. Maithili, Hindi, English or Sanskrit — names and places stay exactly as you type them.' },
+  { n: '3', title: 'Download the PDF', body: 'The live preview is the exact document. One click opens your browser’s print dialog — choose "Save as PDF" for a clean A4 page to print or send on WhatsApp.' },
 ]
 
 const FAQ = [

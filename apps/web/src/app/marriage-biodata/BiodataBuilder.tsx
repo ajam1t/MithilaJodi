@@ -3,6 +3,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { BiodataDocument } from '@/components/biodata/BiodataDocument'
+import { BiodataTemplatePicker } from '@/components/biodata/BiodataTemplatePicker'
+import { BIODATA_TEMPLATES, type BiodataTemplateId } from '@/lib/biodataTemplates'
 import { track } from '@/lib/track'
 import {
   BIODATA_LANGUAGES, biodataFileName, computeAge,
@@ -26,6 +28,12 @@ import {
  *
  * The one thing a visitor loses is that closing the tab loses the draft, which
  * is what the "create a free account" prompt is for.
+ *
+ * Flow: Step 1 picks a design (BiodataTemplatePicker); step 2 combines "add
+ * your details" and "preview and download" into one screen, since the live
+ * preview beside the form already shows the exact document that downloads —
+ * a separate preview-only step would just be the same screen with the form
+ * hidden.
  */
 
 type FieldSpec = {
@@ -36,16 +44,27 @@ type FieldSpec = {
   half?: boolean
 }
 
+type CategoryId = 'personal' | 'family' | 'cultural' | 'contact'
+
 type GroupSpec = {
   id: string
+  category: CategoryId
   title: string
   hint?: string
   fields: FieldSpec[]
 }
 
+const CATEGORIES: { id: CategoryId; title: string; hint?: string }[] = [
+  { id: 'personal', title: 'Personal Information' },
+  { id: 'family', title: 'Family Information' },
+  { id: 'cultural', title: 'Mithila Cultural Details', hint: 'Gotra, mool and gram, plus horoscope — the fields Maithil families ask for first.' },
+  { id: 'contact', title: 'Contact Details', hint: 'Only add what you are comfortable sharing with the families who receive this.' },
+]
+
 const GROUPS: GroupSpec[] = [
   {
     id: 'basic',
+    category: 'personal',
     title: 'Basic details',
     fields: [
       { key: 'full_name', label: 'Full name', placeholder: 'Priya Jha' },
@@ -59,8 +78,8 @@ const GROUPS: GroupSpec[] = [
   },
   {
     id: 'community',
+    category: 'cultural',
     title: 'Community & roots',
-    hint: 'The fields Maithil families actually ask for first.',
     fields: [
       { key: 'religion', label: 'Religion', placeholder: 'Hindu', half: true },
       { key: 'caste', label: 'Caste', placeholder: 'Maithil Brahmin', half: true },
@@ -74,6 +93,7 @@ const GROUPS: GroupSpec[] = [
   },
   {
     id: 'career',
+    category: 'personal',
     title: 'Education & career',
     fields: [
       { key: 'education', label: 'Education', placeholder: 'B.Tech, Computer Science — NIT Patna' },
@@ -84,6 +104,7 @@ const GROUPS: GroupSpec[] = [
   },
   {
     id: 'location',
+    category: 'personal',
     title: 'Location',
     fields: [
       { key: 'current_location', label: 'Currently living in', placeholder: 'Mumbai', half: true },
@@ -92,6 +113,7 @@ const GROUPS: GroupSpec[] = [
   },
   {
     id: 'lifestyle',
+    category: 'personal',
     title: 'Lifestyle',
     fields: [
       { key: 'diet', label: 'Diet', placeholder: 'Vegetarian', half: true },
@@ -101,6 +123,7 @@ const GROUPS: GroupSpec[] = [
   },
   {
     id: 'family',
+    category: 'family',
     title: 'Family',
     fields: [
       { key: 'father_name', label: "Father's name", placeholder: 'Shri Ramesh Jha', half: true },
@@ -113,6 +136,7 @@ const GROUPS: GroupSpec[] = [
   },
   {
     id: 'astrology',
+    category: 'cultural',
     title: 'Horoscope',
     hint: 'Optional. Leave blank and the section is left out of the document.',
     fields: [
@@ -125,6 +149,7 @@ const GROUPS: GroupSpec[] = [
   },
   {
     id: 'about',
+    category: 'personal',
     title: 'About you',
     fields: [
       { key: 'about_me', label: 'A few lines about yourself', type: 'textarea', placeholder: 'What you enjoy, what you are looking for in a partner.' },
@@ -132,8 +157,8 @@ const GROUPS: GroupSpec[] = [
   },
   {
     id: 'contact',
+    category: 'contact',
     title: 'Contact',
-    hint: 'Only add what you are comfortable sharing with the families who receive this.',
     fields: [
       { key: 'mobile', label: 'Mobile', type: 'tel', placeholder: '+91 98765 43210', half: true },
       { key: 'email', label: 'Email', type: 'email', placeholder: 'name@example.com', half: true },
@@ -215,7 +240,42 @@ function ScaledPreview({ revision, children }: { revision: unknown; children: Re
 /** Photos are only ever read locally; this cap keeps a huge file from stalling the tab. */
 const MAX_PHOTO_BYTES = 8 * 1024 * 1024
 
+function PhotoCard({
+  photoUrl, photoError, fileRef, onPick, onClear,
+}: {
+  photoUrl: string | null
+  photoError: string
+  fileRef: React.RefObject<HTMLInputElement | null>
+  onPick: (file: File | undefined) => void
+  onClear: () => void
+}) {
+  return (
+    <section className="card p-4">
+      <h3 className="font-semibold text-ink text-[14.5px] leading-tight">Photograph</h3>
+      <p className="text-[11.5px] text-ink-soft leading-snug mt-0.5">Optional. Stays on your device — it is never uploaded.</p>
+      <div className="flex items-center gap-2 mt-2.5">
+        <input
+          ref={fileRef}
+          type="file"
+          aria-label="Choose a photo for the biodata (optional)"
+          accept="image/*"
+          onChange={e => onPick(e.target.files?.[0])}
+          className="text-[12.5px] text-ink-soft file:mr-2 file:rounded-mj-sm file:border file:border-gold/40 file:bg-cream file:px-3 file:py-1.5 file:text-[12.5px] file:text-maroon"
+        />
+        {photoUrl && (
+          <button type="button" onClick={onClear} className="text-[12px] text-maroon hover:underline shrink-0">
+            Remove
+          </button>
+        )}
+      </div>
+      {photoError && <p className="text-[11.5px] text-terra mt-1">{photoError}</p>}
+    </section>
+  )
+}
+
 export function BiodataBuilder() {
+  const [step, setStep] = useState<'design' | 'details'>('design')
+  const [template, setTemplate] = useState<BiodataTemplateId>('heritage')
   const [data, setData] = useState<BiodataData>(EMPTY)
   const [language, setLanguage] = useState<BiodataLanguage>('en')
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
@@ -245,6 +305,11 @@ export function BiodataBuilder() {
     if (fileRef.current) fileRef.current.value = ''
   }
 
+  function chooseTemplate(id: BiodataTemplateId) {
+    setTemplate(id)
+    track('biodata_template_selected', { k: id })
+  }
+
   // `age` is derived rather than typed — a biodata that says "28" next to a date
   // of birth that disagrees is worse than one that says nothing.
   const documentData: BiodataData = useMemo(() => {
@@ -264,10 +329,37 @@ export function BiodataBuilder() {
     const previous = document.title
     document.title = biodataFileName(data.full_name)
     window.print()
-    track('biodata_downloaded')
+    track('biodata_downloaded', { k: template })
     // Restoring immediately is safe: print() blocks until the dialog is dismissed
     // in every browser that supports it, and the title is only read on open.
     document.title = previous
+  }
+
+  if (step === 'design') {
+    return (
+      <div className="wrap py-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-5">
+            <p className="eyebrow mb-1">Step 1 of 2</p>
+            <h2 className="font-serif text-maroon text-[20px] sm:text-[23px]">Choose a design</h2>
+            <p className="text-ink-soft text-[13.5px] mt-1.5 max-w-lg mx-auto">
+              Every design holds the same fields — pick the one that feels right. You can change it
+              any time from the next screen.
+            </p>
+          </div>
+          <BiodataTemplatePicker selected={template} onSelect={chooseTemplate} />
+          <div className="flex justify-center mt-6">
+            <button
+              type="button"
+              onClick={() => setStep('details')}
+              className="btn-primary px-7 py-2.5 text-[14.5px]"
+            >
+              Continue with {BIODATA_TEMPLATES[template].name} →
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -295,6 +387,17 @@ export function BiodataBuilder() {
           @page { size: A4; margin: 0; }
         }
       `}</style>
+
+      {/* ── Step bar: design in use + language ── */}
+      <div className="no-print flex flex-wrap items-center justify-between gap-2 mb-4 card px-4 py-2.5">
+        <p className="text-[13px] text-ink">
+          <span className="text-ink-soft">Step 2 of 2 · Design:</span>{' '}
+          <span className="font-semibold text-maroon">{BIODATA_TEMPLATES[template].name}</span>
+        </p>
+        <button type="button" onClick={() => setStep('design')} className="text-[12.5px] font-medium text-maroon hover:underline">
+          Change design
+        </button>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)] gap-6 items-start">
         {/* ── Form ── */}
@@ -330,92 +433,83 @@ export function BiodataBuilder() {
                 type names and places in Devanagari too.
               </p>
             </div>
-
-            <div className="mt-3">
-              <span className="field-label">Photo (optional)</span>
-              <div className="flex items-center gap-2 mt-1">
-                <input
-                  ref={fileRef}
-                  type="file"
-                  aria-label="Choose a photo for the biodata (optional)"
-                  accept="image/*"
-                  onChange={e => pickPhoto(e.target.files?.[0])}
-                  className="text-[12.5px] text-ink-soft file:mr-2 file:rounded-mj-sm file:border file:border-gold/40 file:bg-cream file:px-3 file:py-1.5 file:text-[12.5px] file:text-maroon"
-                />
-                {photoUrl && (
-                  <button type="button" onClick={clearPhoto} className="text-[12px] text-maroon hover:underline shrink-0">
-                    Remove
-                  </button>
-                )}
-              </div>
-              {photoError
-                ? <p className="text-[11.5px] text-terra mt-1">{photoError}</p>
-                : <p className="text-[11.5px] text-ink-soft mt-1">Stays on your device — it is never uploaded.</p>}
-            </div>
           </div>
 
-          {GROUPS.map(group => {
-            const open = openGroup === group.id
-            const filled = group.fields.filter(f => String(data[f.key] ?? '').trim() !== '').length
-            return (
-              <section key={group.id} className="card overflow-hidden">
-                <h3>
-                  <button
-                    type="button"
-                    onClick={() => setOpenGroup(open ? '' : group.id)}
-                    aria-expanded={open}
-                    aria-controls={`group-${group.id}`}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-paper-2/60 transition-colors"
-                  >
-                    <span className="flex-1 min-w-0">
-                      <span className="block font-semibold text-ink text-[14.5px] leading-tight">{group.title}</span>
-                      {group.hint && <span className="block text-[11.5px] text-ink-soft leading-snug mt-0.5">{group.hint}</span>}
-                    </span>
-                    <span className={`text-[11px] font-semibold rounded-pill px-2 py-0.5 border whitespace-nowrap ${
-                      filled > 0 ? 'bg-green/[0.08] border-green/30 text-green' : 'bg-paper-2 border-paper-3 text-ink-soft'
-                    }`}>
-                      {filled} of {group.fields.length}
-                    </span>
-                    <svg
-                      width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                      strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"
-                      className={`shrink-0 text-ink-soft transition-transform ${open ? 'rotate-180' : ''}`}
-                    >
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                  </button>
-                </h3>
-                {open && (
-                  <div id={`group-${group.id}`} className="px-4 pb-4 pt-1 border-t border-paper-3 grid grid-cols-2 gap-3">
-                    {group.fields.map(f => (
-                      <div key={f.key} className={f.half ? 'col-span-1' : 'col-span-2'}>
-                        <label className="field-label" htmlFor={`bd-${f.key}`}>{f.label}</label>
-                        {f.type === 'textarea' ? (
-                          <textarea
-                            id={`bd-${f.key}`}
-                            rows={3}
-                            value={String(data[f.key] ?? '')}
-                            placeholder={f.placeholder}
-                            onChange={e => set(f.key, e.target.value)}
-                            className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon resize-none bg-white"
-                          />
-                        ) : (
-                          <input
-                            id={`bd-${f.key}`}
-                            type={f.type ?? 'text'}
-                            value={String(data[f.key] ?? '')}
-                            placeholder={f.placeholder}
-                            onChange={e => set(f.key, e.target.value)}
-                            className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon bg-white"
-                          />
-                        )}
+          {CATEGORIES.map(cat => (
+            <div key={cat.id} className="space-y-3">
+              <div className="pt-1 px-0.5">
+                <h2 className="font-serif text-maroon text-[15.5px] leading-tight">{cat.title}</h2>
+                {cat.hint && <p className="text-[11.5px] text-ink-soft leading-snug mt-0.5">{cat.hint}</p>}
+              </div>
+
+              {cat.id === 'personal' && (
+                <PhotoCard photoUrl={photoUrl} photoError={photoError} fileRef={fileRef} onPick={pickPhoto} onClear={clearPhoto} />
+              )}
+
+              {GROUPS.filter(g => g.category === cat.id).map(group => {
+                const open = openGroup === group.id
+                const filled = group.fields.filter(f => String(data[f.key] ?? '').trim() !== '').length
+                return (
+                  <section key={group.id} className="card overflow-hidden">
+                    <h3>
+                      <button
+                        type="button"
+                        onClick={() => setOpenGroup(open ? '' : group.id)}
+                        aria-expanded={open}
+                        aria-controls={`group-${group.id}`}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-paper-2/60 transition-colors"
+                      >
+                        <span className="flex-1 min-w-0">
+                          <span className="block font-semibold text-ink text-[14.5px] leading-tight">{group.title}</span>
+                          {group.hint && <span className="block text-[11.5px] text-ink-soft leading-snug mt-0.5">{group.hint}</span>}
+                        </span>
+                        <span className={`text-[11px] font-semibold rounded-pill px-2 py-0.5 border whitespace-nowrap ${
+                          filled > 0 ? 'bg-green/[0.08] border-green/30 text-green' : 'bg-paper-2 border-paper-3 text-ink-soft'
+                        }`}>
+                          {filled} of {group.fields.length}
+                        </span>
+                        <svg
+                          width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                          strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"
+                          className={`shrink-0 text-ink-soft transition-transform ${open ? 'rotate-180' : ''}`}
+                        >
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                      </button>
+                    </h3>
+                    {open && (
+                      <div id={`group-${group.id}`} className="px-4 pb-4 pt-1 border-t border-paper-3 grid grid-cols-2 gap-3">
+                        {group.fields.map(f => (
+                          <div key={f.key} className={f.half ? 'col-span-1' : 'col-span-2'}>
+                            <label className="field-label" htmlFor={`bd-${f.key}`}>{f.label}</label>
+                            {f.type === 'textarea' ? (
+                              <textarea
+                                id={`bd-${f.key}`}
+                                rows={3}
+                                value={String(data[f.key] ?? '')}
+                                placeholder={f.placeholder}
+                                onChange={e => set(f.key, e.target.value)}
+                                className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon resize-none bg-white"
+                              />
+                            ) : (
+                              <input
+                                id={`bd-${f.key}`}
+                                type={f.type ?? 'text'}
+                                value={String(data[f.key] ?? '')}
+                                placeholder={f.placeholder}
+                                onChange={e => set(f.key, e.target.value)}
+                                className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm text-ink focus:outline-none focus:border-maroon bg-white"
+                              />
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                )}
-              </section>
-            )
-          })}
+                    )}
+                  </section>
+                )
+              })}
+            </div>
+          ))}
 
           <div className="card p-4 bg-cream">
             <p className="text-[13px] text-ink leading-snug">
@@ -444,8 +538,8 @@ export function BiodataBuilder() {
             </span>
           </div>
 
-          <ScaledPreview revision={`${language}|${photoUrl ?? ''}|${JSON.stringify(documentData)}`}>
-            <BiodataDocument data={documentData} language={language} photoUrl={photoUrl} />
+          <ScaledPreview revision={`${template}|${language}|${photoUrl ?? ''}|${JSON.stringify(documentData)}`}>
+            <BiodataDocument data={documentData} language={language} photoUrl={photoUrl} templateSlug={template} />
           </ScaledPreview>
         </div>
       </div>
