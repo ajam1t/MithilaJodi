@@ -10,6 +10,10 @@ import { formatPartnerPreferences } from '@/lib/partnerPreferences'
 import { isNoExpiry } from '@/lib/digitalProfile'
 import { SITE_URL } from '@/lib/constants'
 import { getOnboardingState, ONBOARDING_FIELDS } from '@/lib/onboarding'
+import { normalisePhotoVisibility } from '@/lib/photoVisibility'
+import { CopyButton } from '@/components/admin/CopyButton'
+import { PhotoVisibilityControl } from '@/components/admin/PhotoVisibilityControl'
+import { SignInAsMember } from '@/components/admin/SignInAsMember'
 
 export const metadata = { title: 'Member' }
 export const dynamic = 'force-dynamic'
@@ -56,7 +60,7 @@ export default async function MemberDetailPage({ params }: { params: Promise<{ i
     p ? admin.from('india_locations').select('id, name_en').in('id', [p.native_place_id, p.current_loc_id, p.job_loc_id].filter(Boolean)) : Promise.resolve({ data: [] }),
     p ? admin.from('profile_preferences').select('*').eq('profile_id', p.id).maybeSingle() : Promise.resolve({ data: null }),
     p ? admin.from('profile_photos').select('status').eq('profile_id', p.id) : Promise.resolve({ data: [] }),
-    p ? admin.from('profile_shares').select('id, label, created_at, expires_at, revoked_at, view_count, last_viewed_at').eq('profile_id', p.id).order('created_at', { ascending: false }) : Promise.resolve({ data: [] }),
+    p ? admin.from('profile_shares').select('id, token, label, created_at, expires_at, revoked_at, view_count, last_viewed_at').eq('profile_id', p.id).order('created_at', { ascending: false }) : Promise.resolve({ data: [] }),
     p ? admin.from('interests').select('status').eq('from_profile', p.id) : Promise.resolve({ data: [] }),
     p ? admin.from('interests').select('status').eq('to_profile', p.id) : Promise.resolve({ data: [] }),
     p ? admin.rpc('admin_member_conversations').or(`profile_a.eq.${p.id},profile_b.eq.${p.id}`).select('id') : Promise.resolve({ data: [] }),
@@ -66,6 +70,8 @@ export default async function MemberDetailPage({ params }: { params: Promise<{ i
     admin.from('notifications').select('id', { count: 'exact', head: true }).eq('account_id', id).eq('type', 'profile_viewed'),
   ])
 
+  const { data: priv } = p ? await admin.from('profile_private').select('photo_visibility').eq('profile_id', p.id).maybeSingle() : { data: null }
+  const photoVisibility = normalisePhotoVisibility((priv as any)?.photo_visibility)
   const locName = new Map(((locs as any).data ?? []).map((l: any) => [l.id, l.name_en]))
   const prefs = p ? await formatPartnerPreferences(admin, (prefsRow as any).data) : null
   const sess = (sessions.data ?? []) as any[]
@@ -178,7 +184,22 @@ export default async function MemberDetailPage({ params }: { params: Promise<{ i
               mobileMasked={`••••••${account.mobile.slice(-4)}`}
               mobileFull={can(session, 'manage_members') ? formatMobile(account.mobile) : undefined}
             />
+            {can(session, 'manage_members') && (
+              <div className="mt-2">
+                <SignInAsMember
+                  accountId={account.id}
+                  name={p ? name : `member ••••${account.mobile.slice(-4)}`}
+                  disabledReason={account.account_status !== 'active' ? 'Only active members can be signed in as.' : undefined}
+                />
+              </div>
+            )}
           </Section>
+
+          {p && (
+            <Section title="Photo visibility" description="Who can see this member's photographs. The member can also change this in their settings.">
+              <PhotoVisibilityControl accountId={account.id} value={photoVisibility} canEdit={can(session, 'manage_members')} />
+            </Section>
+          )}
 
           <Section title="Account">
             <Facts rows={[
@@ -195,8 +216,8 @@ export default async function MemberDetailPage({ params }: { params: Promise<{ i
             ]} />
           </Section>
 
-          <Section title="Digital Profile">
-            {!p ? <Unavailable title="No profile, so no Digital Profile." /> : shareRows.length === 0 ? <Unavailable title="No Digital Profile link yet." /> : (
+          <Section title="Digital Profile" id="digital-profile">
+            {!p ? <Unavailable title="No profile, so no Digital Profile." /> : shareRows.length === 0 ? <Unavailable title="No Digital Profile link yet.">To make one for the family, use “Sign in as this member” above.</Unavailable> : (
               <>
                 <Facts rows={[
                   ['Links', `${fmt(liveShares.length)} live · ${fmt(shareRows.length - liveShares.length)} revoked or expired`],
@@ -205,17 +226,25 @@ export default async function MemberDetailPage({ params }: { params: Promise<{ i
                   ['Last opened', ago(shareRows.map(s => s.last_viewed_at).filter(Boolean).sort().pop() ?? null)],
                 ]} />
                 <ul className="mt-3 divide-y divide-[#F3EEE6] text-[12.5px]">
-                  {shareRows.slice(0, 6).map(s => {
+                  {shareRows.slice(0, 10).map(s => {
                     const live = !s.revoked_at && (isNoExpiry(s.expires_at) || new Date(s.expires_at).getTime() > now)
+                    const url = `${SITE_URL}/p/${s.token}`
                     return (
-                      <li key={s.id} className="flex items-center justify-between gap-2 py-1.5">
-                        <span className="min-w-0 truncate">{s.label || 'Link'} · {ist(s.created_at, false)}</span>
-                        <span className="shrink-0">{live ? <Badge tone="good">live</Badge> : <Badge>{s.revoked_at ? 'revoked' : 'expired'}</Badge>}</span>
+                      <li key={s.id} className="py-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="min-w-0 truncate font-medium text-ink">{s.label || 'Link'} · {ist(s.created_at, false)}</span>
+                          <span className="shrink-0">{live ? <Badge tone="good">live</Badge> : <Badge>{s.revoked_at ? 'revoked' : 'expired'}</Badge>}</span>
+                        </div>
+                        <div className="mt-1 flex items-center gap-1.5">
+                          <code className="min-w-0 flex-1 truncate rounded bg-[#FAF7F2] px-1.5 py-0.5 text-[11.5px] text-ink-soft">{url}</code>
+                          {live && <CopyButton text={url} />}
+                          <Link href={`/admin/members/${account.id}/digital-profile/${s.id}`} className="shrink-0 rounded-md border border-[#DDD3C2] bg-white px-2 py-1 text-[12px] font-medium text-maroon hover:border-[#BFAF95]">View</Link>
+                        </div>
                       </li>
                     )
                   })}
                 </ul>
-                <p className="mt-2 text-[11.5px] text-ink-soft">Link addresses are not shown; members share them privately. Public base: {SITE_URL}/p/…</p>
+                <p className="mt-2 text-[11.5px] text-ink-soft">“View” opens it here and is not counted as a view of the member’s link.</p>
               </>
             )}
           </Section>

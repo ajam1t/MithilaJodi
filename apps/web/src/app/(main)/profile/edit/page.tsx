@@ -6,6 +6,7 @@ import { LocationPicker } from '@/components/LocationPicker'
 import { MasterCombo, type Option } from '@/components/profile/MasterCombo'
 import { GramField } from '@/components/profile/GramField'
 import { latestDob } from '@/lib/ageRules'
+import { normalisePhotoVisibility, PHOTO_VISIBILITY_OPTIONS } from '@/lib/photoVisibility'
 
 
 type PhotoRow = {
@@ -1735,25 +1736,22 @@ export default function ProfileEditPage() {
 
               {/* Photo visibility is a separate axis from profile visibility:
                   this decides who, among the people who can already see your
-                  profile, also sees your photographs. Only the two options we
-                  actually enforce are offered. */}
+                  profile, also sees your photographs (lib/photoVisibility). */}
               <div className="col-span-2">
                 <label htmlFor="photo-visibility" className="block text-sm font-medium text-ink mb-1">
                   Who can see your photographs
                 </label>
                 <select
                   id="photo-visibility"
-                  value={form.photo_visibility === 'all' || form.photo_visibility === '' ? 'all' : 'connected'}
+                  value={normalisePhotoVisibility(form.photo_visibility)}
                   onChange={e => set('photo_visibility', e.target.value)}
                   className="w-full border border-ink/20 rounded-mj-sm px-3 py-2 text-sm bg-white"
                 >
-                  <option value="all">Everyone who can see my profile</option>
-                  <option value="connected">Only my accepted connections</option>
+                  {PHOTO_VISIBILITY_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label} — {o.hint}</option>)}
                 </select>
                 <p className="mt-1 text-xs text-ink-soft">
-                  Choosing connections-only keeps your profile visible but hides your photographs
-                  from search, from members who have only sent you an interest, and from the public
-                  pages — until you accept them.
+                  Members keeps your photographs off the public pages. Matches also hides them from
+                  search and from members who have only sent you an interest — until you accept them.
                 </p>
               </div>
             </div>

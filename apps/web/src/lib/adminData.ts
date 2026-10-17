@@ -170,6 +170,27 @@ export type MemberSnapshot = {
 /** Member base: totals, active (a signed-in session seen) and completion. */
 export const getMemberSnapshot = cache(async () => rpc<MemberSnapshot>('admin_member_snapshot'))
 
+/**
+ * Total = every member the Members list shows (ordinary member accounts,
+ * demo and system accounts excluded — deleted ones included). Active = those
+ * whose account is in good standing: not suspended, banned, deactivated or
+ * deleted. These are the two tabs of the Members list, so the numbers match it.
+ */
+export const getMemberCounts = cache(async (): Promise<{ total: number; active: number } | null> => {
+  const admin = await createAdminClient()
+  const base = () => admin.from('accounts').select('id', { count: 'exact', head: true })
+    .eq('role', 'user').eq('is_demo', false).neq('mobile', '0000000000')
+  const [all, active] = await Promise.all([
+    base(),
+    base().eq('account_status', 'active').is('deleted_at', null),
+  ])
+  if (all.error || active.error) {
+    console.error('[admin] member counts failed:', (all.error ?? active.error)?.message)
+    return null
+  }
+  return { total: all.count ?? 0, active: active.count ?? 0 }
+})
+
 /** Period helpers for client code that needs only the numbers. */
 export function pick(values: PeriodValues | undefined | null, key: PeriodKey): number | null {
   return values?.[key] ?? null

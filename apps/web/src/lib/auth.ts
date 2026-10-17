@@ -12,6 +12,29 @@ export type SessionAccount = {
   session_id: string
   /** The account is admin/moderator, even if this session is a member session. */
   staff: boolean
+  /** Set when an admin is signed in as this member from the Admin Console: the admin's account id. */
+  impersonatedBy: string | null
+}
+
+/**
+ * "Sign in as this member" sessions are ordinary member sessions marked in
+ * device_hash, as Admin Console sessions are marked 'admin-console'. They last
+ * 30 minutes and are created only by POST /api/admin/members/[id]/impersonate.
+ */
+export const IMPERSONATION_PREFIX = 'impersonation:'
+export const IMPERSONATION_MINUTES = 30
+
+/**
+ * What an admin acting as a member may not do: read private messages, change
+ * the password, or export, deactivate or delete the account. Returns the
+ * response to send, or null when the request may go ahead.
+ */
+export function refuseWhileImpersonating(session: Pick<SessionAccount, 'impersonatedBy'> | null): Response | null {
+  if (!session?.impersonatedBy) return null
+  return Response.json(
+    { ok: false, message: 'Not available while signed in as this member from the Admin Console.' },
+    { status: 403 },
+  )
 }
 
 export async function getSessionAccount(): Promise<SessionAccount | null> {
@@ -56,12 +79,19 @@ export async function getSessionAccount(): Promise<SessionAccount | null> {
   // leave every existing cookie fully working.
   if (acct.account_status !== 'active' && acct.account_status !== 'pending_verification') return null
 
-  // Bump last_seen (fire-and-forget)
-  admin
-    .from('account_sessions')
-    .update({ last_seen: new Date().toISOString() })
-    .eq('id', session.id)
-    .then(() => {})
+  const impersonatedBy = typeof session.device_hash === 'string' && session.device_hash.startsWith(IMPERSONATION_PREFIX)
+    ? session.device_hash.slice(IMPERSONATION_PREFIX.length)
+    : null
+
+  // Bump last_seen (fire-and-forget) — not for an admin acting as the member,
+  // which would make the member look active when they are not.
+  if (!impersonatedBy) {
+    admin
+      .from('account_sessions')
+      .update({ last_seen: new Date().toISOString() })
+      .eq('id', session.id)
+      .then(() => {})
+  }
 
   // Admin rights travel only with an Admin Console session (/admin/login:
   // 12-hour, rate-limited, audited). A staff account signed in through the
@@ -77,5 +107,6 @@ export async function getSessionAccount(): Promise<SessionAccount | null> {
     account_status: acct.account_status,
     session_id: session.id,
     staff,
+    impersonatedBy,
   }
 }

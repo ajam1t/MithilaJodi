@@ -1,11 +1,13 @@
 import 'server-only'
 import { NextResponse } from 'next/server'
-import { getSessionAccount } from '@/lib/auth'
+import { getSessionAccount, refuseWhileImpersonating } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/server'
 
 // POST /api/account/export — generate and return a data export for the authenticated user
 export async function POST() {
   const session = await getSessionAccount()
+  const blocked = refuseWhileImpersonating(session)
+  if (blocked) return blocked
   if (!session) return NextResponse.json({ ok: false, message: 'Unauthorised' }, { status: 401 })
 
   const supabase = await createAdminClient()

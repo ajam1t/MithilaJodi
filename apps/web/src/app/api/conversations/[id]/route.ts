@@ -1,7 +1,7 @@
 import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
-import { getSessionAccount } from '@/lib/auth'
+import { getSessionAccount, refuseWhileImpersonating } from '@/lib/auth'
 import { isSystemProfile } from '@/lib/systemProfile'
 import { markConversationNotificationsRead } from '@/lib/notifications'
 
@@ -10,6 +10,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await getSessionAccount()
+  const blocked = refuseWhileImpersonating(session)
+  if (blocked) return blocked
   if (!session) return NextResponse.json({ ok: false, message: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params

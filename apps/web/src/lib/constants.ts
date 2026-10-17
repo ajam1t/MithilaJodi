@@ -102,10 +102,10 @@ export const OFFICIAL_AVATAR_SRC = '/favicon-192.png'
 export const SUPPORT_EMAIL = 'contact@mithilajodi.com'
 export const SUPPORT_PHONE_DISPLAY = '+91 8757569525'
 export const SUPPORT_PHONE_E164 = '918757569525'
-export const LEGAL_VERSION = '1.2'
+export const LEGAL_VERSION = '1.3'
 export const LEGAL_EFFECTIVE_DATE = '17 October 2026'
 /** One line under the version on both legal pages: what changed from earlier versions. */
-export const LEGAL_CHANGE_NOTE = 'Changed in 1.2: the Privacy Policy covers optional bride and groom photos on wedding invitation links (section 6). In 1.1: the minimum age is now 21 for a groom and 18 for a bride, the legal age of marriage in India.'
+export const LEGAL_CHANGE_NOTE = 'Changed in 1.3: Public / Members / Matches photo settings (section 6) and how our team can help you from your account (section 10). In 1.2: wedding invitation photos. In 1.1: the minimum age is now 21 for a groom and 18 for a bride.'
 
 /* Grievance Officer — published to satisfy Rule 3(2) of the Information
    Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules,

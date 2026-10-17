@@ -1,6 +1,6 @@
 import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
-import { getSessionAccount } from '@/lib/auth'
+import { getSessionAccount, refuseWhileImpersonating } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/server'
 import { SESSION_COOKIE } from '@/lib/constants'
 import { cookies } from 'next/headers'
@@ -9,6 +9,8 @@ import { refreshPublicShowcase } from '@/lib/showcaseCache'
 // DELETE /api/account — soft-deactivate the authenticated user's account
 export async function DELETE(request: NextRequest) {
   const session = await getSessionAccount()
+  const blocked = refuseWhileImpersonating(session)
+  if (blocked) return blocked
   if (!session) return NextResponse.json({ ok: false, message: 'Unauthorised' }, { status: 401 })
 
   let body: { confirm?: unknown }

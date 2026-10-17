@@ -1,7 +1,7 @@
 import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
-import { getSessionAccount } from '@/lib/auth'
+import { getSessionAccount, refuseWhileImpersonating } from '@/lib/auth'
 import { hasFeatureAccess } from '@/lib/membership'
 import { notify } from '@/lib/notifications'
 
@@ -11,6 +11,8 @@ export async function POST(
 ) {
   // Step 1: auth
   const session = await getSessionAccount()
+  const blocked = refuseWhileImpersonating(session)
+  if (blocked) return blocked
   if (!session) return NextResponse.json({ ok: false, message: 'Unauthorized' }, { status: 401 })
 
   // Step 2: feature access gate (open to all members while the platform is free)

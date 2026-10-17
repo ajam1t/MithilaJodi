@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { createAdminClient } from '@/lib/supabase/server'
-import { getSessionAccount } from '@/lib/auth'
+import { getSessionAccount, refuseWhileImpersonating } from '@/lib/auth'
 import { isPasswordValid } from '@/lib/password'
 
 export async function POST(request: NextRequest) {
   const account = await getSessionAccount()
+  const blocked = refuseWhileImpersonating(account)
+  if (blocked) return blocked
   if (!account) {
     return NextResponse.json({ ok: false, message: 'Not authenticated' }, { status: 401 })
   }

@@ -7,6 +7,7 @@ import { PersistentPlayer } from '@/components/music/PersistentPlayer'
 import { ServiceWorkerRegistrar } from '@/components/pwa/ServiceWorkerRegistrar'
 import '@/styles/globals.css'
 import { SiteTracker } from '@/components/analytics/SiteTracker'
+import { ImpersonationBanner } from '@/components/admin/ImpersonationBanner'
 
 const marcellus = Marcellus({
   weight: '400',
@@ -182,6 +183,7 @@ export default function RootLayout({
           <MusicPlayerProvider>
             {children}
             <PersistentPlayer />
+            <ImpersonationBanner />
           </MusicPlayerProvider>
         </ToastProvider>
       </body>

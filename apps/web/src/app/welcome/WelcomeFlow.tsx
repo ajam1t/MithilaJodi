@@ -558,7 +558,7 @@ export function WelcomeFlow({ initial, options }: { initial: OnboardingState; op
                 <ul className="mt-5 space-y-1.5 border-t border-paper-3 pt-4 text-[12.5px] leading-relaxed text-ink-soft">
                   <li>· Our team reviews every photo before other members see it.</li>
                   <li>· Photos are stored privately and only ever shared through short-lived links.</li>
-                  <li>· Later you can choose who sees it — all members, or only accepted matches — and replace it any time.</li>
+                  <li>· Later you can choose who sees it — public, members only, or only accepted matches — and replace it any time.</li>
                 </ul>
                 {(pendingPhoto || photoCount > 0) && (
                   <ActionBar><ContinueButton busy={saving} onClick={() => go(profileExists ? firstMissing(SCREENS.indexOf('dob')) ?? 'dob' : 'dob')} /></ActionBar>

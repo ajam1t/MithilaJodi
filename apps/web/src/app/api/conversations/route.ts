@@ -1,7 +1,7 @@
 import 'server-only'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
-import { getSessionAccount } from '@/lib/auth'
+import { getSessionAccount, refuseWhileImpersonating } from '@/lib/auth'
 import { getSystemProfileId } from '@/lib/systemProfile'
 
 function toDisplayName(firstName: string, lastName: string | null): string {
@@ -11,6 +11,8 @@ function toDisplayName(firstName: string, lastName: string | null): string {
 
 export async function GET() {
   const session = await getSessionAccount()
+  const blocked = refuseWhileImpersonating(session)
+  if (blocked) return blocked
   if (!session) return NextResponse.json({ ok: false, message: 'Unauthorized' }, { status: 401 })
 
   const admin = await createAdminClient()

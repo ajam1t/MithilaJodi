@@ -5,7 +5,7 @@ import {
 } from '@/components/admin/ui'
 import { actionLabel, actorLabel } from '@/components/admin/format'
 import {
-  getAttention, getDaily, getDbUsage, getDpPeriods, getEventPeriods, getGeo, getMemberSnapshot, getMetricPeriods,
+  getAttention, getDaily, getDbUsage, getDpPeriods, getEventPeriods, getGeo, getMemberCounts, getMemberSnapshot, getMetricPeriods,
   getRecentAudit, getSectionPeriods, getTrackingSince, getVisitorPeriods, ratio,
 } from '@/lib/adminData'
 import { requireAdminPage } from '@/lib/adminAuth'
@@ -23,9 +23,9 @@ const sub = (a: number | null | undefined, label: string) => (a == null ? undefi
 export default async function AdminDashboard({ searchParams }: { searchParams: Promise<{ denied?: string }> }) {
   const session = await requireAdminPage('view')
   const { denied } = await searchParams
-  const [m, dp, vis, ev, snap, att, daily, geo, sections, audit, usage, since] = await Promise.all([
+  const [m, dp, vis, ev, snap, att, daily, geo, sections, audit, usage, since, counts] = await Promise.all([
     getMetricPeriods(), getDpPeriods(), getVisitorPeriods(), getEventPeriods(), getMemberSnapshot(), getAttention(),
-    getDaily(30), getGeo(), getSectionPeriods(), getRecentAudit(8), getDbUsage(), getTrackingSince(),
+    getDaily(30), getGeo(), getSectionPeriods(), getRecentAudit(8), getDbUsage(), getTrackingSince(), getMemberCounts(),
   ])
 
   const tracking = since ? `Site analytics since ${ist(since, false)}.` : 'Site analytics start with the first visit after this release.'
@@ -65,9 +65,9 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
 
       {/* ── Primary KPIs ────────────────────────────────────────────── */}
       <StatGrid>
-        <StatTile label="Total members" value={fmt(snap?.members)} sub={sub(m?.members?.d7, 'joined in 7 days')} href="/admin/members" />
+        <StatTile label="Total members" value={fmt(counts?.total)} sub={sub(m?.members?.d7, 'joined in 7 days')} note="Every member, including suspended and deleted" href="/admin/members" />
         <StatTile label="New members today" value={fmt(m?.members?.today)} sub={sub(m?.members?.yesterday, 'yesterday')} href="/admin/analytics/growth" />
-        <StatTile label="Active members" value={fmt(snap?.active_30d)} sub={snap ? `${fmt(snap.active_7d)} in 7 days · ${fmt(snap.active_today)} today` : undefined} note="Signed in during the last 30 days" />
+        <StatTile label="Active members" value={fmt(counts?.active)} sub={snap ? `${fmt(snap.active_30d)} signed in within 30 days · ${fmt(snap.active_today)} today` : undefined} note="Not suspended, banned, deactivated or deleted" href="/admin/members?status=active" />
         <StatTile label="Unique visitors today" value={fmt(vis?.today?.visitors)} sub={sub(vis?.yesterday?.visitors, 'yesterday')} href="/admin/analytics/visitors" />
         <StatTile label="Digital Profile views today" value={fmt(dp?.today?.views)} sub={dp ? `${fmt(dp.today?.unique_visitors)} unique · ${fmt(dp.d7?.views)} in 7 days` : undefined} href="/admin/analytics/digital-profiles" />
         <StatTile label="Profiles shared" value={fmt(dp?.d30?.links_opened)} sub="links opened in 30 days" note={avgReach != null ? `${fmt(avgReach, 1)} views per shared profile` : undefined} href="/admin/analytics/digital-profiles" />

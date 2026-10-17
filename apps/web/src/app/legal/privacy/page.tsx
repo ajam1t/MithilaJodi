@@ -208,9 +208,13 @@ export default function PrivacyPage() {
       <P>
         Every photograph is reviewed by our team before other members can see it. Until it is
         approved it is visible only to you. We may reject a photograph that does not meet our
-        standards, for example if it is not a photograph of the person the profile is for. Your main
-        approved photograph is shown to registered members and, if your profile is featured publicly,
-        on the public pages described in section 4. You can delete a photograph at any time.
+        standards, for example if it is not a photograph of the person the profile is for. You
+        choose who sees your approved photographs: <strong className="font-medium text-ink">Public</strong> (registered
+        members and, if your profile is featured publicly, the public pages described in section 4),{' '}
+        <strong className="font-medium text-ink">Members</strong> (registered members only, never public pages) or{' '}
+        <strong className="font-medium text-ink">Matches</strong> (only members whose interest you have accepted). Our
+        team can also change this setting, for example at your request or for your safety. You can
+        delete a photograph at any time.
       </P>
       <p className="text-[14px] font-semibold text-ink mt-4 mb-1.5">Wedding invitation photos</p>
       <P>
@@ -330,6 +334,14 @@ export default function PrivacyPage() {
         sign-in sessions use a cookie that JavaScript cannot read, and the session token is stored in
         our database only as a hash; passwords, where set, are stored only as hashes; and the site is
         served over HTTPS.
+      </P>
+      <P>
+        Nobody at Mithila Jodi can see your password. To help a member — for example a family that
+        asks us to create or share their Digital Profile — an authorised administrator can open the
+        website as that member for up to 30 minutes. This needs no password, every use is recorded in
+        our audit log, and during it your messages cannot be read and your password, data export and
+        account deletion cannot be used. If you did not ask for help and want to know whether this
+        happened on your account, contact us.
       </P>
       <P>
         No online service can promise perfect security, and we do not claim to. We hold no security

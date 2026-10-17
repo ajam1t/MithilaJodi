@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { audit, requireAdminApi, type AdminPerm } from '@/lib/adminAuth'
 import { refreshPublicShowcase } from '@/lib/showcaseCache'
 import { syncDiscoverability } from '@/lib/discoverability'
+import { normalisePhotoVisibility, PHOTO_VISIBILITY_OPTIONS } from '@/lib/photoVisibility'
 
 /*
  * Member actions from Admin → Members → member.
@@ -19,7 +20,7 @@ import { syncDiscoverability } from '@/lib/discoverability'
  * member's own deactivation does — permanent erasure is not done from here.
  */
 
-type Action = 'suspend' | 'enable' | 'hide' | 'show' | 'revoke_dp' | 'delete'
+type Action = 'suspend' | 'enable' | 'hide' | 'show' | 'revoke_dp' | 'delete' | 'photo_visibility'
 
 const PERM: Record<Action, AdminPerm> = {
   suspend: 'moderate',
@@ -28,6 +29,7 @@ const PERM: Record<Action, AdminPerm> = {
   show: 'manage_members',
   revoke_dp: 'manage_members',
   delete: 'delete_members',
+  photo_visibility: 'manage_members',
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -105,6 +107,20 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       const { data: revoked, error } = await admin.from('profile_shares').update({ revoked_at: now }).eq('profile_id', profile.id).is('revoked_at', null).select('id')
       if (error) return fail('revoke shares', error)
       await audit(actor.id, 'member_dp_revoked', { type: 'profile', id: profile.id }, { links: revoked?.length ?? 0, reason }, request)
+      break
+    }
+    case 'photo_visibility': {
+      if (!profile) return NextResponse.json({ ok: false, message: 'This member has no profile yet.' }, { status: 409 })
+      const value = body.value
+      if (!PHOTO_VISIBILITY_OPTIONS.some(o => o.value === value)) {
+        return NextResponse.json({ ok: false, message: 'Choose Public, Members or Matches.' }, { status: 400 })
+      }
+      const { data: before } = await admin.from('profile_private').select('photo_visibility').eq('profile_id', profile.id).maybeSingle()
+      const { error } = await admin.from('profile_private').upsert({ profile_id: profile.id, photo_visibility: value })
+      if (error) return fail('update photo visibility', error)
+      await audit(actor.id, 'member_photo_visibility', { type: 'profile', id: profile.id }, {
+        value, previous: normalisePhotoVisibility(before?.photo_visibility), reason,
+      }, request)
       break
     }
     case 'delete': {

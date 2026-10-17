@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { AccountBadge, Badge, PageHeader, Section, Unavailable, ago, fmt, ist } from '@/components/admin/ui'
-import { getMembers, getMemberSnapshot, type MemberRow } from '@/lib/adminData'
+import { getMemberCounts, getMembers, getMemberSnapshot, type MemberRow } from '@/lib/adminData'
+import { isNoExpiry } from '@/lib/digitalProfile'
 import { can, requireAdminPage } from '@/lib/adminAuth'
 import { formatMobile } from '@/components/admin/format'
 import { getCommunityLabels, labelFor } from '@/lib/communityLabels'
@@ -38,11 +39,30 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
   const sp = await searchParams
   const page = Math.max(1, Number(sp.page) || 1)
   const q = (sp.q ?? '').trim().slice(0, 80)
-  const [data, snap, labels] = await Promise.all([
+  const admin = await createAdminClient()
+  const [data, snap, labels, counts] = await Promise.all([
     getMembers({ q, gender: sp.gender, status: sp.status, sort: sp.sort, page, pageSize: PAGE_SIZE }),
     getMemberSnapshot(),
-    createAdminClient().then(getCommunityLabels),
+    getCommunityLabels(admin),
+    getMemberCounts(),
   ])
+  // Each member's most recent live Digital Profile link, for this page of rows.
+  const profileIds = (data?.rows ?? []).map(r => r.profile_id).filter((v): v is string => !!v)
+  const liveLink = new Map<string, string>()
+  if (profileIds.length) {
+    const { data: shares } = await admin
+      .from('profile_shares')
+      .select('id, profile_id, expires_at, created_at')
+      .in('profile_id', profileIds)
+      .is('revoked_at', null)
+      .order('created_at', { ascending: false })
+    for (const s of (shares ?? []) as Array<{ id: string; profile_id: string; expires_at: string | null }>) {
+      const live = isNoExpiry(s.expires_at) || new Date(s.expires_at as string).getTime() > Date.now()
+      if (live && !liveLink.has(s.profile_id)) liveLink.set(s.profile_id, s.id)
+    }
+  }
+  const dpHref = (r: MemberRow) => (r.profile_id && liveLink.has(r.profile_id) ? `/admin/members/${r.account_id}/digital-profile/${liveLink.get(r.profile_id)}` : null)
+  const activeTab = sp.status === 'active'
   const pages = data ? Math.max(1, Math.ceil(data.total / PAGE_SIZE)) : 1
   const qs = (p: number) => {
     const u = new URLSearchParams()
@@ -62,9 +82,22 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
     <>
       <PageHeader
         eyebrow="Members"
-        title="All members"
-        description={snap ? `${fmt(snap.members)} members · ${fmt(snap.profiles)} profiles · ${fmt(snap.active_30d)} active in 30 days · ${fmt(snap.suspended)} suspended or banned` : undefined}
+        title={activeTab ? 'Active members' : 'All members'}
+        description={snap ? `${fmt(snap.profiles)} profiles · ${fmt(snap.active_30d)} signed in within 30 days · ${fmt(snap.suspended)} suspended or banned` : undefined}
       />
+
+      <nav aria-label="Member lists" className="mb-3 flex flex-wrap gap-2">
+        {([
+          ['All members', counts?.total, '/admin/members', !activeTab && !sp.status],
+          ['Active members', counts?.active, '/admin/members?status=active', activeTab],
+        ] as const).map(([label, n, href, on]) => (
+          <Link key={label} href={href} aria-current={on ? 'page' : undefined}
+            className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium ${on ? 'border-maroon bg-maroon text-white' : 'border-[#DDD3C2] bg-white text-ink hover:border-[#BFAF95]'}`}>
+            {label} <span className="tabular-nums opacity-80">{fmt(n)}</span>
+          </Link>
+        ))}
+        <span className="self-center text-[12px] text-ink-soft">Active = not suspended, banned, deactivated or deleted.</span>
+      </nav>
 
       <form method="get" className="mb-4 grid gap-2 rounded-xl border border-[#E8E1D5] bg-white p-3 sm:grid-cols-[1fr_auto_auto_auto_auto]" role="search">
         <label className="sr-only" htmlFor="m-q">Search members</label>
@@ -91,7 +124,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
             <>
               {/* Desktop table */}
               <div className="-mx-4 hidden overflow-x-auto sm:-mx-5 md:block">
-                <table className="w-full min-w-[960px] text-[13.5px]">
+                <table className="w-full min-w-[1060px] text-[13.5px]">
                   <thead>
                     <tr className="border-b border-[#EFE9DF] text-left text-[11.5px] uppercase tracking-wide text-ink-soft">
                       <th className="px-5 py-2 font-semibold">Member</th>
@@ -101,6 +134,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
                       <th className="px-3 py-2 font-semibold">Status</th>
                       <th className="px-3 py-2 font-semibold">Registered</th>
                       <th className="px-3 py-2 font-semibold">Last active</th>
+                      <th className="px-3 py-2 font-semibold">Digital Profile</th>
                       <th className="px-5 py-2" />
                     </tr>
                   </thead>
@@ -134,6 +168,9 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
                         </td>
                         <td className="px-3 py-2.5 text-ink-soft">{ist(r.registered_at, false)}</td>
                         <td className="px-3 py-2.5 text-ink-soft">{ago(r.last_active)}</td>
+                        <td className="px-3 py-2.5">
+                          {dpHref(r) ? <Link href={dpHref(r)!} className="font-medium text-maroon hover:underline">View link</Link> : <span className="text-ink-soft">—</span>}
+                        </td>
                         <td className="px-5 py-2.5 text-right"><Link href={`/admin/members/${r.account_id}`} className="font-medium text-maroon hover:underline">Open</Link></td>
                       </tr>
                     ))}
@@ -143,8 +180,8 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
               {/* Mobile cards */}
               <ul className="space-y-2 md:hidden">
                 {data.rows.map(r => (
-                  <li key={r.account_id}>
-                    <Link href={`/admin/members/${r.account_id}`} className="block rounded-lg border border-[#EFE9DF] px-3 py-2.5">
+                  <li key={r.account_id} className="rounded-lg border border-[#EFE9DF]">
+                    <Link href={`/admin/members/${r.account_id}`} className="block px-3 py-2.5">
                       <div className="flex items-start justify-between gap-2">
                         <span className="font-medium text-ink">{r.name || 'No profile yet'}</span>
                         <AccountBadge status={r.account_status} />
@@ -153,6 +190,9 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
                       <p className="mt-0.5 text-[12px] text-ink-soft">{community(r) || '—'}</p>
                       <p className="mt-1 text-[11.5px] text-ink-soft">{r.profile_id ? `${r.profile_complete}% complete · ` : ''}active {ago(r.last_active)}</p>
                     </Link>
+                    {dpHref(r) && (
+                      <Link href={dpHref(r)!} className="block border-t border-[#EFE9DF] px-3 py-2 text-[12.5px] font-medium text-maroon">View Digital Profile link →</Link>
+                    )}
                   </li>
                 ))}
               </ul>

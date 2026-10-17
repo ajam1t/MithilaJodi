@@ -9,25 +9,21 @@ import 'server-only'
  * the profile discoverable while photographs stay with accepted connections
  * only, and the three-level profile setting cannot express that.
  *
- * Two levels, because two are all we can actually enforce:
+ * Three levels (labels: Public / Members / Matches):
  *
- *   'all'        any signed-in member who can see the profile (default)
+ *   'all'        any member who can see the profile, and the public pages
+ *                (showcase, Explore) when the profile is featured (default)
+ *   'members'    signed-in members only — never on a public page
  *   'connected'  only members with an accepted interest in either direction
  *
  * The older 'on_request' value is treated as 'connected'. There is no
- * photo-request flow, and quietly downgrading to the stricter of the two is the
- * safe reading of what the member asked for.
- *
- * A profile set to 'connected' also has its photograph withheld from the public
- * showcase — the open web is not a connection.
+ * photo-request flow, and quietly downgrading to the stricter reading is the
+ * safe reading of what the member asked for. Any unknown value is 'connected'.
  */
 
-export type PhotoVisibility = 'all' | 'connected'
+import { normalisePhotoVisibility } from '@/lib/photoVisibility'
 
-/** Anything that is not explicitly 'all' is treated as connections-only. */
-export function normalisePhotoVisibility(raw: string | null | undefined): PhotoVisibility {
-  return !raw || raw === 'all' ? 'all' : 'connected'
-}
+export { normalisePhotoVisibility, type PhotoVisibility } from '@/lib/photoVisibility'
 
 /**
  * Which of `ownerProfileIds` may show their photo to `viewerProfileId`.
@@ -35,14 +31,16 @@ export function normalisePhotoVisibility(raw: string | null | undefined): PhotoV
  * One query for the settings and, only if needed, one for the connections —
  * this is called from list endpoints, so it must not be per-row.
  *
- * `viewerProfileId` may be null (a signed-in member without a profile yet, or a
- * public page). In that case only 'all' owners qualify.
+ * `viewerProfileId` may be null — a signed-in member without a profile yet, who
+ * sees 'all' and 'members' owners. Public pages pass `publicPage`, which admits
+ * 'all' owners only: the open web is neither a member nor a connection.
  */
 export async function filterPhotoViewable(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   admin: any,
   viewerProfileId: string | null,
   ownerProfileIds: string[],
+  opts: { publicPage?: boolean } = {},
 ): Promise<Set<string>> {
   const allowed = new Set<string>()
   if (ownerProfileIds.length === 0) return allowed
@@ -63,13 +61,16 @@ export async function filterPhotoViewable(
   const restricted = new Set<string>()
   for (const id of ownerProfileIds) allowed.add(id)
   for (const r of (rows ?? []) as { profile_id: string; photo_visibility: string | null }[]) {
-    if (normalisePhotoVisibility(r.photo_visibility) === 'connected') {
+    const level = normalisePhotoVisibility(r.photo_visibility)
+    if (level === 'connected') {
       restricted.add(r.profile_id)
+      allowed.delete(r.profile_id)
+    } else if (level === 'members' && opts.publicPage) {
       allowed.delete(r.profile_id)
     }
   }
 
-  if (restricted.size === 0 || !viewerProfileId) return allowed
+  if (restricted.size === 0 || !viewerProfileId || opts.publicPage) return allowed
 
   // Re-admit the restricted owners the viewer is actually connected to.
   const ids = [...restricted]
