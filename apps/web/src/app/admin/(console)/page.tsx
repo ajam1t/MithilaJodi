@@ -67,7 +67,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
       <StatGrid>
         <StatTile label="Total members" value={fmt(counts?.total)} sub={sub(m?.members?.d7, 'joined in 7 days')} note="Every member, including suspended and deleted" href="/admin/members" />
         <StatTile label="New members today" value={fmt(m?.members?.today)} sub={sub(m?.members?.yesterday, 'yesterday')} href="/admin/analytics/growth" />
-        <StatTile label="Active members" value={fmt(counts?.active)} sub={snap ? `${fmt(snap.active_30d)} signed in within 30 days · ${fmt(snap.active_today)} today` : undefined} note="Not suspended, banned, deactivated or deleted" href="/admin/members?status=active" />
+        <StatTile label="Active members" value={fmt(counts?.active)} sub={snap ? `${fmt(snap.active_30d)} signed in within 30 days · ${fmt(snap.active_today)} today` : undefined} note="Has a profile, and not suspended, banned, deactivated or deleted" href="/admin/members?status=active" />
         <StatTile label="Unique visitors today" value={fmt(vis?.today?.visitors)} sub={sub(vis?.yesterday?.visitors, 'yesterday')} href="/admin/analytics/visitors" />
         <StatTile label="Digital Profile views today" value={fmt(dp?.today?.views)} sub={dp ? `${fmt(dp.today?.unique_visitors)} unique · ${fmt(dp.d7?.views)} in 7 days` : undefined} href="/admin/analytics/digital-profiles" />
         <StatTile label="Profiles shared" value={fmt(dp?.d30?.links_opened)} sub="links opened in 30 days" note={avgReach != null ? `${fmt(avgReach, 1)} views per shared profile` : undefined} href="/admin/analytics/digital-profiles" />

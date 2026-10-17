@@ -133,10 +133,19 @@ export type MemberRow = {
 }
 
 export async function getMembers(p: { q?: string; gender?: string; status?: string; sort?: string; page: number; pageSize: number }) {
-  return rpc<{ total: number; rows: MemberRow[] }>('admin_members', {
+  const data = await rpc<{ total: number; rows: MemberRow[] }>('admin_members', {
     p_q: p.q ?? '', p_gender: p.gender ?? '', p_status: p.status ?? '', p_sort: p.sort ?? 'newest',
     p_limit: p.pageSize, p_offset: (p.page - 1) * p.pageSize,
   })
+  // "Active" means in good standing *and* has a profile (migration
+  // 20261017000002). Until that migration runs, the function still returns
+  // accounts with no profile for 'active' — drop them here so the list never
+  // shows "No profile yet" under Active members.
+  if (data && p.status === 'active') {
+    const rows = data.rows.filter(r => r.profile_id)
+    return { total: Math.max(0, data.total - (data.rows.length - rows.length)), rows }
+  }
+  return data
 }
 
 export type DbUsage = {
@@ -178,11 +187,15 @@ export const getMemberSnapshot = cache(async () => rpc<MemberSnapshot>('admin_me
  */
 export const getMemberCounts = cache(async (): Promise<{ total: number; active: number } | null> => {
   const admin = await createAdminClient()
-  const base = () => admin.from('accounts').select('id', { count: 'exact', head: true })
-    .eq('role', 'user').eq('is_demo', false).neq('mobile', '0000000000')
   const [all, active] = await Promise.all([
-    base(),
-    base().eq('account_status', 'active').is('deleted_at', null),
+    admin.from('accounts').select('id', { count: 'exact', head: true })
+      .eq('role', 'user').eq('is_demo', false).neq('mobile', '0000000000'),
+    // Active = account in good standing that has a profile; "No profile yet"
+    // accounts count in the total only.
+    admin.from('profiles').select('id, accounts!inner(id)', { count: 'exact', head: true })
+      .is('deleted_at', null)
+      .eq('accounts.role', 'user').eq('accounts.is_demo', false).neq('accounts.mobile', '0000000000')
+      .eq('accounts.account_status', 'active').is('accounts.deleted_at', null),
   ])
   if (all.error || active.error) {
     console.error('[admin] member counts failed:', (all.error ?? active.error)?.message)

@@ -15,6 +15,7 @@ Supabase SQL editor in this project mis-parses dollar-quoted blocks.
 | 2 | `supabase/migrations/20260826000004_enable_missing_rls.sql` | **Security.** Enables RLS + revokes `anon` on 13 tables that never had it, and re-revokes `anon` on 21 member-data tables |
 | 3 | `supabase/migrations/20260826000005_search_indexes_and_report_fk.sql` | `pg_trgm` search indexes, partial sort indexes, and fixes the unsatisfiable `reports` FK |
 | 4 | `supabase/migrations/20261017000001_wedding_invite_photos.sql` | Optional bride/groom photos on premium invitations (`wedding_invites.photos`, `photos_consent_at`). Until it runs, invitations keep working but adding photos shows "Photos cannot be saved just yet". |
+| 5 | `supabase/migrations/20261017000002_admin_active_members.sql` | Admin → Members → Active members lists only members who have a profile. Until it runs, the app hides "No profile yet" rows itself, but the page count can be slightly off. |
 
 Migration 2 is the important one. Until it runs, those 13 tables are reachable
 with the `anon` key.

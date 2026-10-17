@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic'
 const PAGE_SIZE = 25
 
 const STATUS_OPTIONS: Array<[string, string]> = [
-  ['', 'Any status'], ['active', 'Account active'], ['suspended', 'Suspended'], ['banned', 'Banned'],
+  ['', 'Any status'], ['active', 'Active (has a profile)'], ['suspended', 'Suspended'], ['banned', 'Banned'],
   ['deactivated', 'Deactivated by member'], ['deleted', 'Deleted'], ['pending_review', 'Profile awaiting review'],
   ['draft', 'Profile in draft'], ['hidden', 'Hidden from search'], ['incomplete', 'Profile incomplete'], ['no_profile', 'No profile yet'],
 ]
