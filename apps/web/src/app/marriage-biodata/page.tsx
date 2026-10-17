@@ -39,8 +39,8 @@ export const metadata: Metadata = {
 }
 
 const STEPS = [
-  { n: '1', title: 'Choose a design', body: 'Mithila Heritage, Royal Maroon, Minimal Elegance or Contemporary Mithila — pick the one that feels right. You can change it any time.' },
-  { n: '2', title: 'Add your details, in any language', body: 'Every field is optional and sections you leave blank are left out of the document. Maithili, Hindi, English or Sanskrit — names and places stay exactly as you type them.' },
+  { n: '1', title: 'Choose a design', body: 'Mayur, Royal Kamal, Matsya or Kohbar — four Madhubani designs with peacocks, lotus, fish and hand-drawn borders. You can change it any time.' },
+  { n: '2', title: 'Add your details and photo', body: 'Every field is optional and blank sections are left out. Pick a round, arch or classic photo frame and drag to centre the face. Maithili, Hindi, English or Sanskrit.' },
   { n: '3', title: 'Download the PDF', body: 'The live preview is the exact document. One click opens your browser’s print dialog — choose "Save as PDF" for a clean A4 page to print or send on WhatsApp.' },
 ]
 

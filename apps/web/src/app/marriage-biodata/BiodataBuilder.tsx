@@ -1,10 +1,14 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { createPortal, flushSync } from 'react-dom'
 import Link from 'next/link'
 import { BiodataDocument } from '@/components/biodata/BiodataDocument'
 import { BiodataTemplatePicker } from '@/components/biodata/BiodataTemplatePicker'
-import { BIODATA_TEMPLATES, type BiodataTemplateId } from '@/lib/biodataTemplates'
+import {
+  BIODATA_TEMPLATES, DEFAULT_PHOTO_STYLE, PHOTO_SHAPES,
+  type BiodataTemplateId, type PhotoShape, type PhotoStyle,
+} from '@/lib/biodataTemplates'
 import { track } from '@/lib/track'
 import {
   BIODATA_LANGUAGES, biodataFileName, computeAge,
@@ -180,57 +184,37 @@ const PAGE_WIDTH_PX = 794
  * a screen and a half of blank space beneath it. The wrapper's height has to be
  * measured and scaled to match.
  *
- * Deliberately NOT a ResizeObserver. The document's height changes for exactly
- * three reasons — the window resized, the form data changed, or the language
- * changed — and all three are already state here, so `revision` can drive the
- * measurement directly. That is both cheaper and easier to reason about than
- * observing an element whose size this component is itself setting.
- *
- * Print is unaffected: the print rules reset the transform, so the PDF is
- * always full size regardless of what the preview is doing.
+ * A ResizeObserver, because the document's height now changes on its own: it
+ * paginates itself after measuring, and again once web fonts arrive.
  */
-function ScaledPreview({ revision, children }: { revision: unknown; children: React.ReactNode }) {
+function ScaledPreview({ children }: { children: React.ReactNode }) {
   const outerRef = useRef<HTMLDivElement>(null)
   const innerRef = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(1)
   const [height, setHeight] = useState<number | null>(null)
 
-  // Layout effect, not effect: measuring after paint would show one frame at the
-  // wrong size every time the document grows.
   useLayoutEffect(() => {
+    const outer = outerRef.current
+    const inner = innerRef.current
+    if (!outer || !inner) return
     const measure = () => {
-      const outer = outerRef.current
-      const inner = innerRef.current
-      if (!outer || !inner) return
-
+      // Zero width means not laid out yet (or hidden) — keep the last good scale.
       const available = outer.clientWidth
-      // A container that measures zero is not a container that is zero wide — it
-      // is a page that has not been laid out yet, or one rendering in a hidden
-      // or offscreen context. Scaling to nothing there makes the preview vanish,
-      // so keep the last good scale and wait for a real measurement.
       if (available <= 0) return
-
       const next = Math.min(1, available / PAGE_WIDTH_PX)
       setScale(next)
       setHeight(inner.offsetHeight * next)
     }
-
     measure()
-    window.addEventListener('resize', measure)
-    return () => window.removeEventListener('resize', measure)
-  }, [revision])
+    const ro = new ResizeObserver(measure)
+    ro.observe(outer)
+    ro.observe(inner)
+    return () => ro.disconnect()
+  }, [])
 
   return (
-    <div id="biodata-print" ref={outerRef} style={{ height: height ?? undefined }}>
-      <div
-        ref={innerRef}
-        className="biodata-scaler"
-        style={{
-          width: PAGE_WIDTH_PX,
-          transform: `scale(${scale})`,
-          transformOrigin: 'top left',
-        }}
-      >
+    <div ref={outerRef} style={{ height: height ?? undefined }}>
+      <div ref={innerRef} style={{ width: PAGE_WIDTH_PX, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
         {children}
       </div>
     </div>
@@ -240,14 +224,137 @@ function ScaledPreview({ revision, children }: { revision: unknown; children: Re
 /** Photos are only ever read locally; this cap keeps a huge file from stalling the tab. */
 const MAX_PHOTO_BYTES = 8 * 1024 * 1024
 
+const clampPct = (v: number) => Math.min(100, Math.max(0, v))
+
+/**
+ * Frame shape, zoom and drag-to-position for the photo. The crop box uses the
+ * same CSS as the printed frame (border-radius, object-position, transform
+ * origin), so the percentages it produces frame the photo identically at the
+ * document's size.
+ */
+function PhotoEditor({ url, style, onChange }: { url: string; style: PhotoStyle; onChange: (s: PhotoStyle) => void }) {
+  const shape = PHOTO_SHAPES[style.shape]
+  const boxW = 148, boxH = Math.round(boxW * shape.aspect)
+  const imgRef = useRef<HTMLImageElement>(null)
+  const drag = useRef<{ px: number; py: number; x: number; y: number } | null>(null)
+
+  /** How far the zoomed image overhangs the box — the distance 0→100% pans across. */
+  function overhang() {
+    const img = imgRef.current
+    if (!img || !img.naturalWidth) return { ox: 0, oy: 0 }
+    const cover = Math.max(boxW / img.naturalWidth, boxH / img.naturalHeight)
+    return { ox: img.naturalWidth * cover * style.zoom - boxW, oy: img.naturalHeight * cover * style.zoom - boxH }
+  }
+
+  function moveBy(dx: number, dy: number, from: { x: number; y: number }) {
+    const { ox, oy } = overhang()
+    onChange({
+      ...style,
+      x: ox > 0.5 ? clampPct(from.x - (dx / ox) * 100) : style.x,
+      y: oy > 0.5 ? clampPct(from.y - (dy / oy) * 100) : style.y,
+    })
+  }
+
+  return (
+    <div className="mt-3 flex flex-wrap gap-4 items-start">
+      <div
+        role="group"
+        tabIndex={0}
+        aria-label="Photo position. Drag the photo, or use the arrow keys, to centre the face."
+        onPointerDown={e => {
+          e.currentTarget.setPointerCapture(e.pointerId)
+          drag.current = { px: e.clientX, py: e.clientY, x: style.x, y: style.y }
+        }}
+        onPointerMove={e => {
+          const d = drag.current
+          if (d) moveBy(e.clientX - d.px, e.clientY - d.py, d)
+        }}
+        onPointerUp={() => { drag.current = null }}
+        onPointerCancel={() => { drag.current = null }}
+        onKeyDown={e => {
+          const step = 6
+          const moves: Record<string, [number, number]> = { ArrowLeft: [step, 0], ArrowRight: [-step, 0], ArrowUp: [0, step], ArrowDown: [0, -step] }
+          const m = moves[e.key]
+          if (!m) return
+          e.preventDefault()
+          moveBy(m[0], m[1], style)
+        }}
+        className="relative shrink-0 cursor-grab active:cursor-grabbing select-none outline-none focus-visible:ring-2 focus-visible:ring-maroon/50 rounded-mj-sm"
+        style={{ width: boxW, height: boxH, touchAction: 'none' }}
+      >
+        <div style={{ position: 'absolute', inset: 0, borderRadius: shape.radius, overflow: 'hidden', background: '#F7EBD3', boxShadow: '0 0 0 2px #B98A2E, 0 0 0 4px #FFFAF0, 0 0 0 5px #7A1220' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            ref={imgRef}
+            src={url}
+            alt=""
+            draggable={false}
+            style={{
+              width: '100%', height: '100%', display: 'block', objectFit: 'cover', pointerEvents: 'none',
+              objectPosition: `${style.x}% ${style.y}%`,
+              transform: `scale(${style.zoom})`, transformOrigin: `${style.x}% ${style.y}%`,
+            }}
+          />
+        </div>
+      </div>
+
+      <div className="flex-1 min-w-[150px] space-y-3">
+        <div>
+          <span className="field-label">Frame</span>
+          <div className="flex gap-1.5 mt-1" role="radiogroup" aria-label="Photo frame shape">
+            {(Object.keys(PHOTO_SHAPES) as PhotoShape[]).map(k => (
+              <button
+                key={k}
+                type="button"
+                role="radio"
+                aria-checked={style.shape === k}
+                onClick={() => onChange({ ...style, shape: k })}
+                className={`flex flex-col items-center gap-1 px-2.5 py-1.5 rounded-mj-sm border text-[11.5px] font-medium transition-colors ${
+                  style.shape === k ? 'bg-maroon text-cream border-maroon' : 'bg-cream text-maroon border-gold/40 hover:border-gold'
+                }`}
+              >
+                <span aria-hidden="true" style={{
+                  width: 14, height: Math.round(14 * PHOTO_SHAPES[k].aspect), borderRadius: PHOTO_SHAPES[k].radius,
+                  border: '1.5px solid currentColor', display: 'block',
+                }} />
+                {PHOTO_SHAPES[k].label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <label className="field-label" htmlFor="bd-photo-zoom">Zoom</label>
+          <input
+            id="bd-photo-zoom"
+            type="range" min={1} max={3} step={0.01}
+            value={style.zoom}
+            onChange={e => onChange({ ...style, zoom: Number(e.target.value) })}
+            className="w-full accent-maroon mt-1"
+          />
+        </div>
+        <p className="text-[11.5px] text-ink-soft leading-snug">Drag the photo to centre the face.</p>
+        <button
+          type="button"
+          onClick={() => onChange({ ...style, zoom: 1, x: 50, y: 50 })}
+          className="text-[12px] text-maroon hover:underline"
+        >
+          Reset position
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function PhotoCard({
-  photoUrl, photoError, fileRef, onPick, onClear,
+  photoUrl, photoError, photoStyle, fileRef, onPick, onClear, onStyle,
 }: {
   photoUrl: string | null
   photoError: string
+  photoStyle: PhotoStyle
   fileRef: React.RefObject<HTMLInputElement | null>
   onPick: (file: File | undefined) => void
   onClear: () => void
+  onStyle: (s: PhotoStyle) => void
 }) {
   return (
     <section className="card p-4">
@@ -269,19 +376,47 @@ function PhotoCard({
         )}
       </div>
       {photoError && <p className="text-[11.5px] text-terra mt-1">{photoError}</p>}
+      {photoUrl && <PhotoEditor url={photoUrl} style={photoStyle} onChange={onStyle} />}
     </section>
   )
 }
 
+/**
+ * Printing goes through a separate copy of the document mounted directly on
+ * <body>. The print CSS then hides every other child of <body> with
+ * display:none — hiding the rest with `visibility` keeps its height, which
+ * printed blank sheets after the biodata.
+ */
+const PRINT_CSS = `
+#bd-print-root { position: absolute; left: -12000px; top: 0; width: 210mm; }
+@media print {
+  html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+  body:has(#bd-print-root) > *:not(#bd-print-root) { display: none !important; }
+  #bd-print-root { position: static !important; left: auto !important; width: auto !important; }
+}
+`
+
+const nextFrame = () => new Promise<void>(r => requestAnimationFrame(() => r()))
+
 export function BiodataBuilder() {
   const [step, setStep] = useState<'design' | 'details'>('design')
-  const [template, setTemplate] = useState<BiodataTemplateId>('heritage')
+  const [template, setTemplate] = useState<BiodataTemplateId>('mayur')
   const [data, setData] = useState<BiodataData>(EMPTY)
   const [language, setLanguage] = useState<BiodataLanguage>('en')
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
+  const [photoStyle, setPhotoStyle] = useState<PhotoStyle>(DEFAULT_PHOTO_STYLE)
   const [photoError, setPhotoError] = useState('')
   const [openGroup, setOpenGroup] = useState<string>('basic')
+  const [printMounted, setPrintMounted] = useState(false)
+  const pendingPrint = useRef(false)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  // Ctrl+P / the browser menu skip the button; mount the print copy synchronously then too.
+  useEffect(() => {
+    const onBeforePrint = () => flushSync(() => setPrintMounted(true))
+    window.addEventListener('beforeprint', onBeforePrint)
+    return () => window.removeEventListener('beforeprint', onBeforePrint)
+  }, [])
 
   // Object URLs are per-file and must be revoked, or every re-pick leaks one.
   useEffect(() => () => { if (photoUrl) URL.revokeObjectURL(photoUrl) }, [photoUrl])
@@ -297,6 +432,7 @@ export function BiodataBuilder() {
     if (file.size > MAX_PHOTO_BYTES) { setPhotoError('Please choose an image under 8 MB.'); return }
     if (photoUrl) URL.revokeObjectURL(photoUrl)
     setPhotoUrl(URL.createObjectURL(file))
+    setPhotoStyle(s => ({ ...s, zoom: 1, x: 50, y: 50 }))
   }
 
   function clearPhoto() {
@@ -323,17 +459,35 @@ export function BiodataBuilder() {
 
   const filledCount = Object.values(data).filter(v => v != null && String(v).trim() !== '').length
 
-  function print() {
-    // The document title becomes the default filename in the browser's
-    // "Save as PDF" dialog, so set it to something the member would keep.
+  async function runPrint() {
+    // Wait for the print copy's fonts and images, or the PDF can catch the
+    // photo before it has decoded and print an empty frame.
+    const root = document.getElementById('bd-print-root')
+    await document.fonts?.ready
+    await Promise.all(Array.from(root?.querySelectorAll('img') ?? []).map(img => img.decode().catch(() => {})))
+    await nextFrame()
+    await nextFrame()
+    // The document title becomes the default filename in "Save as PDF".
     const previous = document.title
     document.title = biodataFileName(data.full_name)
     window.print()
     track('biodata_downloaded', { k: template })
-    // Restoring immediately is safe: print() blocks until the dialog is dismissed
-    // in every browser that supports it, and the title is only read on open.
+    // print() blocks until the dialog closes, and the title is only read on open.
     document.title = previous
   }
+
+  function print() {
+    if (printMounted) { void runPrint(); return }
+    pendingPrint.current = true
+    setPrintMounted(true)
+  }
+
+  useEffect(() => {
+    if (printMounted && pendingPrint.current) {
+      pendingPrint.current = false
+      void runPrint()
+    }
+  })
 
   if (step === 'design') {
     return (
@@ -347,7 +501,7 @@ export function BiodataBuilder() {
               any time from the next screen.
             </p>
           </div>
-          <BiodataTemplatePicker selected={template} onSelect={chooseTemplate} />
+          <BiodataTemplatePicker selected={template} onSelect={chooseTemplate} photoShape={photoStyle.shape} language={language} />
           <div className="flex justify-center mt-6">
             <button
               type="button"
@@ -364,29 +518,13 @@ export function BiodataBuilder() {
 
   return (
     <div className="wrap py-6">
-      {/* Print rules: the whole page collapses to the document alone. */}
-      <style>{`
-        @media print {
-          body { background: #fff !important; }
-          body * { visibility: hidden !important; }
-          #biodata-print, #biodata-print * { visibility: visible !important; }
-          #biodata-print {
-            position: absolute !important; left: 0 !important; top: 0 !important;
-            width: 100% !important; height: auto !important;
-            margin: 0 !important; padding: 0 !important;
-          }
-          /* Undo the on-screen fit-to-column scaling — the PDF is always full size. */
-          #biodata-print .biodata-scaler {
-            transform: none !important; width: 100% !important;
-          }
-          #biodata-print .biodata-page {
-            box-shadow: none !important; margin: 0 !important;
-            width: 100% !important; max-width: 100% !important;
-            padding: 14mm 16mm !important;
-          }
-          @page { size: A4; margin: 0; }
-        }
-      `}</style>
+      <style>{PRINT_CSS}</style>
+      {printMounted && createPortal(
+        <div id="bd-print-root" aria-hidden="true">
+          <BiodataDocument data={documentData} language={language} photoUrl={photoUrl} photoStyle={photoStyle} templateSlug={template} />
+        </div>,
+        document.body,
+      )}
 
       {/* ── Step bar: design in use + language ── */}
       <div className="no-print flex flex-wrap items-center justify-between gap-2 mb-4 card px-4 py-2.5">
@@ -443,7 +581,10 @@ export function BiodataBuilder() {
               </div>
 
               {cat.id === 'personal' && (
-                <PhotoCard photoUrl={photoUrl} photoError={photoError} fileRef={fileRef} onPick={pickPhoto} onClear={clearPhoto} />
+                <PhotoCard
+                  photoUrl={photoUrl} photoError={photoError} photoStyle={photoStyle} fileRef={fileRef}
+                  onPick={pickPhoto} onClear={clearPhoto} onStyle={setPhotoStyle}
+                />
               )}
 
               {GROUPS.filter(g => g.category === cat.id).map(group => {
@@ -538,9 +679,13 @@ export function BiodataBuilder() {
             </span>
           </div>
 
-          <ScaledPreview revision={`${template}|${language}|${photoUrl ?? ''}|${JSON.stringify(documentData)}`}>
-            <BiodataDocument data={documentData} language={language} photoUrl={photoUrl} templateSlug={template} />
+          <ScaledPreview>
+            <BiodataDocument data={documentData} language={language} photoUrl={photoUrl} photoStyle={photoStyle} templateSlug={template} />
           </ScaledPreview>
+          <p className="no-print text-[11.5px] text-ink-soft mt-3 leading-snug">
+            In the print dialog choose <strong className="text-ink">Save as PDF</strong> and paper size A4. Longer
+            biodatas continue on a second framed page automatically.
+          </p>
         </div>
       </div>
     </div>

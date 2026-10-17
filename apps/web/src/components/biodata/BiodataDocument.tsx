@@ -1,332 +1,513 @@
+'use client'
+
+import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import type { BiodataData, BiodataLanguage } from '@/lib/biodata'
 import { BIODATA_LABELS } from '@/lib/biodata'
-import { resolveBiodataTemplate, type BiodataPalette, type BiodataTemplate } from '@/lib/biodataTemplates'
-import { CornerFlourish, LotusMotif, VineDivider } from './BiodataMotifs'
+import {
+  DEFAULT_PHOTO_STYLE, PHOTO_SHAPES, resolveBiodataTemplate,
+  type BiodataPalette, type BiodataTemplate, type PhotoShape, type PhotoStyle,
+} from '@/lib/biodataTemplates'
+import { FrameArt } from './BiodataFrames'
+import { SectionIcon, type SectionIconName } from './BiodataIcons'
 
 /**
- * The printed biodata itself — one A4 page, inline styles only.
+ * The printed biodata: one or more A4 pages, each with its theme's full
+ * Madhubani frame (BiodataFrames) and the text inside the frame's safe area.
  *
- * Inline styles rather than Tailwind classes on purpose: this is the one
- * component in the app whose output is a physical piece of paper. Print
- * stylesheets and `window.print()` are far more predictable when every rule is
- * on the element, and a member emailing the printed PDF should not depend on a
- * utility class surviving a future Tailwind purge.
+ * Pagination is measured, not guessed. Every content block is rendered once,
+ * invisibly, at the exact content width; its height decides which page it
+ * goes on. A document a little too long for one page is scaled to fit rather
+ * than spilling a single section onto a second sheet. The screen preview and
+ * the print come from this one component, so the PDF is what the preview
+ * shows.
  *
- * Presentational and dependency-free, so both the member tool (server-rendered
- * from a saved profile) and the public maker (client-rendered from a form) can
- * render exactly the same document. `templateSlug` picks a design from
- * lib/biodataTemplates — the same registry both tools read, so the preview a
- * visitor builds and the PDF they download are the same configuration.
+ * Inline styles throughout, because this output is a physical piece of paper
+ * and must not depend on a utility class surviving a future Tailwind purge.
+ * Shared by the public maker (client-rendered) and the member tool at
+ * /biodata/preview/[id] (server-rendered, then measured on hydration).
  */
 
-function Row({ label, value, t }: { label: string; value: string | null | undefined; t: BiodataPalette }) {
-  if (!value) return null
-  return (
-    <tr>
-      <td style={{ width: '38%', padding: '4px 12px 4px 0', color: t.inkSoft, fontWeight: 500, verticalAlign: 'top', whiteSpace: 'nowrap' }}>
-        {label}
-      </td>
-      <td style={{ padding: '4px 0', color: t.ink, verticalAlign: 'top' }}>
-        {value}
-      </td>
-    </tr>
-  )
-}
+const PX_PER_MM = 96 / 25.4
+const FOOTER_MM = 8
+/** Below this, shrinking to one page would make the text too small; paginate instead. */
+const MIN_FIT = 0.78
+const BLOCK_GAP = 10
 
-/** The heading portion of a section — appearance depends on the template's sectionStyle. */
-function SectionHeading({ title, template }: { title: string; template: BiodataTemplate }) {
-  const p = template.palette
-  switch (template.sectionStyle) {
-    case 'band':
-      return (
-        <div style={{
-          backgroundColor: p.heading, color: '#fff',
-          padding: '4px 10px', fontSize: '12px', fontWeight: 600,
-          letterSpacing: '0.05em', textTransform: 'uppercase',
-          marginBottom: '8px', borderRadius: '2px',
-        }}>
-          {title}
-        </div>
-      )
-    case 'rule':
-      return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '9px' }}>
-          <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: p.gold, flexShrink: 0 }} />
-          <span style={{ fontFamily: 'Georgia, serif', fontSize: '14.5px', color: p.heading, fontWeight: 'bold', letterSpacing: '0.03em' }}>{title}</span>
-          <span style={{ flex: 1, height: '1px', background: `linear-gradient(to right, ${p.gold}, transparent)`, opacity: 0.6 }} />
-        </div>
-      )
-    case 'underline':
-      return (
-        <div style={{ marginBottom: '9px' }}>
-          <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: p.heading }}>{title}</span>
-          <div style={{ width: '34px', height: '1.5px', background: p.gold, marginTop: '4px', opacity: 0.8 }} />
-        </div>
-      )
-    case 'tab':
-      return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '9px', marginBottom: '9px' }}>
-          <span style={{ width: '4px', height: '14px', background: p.gold, borderRadius: '1px', flexShrink: 0 }} />
-          <span style={{ fontSize: '12.5px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: p.heading }}>{title}</span>
-        </div>
-      )
-  }
-}
+const BODY_FONT = "var(--font-mukta), 'Mukta', 'Nirmala UI', 'Mangal', system-ui, sans-serif"
+const LATIN_DISPLAY = "var(--font-marcellus), var(--font-rozha), Georgia, 'Nirmala UI', serif"
+const DEVA_DISPLAY = "var(--font-rozha), var(--font-marcellus), 'Nirmala UI', serif"
 
-function Section({ title, children, template, i = 0 }: { title: string; children: React.ReactNode; template: BiodataTemplate; i?: number }) {
+const DOC_CSS = `
+.bd-pages { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.bd-page, .bd-page * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+@media print {
+  @page { size: A4; margin: 0; }
+  .bd-measure { display: none !important; }
+  .bd-pages { display: block !important; gap: 0 !important; }
+  .bd-page { box-shadow: none !important; margin: 0 !important; height: 296.6mm !important; break-after: page; page-break-after: always; }
+  .bd-page:last-child { break-after: auto; page-break-after: auto; }
+  div:has(> .bd-doc) { padding: 0 !important; }
+}
+`
+
+// ── Rows ───────────────────────────────────────────────────────────────────
+
+type RowSpec = { label: string; value: string | null | undefined; wide?: boolean }
+
+const hasValue = (v: unknown) => v != null && String(v).trim() !== ''
+
+/** Label : value pairs, two to a line; long values take the full width. */
+function Rows({ rows, p, cols = 2 }: { rows: RowSpec[]; p: BiodataPalette; cols?: 1 | 2 }) {
+  const shown = rows.filter(r => hasValue(r.value))
+  // A full-width row's label lines up with the half-width rows' labels.
+  const wideLabel = cols === 2 ? 'calc((100% - 22px) / 2 * 0.42)' : '38%'
   return (
-    <div style={{ marginBottom: '18px', breakInside: 'avoid' }} data-section-index={i}>
-      <SectionHeading title={title} template={template} />
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-        <tbody>{children}</tbody>
-      </table>
+    <div style={{ display: 'grid', gridTemplateColumns: cols === 2 ? '1fr 1fr' : '1fr', columnGap: 22, rowGap: 2, padding: '6px 8px 0' }}>
+      {shown.map(r => {
+        const wide = cols === 1 || r.wide || String(r.value).length > 26
+        return (
+          <div key={r.label} style={{ gridColumn: wide ? '1 / -1' : undefined, display: 'flex', alignItems: 'baseline', gap: 6, lineHeight: 1.4 }}>
+            <span style={{ flex: `0 0 ${wide ? wideLabel : '42%'}`, color: p.inkSoft, fontSize: 12.5 }}>{r.label}</span>
+            <span style={{ color: p.gold, fontWeight: 700 }}>:</span>
+            <span style={{ flex: 1, minWidth: 0, color: p.ink, fontSize: 13.5, fontWeight: 500, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+              {r.value}
+            </span>
+          </div>
+        )
+      })}
     </div>
   )
 }
 
-/** True when at least one of the named fields has a value. */
-function any(data: BiodataData, keys: Array<keyof BiodataData>): boolean {
-  return keys.some(k => {
-    const v = data[k]
-    return v != null && String(v).trim() !== ''
-  })
-}
+// ── Headings ───────────────────────────────────────────────────────────────
 
-/** The outer frame around the page — thickness, colour and corner motifs vary by template. */
-function frameStyle(template: BiodataTemplate): React.CSSProperties {
-  const p = template.palette
-  switch (template.frameStyle) {
-    case 'ornate':
-      return { border: `10px solid ${p.frame}`, boxShadow: `inset 0 0 0 2px ${p.gold}, inset 0 0 0 7px ${p.paper}, 0 2px 20px rgba(0,0,0,0.12)` }
-    case 'wrap':
-      return { border: `7mm solid ${p.frame}`, boxShadow: `inset 0 0 0 3px ${p.gold}, 0 2px 20px rgba(0,0,0,0.14)` }
-    case 'hairline':
-      return { border: `1px solid ${p.frame}`, boxShadow: '0 2px 16px rgba(0,0,0,0.08)' }
-    case 'band':
-      return { borderTop: `6px solid ${p.frame}`, boxShadow: '0 2px 16px rgba(0,0,0,0.08)' }
+const WAVE_PATH = `M0 3${' q3 -2.6 6 0 t6 0'.repeat(20)}`
+
+function SectionHeading({ title, icon, t, font }: { title: string; icon: SectionIconName; t: BiodataTemplate; font: string }) {
+  const p = t.palette
+  const ic = <SectionIcon name={icon} size={13} />
+  const text = (color: string, size = 15.5): CSSProperties => ({ fontFamily: font, fontSize: size, color, lineHeight: 1.25, letterSpacing: '0.01em' })
+
+  switch (t.sectionStyle) {
+    case 'pill':
+      return (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 9, padding: '2px 16px 2px 2px', borderRadius: 999,
+          background: `linear-gradient(90deg, ${p.band} 0%, ${p.bandSoft} 72%, rgba(251,235,209,0) 100%)`,
+          border: `0.8px solid ${p.gold}66`,
+        }}>
+          <span style={{ width: 24, height: 24, borderRadius: '50%', background: p.heading, color: p.goldLt, display: 'grid', placeItems: 'center', flexShrink: 0, boxShadow: `0 0 0 1.5px ${p.gold}` }}>{ic}</span>
+          <span style={text(p.heading)}>{title}</span>
+        </div>
+      )
+    case 'ribbon':
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 26px 4px 16px', color: p.goldLt,
+            background: `linear-gradient(180deg, ${p.heading} 0%, ${p.headingDeep} 100%)`,
+            clipPath: 'polygon(0 0, 100% 0, calc(100% - 11px) 50%, 100% 100%, 0 100%, 9px 50%)',
+            boxShadow: `inset 0 1.5px 0 ${p.gold}, inset 0 -1.5px 0 ${p.gold}`,
+          }}>
+            {ic}<span style={text(p.goldLt, 15)}>{title}</span>
+          </span>
+          <span style={{ flex: 1, height: 1.5, background: `linear-gradient(90deg, ${p.gold}, rgba(201,154,59,0))` }} />
+        </div>
+      )
+    case 'wave':
+      return (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+            <span style={{ width: 24, height: 24, borderRadius: '50%', border: `1.3px solid ${p.heading}`, background: p.bandSoft, color: p.accent, display: 'grid', placeItems: 'center', flexShrink: 0 }}>{ic}</span>
+            <span style={text(p.heading, 16)}>{title}</span>
+          </div>
+          <svg width="100%" height="6" viewBox="0 0 240 6" preserveAspectRatio="none" aria-hidden="true" style={{ display: 'block', marginTop: 3 }}>
+            <path d={WAVE_PATH} fill="none" stroke={p.gold} strokeWidth={1.2} vectorEffect="non-scaling-stroke" />
+          </svg>
+        </div>
+      )
+    case 'zigzag':
+      return (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 12px', background: p.band, color: '#FFF4DC', borderTop: `1.5px solid ${p.ink}` }}>
+            {ic}<span style={text('#FFF4DC', 15)}>{title}</span>
+          </div>
+          <div style={{
+            height: 6, backgroundRepeat: 'repeat-x', backgroundSize: '8px 8px',
+            backgroundImage: `linear-gradient(135deg, ${p.bandSoft} 50%, transparent 50%), linear-gradient(225deg, ${p.bandSoft} 50%, transparent 50%)`,
+          }} />
+        </div>
+      )
   }
 }
+
+/** Gold rules either side of a small lotus — under the title and the hero. */
+function Divider({ p, width = 210 }: { p: BiodataPalette; width?: number }) {
+  return (
+    <svg width={width} height={14} viewBox="0 0 210 14" aria-hidden="true" style={{ display: 'block', margin: '4px auto 0' }}>
+      <path d="M10 7H88M122 7H200" stroke={p.gold} strokeWidth={1} />
+      <path d="M32 7l3-2.4 3 2.4-3 2.4zM172 7l3-2.4 3 2.4-3 2.4z" fill={p.gold} />
+      <circle cx={91.5} cy={7} r={1.5} fill={p.heading} />
+      <circle cx={118.5} cy={7} r={1.5} fill={p.heading} />
+      <path d="M105 11.5C99.5 10.5 96 7 95 3.8C99.5 4.6 103 7.5 105 11.5ZM105 11.5C110.5 10.5 114 7 115 3.8C110.5 4.6 107 7.5 105 11.5Z" fill={p.gold} />
+      <path d="M105 1C108 3.6 108 8.8 105 11.5C102 8.8 102 3.6 105 1Z" fill={p.heading} />
+    </svg>
+  )
+}
+
+// ── Photo ──────────────────────────────────────────────────────────────────
+
+function PhotoRing({ shape, W, H, pad, p }: { shape: PhotoShape; W: number; H: number; pad: number; p: BiodataPalette }) {
+  const OW = W + pad * 2, OH = H + pad * 2
+  const svg = (children: ReactNode) => (
+    <svg width={OW} height={OH} viewBox={`0 0 ${OW} ${OH}`} aria-hidden="true" style={{ position: 'absolute', inset: 0, overflow: 'visible' }}>
+      {children}
+    </svg>
+  )
+
+  if (shape === 'round') {
+    const c = OW / 2, R = W / 2
+    return svg(
+      <>
+        <circle cx={c} cy={c} r={R + 2.2} fill="none" stroke={p.gold} strokeWidth={3.4} />
+        <circle cx={c} cy={c} r={R + 5.6} fill="none" stroke={p.heading} strokeWidth={1.4} />
+        {Array.from({ length: 32 }, (_, i) => {
+          const a = (i * Math.PI * 2) / 32
+          return <circle key={i} cx={c + Math.cos(a) * (R + 9.4)} cy={c + Math.sin(a) * (R + 9.4)} r={i % 2 ? 1.5 : 2} fill={i % 2 ? p.heading : p.gold} />
+        })}
+      </>,
+    )
+  }
+
+  const outline = (d: number) => {
+    const x0 = pad - d, y0 = pad - d, w = W + 2 * d, h = H + 2 * d
+    if (shape === 'arch') {
+      const ry = H * 0.4 + d, br = W * 0.06 + d
+      return `M${x0} ${y0 + h - br}L${x0} ${y0 + ry}A${w / 2} ${ry} 0 0 1 ${x0 + w} ${y0 + ry}L${x0 + w} ${y0 + h - br}Q${x0 + w} ${y0 + h} ${x0 + w - br} ${y0 + h}L${x0 + br} ${y0 + h}Q${x0} ${y0 + h} ${x0} ${y0 + h - br}Z`
+    }
+    const r = W * 0.09 + d
+    return `M${x0 + r} ${y0}H${x0 + w - r}Q${x0 + w} ${y0} ${x0 + w} ${y0 + r}V${y0 + h - r}Q${x0 + w} ${y0 + h} ${x0 + w - r} ${y0 + h}H${x0 + r}Q${x0} ${y0 + h} ${x0} ${y0 + h - r}V${y0 + r}Q${x0} ${y0} ${x0 + r} ${y0}Z`
+  }
+  const cx = OW / 2
+  return svg(
+    <>
+      <path d={outline(2.2)} fill="none" stroke={p.gold} strokeWidth={3.4} />
+      <path d={outline(5.6)} fill="none" stroke={p.heading} strokeWidth={1.4} />
+      {shape === 'arch' ? (
+        <path d={`M${cx} ${pad - 13}C${cx + 3.6} ${pad - 10} ${cx + 3.6} ${pad - 7.6} ${cx} ${pad - 5}C${cx - 3.6} ${pad - 7.6} ${cx - 3.6} ${pad - 10} ${cx} ${pad - 13}Z`} fill={p.gold} stroke={p.heading} strokeWidth={0.8} />
+      ) : (
+        [[pad - 5.6, pad - 5.6], [OW - pad + 5.6, pad - 5.6], [pad - 5.6, OH - pad + 5.6], [OW - pad + 5.6, OH - pad + 5.6]].map(([x, y], i) => (
+          <circle key={i} cx={x} cy={y} r={2.6} fill={p.gold} stroke={p.heading} strokeWidth={0.8} />
+        ))
+      )}
+      {shape === 'arch' && [[pad - 5.6, OH - pad + 5.6], [OW - pad + 5.6, OH - pad + 5.6]].map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r={2.4} fill={p.gold} stroke={p.heading} strokeWidth={0.8} />
+      ))}
+    </>,
+  )
+}
+
+function PhotoFrame({ url, alt, style, p, width }: { url: string; alt: string; style: PhotoStyle; p: BiodataPalette; width: number }) {
+  const shape = PHOTO_SHAPES[style.shape]
+  const W = width, H = Math.round(width * shape.aspect), pad = 14
+  return (
+    <div style={{ position: 'relative', width: W + pad * 2, height: H + pad * 2, flexShrink: 0 }}>
+      <div style={{ position: 'absolute', left: pad, top: pad, width: W, height: H, borderRadius: shape.radius, overflow: 'hidden', background: p.bandSoft }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={url}
+          alt={alt}
+          style={{
+            width: '100%', height: '100%', display: 'block', objectFit: 'cover',
+            objectPosition: `${style.x}% ${style.y}%`,
+            transform: `scale(${style.zoom})`, transformOrigin: `${style.x}% ${style.y}%`,
+          }}
+        />
+      </div>
+      <PhotoRing shape={style.shape} W={W} H={H} pad={pad} p={p} />
+    </div>
+  )
+}
+
+// ── Pagination ─────────────────────────────────────────────────────────────
+
+type Plan = { scale: number; pages: number[][] }
+
+function paginate(hs: number[], cap1: number, capN: number, forced: number): Plan {
+  const total = hs.reduce((a, b) => a + b, 0)
+  const all = hs.map((_, i) => i)
+  if (total <= cap1) return { scale: 1, pages: [all] }
+  if (total * MIN_FIT <= cap1) return { scale: Math.floor((cap1 / total) * 1000) / 1000, pages: [all] }
+  const pages: number[][] = [[]]
+  let used = 0, cap = cap1
+  hs.forEach((h, i) => {
+    const page = pages[pages.length - 1]
+    if (i >= forced && page.length > 0 && used + h > cap) {
+      pages.push([i]); used = h; cap = capN
+    } else {
+      page.push(i); used += h
+    }
+  })
+  return { scale: 1, pages }
+}
+
+const samePlan = (a: Plan, b: Plan) => a.scale === b.scale && JSON.stringify(a.pages) === JSON.stringify(b.pages)
+
+// ── Document ───────────────────────────────────────────────────────────────
 
 export function BiodataDocument({
   data,
   language = 'en',
   photoUrl = null,
+  photoStyle,
   templateSlug,
+  variant = 'full',
 }: {
   data: BiodataData
   language?: BiodataLanguage
   /** Either a signed profile-photo URL or a local object URL from a file input. */
   photoUrl?: string | null
+  photoStyle?: PhotoStyle
   templateSlug?: string | null
+  /** 'thumb' renders the first page only, unmeasured — for the design picker. */
+  variant?: 'full' | 'thumb'
 }) {
+  const t = resolveBiodataTemplate(templateSlug)
+  const p = t.palette
   const L = BIODATA_LABELS[language] ?? BIODATA_LABELS.en
-  const template = resolveBiodataTemplate(templateSlug)
-  const p = template.palette
-  const sidebar = template.layout === 'sidebar'
+  const titleFont = language === 'en' ? LATIN_DISPLAY : DEVA_DISPLAY
+  const photo = photoStyle ?? DEFAULT_PHOTO_STYLE
 
-  const CORNER_POSITIONS = [
-    { top: 10, left: 12 }, { top: 10, right: 12 },
-    { bottom: 10, left: 12 }, { bottom: 10, right: 12 },
-  ] as const
+  // ── Blocks, in reading order ──
+  const blocks: Array<{ key: string; node: ReactNode }> = []
 
-  const identityBlock = (
-    <>
-      {data.full_name && (
-        <div style={{ fontFamily: 'Georgia, serif', fontSize: sidebar ? '19px' : '20px', color: p.heading, marginBottom: '8px' }}>
-          {data.full_name}
-        </div>
-      )}
-      <table style={{ fontSize: '13px', borderCollapse: 'collapse' }}>
-        <tbody>
-          <Row label={L.age} value={data.age ? `${data.age} ${L.years}` : null} t={p} />
-          <Row label={L.gender} value={data.gender} t={p} />
-          <Row label={L.religion} value={data.religion} t={p} />
-          <Row label={L.caste} value={data.caste} t={p} />
-        </tbody>
-      </table>
-    </>
-  )
-
-  const photoBlock = photoUrl && (
-    <div style={{ flexShrink: 0, padding: '5px', border: `2px solid ${p.gold}`, background: p.paper, boxShadow: `0 2px 0 ${p.heading}` }}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={photoUrl}
-        alt={data.full_name ?? ''}
-        style={{ width: '112px', height: '145px', objectFit: 'cover', border: `1px solid ${p.heading}`, display: 'block' }}
-      />
-    </div>
-  )
-
-  return (
-    <div
-      className="biodata-page"
-      data-template={template.id}
-      style={{
-        fontFamily: "'Times New Roman', Georgia, serif",
-        width: '210mm',
-        maxWidth: '100%',
-        minHeight: '297mm',
-        boxSizing: 'border-box',
-        margin: '0 auto',
-        background: p.paper,
-        padding: template.frameStyle === 'wrap' ? '22mm' : '20mm',
-        color: p.ink,
-        position: 'relative',
-        WebkitPrintColorAdjust: 'exact',
-        printColorAdjust: 'exact',
-        ...frameStyle(template),
-      }}
-    >
-      {/* Ornate templates get a dashed gold inset rule; others skip it. */}
-      {template.frameStyle === 'ornate' && (
-        <div aria-hidden="true" style={{ position: 'absolute', inset: '7px', border: `2px dashed ${p.gold}`, pointerEvents: 'none' }} />
-      )}
-
-      {/* Corner motifs — intensity set by the template. */}
-      {template.motif === 'bold' && CORNER_POSITIONS.map((pos, i) => (
-        <div key={i} aria-hidden="true" style={{ position: 'absolute', ...pos, zIndex: 1 }}>
-          <LotusMotif size={26} color={p.gold} />
-        </div>
-      ))}
-      {template.motif === 'soft' && CORNER_POSITIONS.map((pos, i) => (
-        <div key={i} aria-hidden="true" style={{ position: 'absolute', ...pos, zIndex: 1, opacity: 0.55 }}>
-          <CornerFlourish size={24} color={p.gold} rotate={i * 90} />
-        </div>
-      ))}
-      {template.motif === 'single' && (
-        <div aria-hidden="true" style={{ position: 'absolute', top: 10, right: 12, zIndex: 1, opacity: 0.8 }}>
-          <CornerFlourish size={30} color={p.gold} rotate={90} />
-        </div>
-      )}
-
-      {/* Header */}
-      <div style={{
-        textAlign: 'center', borderBottom: `2px solid ${p.heading}`, paddingBottom: sidebar ? '10px' : '14px',
-        marginBottom: sidebar ? '16px' : '20px', position: 'relative', zIndex: 2,
-      }}>
+  blocks.push({
+    key: 'header',
+    node: (
+      <div style={{ textAlign: 'center' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/logo-mark.png" alt="Mithila Jodi"
-          style={{ width: sidebar ? '46px' : '64px', height: sidebar ? '42px' : '59px', objectFit: 'contain', margin: '0 auto 5px', display: 'block' }}
-        />
-        <div style={{ fontSize: '12px', color: p.gold, letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: '5px' }}>Mithila Jodi</div>
-        {/* Not an <h1>. This document is embedded inside /marriage-biodata,
-            whose own heading is the page's H1 — two competing H1s made the
-            public page ambiguous to a crawler. Styling is unchanged, and the
-            standalone print view at /biodata/preview/[id] is noindex, so
-            nothing loses a heading that mattered for search. */}
-        <p style={{ fontFamily: 'Georgia, serif', fontSize: sidebar ? '19px' : '22px', color: p.heading, fontWeight: 'normal', letterSpacing: '0.04em' }}>
-          {L.title}
-        </p>
-        {template.motif === 'minimal' && <div style={{ display: 'flex', justifyContent: 'center', marginTop: '8px' }}><VineDivider width={120} color={p.gold} /></div>}
+        <img src="/logo-mark.png" alt="Mithila Jodi" style={{ width: 40, height: 37, objectFit: 'contain', display: 'block', margin: '0 auto 2px' }} />
+        {/* Not an <h1>: this document is embedded in /marriage-biodata, whose
+            own heading is the page's H1. */}
+        <p style={{ margin: 0, fontFamily: titleFont, fontSize: 29, lineHeight: 1.2, color: p.heading }}>{L.title}</p>
+        <Divider p={p} />
       </div>
+    ),
+  })
 
-      {/* Photo + name row — a boxed sidebar for the Contemporary layout, a plain row for the rest. */}
-      {sidebar ? (
-        <div style={{ display: 'flex', gap: '18px', marginBottom: '22px', alignItems: 'stretch', position: 'relative', zIndex: 2 }}>
-          <div style={{ flexShrink: 0, width: '150px', background: '#FBF3E3', borderRadius: '6px', padding: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-            {photoBlock}
-            <div style={{ textAlign: 'center' }}>{identityBlock}</div>
-          </div>
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-            {data.about_me && (
-              <p style={{ fontSize: '13px', lineHeight: '1.75', color: p.ink, whiteSpace: 'pre-wrap', margin: 0 }}>{data.about_me}</p>
-            )}
+  const facts = [data.age ? `${data.age} ${L.years}` : null, data.gender, data.religion, data.caste].filter(hasValue) as string[]
+  const side = t.hero === 'side' && !!photoUrl
+  const photoNode = photoUrl ? (
+    <PhotoFrame url={photoUrl} alt={data.full_name ?? ''} style={photo} p={p} width={side ? (photo.shape === 'round' ? 132 : 118) : (photo.shape === 'round' ? 136 : 120)} />
+  ) : null
+  const nameNode = hasValue(data.full_name) ? (
+    <p style={{ margin: 0, fontFamily: LATIN_DISPLAY, fontSize: 28, lineHeight: 1.2, color: p.heading }}>{data.full_name}</p>
+  ) : null
+
+  if (photoNode || nameNode || facts.length) {
+    blocks.push({
+      key: 'hero',
+      node: side ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '0 6px' }}>
+          {photoNode}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {nameNode}
+            <div style={{ height: 1.5, margin: '7px 0 0', background: `linear-gradient(90deg, ${p.gold}, rgba(201,154,59,0))` }} />
+            <Rows p={p} cols={1} rows={[
+              { label: L.age, value: data.age ? `${data.age} ${L.years}` : null },
+              { label: L.gender, value: data.gender },
+              { label: L.religion, value: data.religion },
+              { label: L.caste, value: data.caste },
+            ]} />
           </div>
         </div>
       ) : (
-        <div style={{ display: 'flex', gap: '20px', marginBottom: '22px', alignItems: 'flex-start', position: 'relative', zIndex: 2 }}>
-          {photoBlock}
-          <div style={{ flex: 1 }}>{identityBlock}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+          {photoNode}
+          {nameNode && <div style={{ marginTop: photoNode ? 4 : 0 }}>{nameNode}</div>}
+          {facts.length > 0 && (
+            <div style={{ marginTop: 3, display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', columnGap: 10, rowGap: 2, fontSize: 13.5, color: p.ink }}>
+              {facts.map((x, i) => (
+                <Fragment key={i}>
+                  {i > 0 && <span aria-hidden="true" style={{ width: 5, height: 5, background: p.gold, transform: 'rotate(45deg)', display: 'inline-block' }} />}
+                  <span>{x}</span>
+                </Fragment>
+              ))}
+            </div>
+          )}
+        </div>
+      ),
+    })
+  }
+
+  const sections: Array<{ key: string; icon: SectionIconName; title: string; rows?: RowSpec[]; text?: string | null }> = [
+    {
+      key: 'community', icon: 'diya', title: L.community, rows: [
+        { label: L.sub_caste, value: data.sub_caste }, { label: L.self_gotra, value: data.self_gotra },
+        { label: L.maternal_gotra, value: data.maternal_gotra }, { label: L.mool, value: data.mool },
+        { label: L.gram, value: data.gram },
+      ],
+    },
+    {
+      key: 'personal', icon: 'person', title: L.personal, rows: [
+        { label: L.marital_status, value: data.marital_status }, { label: L.mother_tongue, value: data.mother_tongue },
+        { label: L.dob, value: data.dob }, { label: L.height, value: data.height },
+        { label: L.complexion, value: data.complexion }, { label: L.blood_group, value: data.blood_group },
+        { label: L.diet, value: data.diet }, { label: L.smoking, value: data.smoking }, { label: L.drinking, value: data.drinking },
+      ],
+    },
+    {
+      key: 'career', icon: 'career', title: L.career, rows: [
+        { label: L.education, value: data.education, wide: true }, { label: L.profession, value: data.profession },
+        { label: L.employer, value: data.employer }, { label: L.income, value: data.income },
+      ],
+    },
+    {
+      key: 'location', icon: 'location', title: L.location, rows: [
+        { label: L.current_location, value: data.current_location }, { label: L.native_place, value: data.native_place },
+      ],
+    },
+    { key: 'about', icon: 'heart', title: L.about, text: data.about_me },
+    {
+      key: 'family', icon: 'family', title: L.family, rows: [
+        { label: L.father_name, value: data.father_name }, { label: L.mother_name, value: data.mother_name },
+        { label: L.family_type, value: data.family_type }, { label: L.managed_by, value: data.managed_by },
+        { label: L.family_values, value: data.family_values },
+        { label: L.parents, value: data.parents, wide: true }, { label: L.siblings, value: data.siblings, wide: true },
+        { label: L.expectations, value: data.expectations, wide: true }, { label: L.family, value: data.family_about, wide: true },
+        { label: L.family_introduction, value: data.family_introduction, wide: true },
+      ],
+    },
+    {
+      key: 'astrology', icon: 'sun', title: L.astrology, rows: [
+        { label: L.rashi, value: data.rashi }, { label: L.nakshatra, value: data.nakshatra },
+        { label: L.mangalik, value: data.mangalik }, { label: L.birth_time, value: data.birth_time },
+        { label: L.birth_place, value: data.birth_place }, { label: L.kundli, value: data.kundli, wide: true },
+      ],
+    },
+    {
+      key: 'contact', icon: 'phone', title: L.contact, rows: [
+        { label: L.mobile, value: data.mobile }, { label: L.email, value: data.email },
+        { label: L.address, value: data.address, wide: true },
+      ],
+    },
+  ]
+
+  const visible = new Map(
+    sections.filter(s => (s.rows ? s.rows.some(r => hasValue(r.value)) : hasValue(s.text))).map(s => [s.key, s]),
+  )
+  const renderSection = (s: (typeof sections)[number], cols: 1 | 2) => (
+    <div>
+      <SectionHeading title={s.title} icon={s.icon} t={t} font={titleFont} />
+      {s.rows
+        ? <Rows rows={s.rows} p={p} cols={cols} />
+        : <p style={{ margin: 0, padding: '6px 8px 0', fontSize: 13.5, lineHeight: 1.55, color: p.ink, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{s.text}</p>}
+    </div>
+  )
+
+  // Short sections sit side by side, A4 is wide enough; long ones span the page.
+  // Gotra, mool and gram stay near the top, as the public page promises.
+  const LAYOUT: Array<{ left: string[]; right?: string[] }> = [
+    { left: ['personal'], right: ['community', 'location'] },
+    { left: ['career'], right: ['astrology'] },
+    { left: ['about'] },
+    { left: ['family'] },
+    { left: ['contact'] },
+  ]
+  for (const row of LAYOUT) {
+    const left = row.left.map(k => visible.get(k)).filter(Boolean) as Array<(typeof sections)[number]>
+    const right = (row.right ?? []).map(k => visible.get(k)).filter(Boolean) as Array<(typeof sections)[number]>
+    if (left.length && right.length) {
+      const column = (list: typeof left) => (
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: BLOCK_GAP }}>
+          {list.map(s => <Fragment key={s.key}>{renderSection(s, 1)}</Fragment>)}
+        </div>
+      )
+      blocks.push({
+        key: [...left, ...right].map(s => s.key).join('+'),
+        node: <div style={{ display: 'flex', gap: 18, alignItems: 'flex-start' }}>{column(left)}{column(right)}</div>,
+      })
+    } else {
+      for (const s of [...left, ...right]) blocks.push({ key: s.key, node: renderSection(s, 2) })
+    }
+  }
+
+  // ── Measure and paginate ──
+  const forced = blocks.filter(b => b.key === 'header' || b.key === 'hero').length
+  const contentW = (210 - 2 * t.safe.side) * PX_PER_MM
+  const cap1 = (297 - t.safe.top - t.safe.bottom - FOOTER_MM) * PX_PER_MM
+  const capN = (297 - t.safe.contTop - t.safe.bottom - FOOTER_MM) * PX_PER_MM
+  const measureRef = useRef<HTMLDivElement>(null)
+  const [plan, setPlan] = useState<Plan | null>(null)
+  const signature = `${t.id}|${language}|${photoUrl ? photo.shape : '-'}|${JSON.stringify(data)}`
+
+  const measure = useCallback(() => {
+    const el = measureRef.current
+    if (!el) return
+    // offsetHeight is layout size, unaffected by the preview's scale transform.
+    const hs = Array.from(el.children).map(c => (c as HTMLElement).offsetHeight)
+    if (!hs.length || hs.every(h => h === 0)) return
+    const next = paginate(hs, cap1, capN, forced)
+    setPlan(prev => (prev && samePlan(prev, next) ? prev : next))
+  }, [cap1, capN, forced])
+
+  useLayoutEffect(() => {
+    if (variant === 'full') measure()
+  }, [variant, measure, signature])
+
+  // Web fonts change line heights once they arrive; measure again then.
+  useEffect(() => {
+    if (variant !== 'full' || typeof document === 'undefined' || !document.fonts) return
+    let alive = true
+    document.fonts.ready.then(() => { if (alive) measure() })
+    const onDone = () => measure()
+    document.fonts.addEventListener('loadingdone', onDone)
+    return () => { alive = false; document.fonts.removeEventListener('loadingdone', onDone) }
+  }, [variant, measure, signature])
+
+  const planFits = variant === 'full' && plan && plan.pages.flat().length === blocks.length
+  const pages = planFits ? plan.pages : [blocks.map((_, i) => i)]
+  const scale = planFits ? plan.scale : 1
+  const shown = variant === 'thumb' ? pages.slice(0, 1) : pages
+
+  return (
+    <div className="bd-doc" data-template={t.id} style={{ position: 'relative' }}>
+      <style>{DOC_CSS}</style>
+
+      {variant === 'full' && (
+        <div
+          ref={measureRef}
+          className="bd-measure"
+          aria-hidden="true"
+          style={{ position: 'absolute', left: 0, top: 0, width: contentW, height: 0, overflow: 'hidden', visibility: 'hidden', pointerEvents: 'none', fontFamily: BODY_FONT, color: p.ink }}
+        >
+          {blocks.map(b => <div key={b.key} style={{ paddingBottom: BLOCK_GAP }}>{b.node}</div>)}
         </div>
       )}
 
-      {any(data, ['sub_caste', 'self_gotra', 'maternal_gotra', 'mool', 'gram']) && (
-        <Section title={L.community} template={template} i={0}>
-          <Row label={L.sub_caste} value={data.sub_caste} t={p} />
-          <Row label={L.self_gotra} value={data.self_gotra} t={p} />
-          <Row label={L.maternal_gotra} value={data.maternal_gotra} t={p} />
-          <Row label={L.mool} value={data.mool} t={p} />
-          <Row label={L.gram} value={data.gram} t={p} />
-        </Section>
-      )}
-
-      {any(data, ['marital_status', 'mother_tongue', 'dob', 'height', 'complexion', 'blood_group', 'diet', 'smoking', 'drinking']) && (
-        <Section title={L.personal} template={template} i={1}>
-          <Row label={L.marital_status} value={data.marital_status} t={p} />
-          <Row label={L.mother_tongue} value={data.mother_tongue} t={p} />
-          <Row label={L.dob} value={data.dob} t={p} />
-          <Row label={L.height} value={data.height} t={p} />
-          <Row label={L.complexion} value={data.complexion} t={p} />
-          <Row label={L.blood_group} value={data.blood_group} t={p} />
-          <Row label={L.diet} value={data.diet} t={p} />
-          <Row label={L.smoking} value={data.smoking} t={p} />
-          <Row label={L.drinking} value={data.drinking} t={p} />
-        </Section>
-      )}
-
-      {any(data, ['education', 'profession', 'employer', 'income']) && (
-        <Section title={L.career} template={template} i={2}>
-          <Row label={L.education} value={data.education} t={p} />
-          <Row label={L.profession} value={data.profession} t={p} />
-          <Row label={L.employer} value={data.employer} t={p} />
-          <Row label={L.income} value={data.income} t={p} />
-        </Section>
-      )}
-
-      {any(data, ['current_location', 'native_place']) && (
-        <Section title={L.location} template={template} i={3}>
-          <Row label={L.current_location} value={data.current_location} t={p} />
-          <Row label={L.native_place} value={data.native_place} t={p} />
-        </Section>
-      )}
-
-      {/* In the sidebar layout, "About me" already sits beside the photo above. */}
-      {!sidebar && data.about_me && (
-        <div style={{ marginBottom: '18px', breakInside: 'avoid' }}>
-          <SectionHeading title={L.about} template={template} />
-          <p style={{ fontSize: '13px', lineHeight: '1.8', color: p.ink, whiteSpace: 'pre-wrap' }}>{data.about_me}</p>
-        </div>
-      )}
-
-      {any(data, ['father_name', 'mother_name', 'family_type', 'managed_by', 'family_values', 'parents', 'siblings', 'expectations', 'family_about', 'family_introduction']) && (
-        <Section title={L.family} template={template} i={4}>
-          <Row label={L.father_name} value={data.father_name} t={p} />
-          <Row label={L.mother_name} value={data.mother_name} t={p} />
-          <Row label={L.family_type} value={data.family_type} t={p} />
-          <Row label={L.managed_by} value={data.managed_by} t={p} />
-          <Row label={L.family_values} value={data.family_values} t={p} />
-          <Row label={L.parents} value={data.parents} t={p} />
-          <Row label={L.siblings} value={data.siblings} t={p} />
-          <Row label={L.expectations} value={data.expectations} t={p} />
-          <Row label={L.family} value={data.family_about} t={p} />
-          <Row label={L.family_introduction} value={data.family_introduction} t={p} />
-        </Section>
-      )}
-
-      {any(data, ['rashi', 'nakshatra', 'mangalik', 'birth_time', 'birth_place', 'kundli']) && (
-        <Section title={L.astrology} template={template} i={5}>
-          <Row label={L.rashi} value={data.rashi} t={p} />
-          <Row label={L.nakshatra} value={data.nakshatra} t={p} />
-          <Row label={L.mangalik} value={data.mangalik} t={p} />
-          <Row label={L.birth_time} value={data.birth_time} t={p} />
-          <Row label={L.birth_place} value={data.birth_place} t={p} />
-          <Row label={L.kundli} value={data.kundli} t={p} />
-        </Section>
-      )}
-
-      {any(data, ['mobile', 'email', 'address']) && (
-        <Section title={L.contact} template={template} i={6}>
-          <Row label={L.mobile} value={data.mobile} t={p} />
-          <Row label={L.email} value={data.email} t={p} />
-          <Row label={L.address} value={data.address} t={p} />
-        </Section>
-      )}
-
-      {/* Footer */}
-      <div style={{ borderTop: `1px solid ${p.gold}`, marginTop: '32px', paddingTop: '9px', textAlign: 'center', fontSize: '11px', color: p.heading, letterSpacing: '0.02em', breakInside: 'avoid' }}>
-        Made with <span aria-hidden="true">♥</span> on <strong>Mithila Jodi</strong> · mithilajodi.com
+      <div className="bd-pages">
+        {shown.map((idxs, pi) => (
+          <div
+            key={pi}
+            className="bd-page"
+            style={{
+              position: 'relative', width: '210mm', height: '297mm', overflow: 'hidden', flexShrink: 0,
+              background: p.paper, fontFamily: BODY_FONT, color: p.ink,
+              boxShadow: variant === 'full' ? '0 2px 22px rgba(60,30,10,0.18)' : 'none',
+            }}
+          >
+            <FrameArt id={t.id} />
+            <div style={{ position: 'absolute', left: `${t.safe.side}mm`, right: `${t.safe.side}mm`, top: `${pi === 0 ? t.safe.top : t.safe.contTop}mm`, bottom: `${t.safe.bottom}mm` }}>
+              <div style={pi === 0 && scale < 1 ? { width: contentW / scale, transform: `scale(${scale})`, transformOrigin: 'top left' } : undefined}>
+                {idxs.map(i => <div key={blocks[i].key} style={{ paddingBottom: BLOCK_GAP }}>{blocks[i].node}</div>)}
+              </div>
+              <p style={{ position: 'absolute', left: 0, right: 0, bottom: 0, margin: 0, textAlign: 'center', fontSize: 10.5, letterSpacing: '0.03em', color: p.heading }}>
+                Made with <span aria-label="love">♥</span> on <strong style={{ fontWeight: 600 }}>Mithila Jodi</strong>
+                {shown.length > 1 && <span style={{ color: p.inkSoft }}> · {pi + 1} / {shown.length}</span>}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )
