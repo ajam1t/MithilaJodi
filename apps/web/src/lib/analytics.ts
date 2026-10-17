@@ -18,6 +18,7 @@ export const EVENT_NAMES = [
   'astrology_tool_used', // k = tool slug (see ASTROLOGY_TOOL_SLUGS)
   'biodata_downloaded', // the public no-login biodata maker
   'biodata_template_selected', // k = template slug (see BIODATA_TEMPLATES)
+  'biodata_image_made', // WhatsApp image of the biodata; k = 'download' | 'share'
   'invitation_card_made', // basic invitation card downloaded or shared
   'song_played', // k = festival slug
   'dp_shared', // a member shares their Digital Profile link; k = channel

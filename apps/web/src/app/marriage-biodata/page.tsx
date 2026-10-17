@@ -41,7 +41,7 @@ export const metadata: Metadata = {
 const STEPS = [
   { n: '1', title: 'Choose a design', body: 'Mayur, Royal Kamal, Matsya or Kohbar — four Madhubani designs with peacocks, lotus, fish and hand-drawn borders. You can change it any time.' },
   { n: '2', title: 'Add your details and photo', body: 'Every field is optional and blank sections are left out. Pick a round, arch or classic photo frame and drag to centre the face. Maithili, Hindi, English or Sanskrit.' },
-  { n: '3', title: 'Download the PDF', body: 'The live preview is the exact document. One click opens your browser’s print dialog — choose "Save as PDF" for a clean A4 page to print or send on WhatsApp.' },
+  { n: '3', title: 'Download a PDF or a WhatsApp image', body: 'The live preview is the exact document. Save it as an A4 PDF for printing, or as a high-resolution image to send straight to WhatsApp.' },
 ]
 
 const FAQ = [
@@ -68,6 +68,10 @@ const FAQ = [
   {
     q: 'How do I get a PDF?',
     a: 'Press "Download PDF / Print" and choose "Save as PDF" as the destination in the dialog that opens. On a phone, the share sheet usually offers the same option.',
+  },
+  {
+    q: 'Can I send the biodata on WhatsApp as an image?',
+    a: 'Yes. Press "Image for WhatsApp" and you get a high-resolution JPEG of the same page. On a phone you can share it straight to WhatsApp; on a computer it is saved to your Downloads folder to attach.',
   },
 ]
 

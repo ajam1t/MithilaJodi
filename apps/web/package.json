@@ -17,6 +17,7 @@
         "astronomy-engine": "2.1.19",
         "bcryptjs": "^2.4.3",
         "clsx": "^2.1.1",
+        "html-to-image": "1.11.13",
         "nanoid": "^5.0.9",
         "next": "^15.4.3",
         "react": "^19.1.0",

@@ -5,6 +5,8 @@ import { createPortal, flushSync } from 'react-dom'
 import Link from 'next/link'
 import { BiodataDocument } from '@/components/biodata/BiodataDocument'
 import { BiodataTemplatePicker } from '@/components/biodata/BiodataTemplatePicker'
+import { WhatsAppIcon } from '@/components/whatsapp/JoinCommunity'
+import { downloadBlob, renderBiodataImages } from '@/lib/biodataImage'
 import {
   BIODATA_TEMPLATES, DEFAULT_PHOTO_STYLE, PHOTO_SHAPES,
   type BiodataTemplateId, type PhotoShape, type PhotoStyle,
@@ -396,7 +398,18 @@ const PRINT_CSS = `
 }
 `
 
-const nextFrame = () => new Promise<void>(r => requestAnimationFrame(() => r()))
+/** One frame — or 60 ms when the tab is in the background and frames are paused. */
+const nextFrame = () => new Promise<void>(r => {
+  requestAnimationFrame(() => r())
+  setTimeout(r, 60)
+})
+
+type ImageState =
+  | { kind: 'idle' }
+  | { kind: 'working' }
+  | { kind: 'ready'; files: File[]; preview: string }
+  | { kind: 'saved'; count: number }
+  | { kind: 'error'; message: string }
 
 export function BiodataBuilder() {
   const [step, setStep] = useState<'design' | 'details'>('design')
@@ -408,7 +421,7 @@ export function BiodataBuilder() {
   const [photoError, setPhotoError] = useState('')
   const [openGroup, setOpenGroup] = useState<string>('basic')
   const [printMounted, setPrintMounted] = useState(false)
-  const pendingPrint = useRef(false)
+  const [image, setImage] = useState<ImageState>({ kind: 'idle' })
   const fileRef = useRef<HTMLInputElement>(null)
 
   // Ctrl+P / the browser menu skip the button; mount the print copy synchronously then too.
@@ -459,14 +472,24 @@ export function BiodataBuilder() {
 
   const filledCount = Object.values(data).filter(v => v != null && String(v).trim() !== '').length
 
-  async function runPrint() {
-    // Wait for the print copy's fonts and images, or the PDF can catch the
-    // photo before it has decoded and print an empty frame.
+  /**
+   * Mounts the full-size print copy if needed and waits for its fonts and
+   * images — otherwise a PDF or image can catch the photo before it has
+   * decoded and show an empty frame. Both downloads read from this copy.
+   */
+  async function preparePrintRoot(): Promise<HTMLElement> {
+    if (!document.getElementById('bd-print-root')) flushSync(() => setPrintMounted(true))
     const root = document.getElementById('bd-print-root')
+    if (!root) throw new Error('The biodata is not ready yet. Please try again.')
     await document.fonts?.ready
-    await Promise.all(Array.from(root?.querySelectorAll('img') ?? []).map(img => img.decode().catch(() => {})))
+    await Promise.all(Array.from(root.querySelectorAll('img')).map(img => img.decode().catch(() => {})))
     await nextFrame()
     await nextFrame()
+    return root
+  }
+
+  async function print() {
+    await preparePrintRoot()
     // The document title becomes the default filename in "Save as PDF".
     const previous = document.title
     document.title = biodataFileName(data.full_name)
@@ -476,18 +499,49 @@ export function BiodataBuilder() {
     document.title = previous
   }
 
-  function print() {
-    if (printMounted) { void runPrint(); return }
-    pendingPrint.current = true
-    setPrintMounted(true)
+  // A prepared image goes stale as soon as the biodata changes.
+  useEffect(() => {
+    setImage(s => (s.kind === 'idle' || s.kind === 'working' ? s : { kind: 'idle' }))
+  }, [documentData, template, language, photoUrl, photoStyle])
+
+  useEffect(() => () => { if (image.kind === 'ready') URL.revokeObjectURL(image.preview) }, [image])
+
+  function saveImages(files: File[]) {
+    files.forEach(f => downloadBlob(f, f.name))
+    track('biodata_image_made', { k: 'download' })
   }
 
-  useEffect(() => {
-    if (printMounted && pendingPrint.current) {
-      pendingPrint.current = false
-      void runPrint()
+  async function makeImage() {
+    setImage({ kind: 'working' })
+    try {
+      const blobs = await renderBiodataImages(await preparePrintRoot())
+      const base = biodataFileName(data.full_name)
+      const files = blobs.map((b, i) => new File([b], blobs.length > 1 ? `${base}-${i + 1}.jpg` : `${base}.jpg`, { type: 'image/jpeg' }))
+      // Where the device can share files, offer the share sheet as a separate
+      // tap: iOS only allows share() straight after a tap, and rendering takes
+      // longer than that allowance.
+      if (navigator.canShare?.({ files })) {
+        setImage({ kind: 'ready', files, preview: URL.createObjectURL(files[0]) })
+      } else {
+        saveImages(files)
+        setImage({ kind: 'saved', count: files.length })
+      }
+    } catch (err) {
+      setImage({ kind: 'error', message: err instanceof Error ? err.message : 'Could not create the image.' })
     }
-  })
+  }
+
+  async function shareImages(files: File[]) {
+    try {
+      await navigator.share({ files, title: 'Marriage biodata' })
+      track('biodata_image_made', { k: 'share' })
+    } catch (err) {
+      // Closing the share sheet throws AbortError; that is not a failure.
+      if (err instanceof Error && err.name === 'AbortError') return
+      saveImages(files)
+      setImage({ kind: 'saved', count: files.length })
+    }
+  }
 
   if (step === 'design') {
     return (
@@ -669,8 +723,17 @@ export function BiodataBuilder() {
         {/* ── Live preview ── */}
         <div className="min-w-0">
           <div className="no-print flex flex-wrap items-center gap-2 mb-3">
-            <button type="button" onClick={print} className="btn-primary text-sm px-5 py-2">
+            <button type="button" onClick={() => void print()} className="btn-primary text-sm px-5 py-2">
               Download PDF / Print
+            </button>
+            <button
+              type="button"
+              onClick={() => void makeImage()}
+              disabled={image.kind === 'working'}
+              className="btn text-sm px-4 py-2 inline-flex items-center gap-1.5 bg-[#128C7E] border-[#128C7E] text-white hover:bg-[#0F766B] disabled:opacity-70 disabled:cursor-wait"
+            >
+              <WhatsAppIcon size={16} />
+              {image.kind === 'working' ? 'Preparing image…' : 'Image for WhatsApp'}
             </button>
             <span className="text-[12.5px] text-ink-soft">
               {filledCount === 0
@@ -679,12 +742,44 @@ export function BiodataBuilder() {
             </span>
           </div>
 
+          <div className="no-print" aria-live="polite">
+            {image.kind === 'ready' && (
+              <div className="card p-3 mb-3 flex flex-wrap items-center gap-3 border-[#128C7E]/30 bg-[#128C7E]/[0.05]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={image.preview} alt="" className="w-12 h-auto rounded-[3px] border border-paper-3 shadow-mj-xs" />
+                <p className="flex-1 min-w-[160px] text-[13px] text-ink leading-snug">
+                  Your image is ready{image.files.length > 1 ? ` — ${image.files.length} pages` : ''}. Share it straight to
+                  WhatsApp, or save it to your phone.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void shareImages(image.files)}
+                    className="btn text-sm px-4 py-2 inline-flex items-center gap-1.5 bg-[#128C7E] border-[#128C7E] text-white hover:bg-[#0F766B]"
+                  >
+                    <WhatsAppIcon size={16} /> Share
+                  </button>
+                  <button type="button" onClick={() => saveImages(image.files)} className="btn-ghost text-sm px-4 py-2">
+                    Download
+                  </button>
+                </div>
+              </div>
+            )}
+            {image.kind === 'saved' && (
+              <p className="mb-3 text-[12.5px] text-green">
+                {image.count > 1 ? `${image.count} images saved` : 'Image saved'} to your Downloads — attach it in WhatsApp.
+              </p>
+            )}
+            {image.kind === 'error' && <p className="mb-3 text-[12.5px] text-terra" role="alert">{image.message}</p>}
+          </div>
+
           <ScaledPreview>
             <BiodataDocument data={documentData} language={language} photoUrl={photoUrl} photoStyle={photoStyle} templateSlug={template} />
           </ScaledPreview>
           <p className="no-print text-[11.5px] text-ink-soft mt-3 leading-snug">
-            In the print dialog choose <strong className="text-ink">Save as PDF</strong> and paper size A4. Longer
-            biodatas continue on a second framed page automatically.
+            For the PDF, choose <strong className="text-ink">Save as PDF</strong> and paper size A4 in the print
+            dialog. The WhatsApp image is a high-resolution JPEG of the same page. Longer biodatas continue on a
+            second framed page automatically.
           </p>
         </div>
       </div>
