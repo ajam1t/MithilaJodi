@@ -82,7 +82,7 @@ export function stripBrandSuffix(title: string): string {
    /contact, so the legal pages cannot drift away from the real ones.
 
    LEGAL_VERSION must match the default used when consent is recorded
-   (TERMS_VERSION / PRIVACY_POLICY_VERSION, both default '1.0' — see
+   (TERMS_VERSION / PRIVACY_POLICY_VERSION, both default '1.1' — see
    lib/authFlow.ts). Bumping a policy version here without bumping those means
    stored consent records would point at the wrong document version. */
 /* Avatar for the platform's own profile — the "Mithila Jodi" identity an admin
@@ -102,8 +102,10 @@ export const OFFICIAL_AVATAR_SRC = '/favicon-192.png'
 export const SUPPORT_EMAIL = 'contact@mithilajodi.com'
 export const SUPPORT_PHONE_DISPLAY = '+91 8757569525'
 export const SUPPORT_PHONE_E164 = '918757569525'
-export const LEGAL_VERSION = '1.0'
-export const LEGAL_EFFECTIVE_DATE = '5 September 2026'
+export const LEGAL_VERSION = '1.1'
+export const LEGAL_EFFECTIVE_DATE = '17 October 2026'
+/** One line under the version on both legal pages: what changed from the previous version. */
+export const LEGAL_CHANGE_NOTE = 'Changed in 1.1: the minimum age is now 21 for a groom and 18 for a bride, the legal age of marriage in India.'
 
 /* Grievance Officer — published to satisfy Rule 3(2) of the Information
    Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules,

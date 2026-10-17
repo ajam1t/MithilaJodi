@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import {
   GRIEVANCE_OFFICER_NAME,
+  LEGAL_CHANGE_NOTE,
   LEGAL_EFFECTIVE_DATE,
   LEGAL_VERSION,
   SUPPORT_EMAIL,
@@ -69,6 +70,7 @@ export default function PrivacyPage() {
         <p className="text-ink-soft text-[13px] mt-2">
           Version {LEGAL_VERSION} · Effective {LEGAL_EFFECTIVE_DATE}
         </p>
+        <p className="text-ink-soft text-[13px] mt-1">{LEGAL_CHANGE_NOTE}</p>
       </header>
 
       <P>
@@ -348,9 +350,11 @@ export default function PrivacyPage() {
       <H2 n={12}>Age requirement</H2>
       <P>
         Mithila Jodi is only for adults. You must be at least 18 years old to register, and the
-        platform refuses a date of birth that would make the profile holder younger than 18. The
-        service is not directed at children and we do not knowingly collect their data. If you
-        believe a profile belongs to a minor, report it or tell us and we will act on it.
+        person a profile is for must have reached the legal age of marriage in India — at least 21
+        for a groom and at least 18 for a bride. The platform refuses a date of birth below that
+        minimum. The service is not directed at children and we do not knowingly collect their data.
+        If you believe a profile belongs to someone under the minimum age, report it or tell us and
+        we will act on it.
       </P>
 
       <H2 n={13}>Changes to this policy</H2>

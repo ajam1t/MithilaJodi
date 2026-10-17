@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import {
   GRIEVANCE_OFFICER_NAME,
+  LEGAL_CHANGE_NOTE,
   LEGAL_EFFECTIVE_DATE,
   LEGAL_VERSION,
   SUPPORT_EMAIL,
@@ -63,6 +64,7 @@ export default function TermsPage() {
         <p className="text-ink-soft text-[13px] mt-2">
           Version {LEGAL_VERSION} · Effective {LEGAL_EFFECTIVE_DATE}
         </p>
+        <p className="text-ink-soft text-[13px] mt-1">{LEGAL_CHANGE_NOTE}</p>
       </header>
 
       <P>
@@ -86,7 +88,11 @@ export default function TermsPage() {
 
       <H2 n={2}>Who may register</H2>
       <UL>
-        <li>You must be at least 18 years old. The platform will not accept a date of birth that makes the profile holder younger than 18.</li>
+        <li>
+          The person the profile is for must have reached the legal age of marriage in India: at
+          least 21 years old for a groom and at least 18 years old for a bride. The platform will not
+          accept a date of birth below that minimum. You must yourself be at least 18 to register.
+        </li>
         <li>You must have a valid Indian mobile number that can receive an OTP.</li>
         <li>You must be legally free to marry under the law that applies to you.</li>
         <li>
@@ -238,7 +244,7 @@ export default function TermsPage() {
       <UL>
         <li>The information on a profile appears false, misleading or fraudulent</li>
         <li>A member breaches section 5, or reports about them indicate they are unsafe to other members</li>
-        <li>A profile appears to belong to someone under 18</li>
+        <li>A profile appears to belong to someone below the minimum age in section 2</li>
         <li>A member abuses the platform&rsquo;s systems, or uses it for a commercial purpose without permission</li>
         <li>We are required to act by law or by a lawful authority</li>
       </UL>

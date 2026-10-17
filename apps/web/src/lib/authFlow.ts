@@ -2,6 +2,7 @@ import 'server-only'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { generateSessionToken, hashSessionToken, sessionExpiresAt } from '@/lib/session'
 import type { ConsentType } from '@/types/database'
+import { LEGAL_VERSION } from '@/lib/constants'
 
 export type EstablishResult =
   | { ok: true; isNew: boolean; sessionToken: string; role: string }
@@ -137,8 +138,8 @@ async function createAccount(
   }
 
   const accountId = newAccount.id as string
-  const termsVer = process.env.TERMS_VERSION ?? '1.0'
-  const privacyVer = process.env.PRIVACY_POLICY_VERSION ?? '1.0'
+  const termsVer = process.env.TERMS_VERSION ?? LEGAL_VERSION
+  const privacyVer = process.env.PRIVACY_POLICY_VERSION ?? LEGAL_VERSION
 
   const consents: Array<{
     account_id: string

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSessionAccount } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/server'
 import type { ConsentType } from '@/types/database'
+import { LEGAL_VERSION } from '@/lib/constants'
 
 const VALID_TYPES: ConsentType[] = ['terms', 'privacy', 'data_processing', 'marketing', 'third_party_sharing']
 
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
 
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null
   const ua = request.headers.get('user-agent') ?? null
-  const version = process.env.TERMS_VERSION ?? '1.0'
+  const version = process.env.TERMS_VERSION ?? LEGAL_VERSION
 
   const supabase = await createAdminClient()
   const { error } = await supabase
