@@ -16,11 +16,20 @@ const marcellus = Marcellus({
   display: 'swap',
 })
 
+/**
+ * Mukta — the body face. Not preloaded: preloading fetches every weight in
+ * every subset (8 files) at top priority on every page, ahead of the CSS and
+ * scripts, which held back the first paint on mobile data (admin → System →
+ * Performance showed FCP 7.8 s). Without it the browser fetches only the
+ * weights and scripts a page actually uses, and text paints at once in the
+ * size-matched "Mukta Fallback", so the swap does not shift the layout.
+ */
 const mukta = Mukta({
   weight: ['400', '500', '600', '700'],
   subsets: ['latin', 'devanagari'],
   variable: '--font-mukta',
   display: 'swap',
+  preload: false,
 })
 
 /**
@@ -30,7 +39,9 @@ const mukta = Mukta({
  * loaded, so every Devanagari line on the site — including the brand tagline
  * "जहाँ परंपरा मिले, प्रेम से" in the header, hero and footer — was silently
  * falling back to a generic serif. Loading it here is what makes those
- * declarations real. It is above the fold, so it IS preloaded.
+ * declarations real. Not preloaded, for the same reason as Mukta: its
+ * Devanagari file is large, and the tagline paints at once in the size-matched
+ * fallback and swaps when the font arrives.
  *
  * Rozha One ships a single weight (400) and covers latin + devanagari.
  */
@@ -39,6 +50,7 @@ const rozhaOne = Rozha_One({
   subsets: ['latin', 'devanagari'],
   variable: '--font-rozha',
   display: 'swap',
+  preload: false,
 })
 
 const kalam = Kalam({
