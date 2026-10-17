@@ -11,6 +11,7 @@ import { encodeInvite, MAX_LINK_PAYLOAD } from '@/lib/wedding/codec'
 import { baseSlug, invitationPath, slugStem } from '@/lib/wedding/slug'
 import { LANG_LABEL, LANGS, wt, type Lang } from '@/lib/wedding/i18n'
 import { WeddingSite } from '../site/WeddingSite'
+import { ACCEPTED_TYPES, PHOTO_DATA_URL, preparePhoto, type CouplePhotos, type PhotoSide } from '@/lib/wedding/photos'
 
 const DRAFT_KEY = 'mj-wedding-draft'
 
@@ -90,12 +91,66 @@ function StepHead({ hi, en, children }: { hi: string; en: string; children?: Rea
   )
 }
 
+/**
+ * One optional portrait: an arched preview in the same shape as the
+ * invitation's frame, tapped to add or replace the photo.
+ */
+function PhotoSlot({ side, label, photo, busy, error, onPick, onRemove }: {
+  side: PhotoSide; label: string; photo: string | null | undefined; busy: boolean; error?: string
+  onPick: (file: File) => void; onRemove: () => void
+}) {
+  const input = useRef<HTMLInputElement>(null)
+  const open = () => input.current?.click()
+  return (
+    <div className="flex flex-col items-center text-center">
+      <button
+        type="button" onClick={open} disabled={busy}
+        aria-label={photo ? `Replace the ${side}’s photo` : `Add a photo of the ${side} (optional)`}
+        className="relative w-[112px] overflow-hidden border-2 border-gold/70 bg-cream shadow-mj-xs transition hover:border-maroon focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40 disabled:cursor-wait"
+        style={{ aspectRatio: '4 / 5', borderRadius: '999px 999px 14px 14px' }}
+      >
+        {photo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photo} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <span className="flex h-full w-full flex-col items-center justify-center gap-1.5 text-maroon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" /><circle cx="12" cy="13" r="3.5" />
+            </svg>
+            <span className="text-[12px] font-medium">Add photo</span>
+          </span>
+        )}
+        {busy && <span className="absolute inset-0 grid place-items-center bg-cream/85 text-[12px] font-medium text-maroon" role="status">Preparing…</span>}
+      </button>
+      <span className="mt-2 text-[13.5px] font-medium text-ink">{label}</span>
+      {photo ? (
+        <span className="mt-0.5 flex gap-3 text-[12.5px]">
+          <button type="button" onClick={open} disabled={busy} className="font-medium text-maroon hover:underline">Replace</button>
+          <button type="button" onClick={onRemove} disabled={busy} className="text-ink-soft hover:text-maroon hover:underline">Remove</button>
+        </span>
+      ) : (
+        <span className="text-[11.5px] text-ink-soft">Optional · JPG, PNG or WebP</span>
+      )}
+      {error && <p role="alert" className="mt-1 max-w-[180px] text-[12px] leading-snug text-error-fg">{error}</p>}
+      <input
+        ref={input} type="file" accept={ACCEPTED_TYPES.join(',')} className="sr-only" tabIndex={-1} aria-hidden="true"
+        onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) onPick(f) }}
+      />
+    </div>
+  )
+}
+
 // ─── The builder ────────────────────────────────────────────────────────────
 
 /** A published invitation: its short link and the private key that edits it. */
 type Published = { slug: string; key: string }
 
-export function Builder({ initial, published = null }: { initial: Invite | null; published?: Published | null }) {
+export function Builder({ initial, published = null, initialPhotos = null }: {
+  initial: Invite | null
+  published?: Published | null
+  /** The saved photos, when an edit link reopens a published invitation. */
+  initialPhotos?: CouplePhotos | null
+}) {
   const [theme, setTheme] = useState<ThemeId>(initial?.t ?? 'kohbar')
   const [lang, setLang] = useState<Lang>(initial?.l ?? 'mai')
   /** Bumped to play the envelope opening inside the preview. */
@@ -111,6 +166,13 @@ export function Builder({ initial, published = null }: { initial: Invite | null;
   const [publishing, setPublishing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
+  /** Optional bride/groom photos, prepared in this browser (data URLs). */
+  const [photos, setPhotos] = useState<CouplePhotos>(initialPhotos ?? {})
+  /** Photos already saved with a link were consented to when they were added. */
+  const [photoConsent, setPhotoConsent] = useState(!!(initialPhotos?.bride || initialPhotos?.groom))
+  const [photoBusy, setPhotoBusy] = useState<PhotoSide | null>(null)
+  const [photoErr, setPhotoErr] = useState<Partial<Record<PhotoSide, string>>>({})
+  const hasPhotos = !!(photos.bride || photos.groom)
   const loaded = useRef(false)
   const topRef = useRef<HTMLDivElement>(null)
 
@@ -127,6 +189,9 @@ export function Builder({ initial, published = null }: { initial: Invite | null;
             if (WEDDING_THEMES.some(t => t.id === d.t)) setTheme(d.t)
             if ((LANGS as readonly string[]).includes(d.l)) setLang(d.l)
             if (d.pub && typeof d.pub.slug === 'string' && typeof d.pub.key === 'string') setPub(d.pub)
+            const ok = (v: unknown) => (typeof v === 'string' && PHOTO_DATA_URL.test(v) ? v : null)
+            if (d.photos) setPhotos({ bride: ok(d.photos.bride), groom: ok(d.photos.groom) })
+            if (typeof d.photoConsent === 'boolean') setPhotoConsent(d.photoConsent)
           }
         }
       } catch { /* no draft */ }
@@ -138,10 +203,29 @@ export function Builder({ initial, published = null }: { initial: Invite | null;
   useEffect(() => {
     if (!loaded.current) return
     const t = setTimeout(() => {
-      try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ t: theme, l: lang, c, pub })); setSaved('saved') } catch { /* storage full or blocked */ }
+      try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ t: theme, l: lang, c, pub, photos, photoConsent })); setSaved('saved') } catch { /* storage full or blocked */ }
     }, 600)
     return () => clearTimeout(t)
-  }, [c, theme, lang, pub])
+  }, [c, theme, lang, pub, photos, photoConsent])
+
+  async function pickPhoto(side: PhotoSide, file: File) {
+    setPhotoErr(e => ({ ...e, [side]: undefined }))
+    setPhotoBusy(side)
+    try {
+      const url = await preparePhoto(file)
+      setPhotos(p => ({ ...p, [side]: url }))
+      setResult(null)
+    } catch (err) {
+      setPhotoErr(e => ({ ...e, [side]: err instanceof Error ? err.message : 'That photo could not be used. Please try another.' }))
+    } finally {
+      setPhotoBusy(null)
+    }
+  }
+  function removePhoto(side: PhotoSide) {
+    setPhotos(p => ({ ...p, [side]: null }))
+    setPhotoErr(e => ({ ...e, [side]: undefined }))
+    setResult(null)
+  }
 
   const update = useCallback(<K extends keyof WeddingContent>(key: K, patch: Partial<WeddingContent[K]>) => {
     setC(prev => ({ ...prev, [key]: { ...(prev[key] as object), ...patch } }))
@@ -169,6 +253,7 @@ export function Builder({ initial, published = null }: { initial: Invite | null;
     const parsed = contentSchema.safeParse(c)
     if (!parsed.success) { setError(parsed.error.issues[0]?.message ?? 'Please check your details.'); return }
     if (!ready.ready) { setError(`Please add: ${ready.missing.join(', ')}.`); return }
+    if (hasPhotos && !photoConsent) { setError('Please tick the box to confirm the photos may be shown on the invitation — or remove them.'); return }
     const payload = await encodeInvite({ v: 1, t: theme, l: lang, c: parsed.data })
     if (payload.length > MAX_LINK_PAYLOAD) {
       setError('Your invitation has more text than one link can carry. Please shorten the story or the ceremony descriptions.')
@@ -179,7 +264,12 @@ export function Builder({ initial, published = null }: { initial: Invite | null;
       const r = await fetch('/api/wedding/invites', {
         method: pub ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(pub ? { slug: pub.slug, key: pub.key, payload, rename: renameLink } : { payload }),
+        // Photos are always sent, so one removed here is removed from the link too.
+        body: JSON.stringify({
+          ...(pub ? { slug: pub.slug, key: pub.key, payload, rename: renameLink } : { payload }),
+          photos: { bride: photos.bride ?? null, groom: photos.groom ?? null },
+          photoConsent: hasPhotos && photoConsent,
+        }),
       })
       const j = await r.json().catch(() => ({}))
       // An edit link that no longer matches (the link closed after 180 days): start a fresh one.
@@ -207,6 +297,7 @@ export function Builder({ initial, published = null }: { initial: Invite | null;
   function startOver() {
     if (!window.confirm('Clear everything and start a new invitation?')) return
     setC(freshContent()); setTheme('kohbar'); setLang('mai'); setResult(null); setPub(null); go('couple')
+    setPhotos({}); setPhotoConsent(false); setPhotoErr({})
     try { localStorage.removeItem(DRAFT_KEY) } catch { /* ignore */ }
   }
 
@@ -218,7 +309,19 @@ export function Builder({ initial, published = null }: { initial: Invite | null;
 
   /** The scroller is the containing block for the envelope (translateZ), so it opens inside the frame. */
   const site = (
-    <WeddingSite key={openingRun} invite={invite} shareUrl="" mode="embedded" opening={openingRun > 0 ? 'preview' : 'none'} />
+    <WeddingSite key={openingRun} invite={invite} shareUrl="" mode="embedded" opening={openingRun > 0 ? 'preview' : 'none'} photos={photos} />
+  )
+  const consentBox = (
+    <label className="flex items-start gap-2.5 rounded-mj-sm border border-gold/40 bg-cream px-3.5 py-3 text-[13.5px] leading-relaxed text-ink">
+      <input type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-maroon" checked={photoConsent}
+        onChange={e => { setPhotoConsent(e.target.checked); setResult(null) }} />
+      <span>
+        These photos may be shown to anyone who opens the invitation link, and the people in them have agreed.
+        <span className="mt-0.5 block text-[12.5px] text-ink-soft">
+          Saved with your link, and deleted when you remove them or when the link closes after 180 days.
+        </span>
+      </span>
+    </label>
   )
   const watchOpening = (
     <button type="button" className="btn-ghost btn-sm" onClick={() => setOpeningRun(n => n + 1)}>
@@ -278,6 +381,19 @@ export function Builder({ initial, published = null }: { initial: Invite | null;
                   <Field id="w-babout" label="A line about the bride (optional)"><Area id="w-babout" rows={3} value={c.couple.brideAbout} max={240} placeholder="Daughter of … · from Darbhanga" onChange={v => update('couple', { brideAbout: v })} /></Field>
                   <Field id="w-gabout" label="A line about the groom (optional)"><Area id="w-gabout" rows={3} value={c.couple.groomAbout} max={240} placeholder="Son of … · from Madhubani" onChange={v => update('couple', { groomAbout: v })} /></Field>
                 </div>
+                <fieldset className="rounded-mj border border-gold/30 bg-paper px-4 pb-4 pt-2">
+                  <legend className="px-1 field-label !mb-0">Photos (optional)</legend>
+                  <p className="mb-3 text-[13px] leading-relaxed text-ink-soft">
+                    Shown in the arched frames under “The Bride &amp; Groom”. Leave either empty and its Madhubani art stays.
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <PhotoSlot side="bride" label="Bride’s photo" photo={photos.bride} busy={photoBusy === 'bride'} error={photoErr.bride}
+                      onPick={f => void pickPhoto('bride', f)} onRemove={() => removePhoto('bride')} />
+                    <PhotoSlot side="groom" label="Groom’s photo" photo={photos.groom} busy={photoBusy === 'groom'} error={photoErr.groom}
+                      onPick={f => void pickPhoto('groom', f)} onRemove={() => removePhoto('groom')} />
+                  </div>
+                  {hasPhotos && <div className="mt-4">{consentBox}</div>}
+                </fieldset>
               </div>
             )}
 
@@ -481,6 +597,7 @@ export function Builder({ initial, published = null }: { initial: Invite | null;
                     Still needed for the invitation: {ready.missing.join(', ')}.
                   </p>
                 )}
+                {hasPhotos && !photoConsent && consentBox}
                 {error && <p className="rounded-mj-sm bg-error-soft px-4 py-3 text-[14px] text-error-fg" role="alert">{error}</p>}
 
                 {!result ? (

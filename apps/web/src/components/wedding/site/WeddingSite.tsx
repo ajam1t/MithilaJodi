@@ -7,6 +7,7 @@ import { dateL, LANG_TAG, timeL, translator, weekdayL, type Lang, type WeddingSt
 import { Border, Divider, FishPair, Kohbar, Lotus, Paag, Peacock, Sun } from '../motifs'
 import { Countdown, LangBar, RsvpWhatsApp, ShareBar, SiteEffects } from './islands'
 import { Envelope } from './Envelope'
+import type { CouplePhotos } from '@/lib/wedding/photos'
 
 type Props = {
   invite: Invite
@@ -23,6 +24,8 @@ type Props = {
   opening?: 'session' | 'preview' | 'none'
   /** sessionStorage key for 'session' openings. */
   openingKey?: string
+  /** Optional bride/groom photos (data URLs in the builder, image URLs on the public page). */
+  photos?: CouplePhotos
 }
 
 const DEVANAGARI = /[ऀ-ॿ]/
@@ -97,7 +100,7 @@ function HeroArt({ t }: { t: WeddingTheme }) {
   }
 }
 
-export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, opening = 'none', openingKey }: Props) {
+export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, opening = 'none', openingKey, photos }: Props) {
   const CoupleTitle = mode === 'embedded' ? 'p' : 'h1'
   const t = weddingTheme(invite.t)
   const c = invite.c
@@ -117,7 +120,7 @@ export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, openin
   const brideSide = visibleMithila(c.mithila.bride)
   const groomSide = visibleMithila(c.mithila.groom)
   const showMithila = c.mithila.enabled && (brideSide.length > 0 || groomSide.length > 0 || !!c.mithila.intro)
-  const showCouple = !!(c.couple.brideAbout || c.couple.groomAbout)
+  const showCouple = !!(c.couple.brideAbout || c.couple.groomAbout || photos?.bride || photos?.groom)
   const showFamily = !!(c.family.brideParents || c.family.groomParents || c.family.members || c.family.message)
   const events = c.events.filter(e => e.name)
   /** Devanagari text gets the Devanagari display face, Latin text the Latin one. */
@@ -235,9 +238,14 @@ export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, openin
               {([[inv.brideName, c.couple.brideAbout, tr('bride'), 'bride'], [inv.groomName, c.couple.groomAbout, tr('groom'), 'groom']] as const).map(([name, about, role, side]) => (
                 <figure key={side} className="text-center" data-reveal>
                   <div className="wd-portrait grid place-items-center">
-                    <svg viewBox="-60 -66 120 132" className="w-[78%] h-[78%]" aria-hidden="true">
-                      {side === 'bride' ? <Lotus r={44} ink={t.accent} gold={t.gold} fill={t.accent} /> : <Paag s={1.05} ink={t.accent} gold={t.gold} fill={t.bg} />}
-                    </svg>
+                    {photos?.[side] ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={photos[side]!} alt={`${role} — ${name}`} loading="lazy" decoding="async" />
+                    ) : (
+                      <svg viewBox="-60 -66 120 132" className="w-[78%] h-[78%]" aria-hidden="true">
+                        {side === 'bride' ? <Lotus r={44} ink={t.accent} gold={t.gold} fill={t.accent} /> : <Paag s={1.05} ink={t.accent} gold={t.gold} fill={t.bg} />}
+                      </svg>
+                    )}
                   </div>
                   <figcaption className="mt-4">
                     <span className={`block ${face(role)} text-[15px]`} style={{ color: t.gold }}>{role}</span>

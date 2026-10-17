@@ -4,6 +4,7 @@ import '@/styles/wedding.css'
 import { WeddingSite } from '@/components/wedding/site/WeddingSite'
 import { dateL, wt, type Lang } from '@/lib/wedding/i18n'
 import type { Invite } from '@/lib/wedding/schema'
+import type { CouplePhotos } from '@/lib/wedding/photos'
 
 /**
  * The public invitation page, shared by /Invitation/[slug] (short link) and
@@ -34,7 +35,7 @@ export function invitationMetadata(invite: Invite, lang: Lang, url: string, imag
   }
 }
 
-export function PublicInvitation({ invite, payload, shareUrl, lang }: { invite: Invite; payload: string; shareUrl: string; lang?: Lang }) {
+export function PublicInvitation({ invite, payload, shareUrl, lang, photos }: { invite: Invite; payload: string; shareUrl: string; lang?: Lang; photos?: CouplePhotos }) {
   const key = openingKey(payload)
   return (
     <>
@@ -46,7 +47,7 @@ export function PublicInvitation({ invite, payload, shareUrl, lang }: { invite: 
       />
       {/* Without JavaScript the envelope cannot open — show the invitation directly. */}
       <noscript><style>{'#wd-envelope{display:none!important}'}</style></noscript>
-      <WeddingSite invite={invite} lang={lang} shareUrl={shareUrl} mode="public" opening="session" openingKey={key} />
+      <WeddingSite invite={invite} lang={lang} shareUrl={shareUrl} mode="public" opening="session" openingKey={key} photos={photos} />
     </>
   )
 }

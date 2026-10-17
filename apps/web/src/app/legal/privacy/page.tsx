@@ -212,6 +212,17 @@ export default function PrivacyPage() {
         approved photograph is shown to registered members and, if your profile is featured publicly,
         on the public pages described in section 4. You can delete a photograph at any time.
       </P>
+      <p className="text-[14px] font-semibold text-ink mt-4 mb-1.5">Wedding invitation photos</p>
+      <P>
+        The premium wedding invitation, which needs no account, lets you add an optional photo of the
+        bride and of the groom. These work differently from profile photographs. Each photo is cropped
+        and shrunk on your own device before it is sent, which also removes hidden details such as
+        location. It is stored with your invitation&rsquo;s short link and shown to anyone who opens
+        that link, without review by our team — so add a photo only if the people in it have agreed,
+        which you confirm when you add it. A photo is deleted when you remove it and save the
+        invitation, and in any case when the link is deleted 180 days after it was created. We do not
+        use these photos for anything else.
+      </P>
 
       <H2 n={7}>Who we share data with</H2>
       <P>We share personal data only in these situations:</P>

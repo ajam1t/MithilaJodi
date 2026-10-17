@@ -8,6 +8,7 @@ import { invitationPath, isSlug } from '@/lib/wedding/slug'
 import { weddingTheme } from '@/lib/wedding/themes'
 import { isLang, type Lang } from '@/lib/wedding/i18n'
 import { createAdminClient } from '@/lib/supabase/server'
+import { PHOTO_SIDES, type CouplePhotos } from '@/lib/wedding/photos'
 import { SITE_URL } from '@/lib/constants'
 
 export const dynamic = 'force-dynamic'
@@ -61,12 +62,18 @@ export default async function InvitationPage({ params, searchParams }: Props) {
   if (slug !== found.displaySlug) {
     permanentRedirect(`${invitationPath(found.displaySlug)}${isLang(requested) ? `?lang=${requested}` : ''}`)
   }
+  const photos: CouplePhotos = {}
+  for (const side of PHOTO_SIDES) {
+    const v = found.photoVersions[side]
+    if (v) photos[side] = `/api/wedding/photo?s=${encodeURIComponent(found.displaySlug)}&p=${side}&v=${v}`
+  }
   return (
     <PublicInvitation
       invite={found.invite}
       payload={found.payload}
       lang={isLang(requested) ? requested : undefined}
       shareUrl={`${SITE_URL}${invitationPath(found.displaySlug)}`}
+      photos={photos}
     />
   )
 }

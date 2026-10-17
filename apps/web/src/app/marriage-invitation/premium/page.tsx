@@ -49,7 +49,7 @@ const FAQS = [
   },
   {
     q: 'Where are our wedding details stored?',
-    a: 'Only for 180 days. Your short link (mithilajodi.com/Invitation/…) keeps a compact copy of the invitation and is deleted automatically 180 days after you create it. Nothing else is kept — no account, no photos. Anyone with the link can see the invitation; it is never listed on Google.',
+    a: 'Only for 180 days. Your short link (mithilajodi.com/Invitation/…) keeps a compact copy of the invitation — and the bride and groom photos, if you add any — and is deleted automatically 180 days after you create it. Nothing else is kept, and no account is needed. Anyone with the link can see the invitation; it is never listed on Google.',
   },
   {
     q: 'How do I change the invitation later?',
@@ -60,8 +60,8 @@ const FAQS = [
     a: 'If you add a WhatsApp number, guests tap “हँ, अवश्य”, “प्रयास करब” or “नहि आबि सकब” and WhatsApp opens with a ready message to you. Mithila Jodi never sees the replies.',
   },
   {
-    q: 'Why are there no photos?',
-    a: 'Photos would have to be uploaded and stored. To keep invitations small and private, each theme uses Madhubani art instead — the Kohbar, the Paag, the peacock, the fish and the lotus.',
+    q: 'Can we add photos of the bride and groom?',
+    a: 'Yes, one each — both optional. Each photo is cropped and shrunk on your phone before it is saved, which also removes hidden details such as location. It is shown to anyone with the invitation link, and is deleted when you remove it or when the link closes after 180 days. Without a photo, the invitation shows Madhubani art — the lotus and the Paag.',
   },
 ]
 
@@ -140,7 +140,7 @@ export default async function PremiumInvitationPage({ searchParams }: Props) {
               Your invitation is open for editing.
             </p>
           )}
-          <Builder initial={initial} published={published} />
+          <Builder initial={initial} published={published} initialPhotos={published ? stored?.photos ?? null : null} />
         </section>
 
         <section className="py-11 sm:py-14" aria-labelledby="faq-heading">
