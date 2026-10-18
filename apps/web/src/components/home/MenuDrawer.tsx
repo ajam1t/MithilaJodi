@@ -74,8 +74,8 @@ function sections(loggedIn: boolean): Section[] {
       title: 'Wedding Tools',
       items: [
         { href: loggedIn ? '/biodata' : '/marriage-biodata', label: 'Marriage Biodata (PDF)', icon: 'biodata' },
-        { href: '/marriage-invitation/premium', label: 'Mithila Premium Invitation', icon: 'invitation' },
-        { href: '/marriage-invitation/scratch-reveal', label: 'MJ Scratch & Reveal Invitation', icon: 'invitation' },
+        // One entry: the guest picks between the two premium invitations on the chooser.
+        { href: '/marriage-invitation#premium', label: 'Premium Invitation', icon: 'invitation' },
       ],
     },
     {

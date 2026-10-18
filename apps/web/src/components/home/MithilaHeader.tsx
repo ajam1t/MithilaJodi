@@ -87,7 +87,9 @@ export function MithilaHeader() {
   const isActive = (href: string) => {
     if (href.startsWith('/#')) return false
     if (href === '/') return pathname === '/'
-    return pathname === href || pathname.startsWith(href + '/')
+    // '/marriage-invitation#premium' is active on that page and the invitations under it.
+    const path = href.split('#')[0]
+    return pathname === path || pathname.startsWith(path + '/')
   }
   const deskLink = (href: string) =>
     cn(

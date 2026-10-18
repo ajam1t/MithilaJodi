@@ -5,8 +5,8 @@ import { useState } from 'react'
 
 /**
  * The first decision on /marriage-invitation: which invitation to make.
- * Three products, side by side and equal in weight — the premium ones only
- * get a slightly richer ground. Each card is one link into its own builder, so
+ * Basic beside Premium; Premium holds its two invitations (Mithila Premium and
+ * MJ Scratch & Reveal) side by side, equal in weight. The menu links to #premium. Each card is one link into its own builder, so
  * browser back returns here. Features listed are only ones that exist.
  */
 
@@ -130,6 +130,13 @@ export function InvitationChooser() {
 
       <p className="text-center text-[12px] font-semibold uppercase tracking-[0.3em] text-terra lg:hidden" aria-hidden="true">or</p>
 
+      {/* ── Premium: two invitations to choose between ── */}
+      <section id="premium" aria-labelledby="choose-premium-heading" className="scroll-mt-24 rounded-[26px] border border-gold/45 bg-cream/70 p-3 shadow-mj-xs sm:p-4 lg:col-span-2">
+        <div className="mb-3 px-1 text-center sm:mb-4">
+          <h3 id="choose-premium-heading" className="font-serif text-[21px] leading-tight text-maroon sm:text-[24px]">✦ Premium Invitation</h3>
+          <p className="mt-0.5 text-[13.5px] text-ink-soft sm:text-[14.5px]">A complete wedding webpage — choose one of two experiences</p>
+        </div>
+        <div className="grid items-stretch gap-3 sm:gap-4 lg:grid-cols-2">
       {/* ── Mithila Premium ── */}
       <Link
         href="/marriage-invitation/premium#builder"
@@ -159,12 +166,10 @@ export function InvitationChooser() {
         <div className="relative mt-auto pt-4 sm:pt-6">
           <p className="mb-2.5 text-[12.5px] text-cream/75">Free · No login · Link stays open for 180 days</p>
           <span className="inline-flex w-full justify-center rounded-mj-sm bg-gold-gradient px-6 py-3 text-[15px] font-semibold text-maroon-deep shadow-mj-sm transition-transform group-hover:translate-x-0.5 sm:w-auto">
-            Create Premium Invitation →
+            Create Mithila Premium →
           </span>
         </div>
       </Link>
-
-      <p className="text-center text-[12px] font-semibold uppercase tracking-[0.3em] text-terra lg:hidden" aria-hidden="true">or</p>
 
       {/* ── MJ Scratch & Reveal ── */}
       <Link
@@ -189,6 +194,8 @@ export function InvitationChooser() {
           </span>
         </div>
       </Link>
+        </div>
+      </section>
     </div>
   )
 }

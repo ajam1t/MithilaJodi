@@ -664,7 +664,8 @@ export function Builder({ initial, published = null, initialPhotos = null, produ
           </div>
 
           {/* Step controls */}
-          <div className="sticky bottom-16 lg:bottom-4 z-20 mt-5 flex items-center justify-between gap-2 rounded-full border border-gold/30 bg-cream/95 p-2 shadow-mj-sm backdrop-blur">
+          {/* Clears the phone bottom bar, including the home-indicator inset it grows by when the browser toolbar hides. */}
+          <div className="sticky bottom-[calc(4.75rem+env(safe-area-inset-bottom))] lg:bottom-4 z-20 mt-5 flex items-center justify-between gap-2 rounded-full border border-gold/30 bg-cream/95 p-2 shadow-mj-sm backdrop-blur">
             <button type="button" className="btn-ghost btn-sm" disabled={idx === 0} onClick={() => go(STEPS[idx - 1].key)}>← Back</button>
             <button type="button" className="btn-ghost btn-sm lg:hidden" onClick={() => setPreviewOpen(true)}>Preview</button>
             <span className="hidden lg:inline text-[12px] text-ink-soft" aria-live="polite">{saved === 'saved' ? 'Draft saved on this device' : ''}</span>
