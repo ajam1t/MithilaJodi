@@ -383,74 +383,69 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   MJ Scratch to Reveal — the ivory card sealed with the Mithila Jodi seal
-   Four embossed flaps meet under the seal at (--cx, --cy), which the script
-   measures. The date tiles are canvases of gold foil. The brand palette is
-   fixed here (ivory, champagne, antique gold, deep maroon) whatever the theme;
-   the invitation it opens onto keeps the couple's own theme.
+   MJ Scratch & Reveal — the closed ivory envelope (MjEnvelope)
+   Four embossed flaps meet under the ivory wax seal at (--cx, --cy). The
+   brand palette is fixed here: ivory, champagne, antique gold, deep maroon.
    ═══════════════════════════════════════════════════════════════════════════ */
-.wd-sr {
+.wd-mje {
   --cx: 50%;
-  --cy: 42%;
-  --sr-maroon: #6E1024;
-  --sr-gold: #B98A2E;
+  --cy: 47%;
   position: fixed;
   inset: 0;
   z-index: 60;
   overflow: hidden;
   container-type: size;
   background: #F6EBD6;
-  color: var(--sr-maroon);
-  font-family: var(--font-mukta), system-ui, sans-serif;
+  color: #6E1024;
   transition: opacity 450ms ease, background-color 500ms ease;
 }
-.wd-sr[data-phase='opening'], .wd-sr[data-phase='leaving'] { background-color: transparent; }
-.wd-sr[data-phase='leaving'] { opacity: 0; pointer-events: none; }
+.wd-mje:is([data-phase='opening'], [data-phase='leaving']) { background-color: transparent; }
+.wd-mje[data-phase='leaving'] { opacity: 0; pointer-events: none; }
 
-/* ── The four flaps ── */
-.wd-sr-flaps { position: absolute; inset: 0; }
-.wd-sr-flap-wrap {
+.wd-mje-flaps { position: absolute; inset: 0; animation: wdMjeIn 900ms cubic-bezier(.2, .8, .2, 1) backwards; }
+@keyframes wdMjeIn { from { opacity: 0; scale: 1.03; } to { opacity: 1; scale: 1; } }
+.wd-mje-wrap {
   position: absolute;
   inset: 0;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transition: transform 1150ms cubic-bezier(.62, 0, .28, 1);
+  transition: transform 1250ms cubic-bezier(.62, 0, .28, 1);
 }
-.wd-sr-flap { position: absolute; inset: 0; color: rgba(201, 155, 69, 0); transition: color 1400ms ease; }
-.wd-sr-art { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.wd-sr-top { z-index: 3; transform-origin: 50% 0; filter: drop-shadow(0 1px 0 rgba(185, 138, 46, 0.75)) drop-shadow(0 10px 14px rgba(90, 55, 15, 0.16)); }
-.wd-sr-bottom { z-index: 2; transform-origin: 50% 100%; filter: drop-shadow(0 -1px 0 rgba(185, 138, 46, 0.6)) drop-shadow(0 -6px 10px rgba(90, 55, 15, 0.1)); }
-.wd-sr-left { z-index: 1; transform-origin: 0 50%; filter: drop-shadow(1px 0 0 rgba(185, 138, 46, 0.45)); }
-.wd-sr-right { z-index: 1; transform-origin: 100% 50%; filter: drop-shadow(-1px 0 0 rgba(185, 138, 46, 0.45)); }
-.wd-sr-top .wd-sr-flap { clip-path: polygon(0 0, 100% 0, var(--cx) var(--cy)); background: linear-gradient(180deg, #FFFCF5 0%, #FAF1E1 100%); }
-.wd-sr-left .wd-sr-flap { clip-path: polygon(0 0, var(--cx) var(--cy), 0 100%); background: linear-gradient(90deg, #F5E9D3 0%, #FAF1E2 100%); }
-.wd-sr-right .wd-sr-flap { clip-path: polygon(100% 0, 100% 100%, var(--cx) var(--cy)); background: linear-gradient(270deg, #F5E9D3 0%, #FAF1E2 100%); }
-.wd-sr-bottom .wd-sr-flap { clip-path: polygon(0 100%, var(--cx) var(--cy), 100% 100%); background: linear-gradient(0deg, #F1E3C9 0%, #F8EEDC 100%); }
-/* Once the date is free, the embossed florals catch a little gold. */
-.wd-sr:not([data-phase='sealed']) .wd-sr-flap { color: rgba(201, 155, 69, 0.55); }
+.wd-mje-flap { position: absolute; inset: 0; color: rgba(201, 155, 69, 0); transition: color 900ms ease; }
+.wd-mje-art { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.wd-mje-top { z-index: 3; transform-origin: 50% 0; filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.9)) drop-shadow(0 8px 12px rgba(110, 75, 25, 0.18)); }
+.wd-mje-bottom { z-index: 2; transform-origin: 50% 100%; filter: drop-shadow(0 -6px 10px rgba(110, 75, 25, 0.12)); }
+.wd-mje-left { z-index: 1; transform-origin: 0 50%; filter: drop-shadow(3px 0 5px rgba(110, 75, 25, 0.1)); }
+.wd-mje-right { z-index: 1; transform-origin: 100% 50%; filter: drop-shadow(-3px 0 5px rgba(110, 75, 25, 0.1)); }
+.wd-mje-top .wd-mje-flap { clip-path: polygon(0 0, 100% 0, var(--cx) var(--cy)); background: linear-gradient(180deg, #FFFCF6 0%, #FAF1E2 100%); }
+.wd-mje-left .wd-mje-flap { clip-path: polygon(0 0, var(--cx) var(--cy), 0 100%); background: linear-gradient(90deg, #F4E8D2 0%, #F9F0E1 100%); }
+.wd-mje-right .wd-mje-flap { clip-path: polygon(100% 0, 100% 100%, var(--cx) var(--cy)); background: linear-gradient(270deg, #F4E8D2 0%, #F9F0E1 100%); }
+.wd-mje-bottom .wd-mje-flap { clip-path: polygon(0 100%, var(--cx) var(--cy), 100% 100%); background: linear-gradient(0deg, #F1E4CC 0%, #F8EFDE 100%); }
+/* As it opens, the embossed florals catch the gold light. */
+.wd-mje:not([data-phase='closed']) .wd-mje-flap { color: rgba(201, 155, 69, 0.75); }
 
-.wd-sr[data-phase='opening'] .wd-sr-flap-wrap { will-change: transform; }
-.wd-sr:is([data-phase='opening'], [data-phase='leaving']) .wd-sr-top { transform: perspective(1600px) rotateX(-112deg); }
-.wd-sr:is([data-phase='opening'], [data-phase='leaving']) .wd-sr-bottom { transform: perspective(1600px) rotateX(112deg); transition-delay: 160ms; }
-.wd-sr:is([data-phase='opening'], [data-phase='leaving']) .wd-sr-left { transform: perspective(1600px) rotateY(112deg); transition-delay: 90ms; }
-.wd-sr:is([data-phase='opening'], [data-phase='leaving']) .wd-sr-right { transform: perspective(1600px) rotateY(-112deg); transition-delay: 90ms; }
+.wd-mje:is([data-phase='opening'], [data-phase='leaving']) .wd-mje-wrap { will-change: transform; }
+.wd-mje:is([data-phase='opening'], [data-phase='leaving']) .wd-mje-top { transform: perspective(1600px) rotateX(-112deg); transition-delay: 420ms; }
+.wd-mje:is([data-phase='opening'], [data-phase='leaving']) .wd-mje-left { transform: perspective(1600px) rotateY(112deg); transition-delay: 520ms; }
+.wd-mje:is([data-phase='opening'], [data-phase='leaving']) .wd-mje-right { transform: perspective(1600px) rotateY(-112deg); transition-delay: 520ms; }
+.wd-mje:is([data-phase='opening'], [data-phase='leaving']) .wd-mje-bottom { transform: perspective(1600px) rotateX(112deg); transition-delay: 600ms; }
 
-/* Warm light falling across the card, and a soft vignette. */
-.wd-sr-light {
+/* Warm window light across the paper, and a soft vignette. */
+.wd-mje-light {
   position: absolute;
   inset: 0;
   z-index: 4;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 90% 55% at 28% 8%, rgba(255, 244, 214, 0.55), rgba(255, 244, 214, 0) 62%),
-    radial-gradient(ellipse 120% 90% at 50% 50%, rgba(110, 70, 25, 0) 55%, rgba(110, 70, 25, 0.2) 100%);
-  transition: opacity 600ms ease;
+    radial-gradient(ellipse 80% 50% at 25% 6%, rgba(255, 247, 224, 0.6), rgba(255, 247, 224, 0) 65%),
+    radial-gradient(ellipse 120% 90% at 50% 50%, rgba(110, 70, 25, 0) 58%, rgba(110, 70, 25, 0.18) 100%);
+  transition: opacity 700ms ease 400ms;
 }
-.wd-sr:is([data-phase='opening'], [data-phase='leaving']) .wd-sr-light { opacity: 0; }
+.wd-mje:is([data-phase='opening'], [data-phase='leaving']) .wd-mje-light { opacity: 0; }
 
-/* Golden light from under the seal; sparks only as the card opens. */
-.wd-sr-burst { position: absolute; left: var(--cx); top: var(--cy); z-index: 5; width: 0; height: 0; pointer-events: none; }
-.wd-sr-burst::before {
+/* Golden light from under the seal, and sparks as the flaps part. */
+.wd-mje-burst { position: absolute; left: var(--cx); top: var(--cy); z-index: 5; width: 0; height: 0; pointer-events: none; }
+.wd-mje-burst::before {
   content: '';
   position: absolute;
   left: -70cqmax;
@@ -458,109 +453,68 @@
   width: 140cqmax;
   height: 140cqmax;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 238, 178, 0.95) 0%, rgba(243, 196, 98, 0.5) 16%, rgba(232, 160, 60, 0) 42%);
+  background: radial-gradient(circle, rgba(255, 240, 185, 1) 0%, rgba(245, 200, 105, 0.6) 14%, rgba(232, 160, 60, 0) 40%);
   opacity: 0;
-  scale: 0.12;
-  transition: opacity 700ms ease, scale 900ms ease;
+  scale: 0.1;
 }
-.wd-sr[data-phase='revealed'] .wd-sr-burst::before { opacity: 0.45; scale: 0.2; }
-.wd-sr[data-phase='leaving'] .wd-sr-burst::before { opacity: 0; }
-.wd-sr[data-phase='opening'] .wd-sr-burst::before { animation: wdSrBurst 1300ms cubic-bezier(.2, .7, .3, 1) forwards; }
-@keyframes wdSrBurst { 0% { opacity: 0.5; scale: 0.2; } 38% { opacity: 1; scale: 0.9; } 100% { opacity: 0; scale: 1.5; } }
-.wd-sr-burst i {
+.wd-mje[data-phase='opening'] .wd-mje-burst::before { animation: wdMjeBurst 1500ms cubic-bezier(.2, .7, .3, 1) forwards; }
+.wd-mje[data-phase='leaving'] .wd-mje-burst::before { opacity: 0; }
+@keyframes wdMjeBurst { 0% { opacity: 0.3; scale: 0.1; } 30% { opacity: 0.9; scale: 0.35; } 60% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: 1.5; } }
+.wd-mje-burst i { position: absolute; left: -2px; top: -2px; width: 4px; height: 4px; border-radius: 50%; background: #F8E3A0; box-shadow: 0 0 6px 1px rgba(242, 201, 96, 0.85); opacity: 0; }
+.wd-mje[data-phase='opening'] .wd-mje-burst i { animation: wdMjeSpark 1100ms cubic-bezier(.2, .7, .3, 1) 450ms forwards; }
+@keyframes wdMjeSpark { 0% { opacity: 1; translate: 0 0; } 100% { opacity: 0; translate: var(--dx) var(--dy); } }
+
+/* The seal. */
+.wd-mje-seal {
   position: absolute;
-  left: -2px;
-  top: -2px;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: #F8E3A0;
-  box-shadow: 0 0 6px 1px rgba(242, 201, 96, 0.8);
-  opacity: 0;
-}
-.wd-sr[data-phase='opening'] .wd-sr-burst i { animation: wdSrSpark 1050ms cubic-bezier(.2, .7, .3, 1) forwards; }
-@keyframes wdSrSpark { 0% { opacity: 1; translate: 0 0; } 100% { opacity: 0; translate: var(--dx) var(--dy); } }
-
-/* ── Seal, date and controls ── */
-.wd-sr-body {
-  position: relative;
+  left: var(--cx);
+  top: var(--cy);
   z-index: 6;
-  height: 100%;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(12px, 3.2cqh, 30px);
-  padding: 64px 16px 64px;
-  text-align: center;
-  animation: wdSrIn 900ms cubic-bezier(.2, .8, .2, 1) backwards;
-}
-@keyframes wdSrIn { from { opacity: 0; translate: 0 14px; } to { opacity: 1; translate: 0 0; } }
-.wd-sr-brand { position: absolute; top: clamp(58px, 7.5cqh, 76px); left: 16px; right: 16px; transition: opacity 400ms ease; }
-.wd-sr-brand-name { font-size: clamp(14px, 4.2cqw, 20px); letter-spacing: 0.22em; text-transform: uppercase; color: var(--sr-maroon); }
-.wd-sr-brand-tag { margin-top: 2px; font-size: clamp(12px, 3.4cqw, 16px); color: #A8802A; }
-.wd-sr-panel { width: min(100%, 380px); transition: opacity 400ms ease; }
-.wd-sr:is([data-phase='opening'], [data-phase='leaving']) :is(.wd-sr-brand, .wd-sr-panel, .wd-sr-skip) { opacity: 0; pointer-events: none; }
-
-.wd-sr-seal {
-  position: relative;
-  flex: none;
-  width: clamp(96px, min(34cqw, 21cqh), 156px);
+  width: clamp(104px, min(32cqw, 19cqh), 150px);
   aspect-ratio: 1;
+  translate: -50% -50%;
   border-radius: 50%;
-  filter: drop-shadow(0 8px 12px rgba(90, 55, 15, 0.32)) drop-shadow(0 2px 2px rgba(90, 55, 15, 0.3));
+  cursor: pointer;
+  filter: drop-shadow(0 7px 10px rgba(110, 75, 25, 0.3)) drop-shadow(0 2px 2px rgba(110, 75, 25, 0.25));
   transition: scale 300ms ease;
+  animation: wdMjeSealIn 1000ms cubic-bezier(.2, .8, .2, 1) 250ms backwards;
 }
-.wd-sr-seal:disabled { cursor: default; }
-.wd-sr-seal:not(:disabled) { cursor: pointer; }
-.wd-sr-seal:not(:disabled):hover { scale: 1.04; }
-.wd-sr-seal:focus-visible { outline: 3px solid var(--sr-maroon); outline-offset: 5px; }
-.wd-sr-seal::after { content: ''; position: absolute; inset: 4%; border-radius: 50%; pointer-events: none; }
-.wd-sr[data-phase='revealed'] .wd-sr-seal::after { animation: wdSrRing 2.2s ease-out infinite; }
-@keyframes wdSrRing { 0% { box-shadow: 0 0 0 0 rgba(231, 192, 98, 0.65); } 100% { box-shadow: 0 0 0 18px rgba(231, 192, 98, 0); } }
-.wd-sr[data-phase='opening'] .wd-sr-seal { animation: wdSrSealOff 760ms cubic-bezier(.5, 0, .7, .4) forwards; }
-.wd-sr[data-phase='leaving'] .wd-sr-seal { opacity: 0; }
-@keyframes wdSrSealOff { 0% { scale: 1; opacity: 1; } 30% { scale: 1.08; opacity: 1; } 100% { scale: 0.7; opacity: 0; } }
-
-.wd-sr-title { font-size: clamp(22px, 6.6cqw, 32px); line-height: 1.15; color: var(--sr-maroon); }
-.wd-sr-hint { margin-top: 4px; font-size: clamp(12.5px, 3.6cqw, 15px); line-height: 1.4; color: #8A6A3A; letter-spacing: 0.02em; }
-.wd-sr-tiles { margin-top: clamp(10px, 2.4cqh, 18px); display: grid; grid-template-columns: 1fr 1.3fr 1fr; gap: clamp(8px, 2.6cqw, 14px); }
-.wd-sr-tile {
-  position: relative;
-  height: clamp(74px, min(24cqw, 15cqh), 112px);
-  border-radius: 10px;
-  overflow: hidden;
-  background: linear-gradient(160deg, #FFFDF8 0%, #F6EAD3 100%);
-  box-shadow: inset 0 1px 0 #FFFFFF, inset 0 0 0 1px rgba(185, 138, 46, 0.45), 0 7px 14px -8px rgba(90, 55, 15, 0.5);
+@keyframes wdMjeSealIn { from { opacity: 0; scale: 0.85; } to { opacity: 1; scale: 1; } }
+.wd-mje-seal:hover { scale: 1.04; }
+.wd-mje-seal:focus-visible { outline: 3px solid #8B1235; outline-offset: 6px; }
+.wd-mje-seal::after { content: ''; position: absolute; inset: 6%; border-radius: 50%; pointer-events: none; animation: wdMjeRing 2.6s ease-out 1.4s infinite; }
+@keyframes wdMjeRing { 0% { box-shadow: 0 0 0 0 rgba(212, 170, 80, 0.45); } 100% { box-shadow: 0 0 0 16px rgba(212, 170, 80, 0); } }
+/* The monogram as pressed gold foil: the official mark, masked over a gold gradient. */
+.wd-mje-mono { position: absolute; inset: 22%; filter: drop-shadow(0.6px 0.9px 0 rgba(110, 75, 25, 0.45)) drop-shadow(-0.4px -0.5px 0 rgba(255, 255, 255, 0.8)); }
+.wd-mje-mono span {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #F6E2A4 0%, #C8993F 38%, #E9C977 55%, #A87A28 100%);
+  -webkit-mask: url('/logo-mark.png') center / contain no-repeat;
+  mask: url('/logo-mark.png') center / contain no-repeat;
 }
-/* Until the foil is painted the tile is plain gold, so the date never flashes. */
-.wd-sr-tile[data-state='cover'] { background: linear-gradient(135deg, #B8892F, #EBD08A 30%, #C99B45 50%, #F2DC9C 72%, #A87A28); }
-.wd-sr-tile-value { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0 4px; }
-.wd-sr-tile[data-state='cover'] .wd-sr-tile-value { visibility: hidden; }
-.wd-sr-tile-text { font-size: clamp(24px, 8cqw, 38px); line-height: 1; color: var(--sr-maroon); }
-.wd-sr-tile-text[data-long] { font-size: clamp(15px, 4.6cqw, 22px); line-height: 1.15; }
-.wd-sr-tile-label { font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #A8802A; }
-/* Spacing would break Devanagari conjuncts apart. */
-.wd-sr-tile-label.wd-deva { font-size: 12.5px; letter-spacing: 0; }
-.wd-sr-foil { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: pointer; transition: opacity 650ms ease; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
-.wd-sr-foil-plain { background: linear-gradient(135deg, #B8892F, #EBD08A 30%, #C99B45 50%, #F2DC9C 72%, #A87A28); }
-.wd-sr-tile[data-state='clear'] .wd-sr-foil { opacity: 0; pointer-events: none; }
-.wd-sr-tile:nth-child(2) .wd-sr-foil { transition-delay: 110ms; }
-.wd-sr-tile:nth-child(3) .wd-sr-foil { transition-delay: 220ms; }
-/* A slow glint invites the first scratch; a single golden sweep celebrates the reveal. */
-.wd-sr-tile-shine { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(105deg, transparent 35%, rgba(255, 250, 225, 0.7) 50%, transparent 65%); translate: -130% 0; }
-.wd-sr[data-phase='sealed']:not([data-touched]) .wd-sr-tile-shine { animation: wdSrSweep 3.4s ease-in-out 1.4s infinite; }
-.wd-sr[data-phase='revealed'] .wd-sr-tile-shine { background: linear-gradient(105deg, transparent 30%, rgba(242, 205, 120, 0.75) 50%, transparent 70%); animation: wdSrSweep 1200ms ease-out 350ms 1 both; }
-.wd-sr[data-phase='revealed'] .wd-sr-tile:nth-child(2) .wd-sr-tile-shine { animation-delay: 480ms; }
-.wd-sr[data-phase='revealed'] .wd-sr-tile:nth-child(3) .wd-sr-tile-shine { animation-delay: 610ms; }
-@keyframes wdSrSweep { 0% { translate: -130% 0; } 55%, 100% { translate: 130% 0; } }
+.wd-mje[data-phase='opening'] .wd-mje-seal { animation: wdMjeSealOff 900ms cubic-bezier(.5, 0, .6, 1) forwards; pointer-events: none; }
+.wd-mje[data-phase='opening'] .wd-mje-seal::after { animation: none; box-shadow: 0 0 34px 10px rgba(245, 205, 110, 0.75); transition: box-shadow 300ms; }
+.wd-mje[data-phase='leaving'] .wd-mje-seal { opacity: 0; }
+@keyframes wdMjeSealOff { 0% { scale: 1; opacity: 1; } 35% { scale: 1.1; opacity: 1; } 100% { scale: 0.8; opacity: 0; translate: -50% -60%; } }
 
-.wd-sr-when { margin-top: 12px; min-height: 1.4em; font-size: 14.5px; color: #6A4B2A; opacity: 0; translate: 0 6px; transition: opacity 600ms ease 500ms, translate 600ms ease 500ms; }
-.wd-sr:not([data-phase='sealed']) .wd-sr-when { opacity: 1; translate: 0 0; }
-.wd-sr-alt { margin-top: 6px; min-height: 36px; padding: 0 10px; font-size: 12.5px; color: #7A5A30; text-decoration: underline; text-underline-offset: 3px; opacity: 0.85; }
-.wd-sr-alt:hover, .wd-sr-alt:focus-visible { opacity: 1; }
-.wd-sr-skip {
+.wd-mje-hint {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: max(56px, 9cqh);
+  z-index: 6;
+  text-align: center;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8A6A3A;
+  animation: wdMjeHint 2.8s ease-in-out 1.2s infinite both;
+  transition: opacity 300ms ease;
+}
+.wd-mje-hint.wd-deva { font-size: 15px; letter-spacing: 0; text-transform: none; }
+@keyframes wdMjeHint { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+.wd-mje-skip {
   position: absolute;
   right: 14px;
   bottom: 12px;
@@ -569,19 +523,68 @@
   padding: 0 10px;
   font-size: 12px;
   letter-spacing: 0.06em;
-  color: var(--sr-maroon);
-  opacity: 0.55;
+  color: #6E1024;
+  opacity: 0.5;
   text-decoration: underline;
   text-underline-offset: 3px;
-  transition: opacity 300ms ease;
 }
-.wd-sr-skip:hover, .wd-sr-skip:focus-visible { opacity: 0.9; }
+.wd-mje-skip:hover, .wd-mje-skip:focus-visible { opacity: 0.9; }
+.wd-mje:not([data-phase='closed']) :is(.wd-mje-hint, .wd-mje-skip) { opacity: 0; pointer-events: none; animation: none; }
 
-/* Short frames (landscape phones): drop the brand line and tighten. */
-@container (max-height: 540px) {
-  .wd-sr-brand { display: none; }
-  .wd-sr-body { justify-content: flex-start; padding: 16px 16px 48px; gap: 10px; }
+/* While sealed the opening view waits; it rises in as the flaps clear. */
+.wd[data-sealed] .wd-hero * { animation-play-state: paused; }
+
+/* Gold petals drifting down once it opens. */
+.wd-petals { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; }
+.wd-petals i {
+  position: absolute;
+  top: -6%;
+  border-radius: 80% 0 80% 0;
+  background: linear-gradient(135deg, #F6E2A4, #C8993F);
+  opacity: 0;
 }
+.wd[data-opened] .wd-petals i { animation-name: wdPetal; animation-timing-function: cubic-bezier(.3, .2, .5, 1); animation-fill-mode: forwards; }
+@keyframes wdPetal {
+  0% { opacity: 0; translate: 0 0; rotate: 0deg; }
+  10% { opacity: 0.9; }
+  50% { translate: 24px 55svh; rotate: 160deg; }
+  85% { opacity: 0.7; }
+  100% { opacity: 0; translate: -10px 108svh; rotate: 320deg; }
+}
+
+/* ── The Date (ScratchDate) ─────────────────────────────────────────────── */
+.wd-sd-hint { margin-top: 10px; font-size: 14px; line-height: 1.4; color: var(--w-soft); letter-spacing: 0.02em; }
+.wd-sd-tiles { margin: 22px auto 0; max-width: 400px; display: grid; grid-template-columns: 1fr 1.3fr 1fr; gap: 12px; }
+.wd-sd-tile {
+  position: relative;
+  height: clamp(84px, 24vw, 112px);
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(160deg, #FFFDF8 0%, #F6EAD3 100%);
+  box-shadow: inset 0 1px 0 #FFFFFF, inset 0 0 0 1px rgba(185, 138, 46, 0.45), 0 8px 16px -9px rgba(90, 55, 15, 0.5);
+}
+.wd-sd-tile[data-state='cover'] { background: linear-gradient(135deg, #B8892F, #EBD08A 30%, #C99B45 50%, #F2DC9C 72%, #A87A28); }
+.wd-sd-tile-value { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 0 4px; }
+.wd-sd-tile[data-state='cover'] .wd-sd-tile-value { visibility: hidden; }
+.wd-sd-tile-text { font-size: clamp(28px, 8.5vw, 40px); line-height: 1; color: var(--w-accent); }
+.wd-sd-tile-text[data-long] { font-size: clamp(17px, 5vw, 24px); line-height: 1.15; }
+.wd-sd-tile-label { font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--w-gold); }
+.wd-sd-tile-label.wd-deva { font-size: 12.5px; letter-spacing: 0; }
+.wd-sd-foil { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: pointer; transition: opacity 650ms ease; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+.wd-sd-foil-plain { background: linear-gradient(135deg, #B8892F, #EBD08A 30%, #C99B45 50%, #F2DC9C 72%, #A87A28); }
+.wd-sd-tile[data-state='clear'] .wd-sd-foil { opacity: 0; pointer-events: none; }
+.wd-sd-tile:nth-child(2) .wd-sd-foil { transition-delay: 110ms; }
+.wd-sd-tile:nth-child(3) .wd-sd-foil { transition-delay: 220ms; }
+.wd-sd-tile-shine { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(105deg, transparent 35%, rgba(255, 250, 225, 0.7) 50%, transparent 65%); translate: -130% 0; }
+.wd-sd:not([data-touched]):not([data-revealed]) .wd-sd-tile-shine { animation: wdSdSweep 3.4s ease-in-out 1.4s infinite; }
+.wd-sd[data-revealed] .wd-sd-tile-shine { background: linear-gradient(105deg, transparent 30%, rgba(242, 205, 120, 0.75) 50%, transparent 70%); animation: wdSdSweep 1200ms ease-out 350ms 1 both; }
+.wd-sd[data-revealed] .wd-sd-tile:nth-child(2) .wd-sd-tile-shine { animation-delay: 480ms; }
+.wd-sd[data-revealed] .wd-sd-tile:nth-child(3) .wd-sd-tile-shine { animation-delay: 610ms; }
+@keyframes wdSdSweep { 0% { translate: -130% 0; } 55%, 100% { translate: 130% 0; } }
+.wd-sd-when { margin-top: 16px; min-height: 1.4em; font-size: 16px; color: var(--w-ink); opacity: 0; translate: 0 6px; transition: opacity 600ms ease 500ms, translate 600ms ease 500ms; }
+.wd-sd[data-revealed] .wd-sd-when { opacity: 1; translate: 0 0; }
+.wd-sd-alt { margin-top: 6px; min-height: 40px; padding: 0 10px; font-size: 13px; color: var(--w-soft); text-decoration: underline; text-underline-offset: 3px; }
+.wd-sd-alt:hover, .wd-sd-alt:focus-visible { color: var(--w-accent); }
 
 /* The invitation it opens onto: a fine double gold frame and a few slow glints. */
 .wd[data-opening='scratch'] .wd-hero::after {
@@ -608,9 +611,9 @@
 @keyframes wdGlint { 0%, 100% { opacity: 0; scale: 0.6; } 50% { opacity: 0.9; scale: 1; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .wd-sr-body, .wd-sr-seal, .wd-sr-seal::after, .wd-sr-tile-shine, .wd-sr-burst::before, .wd-sr-burst i { animation: none !important; }
-  .wd-sr-flap-wrap, .wd-sr-flap, .wd-sr-when { transition: none !important; }
-  .wd-sr-foil { transition-duration: 200ms; transition-delay: 0ms !important; }
+  .wd-mje-flaps, .wd-mje-seal, .wd-mje-seal::after, .wd-mje-hint, .wd-mje-burst::before, .wd-mje-burst i, .wd-sd-tile-shine, .wd-petals i { animation: none !important; }
+  .wd-mje-wrap, .wd-mje-flap, .wd-mje-light, .wd-sd-when { transition: none !important; }
+  .wd-sd-foil { transition-duration: 200ms; transition-delay: 0ms !important; }
   .wd-glint { animation: none; opacity: 0.5; }
 }
 

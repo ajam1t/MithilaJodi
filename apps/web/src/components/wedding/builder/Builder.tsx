@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import '@/styles/wedding.css'
 import {
   CEREMONY_PRESETS, contentSchema, EMPTY_CONTENT, MITHILA_FIELDS, newEventId, readiness, WELCOME_PRESETS,
@@ -667,7 +668,7 @@ export function Builder({ initial, published = null, initialPhotos = null, produ
           {/* Clears the phone bottom bar, including the home-indicator inset it grows by when the browser toolbar hides. */}
           <div className="sticky bottom-[calc(4.75rem+env(safe-area-inset-bottom))] lg:bottom-4 z-20 mt-5 flex items-center justify-between gap-2 rounded-full border border-gold/30 bg-cream/95 p-2 shadow-mj-sm backdrop-blur">
             <button type="button" className="btn-ghost btn-sm" disabled={idx === 0} onClick={() => go(STEPS[idx - 1].key)}>← Back</button>
-            <button type="button" className="btn-ghost btn-sm lg:hidden" onClick={() => setPreviewOpen(true)}>Preview</button>
+            <button type="button" className="btn-ghost btn-sm lg:hidden" onClick={() => { setPreviewOpen(true); if (product.opening) setOpeningRun(n => n + 1) }}>Preview</button>
             <span className="hidden lg:inline text-[12px] text-ink-soft" aria-live="polite">{saved === 'saved' ? 'Draft saved on this device' : ''}</span>
             {idx < STEPS.length - 1 ? (
               <button type="button" className="btn-primary btn-sm" onClick={() => go(STEPS[idx + 1].key)}>{idx === 0 || idx === 1 ? 'Next →' : 'Next / Skip →'}</button>
@@ -688,8 +689,9 @@ export function Builder({ initial, published = null, initialPhotos = null, produ
       </div>
 
       {/* ── Full-screen preview (phones) ── */}
-      {previewOpen && (
-        <div className="fixed inset-0 z-[60] flex flex-col bg-[#2B211C] lg:hidden" role="dialog" aria-modal="true" aria-label="Invitation preview">
+      {/* Portalled to <body>: inside the builder section the page's sticky header and bottom bar would cover it. */}
+      {previewOpen && createPortal(
+        <div className="fixed inset-0 z-[80] flex flex-col bg-[#2B211C] lg:hidden" role="dialog" aria-modal="true" aria-label="Invitation preview">
           <div className="flex items-center justify-between px-4 py-3 text-cream">
             <span className="flex items-center gap-3"><span className="text-[13px] uppercase tracking-[0.18em]">Preview</span>
               <button type="button" className="rounded-full border border-cream/50 px-3 py-1.5 text-[13px]" onClick={() => setOpeningRun(n => n + 1)}>✉️ Opening</button></span>
@@ -698,7 +700,8 @@ export function Builder({ initial, published = null, initialPhotos = null, produ
           <div data-wd-scroll className="relative flex-1 overflow-y-auto overscroll-contain bg-white [transform:translateZ(0)]">
             {site}
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   )

@@ -42,11 +42,11 @@ export function PublicInvitation({ invite, payload, shareUrl, lang, photos }: { 
       {/* Opened earlier in this session? Hide the envelope before the first paint. */}
       <script
         dangerouslySetInnerHTML={{
-          __html: `try{if(sessionStorage.getItem(${JSON.stringify(key)})){var s=document.createElement('style');s.id='wd-env-hide';s.textContent='#wd-envelope{display:none!important}';document.head.appendChild(s)}}catch(e){}`,
+          __html: `try{if(sessionStorage.getItem(${JSON.stringify(key)})){var s=document.createElement('style');s.id='wd-env-hide';s.textContent='#wd-envelope{display:none!important}.wd[data-sealed] .wd-hero *{animation-play-state:running!important}';document.head.appendChild(s)}}catch(e){}`,
         }}
       />
       {/* Without JavaScript the envelope cannot open — show the invitation directly. */}
-      <noscript><style>{'#wd-envelope{display:none!important}'}</style></noscript>
+      <noscript><style>{'#wd-envelope{display:none!important}.wd[data-sealed] .wd-hero *{animation-play-state:running!important}'}</style></noscript>
       <WeddingSite invite={invite} lang={lang} shareUrl={shareUrl} mode="public" opening="session" openingKey={key} photos={photos} />
     </>
   )

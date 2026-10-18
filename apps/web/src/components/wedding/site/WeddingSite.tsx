@@ -7,7 +7,8 @@ import { dateL, LANG_TAG, timeL, translator, weekdayL, type Lang, type WeddingSt
 import { Border, Divider, FishPair, Kohbar, Lotus, Paag, Peacock, Sun } from '../motifs'
 import { Countdown, LangBar, RsvpWhatsApp, ShareBar, SiteEffects } from './islands'
 import { Envelope } from './Envelope'
-import { ScratchReveal } from './ScratchReveal'
+import { MjEnvelope } from './MjEnvelope'
+import { ScratchDate } from './ScratchDate'
 import { EmbossedFlorals } from './florals'
 import { productOf } from '@/lib/wedding/products'
 import type { CouplePhotos } from '@/lib/wedding/photos'
@@ -70,6 +71,11 @@ const EVENT_GLYPH: Record<WeddingEvent['icon'], string> = {
 
 /** Where the gold glints sit on the scratch-card invitation's opening view: [left, top, delay]. */
 const GLINTS = [['14%', '22%', '0s'], ['84%', '16%', '1.6s'], ['22%', '74%', '3.1s'], ['78%', '68%', '0.8s'], ['50%', '9%', '2.4s'], ['9%', '48%', '4s']] as const
+
+/** Gold petals that drift over the opening view once the envelope opens: [left, delay, duration, size]. */
+const PETALS = Array.from({ length: 18 }, (_, i) => [
+  `${(i * 37) % 100}%`, `${((i * 53) % 18) / 10}s`, `${3.6 + ((i * 29) % 20) / 10}s`, `${8 + ((i * 7) % 7)}px`,
+] as const)
 
 function HeroArt({ t }: { t: WeddingTheme }) {
   const c = { ink: t.heroInk, gold: t.gold, fill: t.heroInk }
@@ -139,16 +145,8 @@ export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, openin
   const storageKey = opening === 'session' ? openingKey ?? null : null
 
   return (
-    <div className={`wd ${mode === 'embedded' ? 'wd-embedded' : ''}`} style={themeVars(t)} data-theme={t.id} data-opening={scratch ? 'scratch' : undefined} data-lang={lang} lang={LANG_TAG[lang]}>
-      {opening !== 'none' && scratch && (
-        <ScratchReveal
-          lang={lang}
-          date={dateIso}
-          time={c.wedding.time}
-          storageKey={storageKey}
-          embedded={mode === 'embedded'}
-        />
-      )}
+    <div className={`wd ${mode === 'embedded' ? 'wd-embedded' : ''}`} style={themeVars(t)} data-theme={t.id} data-opening={scratch ? 'scratch' : undefined} data-sealed={scratch && opening !== 'none' ? '' : undefined} data-lang={lang} lang={LANG_TAG[lang]}>
+      {opening !== 'none' && scratch && <MjEnvelope lang={lang} storageKey={storageKey} embedded={mode === 'embedded'} />}
       {opening !== 'none' && !scratch && (
         <Envelope
           theme={t}
@@ -177,6 +175,11 @@ export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, openin
           {scratch && GLINTS.map(([left, top, delay]) => (
             <span key={`${left}-${top}`} className="wd-glint" style={{ left, top, animationDelay: delay }} aria-hidden="true" />
           ))}
+          {scratch && (
+            <div className="wd-petals" aria-hidden="true">
+              {PETALS.map(([left, delay, dur, size], i) => <i key={i} style={{ left, animationDelay: delay, animationDuration: dur, width: size, height: size }} />)}
+            </div>
+          )}
           <div className="relative max-w-[560px]">
             {t.motif === 'mj' && (
               // eslint-disable-next-line @next/next/no-img-element
@@ -193,18 +196,21 @@ export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, openin
               <span className="block">{inv.groomName}</span>
             </CoupleTitle>
             {c.couple.nickname && <p className="wd-rise wd-d3 mt-3 font-hand text-[22px] opacity-90">#{c.couple.nickname.replace(/^#/, '')}</p>}
-            {dateIso && (
+            {dateIso && !scratch && (
               <p className="wd-rise wd-d4 mt-6 text-[18px] sm:text-[20px] tracking-wide">
                 {dateL(lang, dateIso)}
                 <span className="block text-[14px] opacity-80 mt-1">{[weekdayL(lang, dateIso), timeL(lang, c.wedding.time)].filter(Boolean).join(' · ')}</span>
               </p>
             )}
-            <a href="#welcome" className="wd-rise wd-d5 inline-flex flex-col items-center gap-1 mt-10 text-[15px] opacity-85 hover:opacity-100">
+            <a href={scratch ? '#date' : '#welcome'} className="wd-rise wd-d5 inline-flex flex-col items-center gap-1 mt-10 text-[15px] opacity-85 hover:opacity-100">
               <span className={face(tr('viewInvitation'))}>{tr('viewInvitation')}</span>
               <svg className="wd-scroll-cue" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
             </a>
           </div>
         </header>
+
+        {/* ── The date, scratched free (MJ Scratch & Reveal) ── */}
+        {scratch && <ScratchDate lang={lang} date={dateIso} time={c.wedding.time} storageKey={storageKey ? `${storageKey}:date` : null} />}
 
         {/* ── Welcome ── */}
         {c.message.text ? (

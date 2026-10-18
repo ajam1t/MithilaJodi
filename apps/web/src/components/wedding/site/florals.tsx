@@ -45,34 +45,80 @@ export function lotusPath(cx: number, cy: number, s: number): string {
   ].join('')
 }
 
-/** The embossed floral field, drawn once on a 400 × 800 portrait card. */
+/** A five-petal blossom with a dotted heart. */
+function blossomPath(cx: number, cy: number, r: number): string {
+  let d = ''
+  for (let k = 0; k < 5; k++) {
+    const a = (k / 5) * Math.PI * 2 - Math.PI / 2
+    const a1 = a - 0.55, a2 = a + 0.55
+    d += `M${r1(cx + Math.cos(a1) * r * 0.25)} ${r1(cy + Math.sin(a1) * r * 0.25)}`
+    d += `C${r1(cx + Math.cos(a1) * r * 1.15)} ${r1(cy + Math.sin(a1) * r * 1.15)} ${r1(cx + Math.cos(a2) * r * 1.15)} ${r1(cy + Math.sin(a2) * r * 1.15)} ${r1(cx + Math.cos(a2) * r * 0.25)} ${r1(cy + Math.sin(a2) * r * 0.25)}`
+  }
+  const c = r * 0.2
+  return `${d}M${r1(cx - c)} ${r1(cy)}a${r1(c)} ${r1(c)} 0 1 0 ${r1(c * 2)} 0a${r1(c)} ${r1(c)} 0 1 0 -${r1(c * 2)} 0`
+}
+
+/**
+ * A leafy spray: a gently curving stem from (x, y) along `angle`, leaves in
+ * pairs along it and a blossom or bud at the tip. `bend` curls it sideways.
+ */
+function sprayPath(x: number, y: number, len: number, angle: number, bend: number, tip: 'blossom' | 'bud' | 'none' = 'blossom'): string {
+  const ex = x + Math.cos(angle) * len, ey = y + Math.sin(angle) * len
+  const nx = -Math.sin(angle), ny = Math.cos(angle)
+  const qx = (x + ex) / 2 + nx * bend, qy = (y + ey) / 2 + ny * bend
+  const at = (t: number) => ({
+    x: (1 - t) * (1 - t) * x + 2 * (1 - t) * t * qx + t * t * ex,
+    y: (1 - t) * (1 - t) * y + 2 * (1 - t) * t * qy + t * t * ey,
+    a: Math.atan2(2 * (1 - t) * (qy - y) + 2 * t * (ey - qy), 2 * (1 - t) * (qx - x) + 2 * t * (ex - qx)),
+  })
+  const parts = [`M${r1(x)} ${r1(y)}Q${r1(qx)} ${r1(qy)} ${r1(ex)} ${r1(ey)}`]
+  const pairs = Math.max(2, Math.round(len / 24))
+  for (let i = 1; i <= pairs; i++) {
+    const p = at(i / (pairs + 1))
+    const size = len * 0.2 * (1 - (i / (pairs + 1)) * 0.45)
+    parts.push(leafPath(p.x, p.y, size, p.a - 0.75), leafPath(p.x, p.y, size, p.a + 0.75))
+  }
+  if (tip === 'blossom') parts.push(blossomPath(ex, ey, len * 0.09 + 4))
+  if (tip === 'bud') parts.push(`M${r1(ex)} ${r1(ey)}c-3-5-3-9 0-12 3 3 3 7 0 12Z`)
+  return parts.join('')
+}
+
+/** A bouquet: a full peony between two roses, sprays fanning out, blossoms tucked in. `dir` 1 opens downward, -1 upward. */
+function bouquet(cx: number, cy: number, s: number, dir: 1 | -1): string {
+  const up = -Math.PI / 2 * dir
+  const parts = [
+    rosePath(cx, cy, 30 * s),
+    rosePath(cx - 44 * s, cy - 12 * s * dir, 17 * s), rosePath(cx + 44 * s, cy - 12 * s * dir, 17 * s),
+    blossomPath(cx - 24 * s, cy + 30 * s * dir, 9 * s), blossomPath(cx + 24 * s, cy + 30 * s * dir, 9 * s),
+    blossomPath(cx, cy - 44 * s * dir, 8 * s),
+  ]
+  for (const side of [-1, 1] as const) {
+    parts.push(
+      sprayPath(cx + side * 50 * s, cy - 6 * s * dir, 120 * s, side === 1 ? up + 1.05 : up - 1.05 + Math.PI * 0, side * -26 * s * dir, 'blossom'),
+      sprayPath(cx + side * 58 * s, cy + 6 * s * dir, 104 * s, side === 1 ? 0.18 * dir : Math.PI - 0.18 * dir, side * 20 * s * dir, 'bud'),
+      sprayPath(cx + side * 20 * s, cy - 26 * s * dir, 96 * s, up + side * 0.5, side * -14 * s, 'blossom'),
+      sprayPath(cx + side * 16 * s, cy + 26 * s * dir, 70 * s, -up + side * 0.7, side * 12 * s, 'bud'),
+    )
+  }
+  return parts.join('')
+}
+
+/** The embossed floral field, drawn once on a 400 × 800 portrait card (flaps meet near y 376). */
 function floralField(): string {
   const parts: string[] = []
-  const cluster = (x: number, y: number, r: number, flip: 1 | -1) => {
-    parts.push(rosePath(x, y, r))
-    parts.push(rosePath(x - r * 1.7, y - r * 0.35 * flip, r * 0.62), rosePath(x + r * 1.7, y - r * 0.35 * flip, r * 0.62))
-    for (const [dx, a] of [[-1, 0.15], [1, Math.PI - 0.15], [-2.4, 0.6], [2.4, Math.PI - 0.6]] as const) {
-      parts.push(leafPath(x + dx * r * 0.9, y + r * 0.55 * flip, r * 1.05, flip === 1 ? a : -a))
-    }
-    parts.push(leafPath(x, y - r * 1.05 * flip, r * 0.8, flip === 1 ? -Math.PI / 2 - 0.5 : Math.PI / 2 + 0.5))
-    parts.push(leafPath(x, y - r * 1.05 * flip, r * 0.8, flip === 1 ? -Math.PI / 2 + 0.5 : Math.PI / 2 - 0.5))
-  }
-  cluster(200, 150, 34, 1)
-  cluster(200, 668, 30, -1)
-  // Climbing vines along both edges, leaf after leaf.
+  parts.push(bouquet(200, 158, 1, 1))
+  parts.push(bouquet(200, 640, 1, -1))
+  // Climbing sprays on the side flaps.
   for (const side of [-1, 1] as const) {
-    const x0 = side === -1 ? 34 : 366
-    parts.push(`M${x0} 230C${x0 + side * -22} 300 ${x0 + side * 18} 360 ${x0} 420S${x0 + side * -22} 520 ${x0} 590`)
-    for (let i = 0; i < 6; i++) {
-      const y = 250 + i * 60
-      const out = i % 2 ? 1 : -1
-      parts.push(leafPath(x0 + side * -4 * out, y, 22, side === -1 ? (out === 1 ? -0.5 : Math.PI + 0.5) : (out === 1 ? Math.PI + 0.5 : -0.5)))
-    }
-    parts.push(rosePath(x0, 214, 11), rosePath(x0, 606, 11))
+    const x = side === -1 ? 62 : 338
+    parts.push(sprayPath(x, 650, 330, -Math.PI / 2, side * 22, 'blossom'))
+    parts.push(rosePath(x + side * -6, 470, 13), blossomPath(x + side * 16, 380, 8), blossomPath(x + side * -14, 560, 7))
+    parts.push(sprayPath(x + side * -4, 470, 64, side === -1 ? -0.5 : Math.PI + 0.5, side * 10, 'bud'))
+    parts.push(sprayPath(x + side * -4, 560, 58, side === -1 ? 0.4 : Math.PI - 0.4, side * -8, 'blossom'))
   }
-  // Corner sprigs and a lotus at the foot.
-  for (const [x, y] of [[44, 54], [356, 54], [44, 760], [356, 760]] as const) parts.push(rosePath(x, y, 13))
-  parts.push(lotusPath(200, 760, 1.5))
+  // Corner blossoms and a lotus at the foot.
+  for (const [x, y] of [[30, 34], [370, 34], [30, 770], [370, 770]] as const) parts.push(blossomPath(x, y, 9))
+  parts.push(lotusPath(200, 776, 1.2))
   return parts.join('')
 }
 
