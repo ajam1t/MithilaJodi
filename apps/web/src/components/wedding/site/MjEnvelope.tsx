@@ -187,6 +187,16 @@ export function MjEnvelope({ lang, storageKey, embedded = false }: Props) {
           </div>
         ))}
       </div>
+      {/* The fold edges: a soft shadow under each flap and a fine highlight on its edge. */}
+      <svg className="wd-mje-seams" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <g fill="none">
+          <path d="M0 0.6L50 47.6L100 0.6" stroke="rgba(110,75,25,0.09)" strokeWidth="7" vectorEffect="non-scaling-stroke" />
+          <path d="M0 0.3L50 47.3L100 0.3" stroke="rgba(110,75,25,0.12)" strokeWidth="2.5" vectorEffect="non-scaling-stroke" />
+          <path d="M0 100L50 47M100 100L50 47" stroke="rgba(110,75,25,0.1)" strokeWidth="3" vectorEffect="non-scaling-stroke" />
+          <path d="M0 0L50 47L100 0M0 100L50 47L100 100" stroke="rgba(255,255,255,0.95)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+          <path d="M0 0L50 47L100 0M0 100L50 47L100 100" stroke="rgba(185,138,46,0.35)" strokeWidth="0.6" vectorEffect="non-scaling-stroke" />
+        </g>
+      </svg>
       <div className="wd-mje-light" aria-hidden="true" />
       <div className="wd-mje-burst" aria-hidden="true">
         {SPARKS.map((s, i) => (

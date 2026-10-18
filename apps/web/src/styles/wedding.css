@@ -403,7 +403,7 @@
 .wd-mje[data-phase='leaving'] { opacity: 0; pointer-events: none; }
 
 .wd-mje-flaps { position: absolute; inset: 0; animation: wdMjeIn 900ms cubic-bezier(.2, .8, .2, 1) backwards; }
-@keyframes wdMjeIn { from { opacity: 0; scale: 1.03; } to { opacity: 1; scale: 1; } }
+@keyframes wdMjeIn { from { opacity: 0; } to { opacity: 1; } }
 .wd-mje-wrap {
   position: absolute;
   inset: 0;
@@ -413,10 +413,14 @@
 }
 .wd-mje-flap { position: absolute; inset: 0; color: rgba(201, 155, 69, 0); transition: color 900ms ease; }
 .wd-mje-art { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.wd-mje-top { z-index: 3; transform-origin: 50% 0; filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.9)) drop-shadow(0 8px 12px rgba(110, 75, 25, 0.18)); }
-.wd-mje-bottom { z-index: 2; transform-origin: 50% 100%; filter: drop-shadow(0 -6px 10px rgba(110, 75, 25, 0.12)); }
-.wd-mje-left { z-index: 1; transform-origin: 0 50%; filter: drop-shadow(3px 0 5px rgba(110, 75, 25, 0.1)); }
-.wd-mje-right { z-index: 1; transform-origin: 100% 50%; filter: drop-shadow(-3px 0 5px rgba(110, 75, 25, 0.1)); }
+/* No CSS filters on these full-screen layers: WebKit (every iPhone browser) runs out of
+   graphics memory rendering them. The fold edges are drawn by .wd-mje-seams instead. */
+.wd-mje-top { z-index: 3; transform-origin: 50% 0; }
+.wd-mje-bottom { z-index: 2; transform-origin: 50% 100%; }
+.wd-mje-left { z-index: 1; transform-origin: 0 50%; }
+.wd-mje-right { z-index: 1; transform-origin: 100% 50%; }
+.wd-mje-seams { position: absolute; inset: 0; z-index: 4; width: 100%; height: 100%; pointer-events: none; transition: opacity 300ms ease 300ms; }
+.wd-mje:is([data-phase='opening'], [data-phase='leaving']) .wd-mje-seams { opacity: 0; }
 .wd-mje-top .wd-mje-flap { clip-path: polygon(0 0, 100% 0, var(--cx) var(--cy)); background: linear-gradient(180deg, #FFFCF6 0%, #FAF1E2 100%); }
 .wd-mje-left .wd-mje-flap { clip-path: polygon(0 0, var(--cx) var(--cy), 0 100%); background: linear-gradient(90deg, #F4E8D2 0%, #F9F0E1 100%); }
 .wd-mje-right .wd-mje-flap { clip-path: polygon(100% 0, 100% 100%, var(--cx) var(--cy)); background: linear-gradient(270deg, #F4E8D2 0%, #F9F0E1 100%); }
@@ -448,10 +452,10 @@
 .wd-mje-burst::before {
   content: '';
   position: absolute;
-  left: -70cqmax;
-  top: -70cqmax;
-  width: 140cqmax;
-  height: 140cqmax;
+  left: -50cqmax;
+  top: -50cqmax;
+  width: 100cqmax;
+  height: 100cqmax;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(255, 240, 185, 1) 0%, rgba(245, 200, 105, 0.6) 14%, rgba(232, 160, 60, 0) 40%);
   opacity: 0;
@@ -459,7 +463,7 @@
 }
 .wd-mje[data-phase='opening'] .wd-mje-burst::before { animation: wdMjeBurst 1500ms cubic-bezier(.2, .7, .3, 1) forwards; }
 .wd-mje[data-phase='leaving'] .wd-mje-burst::before { opacity: 0; }
-@keyframes wdMjeBurst { 0% { opacity: 0.3; scale: 0.1; } 30% { opacity: 0.9; scale: 0.35; } 60% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: 1.5; } }
+@keyframes wdMjeBurst { 0% { opacity: 0.3; scale: 0.14; } 30% { opacity: 0.9; scale: 0.5; } 60% { opacity: 1; scale: 1.4; } 100% { opacity: 0; scale: 2.1; } }
 .wd-mje-burst i { position: absolute; left: -2px; top: -2px; width: 4px; height: 4px; border-radius: 50%; background: #F8E3A0; box-shadow: 0 0 6px 1px rgba(242, 201, 96, 0.85); opacity: 0; }
 .wd-mje[data-phase='opening'] .wd-mje-burst i { animation: wdMjeSpark 1100ms cubic-bezier(.2, .7, .3, 1) 450ms forwards; }
 @keyframes wdMjeSpark { 0% { opacity: 1; translate: 0 0; } 100% { opacity: 0; translate: var(--dx) var(--dy); } }
@@ -643,5 +647,7 @@
     radial-gradient(circle, var(--w-gold) 0 2.5px, transparent 3px) center / 10px 10px no-repeat;
 }
 .wd[data-theme='mj-ivory'] .wd-hero { border-bottom: 1px solid rgba(176, 138, 62, 0.35); }
-.wd[data-theme='mj-ivory'] .wd-hero-art { opacity: 1; }
+.wd[data-theme='mj-ivory'] .wd-hero-art { opacity: 1; animation-name: wdArtFade; }
+/* A plain fade: the default entrance blurs, which is costly on a full-screen picture in WebKit. */
+@keyframes wdArtFade { from { opacity: 0; } to { opacity: 1; } }
 .wd[data-theme='mj-ivory'] .wd-btn { background: linear-gradient(180deg, #7A1220, #5A0E19); box-shadow: 0 12px 24px -14px rgba(74, 13, 28, 0.8), inset 0 0 0 1px rgba(231, 200, 119, 0.45); }
