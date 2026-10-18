@@ -7,6 +7,7 @@ import { dateL, LANG_TAG, timeL, translator, weekdayL, type Lang, type WeddingSt
 import { Border, Divider, FishPair, Kohbar, Lotus, Paag, Peacock, Sun } from '../motifs'
 import { Countdown, LangBar, RsvpWhatsApp, ShareBar, SiteEffects } from './islands'
 import { Envelope } from './Envelope'
+import { ScratchReveal } from './ScratchReveal'
 import type { CouplePhotos } from '@/lib/wedding/photos'
 
 type Props = {
@@ -18,7 +19,8 @@ type Props = {
   /** Show this language instead of the invitation's own (a guest's choice). */
   lang?: Lang
   /**
-   * The sealed-envelope opening. 'session' = public page, once per visit;
+   * The opening (the invitation's own choice: the sealed envelope or the MJ
+   * scratch card). 'session' = public page, once per visit;
    * 'preview' = in the builder, on request; 'none' = straight to the invitation.
    */
   opening?: 'session' | 'preview' | 'none'
@@ -63,6 +65,9 @@ const EVENT_GLYPH: Record<WeddingEvent['icon'], string> = {
   puja: 'M6 15c0 3 3 5 6 5s6-2 6-5H6Z M12 15V9 M12 9c2-2 2-4 0-6-2 2-2 4 0 6Z',
   other: 'M12 4c2 3 2 6 0 9-2-3-2-6 0-9Z M5 9c3 0 6 2 7 5-3 0-6-2-7-5Z M19 9c-1 3-4 5-7 5 1-3 4-5 7-5Z M6 18h12',
 }
+
+/** Where the gold glints sit on the scratch-card invitation's opening view: [left, top, delay]. */
+const GLINTS = [['14%', '22%', '0s'], ['84%', '16%', '1.6s'], ['22%', '74%', '3.1s'], ['78%', '68%', '0.8s'], ['50%', '9%', '2.4s'], ['9%', '48%', '4s']] as const
 
 function HeroArt({ t }: { t: WeddingTheme }) {
   const c = { ink: t.heroInk, gold: t.gold, fill: t.heroInk }
@@ -126,17 +131,28 @@ export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, openin
   /** Devanagari text gets the Devanagari display face, Latin text the Latin one. */
   const face = (text: string) => (DEVANAGARI.test(text) ? 'wd-deva' : 'wd-display')
   const [madeBefore, madeAfter] = tr('madeWith', { brand: '\u0000' }).split('\u0000')
+  const scratch = invite.o === 'scratch'
+  const storageKey = opening === 'session' ? openingKey ?? null : null
 
   return (
-    <div className={`wd ${mode === 'embedded' ? 'wd-embedded' : ''}`} style={themeVars(t)} data-theme={t.id} data-lang={lang} lang={LANG_TAG[lang]}>
-      {opening !== 'none' && (
+    <div className={`wd ${mode === 'embedded' ? 'wd-embedded' : ''}`} style={themeVars(t)} data-theme={t.id} data-opening={scratch ? 'scratch' : undefined} data-lang={lang} lang={LANG_TAG[lang]}>
+      {opening !== 'none' && scratch && (
+        <ScratchReveal
+          lang={lang}
+          date={dateIso}
+          time={c.wedding.time}
+          storageKey={storageKey}
+          embedded={mode === 'embedded'}
+        />
+      )}
+      {opening !== 'none' && !scratch && (
         <Envelope
           theme={t}
           lang={lang}
           bride={c.couple.brideName}
           groom={c.couple.groomName}
           dateLine={dateL(lang, dateIso)}
-          storageKey={opening === 'session' ? openingKey ?? null : null}
+          storageKey={storageKey}
           embedded={mode === 'embedded'}
         />
       )}
@@ -154,6 +170,9 @@ export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, openin
               <svg className="wd-petal right-[9%] bottom-[18%]" style={{ animationDelay: '2.5s' }} width="38" viewBox="-30 -30 60 60" aria-hidden="true"><Lotus r={24} ink={t.heroInk} gold={t.gold} /></svg>
             </>
           )}
+          {scratch && GLINTS.map(([left, top, delay]) => (
+            <span key={`${left}-${top}`} className="wd-glint" style={{ left, top, animationDelay: delay }} aria-hidden="true" />
+          ))}
           <div className="relative max-w-[560px]">
             <p className={`${face(tr('shubhVivah'))} wd-rise wd-d1 text-[34px] sm:text-[44px] leading-none`} style={{ color: t.gold }}>{tr('shubhVivah')}</p>
             <Border ink={t.heroInk} gold={t.gold} className="wd-rise wd-d2 mx-auto mt-5 !w-40 opacity-70" />

@@ -9,6 +9,13 @@ import { LANGS, type Lang } from './i18n'
 export const THEME_IDS = ['kohbar', 'mithila-vivah', 'madhubani-garden', 'royal-mithila', 'modern-mithila'] as const
 export type ThemeId = (typeof THEME_IDS)[number]
 
+/**
+ * How the public invitation opens. 'classic' is the sealed Mithila envelope;
+ * 'scratch' is the ivory MJ-sealed card whose date the guest scratches free.
+ */
+export const OPENING_IDS = ['classic', 'scratch'] as const
+export type OpeningId = (typeof OPENING_IDS)[number]
+
 const text = (max: number) => z.string().trim().max(max, `Please keep this under ${max} characters.`)
 const optText = (max: number) => text(max).optional().default('')
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Please choose a date.').or(z.literal('')).optional().default('')
@@ -93,6 +100,8 @@ export const inviteSchema = z.object({
   t: z.enum(THEME_IDS),
   /** Invitation language. Links made before languages existed were Maithili-first. */
   l: z.enum(LANGS).default('mai'),
+  /** Opening experience. Absent (every link made before it existed) means the classic envelope. */
+  o: z.enum(OPENING_IDS).optional(),
   c: contentSchema,
 })
 export type Invite = z.infer<typeof inviteSchema>

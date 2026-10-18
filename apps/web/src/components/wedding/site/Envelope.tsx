@@ -17,7 +17,7 @@
  * the final expansion. The flap uses the perspective() transform function on
  * itself for its 3D hinge for the same reason.
  */
-import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState, type RefObject } from 'react'
 import type { WeddingTheme } from '@/lib/wedding/themes'
 import { translator, type Lang } from '@/lib/wedding/i18n'
 
@@ -230,6 +230,26 @@ function Seal({ u }: { u: string }) {
 
 // ─── The opening ────────────────────────────────────────────────────────────
 
+/**
+ * While an opening covers the invitation, the page underneath neither scrolls
+ * nor takes focus. Shared by every opening style; `phase` is 'done' once the
+ * opening has gone, and any change of phase re-checks the lock.
+ */
+export function useSealedPage(overlay: RefObject<HTMLElement | null>, phase: string, embedded: boolean) {
+  useEffect(() => {
+    const content = overlay.current?.parentElement?.querySelector<HTMLElement>('.wd-content')
+    const scroller = embedded ? overlay.current?.closest<HTMLElement>('[data-wd-scroll]') : document.documentElement
+    if (phase === 'done') {
+      content?.removeAttribute('inert')
+      if (scroller) scroller.style.overflow = ''
+      return
+    }
+    content?.setAttribute('inert', '')
+    if (scroller) { scroller.scrollTop = 0; if (!embedded) window.scrollTo(0, 0); scroller.style.overflow = 'hidden' }
+    return () => { content?.removeAttribute('inert'); if (scroller) scroller.style.overflow = '' }
+  }, [overlay, phase, embedded])
+}
+
 const T = { flap: 200, flapBack: 560, glow: 450, rise: 900, expand: 1850, leave: 2650, done: 3050 }
 
 export function Envelope({ theme, lang, bride, groom, dateLine, storageKey, embedded = false, onDone }: Props) {
@@ -260,19 +280,7 @@ export function Envelope({ theme, lang, bride, groom, dateLine, storageKey, embe
     try { if (sessionStorage.getItem(storageKey)) setPhase('done') } catch { /* ignore */ }
   }, [storageKey])
 
-  // While sealed, the page underneath neither scrolls nor takes focus.
-  useEffect(() => {
-    const content = overlay.current?.parentElement?.querySelector<HTMLElement>('.wd-content')
-    const scroller = embedded ? overlay.current?.closest<HTMLElement>('[data-wd-scroll]') : document.documentElement
-    if (phase === 'done') {
-      content?.removeAttribute('inert')
-      if (scroller) scroller.style.overflow = ''
-      return
-    }
-    content?.setAttribute('inert', '')
-    if (scroller) { scroller.scrollTop = 0; if (!embedded) window.scrollTo(0, 0); scroller.style.overflow = 'hidden' }
-    return () => { content?.removeAttribute('inert'); if (scroller) scroller.style.overflow = '' }
-  }, [phase, embedded])
+  useSealedPage(overlay, phase, embedded)
 
   // "Open again"
   useEffect(() => {

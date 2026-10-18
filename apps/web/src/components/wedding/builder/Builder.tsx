@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import '@/styles/wedding.css'
 import {
-  CEREMONY_PRESETS, contentSchema, EMPTY_CONTENT, MITHILA_FIELDS, newEventId, readiness, WELCOME_PRESETS,
-  type Invite, type ThemeId, type WeddingContent, type WeddingEvent,
+  CEREMONY_PRESETS, contentSchema, EMPTY_CONTENT, MITHILA_FIELDS, newEventId, OPENING_IDS, readiness, WELCOME_PRESETS,
+  type Invite, type OpeningId, type ThemeId, type WeddingContent, type WeddingEvent,
 } from '@/lib/wedding/schema'
 import { WEDDING_THEMES } from '@/lib/wedding/themes'
 import { encodeInvite, MAX_LINK_PAYLOAD } from '@/lib/wedding/codec'
@@ -142,6 +142,11 @@ function PhotoSlot({ side, label, photo, busy, error, onPick, onRemove }: {
 
 // ─── The builder ────────────────────────────────────────────────────────────
 
+/** The opening experiences a couple can choose — stored as the invitation's `o`. */
+const OPENINGS: Array<{ id: OpeningId; name: string; blurb: string; icon: string; swatch: string }> = [
+  { id: 'classic', name: 'Classic Premium Invitation', blurb: 'A sealed Mithila envelope that opens with a tap.', icon: '✉️', swatch: 'radial-gradient(circle at 35% 30%, #B8323F, #5A0E19)' },
+  { id: 'scratch', name: 'MJ Scratch to Reveal', blurb: 'An ivory card with the gold MJ seal — guests scratch gold foil to reveal your date.', icon: '✨', swatch: 'radial-gradient(circle at 35% 30%, #F8E7B0, #B4862F)' },
+]
 /** A published invitation: its short link and the private key that edits it. */
 type Published = { slug: string; key: string }
 
@@ -153,6 +158,7 @@ export function Builder({ initial, published = null, initialPhotos = null }: {
 }) {
   const [theme, setTheme] = useState<ThemeId>(initial?.t ?? 'kohbar')
   const [lang, setLang] = useState<Lang>(initial?.l ?? 'mai')
+  const [opening, setOpening] = useState<OpeningId>(initial?.o ?? 'classic')
   /** Bumped to play the envelope opening inside the preview. */
   const [openingRun, setOpeningRun] = useState(0)
   const [c, setC] = useState<WeddingContent>(initial?.c ?? freshContent())
@@ -187,6 +193,7 @@ export function Builder({ initial, published = null, initialPhotos = null }: {
           if (parsed.success) {
             setC(parsed.data)
             if (WEDDING_THEMES.some(t => t.id === d.t)) setTheme(d.t)
+            if ((OPENING_IDS as readonly string[]).includes(d.o)) setOpening(d.o)
             if ((LANGS as readonly string[]).includes(d.l)) setLang(d.l)
             if (d.pub && typeof d.pub.slug === 'string' && typeof d.pub.key === 'string') setPub(d.pub)
             const ok = (v: unknown) => (typeof v === 'string' && PHOTO_DATA_URL.test(v) ? v : null)
@@ -203,10 +210,10 @@ export function Builder({ initial, published = null, initialPhotos = null }: {
   useEffect(() => {
     if (!loaded.current) return
     const t = setTimeout(() => {
-      try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ t: theme, l: lang, c, pub, photos, photoConsent })); setSaved('saved') } catch { /* storage full or blocked */ }
+      try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ t: theme, l: lang, o: opening, c, pub, photos, photoConsent })); setSaved('saved') } catch { /* storage full or blocked */ }
     }, 600)
     return () => clearTimeout(t)
-  }, [c, theme, lang, pub, photos, photoConsent])
+  }, [c, theme, lang, opening, pub, photos, photoConsent])
 
   async function pickPhoto(side: PhotoSide, file: File) {
     setPhotoErr(e => ({ ...e, [side]: undefined }))
@@ -234,7 +241,9 @@ export function Builder({ initial, published = null, initialPhotos = null }: {
   }, [])
   const setEvents = (events: WeddingEvent[]) => { setC(prev => ({ ...prev, events })); setResult(null) }
 
-  const invite: Invite = useMemo(() => ({ v: 1, t: theme, l: lang, c }), [theme, lang, c])
+  /** The classic envelope is the default and travels as nothing, so classic links stay exactly as they were. */
+  const o = opening === 'classic' ? undefined : opening
+  const invite: Invite = useMemo(() => ({ v: 1, t: theme, l: lang, o, c }), [theme, lang, o, c])
 
   /** The invitation's language. The welcome message follows it only while it is still an untouched default. */
   const chooseLang = (l: Lang) => {
@@ -254,7 +263,7 @@ export function Builder({ initial, published = null, initialPhotos = null }: {
     if (!parsed.success) { setError(parsed.error.issues[0]?.message ?? 'Please check your details.'); return }
     if (!ready.ready) { setError(`Please add: ${ready.missing.join(', ')}.`); return }
     if (hasPhotos && !photoConsent) { setError('Please tick the box to confirm the photos may be shown on the invitation — or remove them.'); return }
-    const payload = await encodeInvite({ v: 1, t: theme, l: lang, c: parsed.data })
+    const payload = await encodeInvite({ v: 1, t: theme, l: lang, o, c: parsed.data })
     if (payload.length > MAX_LINK_PAYLOAD) {
       setError('Your invitation has more text than one link can carry. Please shorten the story or the ceremony descriptions.')
       return
@@ -296,7 +305,7 @@ export function Builder({ initial, published = null, initialPhotos = null }: {
 
   function startOver() {
     if (!window.confirm('Clear everything and start a new invitation?')) return
-    setC(freshContent()); setTheme('kohbar'); setLang('mai'); setResult(null); setPub(null); go('couple')
+    setC(freshContent()); setTheme('kohbar'); setOpening('classic'); setLang('mai'); setResult(null); setPub(null); go('couple')
     setPhotos({}); setPhotoConsent(false); setPhotoErr({})
     try { localStorage.removeItem(DRAFT_KEY) } catch { /* ignore */ }
   }
@@ -570,6 +579,24 @@ export function Builder({ initial, published = null, initialPhotos = null }: {
                       </button>
                     ))}
                   </div>
+                </fieldset>
+
+                <fieldset>
+                  <legend className="field-label">Opening experience</legend>
+                  <p className="-mt-1 mb-3 text-[13px] text-ink-soft">What guests see first when they open the link.</p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {OPENINGS.map(op => (
+                      <button key={op.id} type="button" aria-pressed={opening === op.id} onClick={() => { setOpening(op.id); setResult(null) }}
+                        className={`flex items-start gap-3 rounded-mj-sm border-2 bg-cream p-3 text-left transition ${opening === op.id ? 'border-maroon shadow-mj-sm' : 'border-gold/30 hover:border-gold/60'}`}>
+                        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-[20px]" style={{ background: op.swatch }} aria-hidden="true">{op.icon}</span>
+                        <span>
+                          <span className="block font-serif text-[15px] text-maroon leading-tight">{op.name}</span>
+                          <span className="mt-0.5 block text-[12px] text-ink-soft leading-snug">{op.blurb}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-[12.5px] text-ink-soft">Use “Watch the opening” on the preview to try it.</p>
                 </fieldset>
 
                 <fieldset className="rounded-mj border border-gold/30 bg-paper p-4 space-y-3">

@@ -26,6 +26,15 @@ const en = {
   openHint: 'Tap the seal to open',
   skip: 'Skip',
   replay: 'Open again',
+  scratchTitle: 'The Date',
+  scratchHint: 'Scratch to reveal the wedding date',
+  scratchAlt: 'Reveal the date without scratching',
+  scratchHidden: 'The wedding date, hidden under gold foil',
+  scratchRevealed: 'The wedding date: {date}',
+  scratchDay: 'Day',
+  scratchMonth: 'Month',
+  scratchYear: 'Year',
+  scratchEnter: 'Tap the seal to open the invitation',
   viewInvitation: 'View invitation',
   and: 'and',
   language: 'Language',
@@ -110,6 +119,15 @@ const hi: Partial<WeddingStrings> = {
   openHint: 'खोलने के लिए मुहर को स्पर्श करें',
   skip: 'छोड़ें',
   replay: 'फिर से खोलें',
+  scratchTitle: 'शुभ तिथि',
+  scratchHint: 'विवाह की तिथि देखने के लिए खुरचें',
+  scratchAlt: 'बिना खुरचे तिथि देखें',
+  scratchHidden: 'विवाह की तिथि, सुनहरी परत के नीचे',
+  scratchRevealed: 'विवाह की तिथि: {date}',
+  scratchDay: 'दिन',
+  scratchMonth: 'माह',
+  scratchYear: 'वर्ष',
+  scratchEnter: 'निमंत्रण खोलने के लिए मुहर को स्पर्श करें',
   viewInvitation: 'निमंत्रण देखें',
   and: 'और',
   language: 'भाषा',
@@ -191,6 +209,15 @@ const mai: Partial<WeddingStrings> = {
   openHint: 'खोलबाक लेल मोहर छुबू',
   skip: 'छोड़ू',
   replay: 'फेर सँ खोलू',
+  scratchTitle: 'शुभ तिथि',
+  scratchHint: 'विवाहक तिथि देखबाक लेल खरोंचू',
+  scratchAlt: 'बिना खरोंचने तिथि देखू',
+  scratchHidden: 'विवाहक तिथि, सोनहुला परतक नीचाँ',
+  scratchRevealed: 'विवाहक तिथि: {date}',
+  scratchDay: 'दिन',
+  scratchMonth: 'मास',
+  scratchYear: 'वर्ष',
+  scratchEnter: 'निमंत्रण खोलबाक लेल मोहर छुबू',
   viewInvitation: 'निमंत्रण देखू',
   and: 'आ',
   language: 'भाषा',
@@ -272,6 +299,15 @@ const sa: Partial<WeddingStrings> = {
   openHint: 'उद्घाटनाय मुद्रां स्पृशन्तु',
   skip: 'अग्रे',
   replay: 'पुनः उद्घाटयन्तु',
+  scratchTitle: 'शुभतिथिः',
+  scratchHint: 'विवाहतिथिं द्रष्टुं सुवर्णपटलम् अपसारयन्तु',
+  scratchAlt: 'विना घर्षणं तिथिं पश्यन्तु',
+  scratchHidden: 'विवाहतिथिः, सुवर्णपटलेन आवृता',
+  scratchRevealed: 'विवाहतिथिः — {date}',
+  scratchDay: 'दिनम्',
+  scratchMonth: 'मासः',
+  scratchYear: 'वर्षम्',
+  scratchEnter: 'आमन्त्रणम् उद्घाटयितुं मुद्रां स्पृशन्तु',
   viewInvitation: 'आमन्त्रणं पश्यन्तु',
   and: 'च',
   language: 'भाषा',
@@ -392,6 +428,13 @@ export function dateL(lang: Lang, iso: string): string {
   if (!isIso(iso)) return ''
   const { y, m, d } = ymd(iso)
   return `${num(lang, d)} ${MONTHS[lang][m - 1]} ${num(lang, y)}`
+}
+
+/** The date split for the scratch tiles: '25', 'November', '2026' (Devanagari numerals for Sanskrit). */
+export function datePartsL(lang: Lang, iso: string): { day: string; month: string; year: string } | null {
+  if (!isIso(iso)) return null
+  const { y, m, d } = ymd(iso)
+  return { day: num(lang, d), month: MONTHS[lang][m - 1], year: num(lang, y) }
 }
 
 export function weekdayL(lang: Lang, iso: string): string {
