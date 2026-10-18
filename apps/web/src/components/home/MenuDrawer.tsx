@@ -75,6 +75,7 @@ function sections(loggedIn: boolean): Section[] {
       items: [
         { href: loggedIn ? '/biodata' : '/marriage-biodata', label: 'Marriage Biodata (PDF)', icon: 'biodata' },
         { href: '/marriage-invitation/premium', label: 'Mithila Premium Invitation', icon: 'invitation' },
+        { href: '/marriage-invitation/scratch-reveal', label: 'MJ Scratch & Reveal Invitation', icon: 'invitation' },
       ],
     },
     {

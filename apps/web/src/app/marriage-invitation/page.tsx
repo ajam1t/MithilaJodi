@@ -49,8 +49,12 @@ const FAQS = [
     a: 'The Basic Invitation is a designed card — you download it as a high-resolution image and send it like any picture. Mithila Premium is a wedding webpage guests open from one link: an envelope opening, a countdown, every ceremony, the venue map and WhatsApp replies.',
   },
   {
-    q: 'Are both free?',
-    a: 'Yes. Both invitations are free and neither needs an account or login.',
+    q: 'What is MJ Scratch & Reveal?',
+    a: 'A second premium wedding webpage with its own ivory-and-gold design. Guests first see a card sealed with the gold Mithila Jodi monogram and scratch away gold foil to reveal your wedding date, then the card opens onto your invitation — ceremonies, venue, countdown and WhatsApp replies, just like Mithila Premium.',
+  },
+  {
+    q: 'Are they all free?',
+    a: 'Yes. Every invitation is free and none needs an account or login.',
   },
   {
     q: 'Can I make both?',
@@ -71,11 +75,12 @@ const jsonLd = {
       '@id': `${CANONICAL}#page`,
       url: CANONICAL,
       name: 'Wedding Invitations',
-      description: 'Choose a free Mithila wedding invitation: a downloadable invitation card, or a Mithila Premium wedding webpage.',
+      description: 'Choose a free Mithila wedding invitation: a downloadable invitation card, a Mithila Premium wedding webpage, or the MJ Scratch & Reveal wedding webpage.',
       publisher: organizationRef(),
       hasPart: [
         { '@type': 'WebApplication', name: 'Basic Invitation Card Maker', url: `${SITE_URL}/marriage-invitation/basic`, applicationCategory: 'DesignApplication', isAccessibleForFree: true },
         { '@type': 'WebApplication', name: 'Mithila Premium Invitation', url: `${SITE_URL}/marriage-invitation/premium`, applicationCategory: 'DesignApplication', isAccessibleForFree: true },
+        { '@type': 'WebApplication', name: 'MJ Scratch & Reveal Invitation', url: `${SITE_URL}/marriage-invitation/scratch-reveal`, applicationCategory: 'DesignApplication', isAccessibleForFree: true },
       ],
     },
     {
@@ -128,10 +133,10 @@ export default function WeddingInvitationsPage() {
               "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23B98A2E' stroke-opacity='.12' stroke-width='1'%3E%3Cpath d='M60 44c5 6 5 14 0 20-5-6-5-14 0-20Z'/%3E%3Cpath d='M60 64c-8-2-12-8-13-14 7 1 11 6 13 14Zm0 0c8-2 12-8 13-14-7 1-11 6-13 14Z'/%3E%3C/g%3E%3C/svg%3E\") center / 120px 120px",
           }}
         >
-          <div className="wrap max-w-5xl">
+          <div className="wrap max-w-6xl">
             <div className="mb-4 text-center sm:mb-8">
               <h2 id="choose-heading" className="font-serif text-[22px] text-maroon sm:text-[30px]">Choose your invitation experience</h2>
-              <p className="mt-1 text-[14px] text-ink-soft sm:text-[15px]">Both are free, and neither needs a login.</p>
+              <p className="mt-1 text-[14px] text-ink-soft sm:text-[15px]">All are free, and none needs a login.</p>
             </div>
             <InvitationChooser />
           </div>

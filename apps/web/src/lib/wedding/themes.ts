@@ -21,7 +21,7 @@ export type WeddingTheme = {
   heroBg: string
   heroInk: string
   /** Signature motif for the opening and section dividers. */
-  motif: 'kohbar' | 'paag' | 'peacock' | 'sun' | 'line'
+  motif: 'kohbar' | 'paag' | 'peacock' | 'sun' | 'line' | 'mj'
   /** 0 = almost none (modern) … 2 = rich (kohbar). */
   ornament: 0 | 1 | 2
 }
@@ -59,4 +59,17 @@ export const WEDDING_THEMES: WeddingTheme[] = [
   },
 ]
 
-export const weddingTheme = (id: ThemeId): WeddingTheme => WEDDING_THEMES.find(t => t.id === id) ?? WEDDING_THEMES[0]
+/**
+ * The MJ Scratch & Reveal invitation's own design — ivory and champagne, antique
+ * gold line work and deep maroon type, continuing the scratch card it opens from.
+ * Not one of the Mithila Premium themes, so it is never offered in that picker.
+ */
+export const MJ_IVORY: WeddingTheme = {
+  id: 'mj-ivory', name: 'MJ Ivory', hi: 'हाथीदाँत आ सोन', tagline: 'Ivory, champagne and antique gold, sealed with the MJ monogram',
+  bg: '#FBF6EC', surface: '#F6EEDF', ink: '#4A0D1C', accent: '#6E1024', soft: '#6E5A45', gold: '#B08A3E',
+  heroBg: 'radial-gradient(ellipse 90% 70% at 50% 28%, #FFFDF7 0%, #F8EFDD 55%, #EEDFC3 100%)', heroInk: '#4A0D1C',
+  motif: 'mj', ornament: 1,
+}
+
+export const weddingTheme = (id: ThemeId): WeddingTheme =>
+  (id === MJ_IVORY.id ? MJ_IVORY : WEDDING_THEMES.find(t => t.id === id)) ?? WEDDING_THEMES[0]

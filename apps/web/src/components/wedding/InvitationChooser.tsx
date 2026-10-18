@@ -5,8 +5,8 @@ import { useState } from 'react'
 
 /**
  * The first decision on /marriage-invitation: which invitation to make.
- * Two products, side by side and equal in weight — Premium only gets a
- * slightly richer ground. Each card is one link into its own builder, so
+ * Three products, side by side and equal in weight — the premium ones only
+ * get a slightly richer ground. Each card is one link into its own builder, so
  * browser back returns here. Features listed are only ones that exist.
  */
 
@@ -25,6 +25,17 @@ const PREMIUM = [
   'Live countdown',
   'Tilak to Vidai',
   'हमर मिथिला',
+  'Venue & directions',
+  'WhatsApp RSVP',
+  'Four languages',
+]
+
+const SCRATCH = [
+  'Scratch to reveal the date',
+  'Gold MJ seal opening',
+  'Ivory & gold design',
+  'Live countdown',
+  'Tilak to Vidai',
   'Venue & directions',
   'WhatsApp RSVP',
   'Four languages',
@@ -59,6 +70,22 @@ function EnvelopeEmblem() {
   )
 }
 
+/** The gold MJ seal over a strip of scratched gold foil. */
+function SealEmblem() {
+  return (
+    <svg viewBox="0 0 64 64" className="h-11 w-11 sm:h-14 sm:w-14" aria-hidden="true">
+      <defs>
+        <linearGradient id="mj-foil" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#B8892F" /><stop offset="0.45" stopColor="#F2DC9C" /><stop offset="1" stopColor="#A87A28" /></linearGradient>
+      </defs>
+      <rect x="8" y="40" width="48" height="16" rx="3" fill="url(#mj-foil)" />
+      <path d="M14 50c6-5 10 3 16-2s9 2 14-1" stroke="#FFFCF5" strokeWidth="3.4" strokeLinecap="round" fill="none" />
+      <circle cx="32" cy="24" r="16" fill="#D9B565" stroke="#8E6420" strokeWidth="1.2" />
+      <circle cx="32" cy="24" r="11" fill="#FFFCF5" stroke="#B4862F" strokeWidth="1" />
+      <text x="32" y="28.5" textAnchor="middle" fontSize="11" fontFamily="Georgia, serif" fill="#6E1024">MJ</text>
+    </svg>
+  )
+}
+
 function Features({ items, rich }: { items: string[]; rich?: boolean }) {
   return (
     <ul className="mt-4 grid grid-cols-2 gap-x-3 gap-y-1.5 sm:mt-5 sm:gap-y-2">
@@ -73,12 +100,12 @@ function Features({ items, rich }: { items: string[]; rich?: boolean }) {
 }
 
 export function InvitationChooser() {
-  const [chosen, setChosen] = useState<'basic' | 'premium' | null>(null)
-  const ring = (k: 'basic' | 'premium') =>
+  const [chosen, setChosen] = useState<'basic' | 'premium' | 'scratch' | null>(null)
+  const ring = (k: 'basic' | 'premium' | 'scratch') =>
     chosen === k ? 'ring-4 ring-gold-lt/70 shadow-[0_0_0_1px_rgba(228,197,114,0.9),0_24px_50px_-20px_rgba(185,138,46,0.75)]' : ''
 
   return (
-    <div className="grid items-stretch gap-4 lg:grid-cols-2 lg:gap-6">
+    <div className="grid items-stretch gap-4 lg:grid-cols-3 lg:gap-5">
       {/* ── Basic ── */}
       <Link
         href="/marriage-invitation/basic"
@@ -133,6 +160,32 @@ export function InvitationChooser() {
           <p className="mb-2.5 text-[12.5px] text-cream/75">Free · No login · Link stays open for 180 days</p>
           <span className="inline-flex w-full justify-center rounded-mj-sm bg-gold-gradient px-6 py-3 text-[15px] font-semibold text-maroon-deep shadow-mj-sm transition-transform group-hover:translate-x-0.5 sm:w-auto">
             Create Premium Invitation →
+          </span>
+        </div>
+      </Link>
+
+      <p className="text-center text-[12px] font-semibold uppercase tracking-[0.3em] text-terra lg:hidden" aria-hidden="true">or</p>
+
+      {/* ── MJ Scratch & Reveal ── */}
+      <Link
+        href="/marriage-invitation/scratch-reveal#builder"
+        onClick={() => setChosen('scratch')}
+        aria-describedby="choose-scratch-sub"
+        className={`group relative flex flex-col overflow-hidden rounded-[22px] border border-gold/70 p-4 text-maroon shadow-mj transition duration-300 hover:-translate-y-1 hover:border-gold hover:shadow-[0_28px_56px_-24px_rgba(140,100,32,0.7)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-gold/60 motion-reduce:transform-none sm:p-7 ${ring('scratch')}`}
+        style={{ background: 'radial-gradient(ellipse 90% 70% at 20% 0%, #FFFDF7 0%, #F7EEDC 55%, #EBDAB8 100%)' }}
+      >
+        <span className="pointer-events-none absolute inset-2 rounded-[16px] border border-gold/40" aria-hidden="true" />
+        <div className="relative flex items-start justify-between gap-3">
+          <SealEmblem />
+          <span className="rounded-full bg-gold-gradient px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-maroon-deep shadow-mj-xs">✦ New · Premium</span>
+        </div>
+        <h3 className="relative mt-3 font-serif text-[24px] leading-tight sm:text-[27px]">MJ Scratch &amp; Reveal Invitation</h3>
+        <p id="choose-scratch-sub" className="relative mt-1 text-[15px] text-ink-soft">Guests scratch gold foil to reveal your date</p>
+        <div className="relative"><Features items={SCRATCH} /></div>
+        <div className="relative mt-auto pt-4 sm:pt-6">
+          <p className="mb-2.5 text-[12.5px] text-ink-soft">Free · No login · Link stays open for 180 days</p>
+          <span className="inline-flex w-full justify-center rounded-mj-sm bg-maroon px-6 py-3 text-[15px] font-semibold text-cream shadow-mj-sm transition-transform group-hover:translate-x-0.5 sm:w-auto">
+            Create Scratch &amp; Reveal →
           </span>
         </div>
       </Link>

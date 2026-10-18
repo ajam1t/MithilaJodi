@@ -3,17 +3,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import '@/styles/wedding.css'
 import {
-  CEREMONY_PRESETS, contentSchema, EMPTY_CONTENT, MITHILA_FIELDS, newEventId, OPENING_IDS, readiness, WELCOME_PRESETS,
-  type Invite, type OpeningId, type ThemeId, type WeddingContent, type WeddingEvent,
+  CEREMONY_PRESETS, contentSchema, EMPTY_CONTENT, MITHILA_FIELDS, newEventId, readiness, WELCOME_PRESETS,
+  type Invite, type ThemeId, type WeddingContent, type WeddingEvent,
 } from '@/lib/wedding/schema'
 import { WEDDING_THEMES } from '@/lib/wedding/themes'
+import { PRODUCTS, type ProductId } from '@/lib/wedding/products'
 import { encodeInvite, MAX_LINK_PAYLOAD } from '@/lib/wedding/codec'
 import { baseSlug, invitationPath, slugStem } from '@/lib/wedding/slug'
 import { LANG_LABEL, LANGS, wt, type Lang } from '@/lib/wedding/i18n'
 import { WeddingSite } from '../site/WeddingSite'
 import { ACCEPTED_TYPES, PHOTO_DATA_URL, preparePhoto, type CouplePhotos, type PhotoSide } from '@/lib/wedding/photos'
 
-const DRAFT_KEY = 'mj-wedding-draft'
 
 const STEPS = [
   { key: 'couple', hi: 'युगल', en: 'Couple' },
@@ -142,23 +142,21 @@ function PhotoSlot({ side, label, photo, busy, error, onPick, onRemove }: {
 
 // ─── The builder ────────────────────────────────────────────────────────────
 
-/** The opening experiences a couple can choose — stored as the invitation's `o`. */
-const OPENINGS: Array<{ id: OpeningId; name: string; blurb: string; icon: string; swatch: string }> = [
-  { id: 'classic', name: 'Classic Premium Invitation', blurb: 'A sealed Mithila envelope that opens with a tap.', icon: '✉️', swatch: 'radial-gradient(circle at 35% 30%, #B8323F, #5A0E19)' },
-  { id: 'scratch', name: 'MJ Scratch to Reveal', blurb: 'An ivory card with the gold MJ seal — guests scratch gold foil to reveal your date.', icon: '✨', swatch: 'radial-gradient(circle at 35% 30%, #F8E7B0, #B4862F)' },
-]
 /** A published invitation: its short link and the private key that edits it. */
 type Published = { slug: string; key: string }
 
-export function Builder({ initial, published = null, initialPhotos = null }: {
+export function Builder({ initial, published = null, initialPhotos = null, product: productId = 'mithila' }: {
   initial: Invite | null
+  /** Which premium invitation this builder makes (its look, opening and draft). */
+  product?: ProductId
   published?: Published | null
   /** The saved photos, when an edit link reopens a published invitation. */
   initialPhotos?: CouplePhotos | null
 }) {
-  const [theme, setTheme] = useState<ThemeId>(initial?.t ?? 'kohbar')
+  const product = PRODUCTS[productId]
+  const DRAFT_KEY = product.draftKey
+  const [theme, setTheme] = useState<ThemeId>(product.fixedTheme ? product.theme : initial?.t ?? product.theme)
   const [lang, setLang] = useState<Lang>(initial?.l ?? 'mai')
-  const [opening, setOpening] = useState<OpeningId>(initial?.o ?? 'classic')
   /** Bumped to play the envelope opening inside the preview. */
   const [openingRun, setOpeningRun] = useState(0)
   const [c, setC] = useState<WeddingContent>(initial?.c ?? freshContent())
@@ -192,8 +190,7 @@ export function Builder({ initial, published = null, initialPhotos = null }: {
           const parsed = contentSchema.safeParse(d.c)
           if (parsed.success) {
             setC(parsed.data)
-            if (WEDDING_THEMES.some(t => t.id === d.t)) setTheme(d.t)
-            if ((OPENING_IDS as readonly string[]).includes(d.o)) setOpening(d.o)
+            if (!product.fixedTheme && WEDDING_THEMES.some(t => t.id === d.t)) setTheme(d.t)
             if ((LANGS as readonly string[]).includes(d.l)) setLang(d.l)
             if (d.pub && typeof d.pub.slug === 'string' && typeof d.pub.key === 'string') setPub(d.pub)
             const ok = (v: unknown) => (typeof v === 'string' && PHOTO_DATA_URL.test(v) ? v : null)
@@ -204,16 +201,16 @@ export function Builder({ initial, published = null, initialPhotos = null }: {
       } catch { /* no draft */ }
     }
     loaded.current = true
-  }, [initial])
+  }, [initial, DRAFT_KEY, product.fixedTheme])
 
   // Autosave to this device only.
   useEffect(() => {
     if (!loaded.current) return
     const t = setTimeout(() => {
-      try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ t: theme, l: lang, o: opening, c, pub, photos, photoConsent })); setSaved('saved') } catch { /* storage full or blocked */ }
+      try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ t: theme, l: lang, c, pub, photos, photoConsent })); setSaved('saved') } catch { /* storage full or blocked */ }
     }, 600)
     return () => clearTimeout(t)
-  }, [c, theme, lang, opening, pub, photos, photoConsent])
+  }, [c, theme, lang, pub, photos, photoConsent, DRAFT_KEY])
 
   async function pickPhoto(side: PhotoSide, file: File) {
     setPhotoErr(e => ({ ...e, [side]: undefined }))
@@ -241,9 +238,8 @@ export function Builder({ initial, published = null, initialPhotos = null }: {
   }, [])
   const setEvents = (events: WeddingEvent[]) => { setC(prev => ({ ...prev, events })); setResult(null) }
 
-  /** The classic envelope is the default and travels as nothing, so classic links stay exactly as they were. */
-  const o = opening === 'classic' ? undefined : opening
-  const invite: Invite = useMemo(() => ({ v: 1, t: theme, l: lang, o, c }), [theme, lang, o, c])
+  const o = product.opening
+  const invite: Invite = useMemo(() => ({ v: 1, t: theme, l: lang, ...(o ? { o } : {}), c }), [theme, lang, o, c])
 
   /** The invitation's language. The welcome message follows it only while it is still an untouched default. */
   const chooseLang = (l: Lang) => {
@@ -263,7 +259,7 @@ export function Builder({ initial, published = null, initialPhotos = null }: {
     if (!parsed.success) { setError(parsed.error.issues[0]?.message ?? 'Please check your details.'); return }
     if (!ready.ready) { setError(`Please add: ${ready.missing.join(', ')}.`); return }
     if (hasPhotos && !photoConsent) { setError('Please tick the box to confirm the photos may be shown on the invitation — or remove them.'); return }
-    const payload = await encodeInvite({ v: 1, t: theme, l: lang, o, c: parsed.data })
+    const payload = await encodeInvite({ v: 1, t: theme, l: lang, ...(o ? { o } : {}), c: parsed.data })
     if (payload.length > MAX_LINK_PAYLOAD) {
       setError('Your invitation has more text than one link can carry. Please shorten the story or the ceremony descriptions.')
       return
@@ -290,7 +286,7 @@ export function Builder({ initial, published = null, initialPhotos = null }: {
       const origin = window.location.origin
       setResult({
         share: `${origin}${invitationPath(next.slug)}`,
-        edit: `${origin}/marriage-invitation/premium?i=${encodeURIComponent(next.slug)}&k=${encodeURIComponent(next.key)}`,
+        edit: `${origin}${product.path}?i=${encodeURIComponent(next.slug)}&k=${encodeURIComponent(next.key)}`,
       })
     } catch {
       setError('Network error. Please try again.')
@@ -305,7 +301,7 @@ export function Builder({ initial, published = null, initialPhotos = null }: {
 
   function startOver() {
     if (!window.confirm('Clear everything and start a new invitation?')) return
-    setC(freshContent()); setTheme('kohbar'); setOpening('classic'); setLang('mai'); setResult(null); setPub(null); go('couple')
+    setC(freshContent()); setTheme(product.theme); setLang('mai'); setResult(null); setPub(null); go('couple')
     setPhotos({}); setPhotoConsent(false); setPhotoErr({})
     try { localStorage.removeItem(DRAFT_KEY) } catch { /* ignore */ }
   }
@@ -563,7 +559,7 @@ export function Builder({ initial, published = null, initialPhotos = null }: {
             {step === 'share' && (
               <div className="space-y-6">
                 <StepHead hi="सजाउ आ पठाउ" en="Choose a look, then share" />
-                <fieldset>
+                {!product.fixedTheme && <fieldset>
                   <legend className="field-label">Theme</legend>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                     {WEDDING_THEMES.map(t => (
@@ -579,25 +575,13 @@ export function Builder({ initial, published = null, initialPhotos = null }: {
                       </button>
                     ))}
                   </div>
-                </fieldset>
-
-                <fieldset>
-                  <legend className="field-label">Opening experience</legend>
-                  <p className="-mt-1 mb-3 text-[13px] text-ink-soft">What guests see first when they open the link.</p>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {OPENINGS.map(op => (
-                      <button key={op.id} type="button" aria-pressed={opening === op.id} onClick={() => { setOpening(op.id); setResult(null) }}
-                        className={`flex items-start gap-3 rounded-mj-sm border-2 bg-cream p-3 text-left transition ${opening === op.id ? 'border-maroon shadow-mj-sm' : 'border-gold/30 hover:border-gold/60'}`}>
-                        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-[20px]" style={{ background: op.swatch }} aria-hidden="true">{op.icon}</span>
-                        <span>
-                          <span className="block font-serif text-[15px] text-maroon leading-tight">{op.name}</span>
-                          <span className="mt-0.5 block text-[12px] text-ink-soft leading-snug">{op.blurb}</span>
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                  <p className="mt-2 text-[12.5px] text-ink-soft">Use “Watch the opening” on the preview to try it.</p>
-                </fieldset>
+                </fieldset>}
+                {product.fixedTheme && (
+                  <p className="rounded-mj-sm border border-gold/40 bg-cream px-4 py-3 text-[14px] text-ink">
+                    <span className="font-serif text-maroon">Ivory &amp; gold, sealed with the MJ monogram.</span>{' '}
+                    Guests scratch gold foil to reveal your wedding date, then the card opens onto your invitation.
+                  </p>
+                )}
 
                 <fieldset className="rounded-mj border border-gold/30 bg-paper p-4 space-y-3">
                   <legend className="px-1 font-deva text-[18px] text-maroon">💌 उपस्थितिक पुष्टि <span className="font-sans text-[13px] text-ink-soft">· Guest replies</span></legend>

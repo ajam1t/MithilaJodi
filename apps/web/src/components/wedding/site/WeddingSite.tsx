@@ -8,6 +8,8 @@ import { Border, Divider, FishPair, Kohbar, Lotus, Paag, Peacock, Sun } from '..
 import { Countdown, LangBar, RsvpWhatsApp, ShareBar, SiteEffects } from './islands'
 import { Envelope } from './Envelope'
 import { ScratchReveal } from './ScratchReveal'
+import { EmbossedFlorals } from './florals'
+import { productOf } from '@/lib/wedding/products'
 import type { CouplePhotos } from '@/lib/wedding/photos'
 
 type Props = {
@@ -96,6 +98,8 @@ function HeroArt({ t }: { t: WeddingTheme }) {
           <FishPair y={110} s={1.1} {...c} />
         </svg>
       )
+    case 'mj':
+      return <EmbossedFlorals className="absolute inset-0 h-full w-full" />
     default:
       return (
         <svg viewBox="-100 -100 200 200" width="300" className="max-w-full opacity-[0.16]" aria-hidden="true">
@@ -117,7 +121,7 @@ export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, openin
     weddingAt: weddingMoment(c.wedding.date, c.wedding.time),
   }
   const motifInk = { ink: t.accent, gold: t.gold }
-  const divider = ({ kohbar: 'lotus', paag: 'paag', peacock: 'peacock', sun: 'sun', line: 'dot' } as const)[t.motif]
+  const divider = ({ kohbar: 'lotus', paag: 'paag', peacock: 'peacock', sun: 'sun', line: 'dot', mj: 'lotus' } as const)[t.motif]
   const couple = `${inv.brideName} & ${inv.groomName}`
   const dateIso = c.wedding.date
   const when = (d: string, tm: string) => [dateL(lang, d), timeL(lang, tm)].filter(Boolean).join(' · ')
@@ -174,6 +178,10 @@ export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, openin
             <span key={`${left}-${top}`} className="wd-glint" style={{ left, top, animationDelay: delay }} aria-hidden="true" />
           ))}
           <div className="relative max-w-[560px]">
+            {t.motif === 'mj' && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src="/logo-mark.png" alt="" width={64} height={59} className="wd-rise wd-d1 mx-auto mb-5 h-[52px] w-auto sm:h-[60px]" />
+            )}
             <p className={`${face(tr('shubhVivah'))} wd-rise wd-d1 text-[34px] sm:text-[44px] leading-none`} style={{ color: t.gold }}>{tr('shubhVivah')}</p>
             <Border ink={t.heroInk} gold={t.gold} className="wd-rise wd-d2 mx-auto mt-5 !w-40 opacity-70" />
             {/* The couple is the page's H1 on a real invitation. Embedded as a
@@ -383,7 +391,7 @@ export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, openin
               {madeBefore}<Link href="/" className="font-semibold underline underline-offset-4" style={{ textDecorationColor: t.gold }}>Mithila Jodi</Link>{madeAfter}
             </p>
             <p className={`mt-1 ${face(tr('tagline'))} text-[15px] opacity-80`}>{tr('tagline')}</p>
-            <Link href="/marriage-invitation/premium" className="inline-block mt-5 rounded-full px-5 py-2.5 text-[14px] font-semibold" style={{ border: `1px solid ${t.gold}`, color: t.heroInk }}>
+            <Link href={productOf(invite).path} className="inline-block mt-5 rounded-full px-5 py-2.5 text-[14px] font-semibold" style={{ border: `1px solid ${t.gold}`, color: t.heroInk }}>
               {tr('createOwn')}
             </Link>
             <p className="mt-6 text-[11px] opacity-60">

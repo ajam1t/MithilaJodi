@@ -50,6 +50,7 @@ const CONTENT_UPDATED = {
   '/marriage-invitation': '2026-10-07',
   '/marriage-invitation/basic': '2026-10-07',
   '/marriage-invitation/premium': '2026-10-07',
+  '/marriage-invitation/scratch-reveal': '2026-10-18',
   '/festivals/chhath-puja': '2026-10-07',
   '/festivals/sama-chakeva': '2026-10-07',
   '/festivals/madhushravani': '2026-10-07',
@@ -89,6 +90,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/marriage-invitation/basic', priority: 0.8, changeFrequency: 'monthly' },
     // Indexable and linked from the hub, but was missing here.
     { path: '/marriage-invitation/premium', priority: 0.8, changeFrequency: 'monthly' },
+    { path: '/marriage-invitation/scratch-reveal', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/digital-profile', priority: 0.9, changeFrequency: 'monthly' },
     { path: '/marriage-biodata', priority: 0.9, changeFrequency: 'monthly' },
     { path: '/about', priority: 0.6, changeFrequency: 'monthly' },

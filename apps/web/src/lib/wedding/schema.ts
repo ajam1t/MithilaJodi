@@ -6,12 +6,14 @@
 import { z } from 'zod'
 import { LANGS, type Lang } from './i18n'
 
-export const THEME_IDS = ['kohbar', 'mithila-vivah', 'madhubani-garden', 'royal-mithila', 'modern-mithila'] as const
+/** The five Mithila Premium themes, then the MJ Scratch & Reveal invitation's own design. */
+export const THEME_IDS = ['kohbar', 'mithila-vivah', 'madhubani-garden', 'royal-mithila', 'modern-mithila', 'mj-ivory'] as const
 export type ThemeId = (typeof THEME_IDS)[number]
 
 /**
- * How the public invitation opens. 'classic' is the sealed Mithila envelope;
- * 'scratch' is the ivory MJ-sealed card whose date the guest scratches free.
+ * How the public invitation opens. 'classic' is Mithila Premium's sealed
+ * envelope; 'scratch' marks the MJ Scratch & Reveal invitation, whose date the
+ * guest scratches free under the gold MJ seal (see lib/wedding/products).
  */
 export const OPENING_IDS = ['classic', 'scratch'] as const
 export type OpeningId = (typeof OPENING_IDS)[number]

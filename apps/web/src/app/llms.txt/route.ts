@@ -31,7 +31,7 @@ function body(): string {
     '',
     '## Wedding resources',
     `- [Marriage Biodata Maker](${u('/marriage-biodata')}): a free marriage biodata in Maithili, Hindi, English or Sanskrit, with gotra, mool and gram; downloads as a PDF, no login.`,
-    `- [Wedding Invitations](${u('/marriage-invitation')}): a free Mithila-inspired invitation card (${u('/marriage-invitation/basic')}) or a Mithila Premium wedding webpage (${u('/marriage-invitation/premium')}).`,
+    `- [Wedding Invitations](${u('/marriage-invitation')}): a free Mithila-inspired invitation card (${u('/marriage-invitation/basic')}) a Mithila Premium wedding webpage (${u('/marriage-invitation/premium')}), or the MJ Scratch & Reveal wedding webpage, opened by scratching the date free (${u('/marriage-invitation/scratch-reveal')}).`,
     '',
     '## Astrology tools for marriage',
     `Free tools families use during the marriage conversation, with the method explained on each page. They are for understanding, not predictions or guarantees. Hub: ${u('/astrology')}`,
