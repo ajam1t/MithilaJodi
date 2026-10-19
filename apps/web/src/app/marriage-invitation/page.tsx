@@ -53,6 +53,10 @@ const FAQS = [
     a: 'A second premium wedding webpage with its own ivory-and-gold design. Guests first see a card sealed with the gold Mithila Jodi monogram and scratch away gold foil to reveal your wedding date, then the card opens onto your invitation — ceremonies, venue, countdown and WhatsApp replies, just like Mithila Premium.',
   },
   {
+    q: 'What is Blush Lace Elegance?',
+    a: 'The third premium wedding webpage, with a romantic design in blush, ivory and fine lace with champagne gold. Guests part a pearl-dotted lace veil to open it, and your photos, if you add them, sit in lace frames on the cover. It has the same ceremonies, venue, countdown and WhatsApp replies as the other premium invitations.',
+  },
+  {
     q: 'Are they all free?',
     a: 'Yes. Every invitation is free and none needs an account or login.',
   },
@@ -75,12 +79,13 @@ const jsonLd = {
       '@id': `${CANONICAL}#page`,
       url: CANONICAL,
       name: 'Wedding Invitations',
-      description: 'Choose a free Mithila wedding invitation: a downloadable invitation card, a Mithila Premium wedding webpage, or the MJ Scratch & Reveal wedding webpage.',
+      description: 'Choose a free Mithila wedding invitation: a downloadable invitation card, or one of three premium wedding webpages — Mithila Premium, MJ Scratch & Reveal and Blush Lace Elegance.',
       publisher: organizationRef(),
       hasPart: [
         { '@type': 'WebApplication', name: 'Basic Invitation Card Maker', url: `${SITE_URL}/marriage-invitation/basic`, applicationCategory: 'DesignApplication', isAccessibleForFree: true },
         { '@type': 'WebApplication', name: 'Mithila Premium Invitation', url: `${SITE_URL}/marriage-invitation/premium`, applicationCategory: 'DesignApplication', isAccessibleForFree: true },
         { '@type': 'WebApplication', name: 'MJ Scratch & Reveal Invitation', url: `${SITE_URL}/marriage-invitation/scratch-reveal`, applicationCategory: 'DesignApplication', isAccessibleForFree: true },
+        { '@type': 'WebApplication', name: 'Blush Lace Elegance Invitation', url: `${SITE_URL}/marriage-invitation/blush-lace`, applicationCategory: 'DesignApplication', isAccessibleForFree: true },
       ],
     },
     {

@@ -12,7 +12,7 @@ import { decodeInvite } from '@/lib/wedding/codec.server'
 import { loadForEdit } from '@/lib/wedding/invites.server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { SAMPLE_INVITE } from '@/lib/wedding/sample'
-import { PRODUCTS } from '@/lib/wedding/products'
+import { PRODUCTS, productOf } from '@/lib/wedding/products'
 import type { Invite } from '@/lib/wedding/schema'
 import { SITE_URL } from '@/lib/constants'
 import { organizationJsonLd, organizationRef } from '@/lib/seo'
@@ -94,9 +94,9 @@ export default async function ScratchRevealInvitationPage({ searchParams }: Prop
   const { d, i, k } = await searchParams
   const stored = i && k ? await loadForEdit(await createAdminClient(), i, k).catch(() => null) : null
   const initial = stored ? decodeInvite(stored.payload) : decodeInvite(d)
-  // A Mithila Premium invitation is edited in its own builder.
-  if (initial && initial.o !== 'scratch') {
-    redirect(`${PRODUCTS.mithila.path}?${stored ? `i=${encodeURIComponent(i!)}&k=${encodeURIComponent(k!)}` : `d=${encodeURIComponent(d!)}`}#builder`)
+  // Another premium invitation is edited in its own builder.
+  if (initial && productOf(initial).id !== PRODUCT.id) {
+    redirect(`${productOf(initial).path}?${stored ? `i=${encodeURIComponent(i!)}&k=${encodeURIComponent(k!)}` : `d=${encodeURIComponent(d!)}`}#builder`)
   }
   const published = stored && initial ? { slug: stored.displaySlug, key: k! } : null
   return (

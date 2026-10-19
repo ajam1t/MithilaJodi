@@ -650,4 +650,126 @@
 .wd[data-theme='mj-ivory'] .wd-hero-art { opacity: 1; animation-name: wdArtFade; }
 /* A plain fade: the default entrance blurs, which is costly on a full-screen picture in WebKit. */
 @keyframes wdArtFade { from { opacity: 0; } to { opacity: 1; } }
-.wd[data-theme='mj-ivory'] .wd-btn { background: linear-gradient(180deg, #7A1220, #5A0E19); box-shadow: 0 12px 24px -14px rgba(74, 13, 28, 0.8), inset 0 0 0 1px rgba(231, 200, 119, 0.45); }
+.wd[data-theme='mj-ivory'] .wd-btn:not(.wd-btn-ghost):not(.wd-btn-wa) { background: linear-gradient(180deg, #7A1220, #5A0E19); box-shadow: 0 12px 24px -14px rgba(74, 13, 28, 0.8), inset 0 0 0 1px rgba(231, 200, 119, 0.45); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Blush Lace Elegance — blush and ivory, fine white lace, champagne gold and a
+   deep rose for the darker bands. Every rule is scoped to this design.
+   No CSS filters on full-screen layers (they exhaust iPhone graphics memory).
+   ═══════════════════════════════════════════════════════════════════════════ */
+.wd[data-theme='blush-lace'] {
+  --w-display: var(--font-cormorant), 'Cormorant Garamond', Georgia, serif;
+  --lace-script: var(--font-vibes), 'Great Vibes', cursive;
+  --lace-rose: #86525E;
+  --lace-rose-deep: #6E3F4B;
+  --lace-blush: #F4DEDF;
+}
+
+/* ── The veil (LaceVeil) ── */
+.wd-veil { position: fixed; inset: 0; z-index: 60; overflow: hidden; container-type: size; transition: opacity 400ms ease; }
+.wd-veil[data-phase='leaving'] { opacity: 0; pointer-events: none; }
+.wd-veil-half {
+  position: absolute; top: 0; bottom: 0; width: 50.5%;
+  background:
+    radial-gradient(circle, rgba(255,255,255,.95) 0 2.2px, rgba(255,255,255,0) 2.8px) 0 0 / 38px 38px,
+    radial-gradient(circle, rgba(255,255,255,.85) 0 1.6px, rgba(255,255,255,0) 2.2px) 19px 19px / 38px 38px,
+    repeating-linear-gradient(115deg, rgba(255,255,255,.07) 0 2px, rgba(255,255,255,0) 2px 7px),
+    linear-gradient(90deg, #EFD3D6 0%, #F7E5E6 55%, #F3DADC 100%);
+  transition: transform 1100ms cubic-bezier(.65, 0, .3, 1);
+}
+.wd-veil-l { left: 0; }
+.wd-veil-r { right: 0; background-position: 19px 0, 0 19px, 0 0, 0 0; transform: scaleX(-1); }
+.wd-veil[data-phase='opening'] .wd-veil-l, .wd-veil[data-phase='leaving'] .wd-veil-l { transform: translateX(-104%); }
+.wd-veil[data-phase='opening'] .wd-veil-r, .wd-veil[data-phase='leaving'] .wd-veil-r { transform: scaleX(-1) translateX(-104%); }
+/* lace scallops along the meeting edge */
+.wd-veil-lace {
+  position: absolute; top: 0; bottom: 0; right: -16px; width: 34px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='44' viewBox='0 0 34 44'%3E%3Cpath d='M0 0H14Q34 11 14 22Q34 33 14 44H0Z' fill='%23FFFFFF'/%3E%3Ccircle cx='16' cy='11' r='2.6' fill='%23E8C5CA'/%3E%3Ccircle cx='16' cy='33' r='2.6' fill='%23E8C5CA'/%3E%3Ccircle cx='6' cy='22' r='1.5' fill='%23C8A96B'/%3E%3C/svg%3E") 0 0 / 34px 44px repeat-y;
+}
+.wd-veil-seal {
+  position: absolute; left: 50%; top: 46%; z-index: 2; width: clamp(128px, min(36cqw, 22cqh), 176px); aspect-ratio: 1; translate: -50% -50%;
+  border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  box-shadow: 0 10px 24px -10px rgba(134, 82, 94, .45);
+  transition: scale 250ms ease, opacity 450ms ease;
+  animation: wdVeilIn 900ms cubic-bezier(.2, .8, .2, 1) 200ms backwards;
+}
+@keyframes wdVeilIn { from { opacity: 0; scale: .85; } to { opacity: 1; scale: 1; } }
+.wd-veil-seal:hover { scale: 1.04; }
+.wd-veil-seal:focus-visible { outline: 3px solid #86525E; outline-offset: 6px; }
+.wd-veil-mono { position: relative; font-family: var(--w-display); font-size: clamp(26px, 8cqw, 36px); color: #86525E; letter-spacing: .02em; line-height: 1; }
+.wd-veil-mono.wd-deva { font-family: var(--w-deva); }
+.wd-veil-mono i { font-family: var(--lace-script); font-style: normal; color: #C8A96B; margin: 0 .12em; font-size: 1.15em; }
+.wd-veil:not([data-phase='closed']) .wd-veil-seal { opacity: 0; scale: 1.15; pointer-events: none; }
+.wd-veil-hint { position: absolute; left: 16px; right: 16px; bottom: max(64px, 10cqh); z-index: 2; text-align: center; font-family: var(--w-display); font-style: italic; font-size: 19px; color: #79676A; animation: wdMjeHint 2.8s ease-in-out 1.2s infinite both; }
+.wd-veil-hint.wd-deva { font-style: normal; font-size: 17px; }
+.wd-veil-skip { position: absolute; right: 14px; bottom: 12px; z-index: 3; min-height: 36px; padding: 0 10px; font-size: 12px; letter-spacing: .06em; color: #86525E; opacity: .55; text-decoration: underline; text-underline-offset: 3px; }
+.wd-veil-skip:hover, .wd-veil-skip:focus-visible { opacity: .9; }
+.wd-veil:not([data-phase='closed']) :is(.wd-veil-hint, .wd-veil-skip) { opacity: 0; pointer-events: none; animation: none; }
+
+/* ── The lace cover ── */
+.wd-lace-hero { flex-direction: column; gap: 18px; padding: 64px 16px 72px; }
+.wd-lace-frame { position: relative; width: min(100%, 500px); min-height: min(150vw, 700px); display: grid; place-items: center; }
+.wd-lace-oval { position: absolute; inset: 0; width: 100%; height: 100%; }
+.wd-lace-cover { position: relative; width: 100%; padding: clamp(104px, 27%, 150px) 16% clamp(120px, 31%, 172px); display: grid; justify-items: center; gap: 10px; text-align: center; }
+.wd-lace-photos { display: flex; justify-content: center; margin-bottom: 6px; }
+.wd-lace-photo { width: clamp(84px, 24vw, 112px); aspect-ratio: 3 / 4; margin: 0 -8px; border-radius: 999px 999px 18px 18px; overflow: hidden; border: 3px solid #FFFFFF; box-shadow: 0 0 0 1px #C8A96B, 0 10px 20px -12px rgba(134, 82, 94, .55); background: var(--lace-blush); }
+.wd-lace-photo img { width: 100%; height: 100%; object-fit: cover; display: block; color: transparent; }
+.wd-lace-kicker { font-family: var(--w-display); font-style: italic; font-size: 19px; color: #79676A; letter-spacing: .03em; }
+.wd-lace-kicker.wd-deva { font-style: normal; font-size: 18px; }
+.wd-lace-names { font-family: var(--w-display); font-weight: 500; font-size: clamp(34px, 10vw, 54px); line-height: 1.04; color: #86525E; overflow-wrap: anywhere; }
+.wd-lace-names .wd-deva { font-size: .86em; line-height: 1.2; }
+.wd-lace-amp { display: block; font-family: var(--lace-script); font-size: .9em; line-height: 1.1; color: #C8A96B; }
+.wd-lace-invite { max-width: 20em; font-family: var(--w-display); font-style: italic; font-size: 18px; line-height: 1.35; color: #46363A; }
+.wd-lace-invite.wd-deva { font-style: normal; font-size: 17px; line-height: 1.5; }
+.wd-lace-date { margin-top: 6px; font-family: var(--w-display); font-size: 22px; letter-spacing: .08em; color: #46363A; }
+.wd-lace-when { margin-top: 2px; font-family: var(--font-mukta), sans-serif; font-size: 14px; letter-spacing: .02em; color: #79676A; }
+.wd-lace-venue { max-width: 15em; font-family: var(--w-display); font-size: 13px; line-height: 1.5; letter-spacing: .14em; text-transform: uppercase; color: #86525E; overflow-wrap: anywhere; }
+.wd-lace-venue.wd-deva { letter-spacing: 0; font-size: 16px; text-transform: none; }
+.wd-lace-tag { font-family: var(--lace-script); font-size: 22px; color: #C8A96B; }
+.wd-lace-cue { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; font-size: 15px; color: #86525E; opacity: .85; }
+.wd-lace-cue:hover { opacity: 1; }
+
+/* ── Sections ── */
+.wd[data-theme='blush-lace'] .wd-section { background: #FFFCF6; }
+.wd[data-theme='blush-lace'] .wd-alt {
+  background: radial-gradient(circle, rgba(255,255,255,.7) 0 1.4px, rgba(255,255,255,0) 2px) 0 0 / 26px 26px, #F8E9E9;
+}
+.wd[data-theme='blush-lace'][data-lang='en'] .wd-h2, .wd[data-theme='blush-lace'] .wd-h2:not(:lang(hi)):not(:lang(mai)):not(:lang(sa)) { font-weight: 500; }
+.wd[data-theme='blush-lace'] .wd-h2 { color: #86525E; }
+.wd[data-theme='blush-lace'] .wd-h2::after {
+  content: ''; display: block; width: 140px; height: 12px; margin: 12px auto 0;
+  background:
+    linear-gradient(90deg, transparent, #C8A96B 42%, transparent 42%, transparent 58%, #C8A96B 58%, transparent) center / 100% 1px no-repeat,
+    radial-gradient(circle, #C8A96B 0 3px, transparent 3.5px) center / 12px 12px no-repeat;
+}
+.wd[data-theme='blush-lace'] .wd-card { background: #FFFFFF; border: 1px solid rgba(200, 169, 107, .5); border-radius: 22px; box-shadow: 0 18px 38px -28px rgba(134, 82, 94, .45); }
+.wd[data-theme='blush-lace'] .wd-btn:not(.wd-btn-ghost):not(.wd-btn-wa) { background: #86525E; box-shadow: 0 12px 24px -14px rgba(134, 82, 94, .8), inset 0 0 0 1px rgba(200, 169, 107, .55); }
+.wd[data-theme='blush-lace'] .wd-timeline::before { width: 1px; background: linear-gradient(#C8A96B, rgba(200, 169, 107, .25)); }
+.wd[data-theme='blush-lace'] .wd-event-dot { background: #FFFFFF; border: 1px solid #C8A96B; box-shadow: 0 0 0 4px #F8E9E9; }
+.wd[data-theme='blush-lace'] .wd-portrait { border-radius: 999px 999px 24px 24px; }
+
+/* Deep-rose bands with lace trims and a ribbon (countdown, RSVP). */
+.wd[data-theme='blush-lace'] .wd-band { position: relative; padding: 0; background: linear-gradient(180deg, #86525E 0%, #6E3F4B 100%); color: #FFF6F4; }
+.wd-band .wd-lace-edge { display: block; }
+.wd-band > .wd-wrap { padding: 8px 20px 44px; }
+.wd-band-ribbon { display: block; width: min(520px, 86%); height: auto; margin: 6px auto 4px; opacity: .9; }
+.wd[data-theme='blush-lace'] .wd-band :is(.wd-h2, .wd-accent) { color: #FFF6F4; }
+.wd[data-theme='blush-lace'] .wd-band .wd-h2::after { filter: none; opacity: .9; }
+.wd[data-theme='blush-lace'] .wd-band .wd-sub { color: rgba(255, 246, 244, .78); }
+.wd[data-theme='blush-lace'] .wd-band .wd-count > div { background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .35); }
+.wd[data-theme='blush-lace'] .wd-band .wd-count b { color: #FFFFFF; }
+.wd[data-theme='blush-lace'] .wd-band .wd-count span { color: #F4DEDF; }
+.wd[data-theme='blush-lace'] .wd-band .wd-card { color: #46363A; }
+.wd[data-theme='blush-lace'] .wd-band .wd-card .wd-accent { color: #86525E; }
+
+/* Guest information, framed in a lace oval. */
+.wd-lace-note { position: relative; max-width: 440px; margin: 0 auto; min-height: 400px; display: grid; place-items: center; }
+.wd-lace-note-oval { position: absolute; inset: 0; width: 100%; height: 100%; }
+.wd-lace-note-body { position: relative; padding: 84px 17%; display: grid; gap: 18px; text-align: center; color: #46363A; overflow-wrap: anywhere; }
+.wd-lace-label { font-family: var(--w-display); font-style: italic; font-size: 17px; letter-spacing: .04em; color: #86525E; }
+.wd-lace-label.wd-deva { font-style: normal; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wd-veil-half, .wd-veil-seal { transition: none !important; animation: none !important; }
+  .wd-veil-hint { animation: none !important; }
+}

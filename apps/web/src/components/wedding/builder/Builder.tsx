@@ -577,10 +577,10 @@ export function Builder({ initial, published = null, initialPhotos = null, produ
                     ))}
                   </div>
                 </fieldset>}
-                {product.fixedTheme && (
+                {product.designNote && (
                   <p className="rounded-mj-sm border border-gold/40 bg-cream px-4 py-3 text-[14px] text-ink">
-                    <span className="font-serif text-maroon">Ivory &amp; gold, sealed with the MJ monogram.</span>{' '}
-                    Guests scratch gold foil to reveal your wedding date, then the card opens onto your invitation.
+                    <span className="font-serif text-maroon">{product.designNote.title}</span>{' '}
+                    {product.designNote.body}
                   </p>
                 )}
 

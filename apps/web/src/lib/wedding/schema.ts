@@ -6,16 +6,17 @@
 import { z } from 'zod'
 import { LANGS, type Lang } from './i18n'
 
-/** The five Mithila Premium themes, then the MJ Scratch & Reveal invitation's own design. */
-export const THEME_IDS = ['kohbar', 'mithila-vivah', 'madhubani-garden', 'royal-mithila', 'modern-mithila', 'mj-ivory'] as const
+/** The five Mithila Premium themes, then the own designs of MJ Scratch & Reveal and Blush Lace Elegance. */
+export const THEME_IDS = ['kohbar', 'mithila-vivah', 'madhubani-garden', 'royal-mithila', 'modern-mithila', 'mj-ivory', 'blush-lace'] as const
 export type ThemeId = (typeof THEME_IDS)[number]
 
 /**
  * How the public invitation opens. 'classic' is Mithila Premium's sealed
  * envelope; 'scratch' marks the MJ Scratch & Reveal invitation, whose date the
- * guest scratches free under the gold MJ seal (see lib/wedding/products).
+ * guest scratches free under the gold MJ seal; 'lace' marks Blush Lace
+ * Elegance, opened by parting a pearl-dotted lace veil (see lib/wedding/products).
  */
-export const OPENING_IDS = ['classic', 'scratch'] as const
+export const OPENING_IDS = ['classic', 'scratch', 'lace'] as const
 export type OpeningId = (typeof OPENING_IDS)[number]
 
 const text = (max: number) => z.string().trim().max(max, `Please keep this under ${max} characters.`)

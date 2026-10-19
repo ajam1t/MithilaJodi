@@ -21,7 +21,7 @@ export type WeddingTheme = {
   heroBg: string
   heroInk: string
   /** Signature motif for the opening and section dividers. */
-  motif: 'kohbar' | 'paag' | 'peacock' | 'sun' | 'line' | 'mj'
+  motif: 'kohbar' | 'paag' | 'peacock' | 'sun' | 'line' | 'mj' | 'lace'
   /** 0 = almost none (modern) … 2 = rich (kohbar). */
   ornament: 0 | 1 | 2
 }
@@ -71,5 +71,18 @@ export const MJ_IVORY: WeddingTheme = {
   motif: 'mj', ornament: 1,
 }
 
+/**
+ * Blush Lace Elegance — blush and ivory with fine white lace, champagne gold
+ * line work and a deep rose for its darker bands. Its own design, so it is never
+ * offered in the Mithila Premium picker either.
+ */
+export const BLUSH_LACE: WeddingTheme = {
+  id: 'blush-lace', name: 'Blush Lace', hi: 'गुलाबी लेस', tagline: 'Blush, ivory and fine lace with champagne gold',
+  bg: '#FFFCF6', surface: '#F8E9E9', ink: '#46363A', accent: '#86525E', soft: '#79676A', gold: '#C8A96B',
+  heroBg: 'radial-gradient(ellipse 90% 70% at 50% 35%, #FFF7F5 0%, #F7E3E3 55%, #EED0D3 100%)', heroInk: '#46363A',
+  motif: 'lace', ornament: 1,
+}
+
+const OWN_DESIGNS = [MJ_IVORY, BLUSH_LACE]
 export const weddingTheme = (id: ThemeId): WeddingTheme =>
-  (id === MJ_IVORY.id ? MJ_IVORY : WEDDING_THEMES.find(t => t.id === id)) ?? WEDDING_THEMES[0]
+  OWN_DESIGNS.find(t => t.id === id) ?? WEDDING_THEMES.find(t => t.id === id) ?? WEDDING_THEMES[0]

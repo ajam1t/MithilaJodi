@@ -5,8 +5,8 @@ import { useState } from 'react'
 
 /**
  * The first decision on /marriage-invitation: which invitation to make.
- * Basic beside Premium; Premium holds its two invitations (Mithila Premium and
- * MJ Scratch & Reveal) side by side, equal in weight. The menu links to #premium. Each card is one link into its own builder, so
+ * Basic above Premium; Premium holds its three invitations (Mithila Premium,
+ * MJ Scratch & Reveal and Blush Lace Elegance) side by side, equal in weight. The menu links to #premium.
  * browser back returns here. Features listed are only ones that exist.
  */
 
@@ -36,6 +36,17 @@ const SCRATCH = [
   'Ivory & gold design',
   'Live countdown',
   'Tilak to Vidai',
+  'Venue & directions',
+  'WhatsApp RSVP',
+  'Four languages',
+]
+
+const LACE = [
+  'Lace veil opening',
+  'Blush & ivory lace design',
+  'Optional couple photos',
+  'Live countdown',
+  'Ceremony timeline',
   'Venue & directions',
   'WhatsApp RSVP',
   'Four languages',
@@ -86,9 +97,24 @@ function SealEmblem() {
   )
 }
 
-function Features({ items, rich }: { items: string[]; rich?: boolean }) {
+/** A lace oval frame with a small rosette — the Blush Lace cover. */
+function LaceEmblem() {
+  const scallops = Array.from({ length: 20 }, (_, i) => {
+    const a = (i / 20) * Math.PI * 2
+    return `<circle cx="${(32 + Math.cos(a) * 21).toFixed(1)}" cy="${(32 + Math.sin(a) * 26).toFixed(1)}" r="4.2"/>`
+  }).join('')
   return (
-    <ul className="mt-4 grid grid-cols-2 gap-x-3 gap-y-1.5 sm:mt-5 sm:gap-y-2">
+    <svg viewBox="0 0 64 64" className="h-11 w-11 sm:h-14 sm:w-14" aria-hidden="true">
+      <g fill="#FFFFFF" stroke="#E8C5CA" strokeWidth="1" dangerouslySetInnerHTML={{ __html: scallops }} />
+      <ellipse cx="32" cy="32" rx="19" ry="24" fill="#FFFFFF" stroke="#C8A96B" strokeWidth="1.2" />
+      <path d="M26 30c0-4 6-5 6 0 0-5 6-4 6 0 0 4-6 8-6 8s-6-4-6-8Z" fill="#E8C5CA" stroke="#86525E" strokeWidth="1" />
+    </svg>
+  )
+}
+
+function Features({ items, rich, className = '' }: { items: string[]; rich?: boolean; className?: string }) {
+  return (
+    <ul className={`mt-4 grid grid-cols-2 gap-x-3 gap-y-1.5 sm:mt-5 sm:gap-y-2 ${className}`}>
       {items.map(f => (
         <li key={f} className={`flex gap-1.5 text-[13.5px] leading-snug sm:gap-2 sm:text-[14.5px] ${rich ? 'text-cream/90' : 'text-ink'}`}>
           <span className={rich ? 'text-gold-lt' : 'text-marigold'} aria-hidden="true">◆</span>
@@ -100,12 +126,12 @@ function Features({ items, rich }: { items: string[]; rich?: boolean }) {
 }
 
 export function InvitationChooser() {
-  const [chosen, setChosen] = useState<'basic' | 'premium' | 'scratch' | null>(null)
-  const ring = (k: 'basic' | 'premium' | 'scratch') =>
+  const [chosen, setChosen] = useState<'basic' | 'premium' | 'scratch' | 'lace' | null>(null)
+  const ring = (k: 'basic' | 'premium' | 'scratch' | 'lace') =>
     chosen === k ? 'ring-4 ring-gold-lt/70 shadow-[0_0_0_1px_rgba(228,197,114,0.9),0_24px_50px_-20px_rgba(185,138,46,0.75)]' : ''
 
   return (
-    <div className="grid items-stretch gap-4 lg:grid-cols-3 lg:gap-5">
+    <div className="grid items-stretch gap-4 lg:gap-5">
       {/* ── Basic ── */}
       <Link
         href="/marriage-invitation/basic"
@@ -119,7 +145,7 @@ export function InvitationChooser() {
         </div>
         <h3 className="mt-3 font-serif text-[24px] leading-tight text-maroon sm:text-[27px]">Basic Invitation</h3>
         <p id="choose-basic-sub" className="mt-1 text-[15px] text-ink-soft">Beautiful digital wedding invitation cards</p>
-        <Features items={BASIC} />
+        <Features items={BASIC} className="lg:max-w-3xl lg:grid-cols-3" />
         <div className="mt-auto pt-4 sm:pt-6">
           <p className="mb-2.5 text-[12.5px] text-ink-soft">Free · Ready in about a minute</p>
           <span className="btn-primary inline-flex w-full justify-center px-6 py-3 text-[15px] transition-transform group-hover:translate-x-0.5 sm:w-auto">
@@ -128,15 +154,15 @@ export function InvitationChooser() {
         </div>
       </Link>
 
-      <p className="text-center text-[12px] font-semibold uppercase tracking-[0.3em] text-terra lg:hidden" aria-hidden="true">or</p>
+      <p className="text-center text-[12px] font-semibold uppercase tracking-[0.3em] text-terra" aria-hidden="true">or</p>
 
       {/* ── Premium: two invitations to choose between ── */}
-      <section id="premium" aria-labelledby="choose-premium-heading" className="scroll-mt-24 rounded-[26px] border border-gold/45 bg-cream/70 p-3 shadow-mj-xs sm:p-4 lg:col-span-2">
+      <section id="premium" aria-labelledby="choose-premium-heading" className="scroll-mt-24 rounded-[26px] border border-gold/45 bg-cream/70 p-3 shadow-mj-xs sm:p-4">
         <div className="mb-3 px-1 text-center sm:mb-4">
           <h3 id="choose-premium-heading" className="font-serif text-[21px] leading-tight text-maroon sm:text-[24px]">✦ Premium Invitation</h3>
-          <p className="mt-0.5 text-[13.5px] text-ink-soft sm:text-[14.5px]">A complete wedding webpage — choose one of two experiences</p>
+          <p className="mt-0.5 text-[13.5px] text-ink-soft sm:text-[14.5px]">A complete wedding webpage — choose one of three designs</p>
         </div>
-        <div className="grid items-stretch gap-3 sm:gap-4 lg:grid-cols-2">
+        <div className="grid items-stretch gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
       {/* ── Mithila Premium ── */}
       <Link
         href="/marriage-invitation/premium#builder"
@@ -191,6 +217,30 @@ export function InvitationChooser() {
           <p className="mb-2.5 text-[12.5px] text-ink-soft">Free · No login · Link stays open for 180 days</p>
           <span className="inline-flex w-full justify-center rounded-mj-sm bg-maroon px-6 py-3 text-[15px] font-semibold text-cream shadow-mj-sm transition-transform group-hover:translate-x-0.5 sm:w-auto">
             Create Scratch &amp; Reveal →
+          </span>
+        </div>
+      </Link>
+
+      {/* ── Blush Lace Elegance ── */}
+      <Link
+        href="/marriage-invitation/blush-lace#builder"
+        onClick={() => setChosen('lace')}
+        aria-describedby="choose-lace-sub"
+        className={`group relative flex flex-col overflow-hidden rounded-[22px] border border-[#E8C5CA] p-4 text-[#46363A] shadow-mj transition duration-300 hover:-translate-y-1 hover:border-[#C8A96B] hover:shadow-[0_28px_56px_-24px_rgba(134,82,94,0.6)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#E8C5CA] motion-reduce:transform-none sm:p-7 ${ring('lace')}`}
+        style={{ background: 'radial-gradient(circle, rgba(255,255,255,.75) 0 1.4px, rgba(255,255,255,0) 2px) 0 0 / 24px 24px, radial-gradient(ellipse 90% 70% at 20% 0%, #FFF8F6 0%, #F7E3E3 60%, #EFD3D6 100%)' }}
+      >
+        <span className="pointer-events-none absolute inset-2 rounded-[16px] border border-dashed border-[#C8A96B]/50" aria-hidden="true" />
+        <div className="relative flex items-start justify-between gap-3">
+          <LaceEmblem />
+          <span className="rounded-full bg-[#86525E] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-[#FFF6F4] shadow-mj-xs">✦ New · Premium</span>
+        </div>
+        <h3 className="relative mt-3 font-serif text-[24px] leading-tight text-[#86525E] sm:text-[27px]">Blush Lace Elegance</h3>
+        <p id="choose-lace-sub" className="relative mt-1 text-[15px] text-[#79676A]">Romantic blush, ivory and fine lace</p>
+        <div className="relative"><Features items={LACE} /></div>
+        <div className="relative mt-auto pt-4 sm:pt-6">
+          <p className="mb-2.5 text-[12.5px] text-[#79676A]">Free · No login · Link stays open for 180 days</p>
+          <span className="inline-flex w-full justify-center rounded-mj-sm bg-[#86525E] px-6 py-3 text-[15px] font-semibold text-[#FFF6F4] shadow-mj-sm transition-transform group-hover:translate-x-0.5 sm:w-auto">
+            Create Blush Lace →
           </span>
         </div>
       </Link>

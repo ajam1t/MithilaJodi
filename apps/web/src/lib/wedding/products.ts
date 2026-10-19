@@ -8,8 +8,10 @@ import type { Invite, OpeningId, ThemeId } from './schema'
  *   mithila — Mithila Premium: five themes, the sealed envelope opening.
  *   scratch — MJ Scratch & Reveal: one ivory-and-gold design, opened by
  *             scratching the date free under the gold MJ seal.
+ *   lace    — Blush Lace Elegance: blush, ivory and fine lace, opened by
+ *             parting a pearl-dotted lace veil.
  */
-export type ProductId = 'mithila' | 'scratch'
+export type ProductId = 'mithila' | 'scratch' | 'lace'
 
 export type PremiumProduct = {
   id: ProductId
@@ -23,6 +25,8 @@ export type PremiumProduct = {
   opening?: OpeningId
   /** Separate drafts, so starting one invitation never overwrites the other. */
   draftKey: string
+  /** For a fixed design, a line in the builder describing it. */
+  designNote?: { title: string; body: string }
 }
 
 export const PRODUCTS: Record<ProductId, PremiumProduct> = {
@@ -33,8 +37,15 @@ export const PRODUCTS: Record<ProductId, PremiumProduct> = {
   scratch: {
     id: 'scratch', name: 'MJ Scratch & Reveal Invitation', path: '/marriage-invitation/scratch-reveal',
     theme: 'mj-ivory', fixedTheme: true, opening: 'scratch', draftKey: 'mj-wedding-draft-scratch',
+    designNote: { title: 'Ivory & gold, sealed with the MJ monogram.', body: 'Guests scratch gold foil to reveal your wedding date, then the card opens onto your invitation.' },
+  },
+  lace: {
+    id: 'lace', name: 'Blush Lace Elegance', path: '/marriage-invitation/blush-lace',
+    theme: 'blush-lace', fixedTheme: true, opening: 'lace', draftKey: 'mj-wedding-draft-lace',
+    designNote: { title: 'Blush, ivory and fine lace, with champagne gold.', body: 'Guests part a pearl-dotted lace veil to open your invitation. Your photos, if you add them, sit in lace frames on the cover.' },
   },
 }
 
 /** Which product an invitation was made with. */
-export const productOf = (invite: Pick<Invite, 'o'>): PremiumProduct => (invite.o === 'scratch' ? PRODUCTS.scratch : PRODUCTS.mithila)
+export const productOf = (invite: Pick<Invite, 'o'>): PremiumProduct =>
+  invite.o === 'scratch' ? PRODUCTS.scratch : invite.o === 'lace' ? PRODUCTS.lace : PRODUCTS.mithila

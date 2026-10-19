@@ -14,7 +14,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { SITE_URL } from '@/lib/constants'
 import { organizationJsonLd, organizationRef } from '@/lib/seo'
 import { RelatedGuides } from '@/components/journal/RelatedGuides'
-import { PRODUCTS } from '@/lib/wedding/products'
+import { productOf } from '@/lib/wedding/products'
 
 const CANONICAL = `${SITE_URL}/marriage-invitation/premium`
 
@@ -99,9 +99,9 @@ export default async function PremiumInvitationPage({ searchParams }: Props) {
   // invitation so saving updates the same link; an old long edit link (?d=) still works.
   const stored = i && k ? await loadForEdit(await createAdminClient(), i, k).catch(() => null) : null
   const initial = stored ? decodeInvite(stored.payload) : decodeInvite(d)
-  // An MJ Scratch & Reveal invitation is edited in its own builder.
-  if (initial?.o === 'scratch') {
-    redirect(`${PRODUCTS.scratch.path}?${stored ? `i=${encodeURIComponent(i!)}&k=${encodeURIComponent(k!)}` : `d=${encodeURIComponent(d!)}`}#builder`)
+  // Another premium invitation is edited in its own builder.
+  if (initial && productOf(initial).id !== 'mithila') {
+    redirect(`${productOf(initial).path}?${stored ? `i=${encodeURIComponent(i!)}&k=${encodeURIComponent(k!)}` : `d=${encodeURIComponent(d!)}`}#builder`)
   }
   const published = stored && initial ? { slug: stored.displaySlug, key: k! } : null
   return (

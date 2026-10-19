@@ -9,6 +9,9 @@ import { Countdown, LangBar, RsvpWhatsApp, ShareBar, SiteEffects } from './islan
 import { Envelope } from './Envelope'
 import { MjEnvelope } from './MjEnvelope'
 import { ScratchDate } from './ScratchDate'
+import { LaceVeil } from './LaceVeil'
+import { LaceEdge, LaceOval, Ribbon } from './lace'
+import { cormorant, greatVibes } from '@/lib/wedding/fonts'
 import { EmbossedFlorals } from './florals'
 import { productOf } from '@/lib/wedding/products'
 import type { CouplePhotos } from '@/lib/wedding/photos'
@@ -42,9 +45,14 @@ function themeVars(t: WeddingTheme): CSSProperties {
   } as CSSProperties
 }
 
-function Section({ id, title, sub, children, alt = false, wide = false }: { id: string; title: string; sub?: string; children: ReactNode; alt?: boolean; wide?: boolean }) {
+function Section({ id, title, sub, children, alt = false, wide = false, className = '', top, bottom }: {
+  id: string; title: string; sub?: string; children: ReactNode; alt?: boolean; wide?: boolean
+  /** Extra classes, and full-width trims drawn at the section's top and bottom edges. */
+  className?: string; top?: ReactNode; bottom?: ReactNode
+}) {
   return (
-    <section id={id} className={`wd-section ${alt ? 'wd-alt' : ''}`} aria-labelledby={`${id}-h`}>
+    <section id={id} className={`wd-section ${alt ? 'wd-alt' : ''} ${className}`} aria-labelledby={`${id}-h`}>
+      {top}
       <div className={wide ? 'wd-wide' : 'wd-wrap'}>
         <header className="mb-8 sm:mb-10" data-reveal>
           <h2 id={`${id}-h`} className="wd-h2">{title}</h2>
@@ -52,6 +60,7 @@ function Section({ id, title, sub, children, alt = false, wide = false }: { id: 
         </header>
         {children}
       </div>
+      {bottom}
     </section>
   )
 }
@@ -127,7 +136,7 @@ export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, openin
     weddingAt: weddingMoment(c.wedding.date, c.wedding.time),
   }
   const motifInk = { ink: t.accent, gold: t.gold }
-  const divider = ({ kohbar: 'lotus', paag: 'paag', peacock: 'peacock', sun: 'sun', line: 'dot', mj: 'lotus' } as const)[t.motif]
+  const divider = ({ kohbar: 'lotus', paag: 'paag', peacock: 'peacock', sun: 'sun', line: 'dot', mj: 'lotus', lace: 'dot' } as const)[t.motif]
   const couple = `${inv.brideName} & ${inv.groomName}`
   const dateIso = c.wedding.date
   const when = (d: string, tm: string) => [dateL(lang, d), timeL(lang, tm)].filter(Boolean).join(' · ')
@@ -142,12 +151,23 @@ export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, openin
   const face = (text: string) => (DEVANAGARI.test(text) ? 'wd-deva' : 'wd-display')
   const [madeBefore, madeAfter] = tr('madeWith', { brand: '\u0000' }).split('\u0000')
   const scratch = invite.o === 'scratch'
+  const lace = invite.o === 'lace'
   const storageKey = opening === 'session' ? openingKey ?? null : null
+  /** Section headings carry a small emoji, except in Blush Lace Elegance, whose ornament is the lace itself. */
+  const mark = (emoji: string) => (lace ? '' : `${emoji} `)
+  /** Lace trims and ribbon for the deep-rose bands of Blush Lace Elegance. */
+  const band = (id: string) => lace ? {
+    className: 'wd-band',
+    top: <><LaceEdge id={`${id}-t`} /><Ribbon className="wd-band-ribbon" /></>,
+    bottom: <LaceEdge id={`${id}-b`} flip />,
+  } : {}
+  const laceFaces = lace ? ` ${cormorant.variable} ${greatVibes.variable}` : ''
 
   return (
-    <div className={`wd ${mode === 'embedded' ? 'wd-embedded' : ''}`} style={themeVars(t)} data-theme={t.id} data-opening={scratch ? 'scratch' : undefined} data-sealed={scratch && opening !== 'none' ? '' : undefined} data-lang={lang} lang={LANG_TAG[lang]}>
+    <div className={`wd ${mode === 'embedded' ? 'wd-embedded' : ''}${laceFaces}`} style={themeVars(t)} data-theme={t.id} data-opening={scratch ? 'scratch' : lace ? 'lace' : undefined} data-sealed={(scratch || lace) && opening !== 'none' ? '' : undefined} data-lang={lang} lang={LANG_TAG[lang]}>
       {opening !== 'none' && scratch && <MjEnvelope lang={lang} storageKey={storageKey} embedded={mode === 'embedded'} />}
-      {opening !== 'none' && !scratch && (
+      {opening !== 'none' && lace && <LaceVeil lang={lang} bride={c.couple.brideName} groom={c.couple.groomName} storageKey={storageKey} embedded={mode === 'embedded'} />}
+      {opening !== 'none' && !scratch && !lace && (
         <Envelope
           theme={t}
           lang={lang}
@@ -164,6 +184,44 @@ export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, openin
         {mode === 'public' && <SiteEffects />}
 
         {/* ── Opening view — what the card becomes ── */}
+        {lace ? (
+          <header className="wd-hero wd-lace-hero">
+            <div className="wd-lace-frame">
+              <LaceOval className="wd-lace-oval" />
+              <div className="wd-lace-cover">
+                {(photos?.bride || photos?.groom) && (
+                  <div className="wd-lace-photos wd-rise wd-d1">
+                    {(['bride', 'groom'] as const).filter(side => photos?.[side]).map(side => (
+                      <figure key={side} className="wd-lace-photo">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={photos![side]!} alt={`${side === 'bride' ? tr('bride') : tr('groom')} — ${side === 'bride' ? inv.brideName : inv.groomName}`} decoding="async" />
+                      </figure>
+                    ))}
+                  </div>
+                )}
+                <p className={`wd-lace-kicker wd-rise wd-d1 ${DEVANAGARI.test(tr('laceTogether')) ? 'wd-deva' : ''}`}>{tr('laceTogether')}</p>
+                <CoupleTitle className="wd-lace-names wd-rise wd-d2">
+                  <span className={`block ${DEVANAGARI.test(inv.brideName) ? 'wd-deva' : ''}`}>{inv.brideName}</span>
+                  <span className="wd-lace-amp" aria-label={tr('and')}>&amp;</span>
+                  <span className={`block ${DEVANAGARI.test(inv.groomName) ? 'wd-deva' : ''}`}>{inv.groomName}</span>
+                </CoupleTitle>
+                <p className={`wd-lace-invite wd-rise wd-d3 ${DEVANAGARI.test(tr('laceInvite')) ? 'wd-deva' : ''}`}>{tr('laceInvite')}</p>
+                {dateIso && (
+                  <p className="wd-lace-date wd-rise wd-d4">
+                    <span className="block">{dateL(lang, dateIso)}</span>
+                    <span className="block wd-lace-when">{[weekdayL(lang, dateIso), timeL(lang, c.wedding.time)].filter(Boolean).join(' · ')}</span>
+                  </p>
+                )}
+                {c.wedding.venueName && <p className={`wd-lace-venue wd-rise wd-d4 ${DEVANAGARI.test(c.wedding.venueName) ? 'wd-deva' : ''}`}>{c.wedding.venueName}</p>}
+                {c.couple.nickname && <p className="wd-rise wd-d4 mt-2 wd-lace-tag">#{c.couple.nickname.replace(/^#/, '')}</p>}
+              </div>
+            </div>
+            <a href="#welcome" className="wd-rise wd-d5 wd-lace-cue">
+              <span className={face(tr('viewInvitation'))}>{tr('viewInvitation')}</span>
+              <svg className="wd-scroll-cue" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+            </a>
+          </header>
+        ) : (
         <header className="wd-hero">
           <div className="absolute inset-0 -z-10 grid place-items-center wd-hero-art"><HeroArt t={t} /></div>
           {t.ornament > 0 && (
@@ -208,6 +266,7 @@ export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, openin
             </a>
           </div>
         </header>
+        )}
 
         {/* ── The date, scratched free (MJ Scratch & Reveal) ── */}
         {scratch && <ScratchDate lang={lang} date={dateIso} time={c.wedding.time} storageKey={storageKey ? `${storageKey}:date` : null} />}
@@ -229,7 +288,7 @@ export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, openin
 
         {/* ── Story ── */}
         {c.story.text && (
-          <Section id="story" title={`❤️ ${tr('storyTitle')}`} sub={c.story.title || undefined} alt>
+          <Section id="story" title={`${mark('❤️')}${tr('storyTitle')}`} sub={c.story.title || undefined} alt>
             <div className="wd-card p-6 sm:p-9 space-y-4 text-[17px] leading-relaxed" data-reveal>
               {paragraphs(c.story.text).map((p, i) => <p key={i} style={{ whiteSpace: 'pre-line' }} className={i === 0 ? 'first-letter:font-serif first-letter:text-[44px] first-letter:float-left first-letter:mr-2 first-letter:leading-none' : ''}>{p}</p>)}
             </div>
@@ -238,7 +297,7 @@ export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, openin
 
         {/* ── Mithila ── */}
         {showMithila && (
-          <Section id="mithila" title={`🌺 ${tr('mithilaTitle')}`}>
+          <Section id="mithila" title={`${mark('🌺')}${tr('mithilaTitle')}`}>
             {c.mithila.intro && <p className="text-center text-[17px] leading-relaxed max-w-xl mx-auto mb-8" data-reveal style={{ whiteSpace: 'pre-line' }}>{c.mithila.intro}</p>}
             <div className={`grid gap-5 ${brideSide.length && groomSide.length ? 'sm:grid-cols-2' : 'max-w-md mx-auto'}`}>
               {([[brideSide, tr('brideSide')], [groomSide, tr('groomSide')]] as const).filter(([s]) => s.length).map(([side, title]) => (
@@ -293,11 +352,13 @@ export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, openin
 
         {/* ── Countdown ── */}
         {inv.weddingAt && (
-          <section className="wd-section" aria-label={tr('countdownTitle')}>
+          <section className={`wd-section ${lace ? 'wd-band' : ''}`} aria-label={tr('countdownTitle')}>
+            {lace && <><LaceEdge id="cd-t" /><Ribbon className="wd-band-ribbon" /></>}
             <div className="wd-wrap text-center" data-reveal>
               <p className={`${face(tr('countdownTitle'))} text-[24px] sm:text-[30px] wd-accent mb-6`}>{tr('countdownTitle')}</p>
               <Countdown at={inv.weddingAt} lang={lang} label={dateL(lang, dateIso)} />
             </div>
+            {lace && <LaceEdge id="cd-b" flip />}
           </section>
         )}
 
@@ -324,14 +385,14 @@ export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, openin
 
         {/* ── Venue ── */}
         {c.wedding.venueName && (
-          <Section id="venue" title={`📍 ${tr('venueTitle')}`}>
+          <Section id="venue" title={`${mark('📍')}${tr('venueTitle')}`}>
             <div className="wd-card overflow-hidden" data-reveal>
               <div className="p-6 sm:p-8 text-center">
                 <p className="wd-display text-[26px] sm:text-[30px] wd-accent leading-tight">{c.wedding.venueName}</p>
                 {c.wedding.venueAddress && <p className="mt-2 text-[16px] wd-soft" style={{ whiteSpace: 'pre-line' }}>{c.wedding.venueAddress}</p>}
                 {(dateIso || c.wedding.time) && <p className="mt-3 text-[15px]">{when(dateIso, c.wedding.time)}</p>}
-                {c.wedding.dressCode && <p className="mt-2 text-[14px]"><span className="wd-soft">{tr('dressCode')}:</span> {c.wedding.dressCode}</p>}
-                {c.wedding.note && <p className="mt-2 text-[14px] wd-soft" style={{ whiteSpace: 'pre-line' }}>{c.wedding.note}</p>}
+                {!lace && c.wedding.dressCode && <p className="mt-2 text-[14px]"><span className="wd-soft">{tr('dressCode')}:</span> {c.wedding.dressCode}</p>}
+                {!lace && c.wedding.note && <p className="mt-2 text-[14px] wd-soft" style={{ whiteSpace: 'pre-line' }}>{c.wedding.note}</p>}
                 <a className="wd-btn mt-6" href={directionsUrl(c.wedding.mapUrl, venueQuery)} target="_blank" rel="noopener noreferrer">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z" /><circle cx="12" cy="10" r="2.5" /></svg>
                   <span>{tr('directions')}</span>
@@ -350,10 +411,26 @@ export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, openin
           </Section>
         )}
 
+        {/* ── Guest information (Blush Lace Elegance): dress code and notes, framed in lace ── */}
+        {lace && (c.wedding.dressCode || c.wedding.note) && (
+          <Section id="guests" title={tr('laceGuestTitle')} alt>
+            <div className="wd-lace-note" data-reveal>
+              <LaceOval className="wd-lace-note-oval" />
+              <div className="wd-lace-note-body">
+                {c.wedding.dressCode && (
+                  <p><span className={`block wd-lace-label ${DEVANAGARI.test(tr('dressCode')) ? 'wd-deva' : ''}`}>{tr('dressCode')}</span>
+                    <span className={`block mt-1 text-[19px] ${face(c.wedding.dressCode)}`}>{c.wedding.dressCode}</span></p>
+                )}
+                {c.wedding.note && <p className="text-[16px] leading-relaxed" style={{ whiteSpace: 'pre-line' }}>{c.wedding.note}</p>}
+              </div>
+            </div>
+          </Section>
+        )}
+
         {/* ── RSVP ── */}
         {c.rsvp.enabled && c.rsvp.phone && (
-          <Section id="rsvp" title={`💌 ${tr('rsvpTitle')}`} sub={c.rsvp.deadline ? tr('rsvpBy', { date: dateL(lang, c.rsvp.deadline) }) : undefined}>
-            <div className="max-w-md mx-auto" data-reveal>
+          <Section id="rsvp" title={`${mark('💌')}${tr('rsvpTitle')}`} sub={c.rsvp.deadline ? tr('rsvpBy', { date: dateL(lang, c.rsvp.deadline) }) : undefined} {...band('rsvp')}>
+            <div className={`max-w-md mx-auto ${lace ? 'wd-card p-6 sm:p-7' : ''}`} data-reveal>
               <RsvpWhatsApp phone={c.rsvp.phone} couple={couple} contactName={c.rsvp.contactName} lang={lang} />
             </div>
           </Section>
