@@ -166,7 +166,7 @@ export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, openin
   return (
     <div className={`wd ${mode === 'embedded' ? 'wd-embedded' : ''}${laceFaces}`} style={themeVars(t)} data-theme={t.id} data-opening={scratch ? 'scratch' : lace ? 'lace' : undefined} data-sealed={(scratch || lace) && opening !== 'none' ? '' : undefined} data-lang={lang} lang={LANG_TAG[lang]}>
       {opening !== 'none' && scratch && <MjEnvelope lang={lang} storageKey={storageKey} embedded={mode === 'embedded'} />}
-      {opening !== 'none' && lace && <LaceVeil lang={lang} bride={c.couple.brideName} groom={c.couple.groomName} storageKey={storageKey} embedded={mode === 'embedded'} />}
+      {opening !== 'none' && lace && <LaceVeil lang={lang} storageKey={storageKey} embedded={mode === 'embedded'} />}
       {opening !== 'none' && !scratch && !lace && (
         <Envelope
           theme={t}

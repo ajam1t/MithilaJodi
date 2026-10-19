@@ -696,9 +696,9 @@
 @keyframes wdVeilIn { from { opacity: 0; scale: .85; } to { opacity: 1; scale: 1; } }
 .wd-veil-seal:hover { scale: 1.04; }
 .wd-veil-seal:focus-visible { outline: 3px solid #86525E; outline-offset: 6px; }
-.wd-veil-mono { position: relative; font-family: var(--w-display); font-size: clamp(26px, 8cqw, 36px); color: #86525E; letter-spacing: .02em; line-height: 1; }
-.wd-veil-mono.wd-deva { font-family: var(--w-deva); }
-.wd-veil-mono i { font-family: var(--lace-script); font-style: normal; color: #C8A96B; margin: 0 .12em; font-size: 1.15em; }
+.wd-veil-mono { position: relative; display: grid; justify-items: center; gap: 1px; font-family: var(--font-marcellus), Georgia, serif; font-size: clamp(17px, 5.2cqw, 24px); color: #86525E; letter-spacing: .04em; line-height: 1.05; }
+.wd-veil-lotus { width: 1.25em; height: auto; margin-bottom: 3px; }
+.wd-veil-rule { width: 1.6em; height: 1px; margin-top: 4px; background: #C8A96B; }
 .wd-veil:not([data-phase='closed']) .wd-veil-seal { opacity: 0; scale: 1.15; pointer-events: none; }
 .wd-veil-hint { position: absolute; left: 16px; right: 16px; bottom: max(64px, 10cqh); z-index: 2; text-align: center; font-family: var(--w-display); font-style: italic; font-size: 19px; color: #79676A; animation: wdMjeHint 2.8s ease-in-out 1.2s infinite both; }
 .wd-veil-hint.wd-deva { font-style: normal; font-size: 17px; }
