@@ -29,11 +29,14 @@ export const metadata: Metadata = pageMetadata({
     'Mithila Jodi is a matrimonial platform for the Mithila and Maithili community — matchmaking, digital profiles, marriage biodata and wedding tools in one place.',
 })
 
-// Mithila Jodi has a single founder, and this page is the ONE place the site
-// states who it is — search engines and AI assistants should read it from here.
-// Only what has been stated about her is asserted: name, role, and that she is
-// an MBA student at NMIMS. There is no approved photo, so the card uses initials.
-const FOUNDER = { name: 'Resham Chaudhary', role: 'Founder · Mithila Jodi', credential: 'MBA Student · NMIMS' }
+// Mithila Jodi's founders, and this page is the ONE place the site states who
+// they are — search engines and AI assistants should read it from here. Only
+// their names and roles are asserted. There are no approved photos, so the
+// cards use initials.
+const FOUNDERS = [
+  { name: 'Manoj Jha', initials: 'MJ', role: 'Co-Founder · Mithila Jodi', id: 'founder-manoj-jha' },
+  { name: 'Babita Jha', initials: 'BJ', role: 'Co-Founder · Mithila Jodi', id: 'founder-babita-jha' },
+]
 
 const FAQ = [
   {
@@ -172,16 +175,15 @@ const jsonLd = {
       mainEntity: { '@id': ORGANIZATION_ID },
     },
     // The single statement of who founded Mithila Jodi.
-    {
+    ...FOUNDERS.map(f => ({
       '@type': 'Person',
-      '@id': `${canonicalUrl('/about')}#founder`,
-      name: FOUNDER.name,
-      jobTitle: 'Founder',
+      '@id': `${canonicalUrl('/about')}#${f.id}`,
+      name: f.name,
+      jobTitle: 'Co-Founder',
       worksFor: { '@id': ORGANIZATION_ID },
-      affiliation: { '@type': 'CollegeOrUniversity', name: 'NMIMS' },
       url: canonicalUrl('/about'),
-    },
-    { '@type': 'Organization', '@id': ORGANIZATION_ID, founder: { '@id': `${canonicalUrl('/about')}#founder` } },
+    })),
+    { '@type': 'Organization', '@id': ORGANIZATION_ID, founder: FOUNDERS.map(f => ({ '@id': `${canonicalUrl('/about')}#${f.id}` })) },
     { ...breadcrumbJsonLd([{ name: 'Home', path: '/' }, { name: 'About', path: '/about' }]), '@context': undefined },
     { ...faqJsonLd(FAQ), '@context': undefined },
   ],
@@ -417,41 +419,50 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* ── 7. Founder ── */}
+        {/* ── 7. Founders ── */}
         <section aria-labelledby="about-founder" className="py-14 sm:py-20">
           <div className="wrap px-5 sm:px-6">
             <div className="text-center" data-mj-reveal>
-              <Eyebrow center>The person behind Mithila Jodi</Eyebrow>
-              <h2 id="about-founder" className={`mt-4 ${H2}`}>Meet the Founder</h2>
+              <Eyebrow center>The family behind Mithila Jodi</Eyebrow>
+              <h2 id="about-founder" className={`mt-4 ${H2}`}>Meet the Founders</h2>
             </div>
 
             <article data-mj-reveal className="relative mx-auto mt-8 max-w-4xl overflow-hidden rounded-[22px] border border-gold/35 bg-[#FFFBF3] shadow-mj-sm">
               <div className="h-[3px] bg-gradient-to-r from-maroon-deep/20 via-gold to-maroon-deep/20" aria-hidden="true" />
-              <div className="grid gap-6 p-6 sm:p-8 md:grid-cols-[auto_1fr] md:gap-9">
-                <div className="flex items-center gap-4 md:flex-col md:items-start">
-                  <span className="grid h-[84px] w-[84px] shrink-0 place-items-center rounded-full bg-maroon-gradient font-serif text-[28px] font-bold text-gold-lt ring-[3px] ring-gold/60 ring-offset-[3px] ring-offset-[#FFFBF3] sm:h-[104px] sm:w-[104px] sm:text-[34px]" aria-hidden="true">
-                    RC
-                  </span>
-                  <div>
-                    <h3 className="font-serif text-[22px] leading-tight text-maroon">{FOUNDER.name}</h3>
-                    <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8A6516]">{FOUNDER.role}</p>
-                    <p className="mt-1 text-[13px] text-ink-soft">{FOUNDER.credential}</p>
-                  </div>
-                </div>
+              <div className="p-6 sm:p-8">
+                <ul className="grid gap-5 sm:grid-cols-2" aria-label="Founders">
+                  {FOUNDERS.map(f => (
+                    <li key={f.id} className="flex items-center gap-4">
+                      <span className="grid h-[76px] w-[76px] shrink-0 place-items-center rounded-full bg-maroon-gradient font-serif text-[26px] font-bold text-gold-lt ring-[3px] ring-gold/60 ring-offset-[3px] ring-offset-[#FFFBF3] sm:h-[88px] sm:w-[88px] sm:text-[30px]" aria-hidden="true">
+                        {f.initials}
+                      </span>
+                      <div>
+                        <h3 className="font-serif text-[22px] leading-tight text-maroon">{f.name}</h3>
+                        <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8A6516]">{f.role}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
 
-                <div className="min-w-0">
+                <div className="mt-7 min-w-0">
                   <blockquote className="relative border-l-2 border-gold/60 pl-4 font-serif text-[18px] italic leading-snug text-maroon sm:text-[20px]">
-                    “Mithila deserves a matrimonial experience shaped around the way its families actually approach marriage.”
+                    “In Mithila, a marriage begins when two families sit together. We built Mithila Jodi to keep that warmth, and to make the search a little easier.”
                   </blockquote>
                   <div className="mt-5 space-y-3 text-[15px] leading-relaxed text-ink-soft">
                     <p>
-                      Resham Chaudhary is the founder of Mithila Jodi and an MBA student at NMIMS. She built Mithila Jodi with
-                      a simple vision: to create a matrimonial platform for Mithila and Maithili families that understands the
-                      details that matter in their marriage journey — from gotra, mool and native roots to family involvement
-                      and the way biodata is shared.
+                      Manoj Jha and Babita Jha founded Mithila Jodi on a belief that has guided Maithil families for generations:
+                      a marriage is not only the union of two people, but the coming together of two families, with their gram,
+                      their traditions and their blessings.
                     </p>
-                    <p>Her vision is to bring these traditions into a modern digital experience without losing the cultural context behind them.</p>
+                    <p>
+                      For a long time, families have looked for the right match through relatives, trusted elders and word of mouth.
+                      Manoj and Babita wanted to give the Mithila community a place that keeps those values: gotra, mool and native
+                      roots, a real voice for the family, and the dignity with which a biodata is shared. At the same time, it should
+                      make the search simpler and safer, for every Maithil family, wherever in the world they live.
+                    </p>
                   </div>
+                  <p className="mt-5 font-deva text-[19px] text-maroon" lang="mai">अहाँक परिवार लेल उचित जोड़ी, इएह हमर संकल्प अछि।</p>
+                  <p className="mt-1 text-[13px] text-ink-soft">The right match for your family: that is our promise.</p>
                   <ul className="mt-5 flex flex-wrap gap-2" aria-label="Focus areas">
                     {FOUNDER_CHIPS.map(c => (
                       <li key={c} className="rounded-full border border-gold/35 bg-cream px-3 py-1 text-[12px] font-medium text-ink">{c}</li>
