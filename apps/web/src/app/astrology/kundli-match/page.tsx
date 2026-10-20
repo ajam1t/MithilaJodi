@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { KootaBlueprint } from '@/components/astrology/KootaBlueprint'
 import { ToolEmblem } from '@/components/astrology/ToolEmblem'
 import { MoreTools } from '@/components/astrology/MoreTools'
 import '@/styles/kundli.css'
@@ -181,6 +182,7 @@ export default function KundliMatchPage() {
             </div>
             <div>
               <h2 className="font-serif text-maroon text-[26px]">The eight kootas</h2>
+              <div className="mt-4"><KootaBlueprint /></div>
               <div className="mt-4 card overflow-x-auto">
                 <table className="w-full min-w-[480px] text-[14px]">
                   <thead>

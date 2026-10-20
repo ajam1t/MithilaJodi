@@ -36,21 +36,24 @@ export async function FeaturedProfiles() {
   return (
     <section className="pt-9 pb-8 sm:pt-12 sm:pb-10 bg-paper-2/40" aria-label="Featured profiles">
       <div className="wrap">
-        <SectionHeading
-          eyebrow="From Our Community"
-          title="Featured Profiles"
-          subtitle="A glimpse of Maithil individuals and families seeking a meaningful marriage on Mithila Jodi."
-        />
-        <FeaturedCarousel profiles={profiles} />
-        <div className="text-center mt-5">
+        {/* The way to every profile sits beside the heading, where people look for it. */}
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-x-6 gap-y-3 sm:mb-8">
+          <SectionHeading
+            align="left"
+            className="mb-0"
+            eyebrow="From Our Community"
+            title="Featured Profiles"
+            subtitle="A glimpse of Maithil individuals and families seeking a meaningful marriage on Mithila Jodi."
+          />
           <Link
             href="/explore"
-            className="inline-flex items-center gap-1.5 text-maroon font-semibold hover:text-terra transition-colors"
+            className="group inline-flex shrink-0 items-center gap-1.5 rounded-pill border border-gold/50 bg-cream px-4 py-2 text-[14px] font-semibold text-maroon transition-colors hover:border-gold hover:bg-white"
           >
             Explore all profiles
-            <span aria-hidden="true">→</span>
+            <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">→</span>
           </Link>
         </div>
+        <FeaturedCarousel profiles={profiles} />
       </div>
     </section>
   )

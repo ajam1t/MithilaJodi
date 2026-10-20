@@ -993,7 +993,7 @@ export function BiodataBuilder() {
                       </button>
                     </h3>
                     {open && (
-                      <div id={`group-${group.id}`} className="px-4 pb-4 pt-1 border-t border-paper-3 grid grid-cols-2 gap-3">
+                      <div id={`group-${group.id}`} className="mj-bd-open px-4 pb-4 pt-1 border-t border-paper-3 grid grid-cols-2 gap-3">
                         {group.fields.map(f => (
                           <div key={f.key} className={f.half ? 'col-span-1' : 'col-span-2'}>
                             <label className="field-label" htmlFor={`bd-${f.key}`}>{f.label}</label>
@@ -1063,6 +1063,7 @@ export function BiodataBuilder() {
               disabled={pdf.kind === 'working'}
               className="btn-primary text-sm px-5 py-2 disabled:opacity-70 disabled:cursor-wait"
             >
+              {pdf.kind === 'working' && <span className="mj-spin mr-2 inline-block h-3.5 w-3.5 rounded-full border-2 border-cream/40 border-t-cream align-[-2px]" aria-hidden="true" />}
               {pdf.kind === 'working' ? 'Preparing PDF…' : 'Download PDF'}
             </button>
             <button
@@ -1072,6 +1073,7 @@ export function BiodataBuilder() {
               className="btn text-sm px-4 py-2 inline-flex items-center gap-1.5 bg-[#128C7E] border-[#128C7E] text-white hover:bg-[#0F766B] disabled:opacity-70 disabled:cursor-wait"
             >
               <WhatsAppIcon size={16} />
+              {image.kind === 'working' ? <span className="mj-spin inline-block h-3.5 w-3.5 rounded-full border-2 border-white/40 border-t-white" aria-hidden="true" /> : null}
               {image.kind === 'working' ? 'Preparing image…' : 'Image for WhatsApp'}
             </button>
             <button type="button" onClick={() => void print()} className="btn-ghost text-sm px-4 py-2">

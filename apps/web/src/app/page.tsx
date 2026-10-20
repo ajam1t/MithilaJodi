@@ -5,6 +5,7 @@ import { ContextualPromoStrip } from '@/components/home/ContextualPromoStrip'
 import { HeroSection } from '@/components/home/HeroSection'
 import { FeaturedProfiles } from '@/components/home/FeaturedProfiles'
 import { WhyMithilaJodi } from '@/components/home/FeatureStrip'
+import { EcosystemWheel } from '@/components/home/EcosystemWheel'
 import { CommunityStories } from '@/components/home/CommunityStories'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
@@ -86,6 +87,7 @@ export default function HomePage() {
       <main id="main-content" className="flex-1">
         <HeroSection />
         <FeaturedProfiles />
+        <EcosystemWheel />
         <WhyMithilaJodi />
         <CommunityStories />
       </main>

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { HeroCinematic } from './hero/HeroCinematic'
+import { EcosystemIcon, type EcosystemId } from './EcosystemIcons'
 
 /**
  * Homepage hero.
@@ -16,12 +17,12 @@ import { HeroCinematic } from './hero/HeroCinematic'
  * The previous full-bleed /hero-couple.jpg is no longer used here. It is still
  * the Open Graph / Twitter card image in the page metadata.
  */
-const ECOSYSTEM: Array<[string, string, string]> = [
-  ['❤️', 'Matrimony', '/explore'],
-  ['📄', 'Biodata', '/marriage-biodata'],
-  ['💌', 'Wedding Invitation', '/marriage-invitation'],
-  ['🔮', 'Astrology', '/astrology'],
-  ['🌸', 'Mithila Culture', '/festivals'],
+const ECOSYSTEM: Array<[EcosystemId, string, string]> = [
+  ['matrimony', 'Matrimony', '/explore'],
+  ['biodata', 'Biodata', '/marriage-biodata'],
+  ['invitations', 'Wedding Invitation', '/marriage-invitation'],
+  ['astrology', 'Astrology', '/astrology'],
+  ['festivals', 'Mithila Culture', '/festivals'],
 ]
 
 export function HeroSection() {
@@ -86,7 +87,7 @@ export function HeroSection() {
             {ECOSYSTEM.map(([icon, label, href]) => (
               <li key={label}>
                 <Link href={href} className="inline-flex items-center gap-1 rounded-full border border-gold/45 bg-cream px-2.5 py-1 text-[12px] font-medium text-maroon transition-colors hover:border-gold hover:bg-white sm:text-[13px]">
-                  <span aria-hidden="true">{icon}</span>{label}
+                  <EcosystemIcon id={icon} className="h-3.5 w-3.5 text-gold sm:h-4 sm:w-4" />{label}
                 </Link>
               </li>
             ))}

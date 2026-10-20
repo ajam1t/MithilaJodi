@@ -168,7 +168,7 @@ export function InvitationChooser() {
         href="/marriage-invitation/premium#builder"
         onClick={() => setChosen('premium')}
         aria-describedby="choose-premium-sub"
-        className={`group relative flex flex-col overflow-hidden rounded-[22px] border border-gold/60 p-4 text-cream shadow-mj transition duration-300 hover:-translate-y-1 hover:border-gold-lt hover:shadow-[0_28px_56px_-24px_rgba(90,14,25,0.85)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-gold/60 motion-reduce:transform-none sm:p-7 ${ring('premium')}`}
+        className={`group relative flex flex-col overflow-hidden rounded-[22px] border border-gold/60 p-4 text-cream shadow-mj transition duration-300 hover:-translate-y-1 hover:border-gold-lt hover:shadow-[0_28px_56px_-24px_rgba(90,14,25,0.85)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-gold/60 motion-reduce:transform-none sm:p-7 mj-holo ${ring('premium')}`}
         style={{
           background:
             'radial-gradient(ellipse 80% 60% at 100% 0%, rgba(232,150,60,0.22), transparent 60%), linear-gradient(160deg, #8E1A2C 0%, #6E1024 55%, #5A0E19 100%)',
@@ -202,7 +202,7 @@ export function InvitationChooser() {
         href="/marriage-invitation/scratch-reveal#builder"
         onClick={() => setChosen('scratch')}
         aria-describedby="choose-scratch-sub"
-        className={`group relative flex flex-col overflow-hidden rounded-[22px] border border-gold/70 p-4 text-maroon shadow-mj transition duration-300 hover:-translate-y-1 hover:border-gold hover:shadow-[0_28px_56px_-24px_rgba(140,100,32,0.7)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-gold/60 motion-reduce:transform-none sm:p-7 ${ring('scratch')}`}
+        className={`group relative flex flex-col overflow-hidden rounded-[22px] border border-gold/70 p-4 text-maroon shadow-mj transition duration-300 hover:-translate-y-1 hover:border-gold hover:shadow-[0_28px_56px_-24px_rgba(140,100,32,0.7)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-gold/60 motion-reduce:transform-none sm:p-7 mj-holo ${ring('scratch')}`}
         style={{ background: 'radial-gradient(ellipse 90% 70% at 20% 0%, #FFFDF7 0%, #F7EEDC 55%, #EBDAB8 100%)' }}
       >
         <span className="pointer-events-none absolute inset-2 rounded-[16px] border border-gold/40" aria-hidden="true" />
@@ -226,7 +226,7 @@ export function InvitationChooser() {
         href="/marriage-invitation/blush-lace#builder"
         onClick={() => setChosen('lace')}
         aria-describedby="choose-lace-sub"
-        className={`group relative flex flex-col overflow-hidden rounded-[22px] border border-[#E8C5CA] p-4 text-[#46363A] shadow-mj transition duration-300 hover:-translate-y-1 hover:border-[#C8A96B] hover:shadow-[0_28px_56px_-24px_rgba(134,82,94,0.6)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#E8C5CA] motion-reduce:transform-none sm:p-7 ${ring('lace')}`}
+        className={`group relative flex flex-col overflow-hidden rounded-[22px] border border-[#E8C5CA] p-4 text-[#46363A] shadow-mj transition duration-300 hover:-translate-y-1 hover:border-[#C8A96B] hover:shadow-[0_28px_56px_-24px_rgba(134,82,94,0.6)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#E8C5CA] motion-reduce:transform-none sm:p-7 mj-holo ${ring('lace')}`}
         style={{ background: 'radial-gradient(circle, rgba(255,255,255,.75) 0 1.4px, rgba(255,255,255,0) 2px) 0 0 / 24px 24px, radial-gradient(ellipse 90% 70% at 20% 0%, #FFF8F6 0%, #F7E3E3 60%, #EFD3D6 100%)' }}
       >
         <span className="pointer-events-none absolute inset-2 rounded-[16px] border border-dashed border-[#C8A96B]/50" aria-hidden="true" />

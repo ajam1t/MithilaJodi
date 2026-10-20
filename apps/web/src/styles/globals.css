@@ -709,3 +709,115 @@ footer :focus-visible {
     display: none;
   }
 }
+
+/* ── Ecosystem wheel (components/home/EcosystemWheel) ──────────────────────
+   A restrained gradient mesh behind the section; segments that fill maroon
+   when chosen; a gold marker that turns to the selection. Everything here
+   moves only in response to a choice — nothing loops. */
+.mj-eco-bg {
+  background:
+    radial-gradient(38% 46% at 18% 30%, rgba(228, 197, 114, 0.22), transparent 70%),
+    radial-gradient(34% 42% at 84% 70%, rgba(122, 18, 32, 0.07), transparent 70%),
+    radial-gradient(60% 60% at 50% 50%, #FFFAF0, #F7EEDD);
+}
+.mj-eco-seg {
+  fill: #FFFDF8;
+  stroke: rgba(185, 138, 46, 0.55);
+  stroke-width: 1;
+  cursor: pointer;
+  transition: fill 0.35s ease, stroke 0.35s ease;
+}
+.mj-eco-seg:hover { fill: #F8EBD3; }
+.mj-eco-seg[data-on] { fill: #7A1220; stroke: #5A0E19; }
+.mj-eco-tab {
+  color: #7A1220;
+  transition: color 0.3s ease, transform 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.mj-eco-tab:hover:not([data-on]) { color: #B34A24; }
+.mj-eco-tab[data-on] { color: #FBF1DD; }
+.mj-eco-tab:focus-visible { outline: 2px solid #B98A2E; outline-offset: 2px; }
+.mj-eco-marker {
+  transform-box: view-box;
+  transform-origin: 200px 200px;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes mjEcoPanelIn {
+  from { opacity: 0; translate: 0 10px; }
+  to   { opacity: 1; translate: none; }
+}
+@keyframes mjEcoSwap {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .mj-eco-panel { animation: mjEcoPanelIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .mj-eco-swap { animation: mjEcoSwap 0.4s ease both; }
+}
+
+/* ── Koota blueprint (components/astrology/KootaBlueprint) ─────────────────
+   Blueprint grid paper in the astrology indigo, and spokes that draw out
+   from the centre once when the block is revealed. */
+.mj-bp-grid {
+  background-color: #F7F8FC;
+  background-image:
+    linear-gradient(rgba(46, 58, 110, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(46, 58, 110, 0.07) 1px, transparent 1px),
+    linear-gradient(rgba(46, 58, 110, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(46, 58, 110, 0.035) 1px, transparent 1px);
+  background-size: 40px 40px, 40px 40px, 8px 8px, 8px 8px;
+  padding: 18px 8px 10px;
+}
+@keyframes mjBpDraw {
+  from { stroke-dashoffset: var(--len); }
+  to   { stroke-dashoffset: 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .mj-bp.mj-in .mj-bp-draw {
+    stroke-dasharray: var(--len);
+    animation: mjBpDraw 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+/* ── Holographic sheen on the premium invitation cards ─────────────────────
+   One iridescent sweep across the card when it is hovered — the "premium foil"
+   cue. Hover-capable pointers only, never looping, and none at all with
+   reduced motion. pointer-events: none keeps the whole card one link. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .mj-holo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    border-radius: inherit;
+    background: linear-gradient(115deg,
+      transparent 30%,
+      rgba(255, 214, 240, 0.32) 40%,
+      rgba(206, 236, 255, 0.34) 47%,
+      rgba(255, 244, 196, 0.36) 54%,
+      transparent 64%);
+    background-size: 260% 100%;
+    background-position: 120% 0;
+    mix-blend-mode: soft-light;
+    opacity: 0;
+    transition: opacity 0.35s ease, background-position 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .mj-holo:hover::after { opacity: 1; background-position: -20% 0; }
+}
+
+/* ── Biodata maker: a section eases open; buttons spin while they work ── */
+@keyframes mjBdOpen {
+  from { opacity: 0; translate: 0 -4px; }
+  to   { opacity: 1; translate: none; }
+}
+@keyframes mjSpin { to { rotate: 360deg; } }
+@media (prefers-reduced-motion: no-preference) {
+  .mj-bd-open { animation: mjBdOpen 0.28s ease-out both; }
+}
+/* A working spinner is information, not decoration — it keeps turning (slowly)
+   even with reduced motion, which the global rule would otherwise stop. */
+.mj-spin { animation: mjSpin 0.8s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .mj-spin { animation-duration: 1.6s !important; animation-iteration-count: infinite !important; }
+}
