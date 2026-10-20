@@ -71,7 +71,7 @@ const FAQ = [
   },
   {
     q: 'How do I get a PDF?',
-    a: 'Press "Download PDF / Print" and choose "Save as PDF" as the destination in the dialog that opens. On a phone, the share sheet usually offers the same option.',
+    a: 'Press "Download PDF". You get an A4 PDF file with exactly the pages in the preview — on a computer it goes to your Downloads folder, and on a phone tap "Save PDF" and choose Save to Files or send it on WhatsApp. "Print" is there too if you want a paper copy.',
   },
   {
     q: 'Can I send the biodata on WhatsApp as an image?',

@@ -33,7 +33,7 @@ const FOOTER_MM = 8
  * A document only slightly too long for one page is eased onto it; anything
  * more goes onto further pages at full size rather than shrinking the text.
  */
-const MIN_FIT = 0.93
+const MIN_FIT = 0.86
 const BLOCK_GAP = 10
 
 const BODY_FONT = "var(--font-mukta), 'Mukta', 'Nirmala UI', 'Mangal', system-ui, sans-serif"
@@ -47,7 +47,7 @@ const DOC_CSS = `
   @page { size: A4; margin: 0; }
   .bd-measure { display: none !important; }
   .bd-pages { display: block !important; gap: 0 !important; }
-  .bd-page { box-shadow: none !important; margin: 0 !important; height: 296.6mm !important; break-after: page; page-break-after: always; }
+  .bd-page { box-shadow: none !important; margin: 0 !important; height: 296.6mm !important; break-after: page; page-break-after: always; break-inside: avoid; }
   .bd-page:last-child { break-after: auto; page-break-after: auto; }
   div:has(> .bd-doc) { padding: 0 !important; }
 }

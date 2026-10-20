@@ -7,6 +7,7 @@ import { BiodataDocument } from '@/components/biodata/BiodataDocument'
 import { BiodataTemplatePicker } from '@/components/biodata/BiodataTemplatePicker'
 import { WhatsAppIcon } from '@/components/whatsapp/JoinCommunity'
 import { downloadBlob, renderBiodataImages } from '@/lib/biodataImage'
+import { buildBiodataPdf } from '@/lib/biodataPdf'
 import {
   BIODATA_TEMPLATES, DEFAULT_PHOTO_STYLE, PHOTO_SHAPES,
   type BiodataTemplateId, type PhotoShape, type PhotoStyle,
@@ -556,6 +557,7 @@ export function BiodataBuilder() {
   const [openGroup, setOpenGroup] = useState<string>('basic')
   const [printMounted, setPrintMounted] = useState(false)
   const [image, setImage] = useState<ImageState>({ kind: 'idle' })
+  const [pdf, setPdf] = useState<ImageState>({ kind: 'idle' })
   const fileRef = useRef<HTMLInputElement>(null)
 
   const [prefill, setPrefill] = useState<Prefill>({ kind: 'checking' })
@@ -730,12 +732,47 @@ export function BiodataBuilder() {
     document.title = previous
   }
 
-  // A prepared image goes stale as soon as the biodata changes.
+  // A prepared image or PDF goes stale as soon as the biodata changes.
   useEffect(() => {
     setImage(s => (s.kind === 'idle' || s.kind === 'working' ? s : { kind: 'idle' }))
+    setPdf(s => (s.kind === 'idle' || s.kind === 'working' ? s : { kind: 'idle' }))
   }, [documentData, template, language, photoUrl, photoStyle])
 
-  useEffect(() => () => { if (image.kind === 'ready') URL.revokeObjectURL(image.preview) }, [image])
+  /**
+   * The PDF is built here from the page images rather than through the print
+   * dialog: iPhone Safari adds margins to every print, which pushed each A4
+   * page onto two sheets. This file has exactly one sheet per page.
+   */
+  async function makePdf() {
+    setPdf({ kind: 'working' })
+    try {
+      const pages = await renderBiodataImages(await preparePrintRoot())
+      const base = biodataFileName(data.full_name)
+      const file = new File([await buildBiodataPdf(pages, base)], `${base}.pdf`, { type: 'application/pdf' })
+      track('biodata_downloaded', { k: template })
+      // Phones save a PDF most reliably through the share sheet ("Save to Files").
+      if (navigator.canShare?.({ files: [file] }) && window.matchMedia?.('(pointer: coarse)').matches) {
+        setPdf({ kind: 'ready', files: [file], preview: '' })
+      } else {
+        downloadBlob(file, file.name)
+        setPdf({ kind: 'saved', count: pages.length })
+      }
+    } catch (err) {
+      setPdf({ kind: 'error', message: err instanceof Error ? err.message : 'Could not create the PDF.' })
+    }
+  }
+
+  async function sharePdf(files: File[]) {
+    try {
+      await navigator.share({ files, title: 'Marriage biodata' })
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return
+      downloadBlob(files[0], files[0].name)
+      setPdf({ kind: 'saved', count: 1 })
+    }
+  }
+
+  useEffect(() => () => { if (image.kind === 'ready' && image.preview) URL.revokeObjectURL(image.preview) }, [image])
 
   function saveImages(files: File[]) {
     files.forEach(f => downloadBlob(f, f.name))
@@ -982,8 +1019,13 @@ export function BiodataBuilder() {
         {/* ── Live preview ── */}
         <div className="min-w-0">
           <div className="no-print flex flex-wrap items-center gap-2 mb-3">
-            <button type="button" onClick={() => void print()} className="btn-primary text-sm px-5 py-2">
-              Download PDF / Print
+            <button
+              type="button"
+              onClick={() => void makePdf()}
+              disabled={pdf.kind === 'working'}
+              className="btn-primary text-sm px-5 py-2 disabled:opacity-70 disabled:cursor-wait"
+            >
+              {pdf.kind === 'working' ? 'Preparing PDF…' : 'Download PDF'}
             </button>
             <button
               type="button"
@@ -994,6 +1036,9 @@ export function BiodataBuilder() {
               <WhatsAppIcon size={16} />
               {image.kind === 'working' ? 'Preparing image…' : 'Image for WhatsApp'}
             </button>
+            <button type="button" onClick={() => void print()} className="btn-ghost text-sm px-4 py-2">
+              Print
+            </button>
             <span className="text-[12.5px] text-ink-soft">
               {filledCount === 0
                 ? 'Start filling the form — the preview updates as you type.'
@@ -1002,6 +1047,25 @@ export function BiodataBuilder() {
           </div>
 
           <div className="no-print" aria-live="polite">
+            {pdf.kind === 'ready' && (
+              <div className="card p-3 mb-3 flex flex-wrap items-center gap-3 border-gold/50 bg-[#FFFAF0]">
+                <p className="flex-1 min-w-[160px] text-[13px] text-ink leading-snug">
+                  Your PDF is ready. Tap Save PDF, then choose <strong>Save to Files</strong> — or send it straight to WhatsApp.
+                </p>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => void sharePdf(pdf.files)} className="btn-primary text-sm px-4 py-2">
+                    Save PDF
+                  </button>
+                  <button type="button" onClick={() => downloadBlob(pdf.files[0], pdf.files[0].name)} className="btn-ghost text-sm px-4 py-2">
+                    Download
+                  </button>
+                </div>
+              </div>
+            )}
+            {pdf.kind === 'saved' && (
+              <p className="mb-3 text-[12.5px] text-green">PDF saved to your Downloads ({pdf.count} {pdf.count === 1 ? 'page' : 'pages'}).</p>
+            )}
+            {pdf.kind === 'error' && <p className="mb-3 text-[12.5px] text-terra" role="alert">{pdf.message}</p>}
             {image.kind === 'ready' && (
               <div className="card p-3 mb-3 flex flex-wrap items-center gap-3 border-[#128C7E]/30 bg-[#128C7E]/[0.05]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1036,9 +1100,8 @@ export function BiodataBuilder() {
             <BiodataDocument data={documentData} language={language} photoUrl={photoUrl} photoStyle={photoStyle} templateSlug={template} />
           </ScaledPreview>
           <p className="no-print text-[11.5px] text-ink-soft mt-3 leading-snug">
-            For the PDF, choose <strong className="text-ink">Save as PDF</strong> and paper size A4 in the print
-            dialog. The WhatsApp image is a high-resolution JPEG of the same page. Longer biodatas continue on a
-            second framed page automatically.
+            Download PDF saves an A4 file with exactly the pages shown here. The WhatsApp image is a
+            high-resolution JPEG of the same pages. Longer biodatas continue on a second framed page automatically.
           </p>
         </div>
       </div>
