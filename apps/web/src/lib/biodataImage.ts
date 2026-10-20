@@ -12,9 +12,47 @@
 const PIXEL_RATIO = 2
 const JPEG_QUALITY = 0.94
 
-/** WebKit often paints a foreignObject's images only on the second render. */
+/**
+ * WebKit often paints a foreignObject's images only on a later render.
+ *
+ * That is every browser on iPhone and iPad — Chrome there ("CriOS"), Firefox
+ * ("FxiOS") and Edge all run on WebKit — plus Safari on the Mac. Matching
+ * "Safari" while excluding those names missed Chrome on iPhone, whose PDFs
+ * then came out with an empty photo frame and no logo.
+ */
 function isWebKit(): boolean {
-  return /^((?!chrome|android|crios|fxios|edg).)*safari/i.test(navigator.userAgent)
+  const ua = navigator.userAgent
+  const iOS = /iP(hone|od|ad)/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)
+  return iOS || (/AppleWebKit/.test(ua) && !/Chrome|Chromium|Edg|Android/.test(ua))
+}
+
+const wait = (ms: number) => new Promise(r => setTimeout(r, ms))
+
+/**
+ * Swaps each image's address for an inline data URL and waits for it to
+ * decode, so the copy html-to-image draws never has to fetch anything — a
+ * blob: or same-origin URL fetched mid-render is what WebKit drops.
+ * Returns a function that puts the original addresses back.
+ */
+async function inlineImages(root: HTMLElement): Promise<() => void> {
+  const restore: Array<() => void> = []
+  await Promise.all(Array.from(root.querySelectorAll('img')).map(async img => {
+    const src = img.getAttribute('src')
+    if (!src || src.startsWith('data:')) return
+    try {
+      const blob = await (await fetch(img.currentSrc || src)).blob()
+      const data = await new Promise<string>((resolve, reject) => {
+        const r = new FileReader()
+        r.onload = () => resolve(String(r.result))
+        r.onerror = () => reject(r.error)
+        r.readAsDataURL(blob)
+      })
+      img.src = data
+      restore.push(() => { img.src = src })
+      await img.decode().catch(() => {})
+    } catch { /* leave it as it is; html-to-image tries its own fetch */ }
+  }))
+  return () => restore.forEach(f => f())
 }
 
 /** The next/font variables the document's inline styles refer to. */
@@ -63,15 +101,43 @@ export async function renderBiodataImages(root: HTMLElement): Promise<Blob[]> {
     style: { boxShadow: 'none', margin: '0' },
   }
 
+  const restore = await inlineImages(root)
+  const webkit = isWebKit()
   const blobs: Blob[] = []
-  for (const page of pages) {
-    if (isWebKit()) await toCanvas(page, options)
-    const canvas = await toCanvas(page, options)
-    blobs.push(await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob(b => (b ? resolve(b) : reject(new Error('Could not create the image.'))), 'image/jpeg', JPEG_QUALITY)
-    }))
+  try {
+    for (const page of pages) {
+      // Warm-up renders let WebKit decode the images it will paint on the last one.
+      if (webkit) {
+        for (let n = 0; n < 2; n++) { await toCanvas(page, options); await wait(120) }
+      }
+      const canvas = await toCanvas(page, options)
+      blobs.push(await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(b => (b ? resolve(b) : reject(new Error('Could not create the image.'))), 'image/jpeg', JPEG_QUALITY)
+      }))
+    }
+  } finally {
+    restore()
   }
   return blobs
+}
+
+/** A link on a page, as fractions of the page's width and height from its top left. */
+export type PageLink = { href: string; x: number; y: number; w: number; h: number }
+
+/** The links (data-pdf-link) on each page, so the PDF can keep them clickable. */
+export function pageLinks(root: HTMLElement): PageLink[][] {
+  return Array.from(root.querySelectorAll<HTMLElement>('.bd-page')).map(page => {
+    const box = page.getBoundingClientRect()
+    if (!box.width || !box.height) return []
+    return Array.from(page.querySelectorAll<HTMLElement>('[data-pdf-link]')).map(el => {
+      const r = el.getBoundingClientRect()
+      return {
+        href: el.dataset.pdfLink ?? '',
+        x: (r.left - box.left) / box.width, y: (r.top - box.top) / box.height,
+        w: r.width / box.width, h: r.height / box.height,
+      }
+    }).filter(l => /^https?:\/\//i.test(l.href) && l.w > 0 && l.h > 0)
+  })
 }
 
 export function downloadBlob(blob: Blob, filename: string) {

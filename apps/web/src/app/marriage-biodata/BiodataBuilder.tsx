@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { BiodataDocument } from '@/components/biodata/BiodataDocument'
 import { BiodataTemplatePicker } from '@/components/biodata/BiodataTemplatePicker'
 import { WhatsAppIcon } from '@/components/whatsapp/JoinCommunity'
-import { downloadBlob, renderBiodataImages } from '@/lib/biodataImage'
+import { downloadBlob, pageLinks, renderBiodataImages } from '@/lib/biodataImage'
 import { buildBiodataPdf } from '@/lib/biodataPdf'
 import {
   BIODATA_TEMPLATES, DEFAULT_PHOTO_STYLE, PHOTO_SHAPES,
@@ -51,7 +51,7 @@ type FieldSpec = {
   key: keyof BiodataData
   label: string
   placeholder?: string
-  type?: 'text' | 'date' | 'tel' | 'email' | 'textarea'
+  type?: 'text' | 'date' | 'tel' | 'email' | 'url' | 'textarea'
   half?: boolean
 }
 
@@ -175,6 +175,7 @@ const GROUPS: GroupSpec[] = [
       { key: 'mobile', label: 'Mobile', type: 'tel', placeholder: '+91 98765 43210', half: true },
       { key: 'email', label: 'Email', type: 'email', placeholder: 'name@example.com', half: true },
       { key: 'address', label: 'Address', type: 'textarea', placeholder: 'Optional.' },
+      { key: 'profile_link', label: 'Mithila Jodi Digital Profile link', type: 'url', placeholder: 'https://mithilajodi.com/p/…' },
     ],
   },
 ]
@@ -746,9 +747,11 @@ export function BiodataBuilder() {
   async function makePdf() {
     setPdf({ kind: 'working' })
     try {
-      const pages = await renderBiodataImages(await preparePrintRoot())
+      const root = await preparePrintRoot()
+      const links = pageLinks(root)
+      const pages = await renderBiodataImages(root)
       const base = biodataFileName(data.full_name)
-      const file = new File([await buildBiodataPdf(pages, base)], `${base}.pdf`, { type: 'application/pdf' })
+      const file = new File([await buildBiodataPdf(pages, base, links)], `${base}.pdf`, { type: 'application/pdf' })
       track('biodata_downloaded', { k: template })
       // Phones save a PDF most reliably through the share sheet ("Save to Files").
       if (navigator.canShare?.({ files: [file] }) && window.matchMedia?.('(pointer: coarse)').matches) {

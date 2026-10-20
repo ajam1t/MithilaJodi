@@ -80,6 +80,9 @@ export type BiodataData = {
   mobile?: string | null
   email?: string | null
   address?: string | null
+
+  /** The member's Digital Profile link (mithilajodi.com/p/…), printed at the foot. */
+  profile_link?: string | null
 }
 
 export type BiodataLabels = Record<string, string>
@@ -111,6 +114,7 @@ export const BIODATA_LABELS: Record<BiodataLanguage, BiodataLabels> = {
     complexion: 'Complexion',
     kundli: 'Kundli', address: 'Address',
     age: 'Age', gender: 'Gender', religion: 'Religion', caste: 'Caste', years: 'years',
+    more_details: 'For more details and pictures, view my Mithila Jodi Digital Profile',
   },
   mai: {
     title: 'विवाह बायोडाटा',
@@ -134,6 +138,7 @@ export const BIODATA_LABELS: Record<BiodataLanguage, BiodataLabels> = {
     complexion: 'वर्ण',
     kundli: 'कुंडली', address: 'पता',
     age: 'आयु', gender: 'लिंग', religion: 'धर्म', caste: 'जाति', years: 'वर्ष',
+    more_details: 'बेसी जानकारी आ फोटो लेल हमर मिथिला जोड़ी डिजिटल प्रोफ़ाइल देखू',
   },
   hi: {
     title: 'विवाह बायोडाटा',
@@ -157,6 +162,7 @@ export const BIODATA_LABELS: Record<BiodataLanguage, BiodataLabels> = {
     complexion: 'रंग',
     kundli: 'कुंडली', address: 'पता',
     age: 'आयु', gender: 'लिंग', religion: 'धर्म', caste: 'जाति', years: 'वर्ष',
+    more_details: 'अधिक जानकारी और तस्वीरों के लिए मेरी मिथिला जोड़ी डिजिटल प्रोफ़ाइल देखें',
   },
   sa: {
     title: 'विवाहार्थं परिचयपत्रम्',
@@ -180,6 +186,7 @@ export const BIODATA_LABELS: Record<BiodataLanguage, BiodataLabels> = {
     complexion: 'वर्णः',
     kundli: 'कुण्डली', address: 'पता',
     age: 'वयः', gender: 'लिङ्गम्', religion: 'धर्मः', caste: 'जातिः', years: 'वर्षाणि',
+    more_details: 'अधिकविवरणाय चित्रेभ्यश्च मम मिथिलाजोडी-डिजिटल-परिचयं पश्यन्तु',
   },
 }
 

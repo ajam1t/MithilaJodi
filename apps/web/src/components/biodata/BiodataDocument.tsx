@@ -463,6 +463,27 @@ export function BiodataDocument({
     }
   }
 
+  // The Digital Profile link closes the document: photos and the full profile
+  // are one tap away. Only a real web address is printed.
+  const link = String(data.profile_link ?? '').trim()
+  if (/^https?:\/\/\S+$/i.test(link)) {
+    blocks.push({
+      key: 'profile-link',
+      node: (
+        <div style={{ margin: '4px 24px 0', padding: '9px 14px', textAlign: 'center', border: `1px solid ${p.gold}`, borderRadius: 10, background: 'rgba(255,250,240,0.85)' }}>
+          <p style={{ margin: 0, fontFamily: titleFont, fontSize: 13.5, lineHeight: 1.35, color: p.heading }}>{L.more_details ?? BIODATA_LABELS.en.more_details}</p>
+          <a
+            href={link}
+            data-pdf-link={link}
+            style={{ display: 'inline-block', marginTop: 3, fontSize: 13, fontWeight: 600, color: p.heading, textDecoration: 'underline', textUnderlineOffset: 2, overflowWrap: 'anywhere' }}
+          >
+            {link.replace(/^https?:\/\//i, '')}
+          </a>
+        </div>
+      ),
+    })
+  }
+
   // ── Measure and paginate ──
   const forced = blocks.filter(b => b.key === 'header' || b.key === 'hero').length
   const contentW = (210 - 2 * t.safe.side) * PX_PER_MM

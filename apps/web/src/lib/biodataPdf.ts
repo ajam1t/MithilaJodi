@@ -12,7 +12,12 @@
  * the bundle.
  */
 
+import type { PageLink } from './biodataImage'
+
 const A4 = { w: 595.28, h: 841.89 }
+
+/** A PDF literal string: printable ASCII only, with the delimiters escaped. */
+const pdfString = (v: string) => `(${v.replace(/[^\x20-\x7E]/g, '').replace(/[()\\]/g, m => `\\${m}`)})`
 
 /** Width and height from a JPEG's start-of-frame marker. */
 function jpegSize(bytes: Uint8Array): { w: number; h: number } {
@@ -30,7 +35,7 @@ function jpegSize(bytes: Uint8Array): { w: number; h: number } {
   throw new Error('Could not read the page image.')
 }
 
-export async function buildBiodataPdf(pages: Blob[], title: string): Promise<Blob> {
+export async function buildBiodataPdf(pages: Blob[], title: string, links: PageLink[][] = []): Promise<Blob> {
   const enc = new TextEncoder()
   const parts: Uint8Array[] = []
   const offsets: number[] = []
@@ -49,18 +54,21 @@ export async function buildBiodataPdf(pages: Blob[], title: string): Promise<Blo
 
   const images = await Promise.all(pages.map(async p => new Uint8Array(await p.arrayBuffer())))
   // 1 catalog, 2 page tree, 3 info; then page, image, content for each sheet.
+  // Link annotations are numbered after every page's three objects.
   const pageObj = (k: number) => 4 + k * 3
-  const safeTitle = title.replace(/[^\x20-\x7E]/g, '').replace(/[()\\]/g, '')
+  let nextAnnot = 4 + images.length * 3
+  const annots = images.map((_, k) => (links[k] ?? []).map(l => ({ ...l, n: nextAnnot++ })))
 
   push('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n')
   object(1, () => push('<< /Type /Catalog /Pages 2 0 R >>'))
   object(2, () => push(`<< /Type /Pages /Count ${images.length} /Kids [${images.map((_, k) => `${pageObj(k)} 0 R`).join(' ')}] >>`))
-  object(3, () => push(`<< /Title (${safeTitle}) /Producer (Mithila Jodi) >>`))
+  object(3, () => push(`<< /Title ${pdfString(title)} /Producer (Mithila Jodi) >>`))
   images.forEach((img, k) => {
     const { w, h } = jpegSize(img)
     const [pg, im, ct] = [pageObj(k), pageObj(k) + 1, pageObj(k) + 2]
     const draw = `q ${A4.w} 0 0 ${A4.h} 0 0 cm /Im0 Do Q`
-    object(pg, () => push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${A4.w} ${A4.h}] /Resources << /XObject << /Im0 ${im} 0 R >> >> /Contents ${ct} 0 R >>`))
+    const annotRefs = annots[k].length ? ` /Annots [${annots[k].map(a => `${a.n} 0 R`).join(' ')}]` : ''
+    object(pg, () => push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${A4.w} ${A4.h}] /Resources << /XObject << /Im0 ${im} 0 R >> >> /Contents ${ct} 0 R${annotRefs} >>`))
     object(im, () => {
       push(`<< /Type /XObject /Subtype /Image /Width ${w} /Height ${h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${img.length} >>\nstream\n`)
       push(img)
@@ -69,7 +77,13 @@ export async function buildBiodataPdf(pages: Blob[], title: string): Promise<Blo
     object(ct, () => push(`<< /Length ${draw.length} >>\nstream\n${draw}\nendstream`))
   })
 
-  const count = 4 + images.length * 3
+  for (const a of annots.flat()) {
+    const r = (v: number) => Math.round(v * 100) / 100
+    const rect = [a.x * A4.w, A4.h - (a.y + a.h) * A4.h, (a.x + a.w) * A4.w, A4.h - a.y * A4.h].map(r).join(' ')
+    object(a.n, () => push(`<< /Type /Annot /Subtype /Link /Rect [${rect}] /Border [0 0 0] /A << /S /URI /URI ${pdfString(a.href)} >> >>`))
+  }
+
+  const count = nextAnnot
   const xref = size
   push(`xref\n0 ${count}\n0000000000 65535 f \n`)
   for (let n = 1; n < count; n++) push(`${String(offsets[n]).padStart(10, '0')} 00000 n \n`)

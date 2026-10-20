@@ -1,6 +1,8 @@
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getCommunityLabels, labelFor } from '@/lib/communityLabels'
+import { ensurePrimaryShare } from '@/lib/digitalProfileOwner'
+import { SITE_URL } from '@/lib/constants'
 import type { BiodataData } from '@/lib/biodata'
 import { profileToBiodata, type PrivateRow, type ProfileRow } from '@/lib/biodataProfile'
 
@@ -97,6 +99,10 @@ export async function loadOwnBiodata(accountId: string): Promise<{ data: Biodata
     currentLocation: p.current_loc_id ? places[p.current_loc_id] ?? null : null,
     nativePlace: p.native_place_id ? places[p.native_place_id] ?? null : null,
   })
+  // The member's own live Digital Profile link, as the member Home shows it.
+  // A member who switched their link off gets none; the biodata works without it.
+  const share = await ensurePrimaryShare(admin, profileId).catch(() => null)
+  if (share) data.profile_link = `${SITE_URL}/p/${share.token}`
   return { data, hasPhoto: !!photo }
 }
 
