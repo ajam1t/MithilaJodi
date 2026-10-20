@@ -3,6 +3,8 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { FESTIVALS } from '@/lib/festivals'
 import { SITE_URL } from '@/lib/constants'
 import { canonicalUrl } from '@/lib/seo'
+import { GOTRAS } from '@/lib/mithilaRoots'
+import { COMPETITORS } from '@/lib/compare'
 
 const SITE = SITE_URL
 
@@ -64,6 +66,12 @@ const CONTENT_UPDATED = {
   '/astrology': '2026-10-07',
   // Everything else last had a substantive content change with the content
   // build on this date. Bump a path here when you actually edit that page.
+  // New: the gotra and mool guides and the comparison pages.
+  '/gotra': '2026-10-20', '/mool': '2026-10-20', '/compare': '2026-10-20',
+  ...Object.fromEntries([
+    ...GOTRAS.map(g => [`/gotra/${g.slug}`, '2026-10-20']),
+    ...COMPETITORS.map(c => [`/compare/${c.slug}`, '2026-10-20']),
+  ]),
   DEFAULT: '2026-08-23',
 } as const
 
@@ -117,6 +125,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/astrology/vivah-muhurat', priority: 0.7, changeFrequency: 'monthly' },
     { path: '/astrology/baby-names', priority: 0.7, changeFrequency: 'monthly' },
     { path: '/astrology/compatibility', priority: 0.7, changeFrequency: 'monthly' },
+    // Mithila roots guides and the comparison pages.
+    { path: '/gotra', priority: 0.9, changeFrequency: 'monthly' },
+    ...GOTRAS.map(g => ({ path: `/gotra/${g.slug}`, priority: 0.7, changeFrequency: 'monthly' as const })),
+    { path: '/mool', priority: 0.8, changeFrequency: 'monthly' },
+    { path: '/compare', priority: 0.6, changeFrequency: 'monthly' },
+    ...COMPETITORS.map(c => ({ path: `/compare/${c.slug}`, priority: 0.6, changeFrequency: 'monthly' as const })),
   ]
 
   const staticEntries: MetadataRoute.Sitemap = staticRoutes.map((r) => ({

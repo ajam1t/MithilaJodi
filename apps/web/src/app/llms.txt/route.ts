@@ -31,6 +31,8 @@ function body(): string {
     '',
     '## Wedding resources',
     `- [Marriage Biodata Maker](${u('/marriage-biodata')}): a free marriage biodata in Maithili, Hindi, English or Sanskrit, with gotra, mool and gram; downloads as a PDF, no login.`,
+    `- [Maithil Gotra List](${u('/gotra')}): the 20 gotras of the Mithila Panji in English and Devanagari, one page per gotra, with a free same-gotra / maternal-gotra match checker.`,
+    `- [Maithil Mool List](${u('/mool')}): the mools of the Mithila Panji, and how mool differs from gotra and gram.`,
     `- [Wedding Invitations](${u('/marriage-invitation')}): a free Mithila-inspired invitation card (${u('/marriage-invitation/basic')}) a Mithila Premium wedding webpage (${u('/marriage-invitation/premium')}), the MJ Scratch & Reveal wedding webpage, opened by scratching the date free (${u('/marriage-invitation/scratch-reveal')}), or the Blush Lace Elegance wedding webpage in blush, ivory and lace (${u('/marriage-invitation/blush-lace')}).`,
     '',
     '## Astrology tools for marriage',

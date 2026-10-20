@@ -11,6 +11,7 @@ const GROUPS = [
       { href: '/register', label: 'Create Free Account' },
       { href: '/login', label: 'Login' },
       { href: '/about', label: 'About' },
+      { href: '/compare', label: 'Why Mithila Jodi' },
       { href: '/#stories', label: 'Family & Values' },
     ],
   },
@@ -18,6 +19,8 @@ const GROUPS = [
     label: 'Explore',
     links: [
       { href: '/marriage-biodata', label: 'Marriage Biodata' },
+      { href: '/gotra', label: 'Gotra List & Checker' },
+      { href: '/mool', label: 'Mool List' },
       { href: '/astrology', label: 'Astrology Tools' },
       { href: '/festivals', label: 'Mithila Festivals' },
       { href: '/festival-songs', label: 'Festival Songs' },
