@@ -9,7 +9,7 @@
  * widely available system stacks. Preview and download therefore match exactly.
  */
 
-export type TemplateId = 'kohbar' | 'matsya' | 'mayur' | 'surya' | 'modern'
+export type TemplateId = 'kohbar' | 'matsya' | 'mayur' | 'surya' | 'modern' | 'deco' | 'bauhaus'
 
 export type InvitationData = {
   brideName: string
@@ -55,6 +55,10 @@ export type Template = {
 /** Font stacks that exist on virtually all devices — safe for SVG rasterisation. */
 const SERIF = "Georgia, 'Times New Roman', 'Nirmala UI', serif"
 const SANS = "'Segoe UI', Roboto, 'Helvetica Neue', 'Nirmala UI', Arial, sans-serif"
+/** High-contrast didone where the device has one (Apple ships Didot and Bodoni). */
+const DIDONE = "Didot, 'Bodoni 72', 'Bodoni MT', 'Playfair Display', Georgia, 'Nirmala UI', serif"
+/** Geometric sans where available, falling back to the system sans. */
+const GEOMETRIC = "Futura, 'Century Gothic', 'Avenir Next', 'Segoe UI', Roboto, 'Nirmala UI', Arial, sans-serif"
 
 export const TEMPLATES: Template[] = [
   {
@@ -111,6 +115,28 @@ export const TEMPLATES: Template[] = [
       gold: '#B98A2E', accent: '#D6A83C', muted: '#7A6E62',
     },
     headingFont: SERIF, bodyFont: SANS,
+  },
+  {
+    id: 'deco',
+    name: 'Deco',
+    tag: 'Art Deco',
+    description: 'Art Deco in onyx and champagne gold — a sunburst fan, stepped arch and pinstripe frame.',
+    palette: {
+      bg: '#0F1015', panel: '#17181F', ink: '#F1E7D0', heading: '#E4C572',
+      gold: '#C9A24B', accent: '#B8455A', muted: '#BDB29A',
+    },
+    headingFont: DIDONE, bodyFont: GEOMETRIC,
+  },
+  {
+    id: 'bauhaus',
+    name: 'Bauhaus',
+    tag: 'Modern · Geometric',
+    description: 'Bauhaus geometry in vermilion, ochre and indigo — circles, bars and bold modern type.',
+    palette: {
+      bg: '#EFE6D6', panel: '#F7F1E6', ink: '#1C1B1A', heading: '#1C1B1A',
+      gold: '#B3261E', accent: '#E0A526', muted: '#5A5048',
+    },
+    headingFont: GEOMETRIC, bodyFont: GEOMETRIC,
   },
 ]
 

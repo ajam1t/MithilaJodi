@@ -41,7 +41,7 @@ export const metadata: Metadata = {
 }
 
 const STEPS = [
-  { n: '1', title: 'Choose a design', body: 'Five designs — Madhubani kohbar, fish, sun, a traditional peacock arch, and a minimal ivory card.' },
+  { n: '1', title: 'Choose a design', body: 'Seven designs — Madhubani kohbar, fish, sun, a traditional peacock arch, a minimal ivory card, Art Deco and Bauhaus.' },
   { n: '2', title: 'Add your details', body: 'Names, date, time, venue, city and an optional family message. The preview updates as you type.' },
   { n: '3', title: 'Download or share', body: 'Save a high-resolution image, or share it straight to WhatsApp from your phone.' },
 ]
@@ -211,7 +211,7 @@ export default function BasicInvitationPage() {
           <div className="text-center mb-8">
             <p className="eyebrow mb-2">The designs</p>
             <h2 id="designs-heading" className="section-heading text-[24px] sm:text-[30px]">
-              Rooted in Mithila art
+              From Mithila art to modern
             </h2>
             <div className="ornament-line w-16 mx-auto mt-4" />
           </div>

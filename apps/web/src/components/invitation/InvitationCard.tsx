@@ -243,6 +243,76 @@ function Ornament({ id, p }: { id: TemplateId; p: Palette }) {
         </>
       )
 
+    case 'deco': {
+      // Art Deco: a chamfered double frame, a sunburst fan over a stepped arch,
+      // pinstripe side panels and a small inverted fan at the foot. All of it
+      // stays outside the text column (y 330–1120).
+      const chamfer = (i: number, c: number) =>
+        `M${i + c} ${i}H${CARD_W - i - c}L${CARD_W - i} ${i + c}V${CARD_H - i - c}L${CARD_W - i - c} ${CARD_H - i}H${i + c}L${i} ${CARD_H - i - c}V${i + c}Z`
+      const rays = Array.from({ length: 19 }, (_, k) => {
+        const a = Math.PI + (k / 18) * Math.PI
+        const r0 = 46, r1 = 190 + (k % 2 ? 0 : 26)
+        return `M${(500 + r0 * Math.cos(a)).toFixed(1)} ${(286 + r0 * Math.sin(a)).toFixed(1)}L${(500 + r1 * Math.cos(a)).toFixed(1)} ${(286 + r1 * Math.sin(a)).toFixed(1)}`
+      }).join('')
+      const footRays = Array.from({ length: 11 }, (_, k) => {
+        const a = (k / 10) * Math.PI
+        return `M500 1188L${(500 + 92 * Math.cos(a)).toFixed(1)} ${(1188 + 92 * Math.sin(a)).toFixed(1)}`
+      }).join('')
+      return (
+        <>
+          <path d={chamfer(26, 46)} fill={p.panel} />
+          <path d={chamfer(44, 40)} fill="none" stroke={p.gold} strokeWidth="3" />
+          <path d={chamfer(58, 34)} fill="none" stroke={p.gold} strokeWidth="1.2" opacity="0.7" />
+          {/* sunburst fan and stepped arch */}
+          <path d={rays} stroke={p.gold} strokeWidth="2.4" opacity="0.85" />
+          {[216, 176, 136].map((r, k) => (
+            <path key={r} d={`M${500 - r} 286A${r} ${r} 0 0 1 ${500 + r} 286`} fill="none" stroke={p.gold} strokeWidth={k === 0 ? 2.6 : 1.2} opacity={k === 0 ? 1 : 0.6} />
+          ))}
+          <path d="M454 286a46 46 0 0 1 92 0Z" fill={p.gold} />
+          <path d="M240 286H760M268 300H732" stroke={p.gold} strokeWidth="1.6" />
+          {[[270, 1], [730, -1]].map(([x, dir]) => (
+            <path key={x} d={`M${x} 286v-34h${dir * 26}v-26h${dir * 22}v-20h${dir * 16}`} fill="none" stroke={p.gold} strokeWidth="1.6" opacity="0.8" />
+          ))}
+          {/* pinstripe side panels */}
+          {[96, CARD_W - 96].map(x => (
+            <g key={x} stroke={p.gold} opacity="0.5">
+              {[-12, -4, 4, 12].map(dx => <path key={dx} d={`M${x + dx} 380V1060`} strokeWidth={dx === -4 || dx === 4 ? 1.6 : 0.8} />)}
+              <path d={`M${x} 350l14 16-14 16-14-16Z M${x} 1058l14 16-14 16-14-16Z`} fill={p.gold} stroke="none" opacity="1" />
+            </g>
+          ))}
+          {/* foot: inverted fan and diamond chain */}
+          <path d={footRays} stroke={p.gold} strokeWidth="1.8" opacity="0.75" />
+          <path d="M408 1188A92 92 0 0 0 592 1188" fill="none" stroke={p.gold} strokeWidth="2" />
+          <path d="M300 1188H700" stroke={p.gold} strokeWidth="1.4" />
+          {[330, 370, 630, 670].map(x => <path key={x} d={`M${x} 1178l10 10-10 10-10-10Z`} fill={p.gold} />)}
+        </>
+      )
+    }
+
+    case 'bauhaus':
+      // Bauhaus: primary geometry in the corners and bands only, so the type
+      // in the middle stays on a quiet ground.
+      return (
+        <>
+          <rect x={22} y={22} width={CARD_W - 44} height={CARD_H - 44} fill={p.panel} />
+          {/* top-left: a vermilion circle cut by the edge, with a black bar */}
+          <path d="M22 22H330A308 308 0 0 1 22 330Z" fill={p.gold} />
+          <circle cx={238} cy={122} r={34} fill={p.panel} />
+          {/* top-right: indigo block carrying an ochre half-disc */}
+          <rect x={724} y={22} width={254} height={196} fill="#2E3A6E" />
+          <path d="M760 218A90 90 0 0 1 940 218Z" fill={p.accent} />
+          <rect x={724} y={232} width={254} height={12} fill={p.ink} />
+          {/* a thin rule down the left of the text column */}
+          <rect x={84} y={372} width={6} height={720} fill={p.ink} />
+          <circle cx={87} cy={1120} r={13} fill={p.gold} />
+          {/* foot: black band, ochre quarter-disc, indigo triangle */}
+          <rect x={22} y={1168} width={CARD_W - 44} height={14} fill={p.ink} />
+          <path d="M978 1378H770A208 208 0 0 1 978 1170Z" fill={p.accent} />
+          <path d="M22 1378V1210L190 1378Z" fill="#2E3A6E" />
+          <circle cx={846} cy={1236} r={16} fill={p.ink} />
+        </>
+      )
+
     case 'modern':
       return (
         <>
@@ -282,6 +352,9 @@ export function InvitationCard({
   const venueLines = wrapText(venue, 34, 2)
   const messageLines = wrapText(data.message, 52, 3)
 
+  // The geometric "weds" is wider than the italic serif one; its rules step out.
+  const wg = t.id === 'bauhaus' ? 14 : 0
+
   // Long names step down a size so they never overflow the card.
   const nameSize = (n: string) => (n.length > 16 ? 62 : n.length > 12 ? 74 : 86)
 
@@ -319,14 +392,14 @@ export function InvitationCard({
       </text>
 
       <g>
-        <line x1={392} y1={534} x2={456} y2={534} stroke={p.gold} strokeWidth="1.6" opacity="0.8" />
+        <line x1={392 - wg} y1={534} x2={456 - wg} y2={534} stroke={p.gold} strokeWidth="1.6" opacity="0.8" />
         <text
           x={500} y={543} textAnchor="middle" fill={p.gold}
           fontFamily={t.headingFont} fontSize="34" fontStyle="italic"
         >
           weds
         </text>
-        <line x1={544} y1={534} x2={608} y2={534} stroke={p.gold} strokeWidth="1.6" opacity="0.8" />
+        <line x1={544 + wg} y1={534} x2={608 + wg} y2={534} stroke={p.gold} strokeWidth="1.6" opacity="0.8" />
       </g>
 
       <text
