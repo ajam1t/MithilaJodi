@@ -85,9 +85,13 @@ export default function AstrologyHubPage() {
       <main id="main-content" className="flex-1">
         <AstroHero />
 
-        <section id="tools" className="relative bg-[#FFF8EC] pb-10 pt-5 sm:pb-14 sm:pt-8" aria-labelledby="tools-heading">
+        <section id="tools" className="mj-observatory pb-11 pt-9 sm:pb-16 sm:pt-12" aria-labelledby="tools-heading">
           <div className="mx-auto w-full max-w-[1280px] px-3 sm:px-6">
-            <h2 id="tools-heading" className="sr-only">Astrology tools</h2>
+            <div className="relative z-[1] mb-6 text-center sm:mb-9">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-gold-lt">The observatory</p>
+              <h2 id="tools-heading" className="mt-2 font-serif text-[26px] leading-tight text-cream sm:text-[34px]">Eight tools for a Maithil marriage</h2>
+              <p className="mt-1.5 font-deva text-[15px] text-gold-lt/90 sm:text-[17px]" lang="hi">ज्योतिष · कुंडली · मुहूर्त</p>
+            </div>
             <ToolGrid />
           </div>
         </section>

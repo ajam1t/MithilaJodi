@@ -418,3 +418,108 @@
   body.kd-printing-share nav[aria-label='Mobile quick navigation'],
   body.kd-printing-share .kd-no-print { display: none !important; }
 }
+
+/* ── The observatory: astrology hub tool grid (components/astrology/hub/ToolGrid) ──
+   Indigo night with fine blueprint orbits and sparse stars — static. Cards are
+   dark panels with a gold hairline; each illustration sits in a cream window
+   under orbit rings that turn on hover. */
+.mj-observatory {
+  position: relative;
+  background:
+    radial-gradient(60% 50% at 50% 0%, rgba(201, 162, 75, 0.12), transparent 70%),
+    radial-gradient(50% 60% at 100% 100%, rgba(139, 18, 53, 0.25), transparent 70%),
+    linear-gradient(180deg, #1A1F3D 0%, #141833 55%, #10132A 100%);
+  overflow: hidden;
+}
+.mj-observatory::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 12% 22%, rgba(255, 241, 194, 0.9) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 74% 12%, rgba(255, 241, 194, 0.7) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 88% 46%, rgba(255, 241, 194, 0.8) 0 1.2px, transparent 1.8px),
+    radial-gradient(circle at 34% 78%, rgba(255, 241, 194, 0.6) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 58% 64%, rgba(255, 241, 194, 0.5) 0 0.8px, transparent 1.4px);
+  background-size: 420px 360px;
+}
+.mj-observatory::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -340px;
+  width: 1100px;
+  height: 1100px;
+  translate: -50% 0;
+  border-radius: 50%;
+  pointer-events: none;
+  border: 1px dashed rgba(201, 162, 75, 0.18);
+  box-shadow: 0 0 0 140px transparent, 0 0 0 141px rgba(201, 162, 75, 0.08);
+}
+.mj-obs-grid { position: relative; z-index: 1; }
+.mj-obs-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(201, 162, 75, 0.32);
+  box-shadow: 0 18px 40px -28px rgba(0, 0, 0, 0.8);
+  transition: border-color 0.3s ease, translate 0.3s ease, background-color 0.3s ease;
+}
+.mj-obs-card:hover { border-color: rgba(228, 197, 114, 0.7); }
+.mj-obs-card:focus-visible { outline: 3px solid #C99532; outline-offset: 3px; }
+.mj-obs-window { background: radial-gradient(circle at 50% 40%, #FFFAF0, #F5EBDD); box-shadow: inset 0 0 0 1px rgba(201, 162, 75, 0.5); }
+.mj-obs-orbits { transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1); transform-origin: 50% 50%; }
+.mj-obs-card:hover .mj-obs-orbits { transform: rotate(8deg) scale(1.03); }
+.mj-obs-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #E4C572;
+  transition: gap 0.25s ease, color 0.25s ease;
+}
+.mj-obs-card:hover .mj-obs-cta { gap: 12px; color: #FFE7A6; }
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .mj-obs-card:hover { translate: 0 -3px; }
+}
+
+/* ── Tool pages: the observatory carried into each page ────────────────────
+   The breadcrumb becomes a slim indigo bar, and the hero gets a faint
+   blueprint grid with two orbit rings behind the title. Shared by all eight
+   tool pages through .kd-cosmic; the calculators themselves are untouched. */
+.kd-cosmic > nav[aria-label='Breadcrumb'] {
+  background: linear-gradient(90deg, #141833, #1A1F3D 60%, #141833);
+  border-color: rgba(201, 162, 75, 0.35);
+}
+.kd-cosmic > nav[aria-label='Breadcrumb'] li { color: #CFC6DD; }
+.kd-cosmic > nav[aria-label='Breadcrumb'] a:hover { color: #FFE7A6; }
+.kd-cosmic > nav[aria-label='Breadcrumb'] [aria-current='page'] { color: #E4C572; }
+.kd-cosmic > nav[aria-label='Breadcrumb'] [aria-hidden='true'] { color: rgba(228, 197, 114, 0.6); }
+.kd-cosmic > section:first-of-type { position: relative; }
+.kd-cosmic > section:first-of-type::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 30% 45%, transparent 0 190px, rgba(46, 58, 110, 0.10) 190px 191px, transparent 192px),
+    radial-gradient(circle at 30% 45%, transparent 0 290px, rgba(46, 58, 110, 0.07) 290px 291px, transparent 292px),
+    linear-gradient(rgba(46, 58, 110, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(46, 58, 110, 0.05) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 80% at 30% 45%, #000 30%, transparent 85%);
+          mask-image: radial-gradient(ellipse 70% 80% at 30% 45%, #000 30%, transparent 85%);
+}
+@media (max-width: 1023px) {
+  .kd-cosmic > section:first-of-type::before {
+    background-image:
+      radial-gradient(circle at 50% 30%, transparent 0 130px, rgba(46, 58, 110, 0.10) 130px 131px, transparent 132px),
+      linear-gradient(rgba(46, 58, 110, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(46, 58, 110, 0.05) 1px, transparent 1px);
+    background-size: 100% 100%, 32px 32px, 32px 32px;
+    -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, #000 30%, transparent 85%);
+            mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, #000 30%, transparent 85%);
+  }
+}

@@ -1,7 +1,8 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { ToolArt } from './ToolArt'
-import type { ToolSlug } from '../tools'
+import { PointerGlow } from '@/components/motion/PointerGlow'
+import { TOOLS, type ToolSlug } from '../tools'
 
 type Card = {
   slug: ToolSlug
@@ -12,10 +13,21 @@ type Card = {
   /** Phones show this instead of the description. */
   short: string
   cta: string
+  /** Bento size: the feature tile, a wide tile, or a regular one. */
+  size?: 'feature' | 'wide'
 }
 
-/** Hub order: row one Nakshatra … Rashi, row two Vivah Muhurat … Kundli Match. */
+/**
+ * Bento order: Kundli Match is the feature tile (two columns, two rows) with
+ * Nakshatra, Manglik, Janam Kundli and Rashi beside it; then Vivah Muhurat
+ * (wide), Baby Names and Compatibility.
+ */
 const CARDS: Card[] = [
+  {
+    slug: 'kundli-match', size: 'feature', href: '/astrology/kundli-match', title: 'Kundli Match', subtitle: 'Match two Kundlis',
+    description: 'A complete match of two birth charts — all eight kootas, Manglik for both, and both charts.',
+    short: '36 Guna for two charts.', cta: 'Start Matching',
+  },
   {
     slug: 'nakshatra', href: '/astrology/nakshatra', title: 'Nakshatra', subtitle: 'Find your Janma Nakshatra',
     description: 'Determine the birth star from your date, time and place and understand its significance in Mithila tradition.',
@@ -37,7 +49,7 @@ const CARDS: Card[] = [
     short: 'Your Janma Rashi.', cta: 'Find Your Rashi',
   },
   {
-    slug: 'vivah-muhurat', href: '/astrology/vivah-muhurat', title: 'Vivah Muhurat', subtitle: 'Auspicious dates for marriage',
+    slug: 'vivah-muhurat', size: 'wide', href: '/astrology/vivah-muhurat', title: 'Vivah Muhurat', subtitle: 'Auspicious dates for marriage',
     description: 'Find suitable marriage dates for your city, worked out with traditional muhurat rules.',
     short: 'Shubh wedding dates.', cta: 'Explore Muhurat',
   },
@@ -50,11 +62,6 @@ const CARDS: Card[] = [
     slug: 'compatibility', href: '/astrology/compatibility', title: 'Compatibility', subtitle: 'Beyond the 36 Guna',
     description: 'Guna Milan and Manglik, then the Lagna, the 7th house, Navamsa and how the two charts touch.',
     short: 'Lagna, 7th house, Navamsa.', cta: 'Check Compatibility',
-  },
-  {
-    slug: 'kundli-match', href: '/astrology/kundli-match', title: 'Kundli Match', subtitle: 'Match two Kundlis',
-    description: 'A complete match of two birth charts — all eight kootas, Manglik for both, and both charts.',
-    short: '36 Guna for two charts.', cta: 'Start Matching',
   },
 ]
 
@@ -88,26 +95,63 @@ function MatchArt() {
   )
 }
 
+/** Each tool's Devanagari name, from the shared registry the tool pages use. */
+const HI = Object.fromEntries(TOOLS.map(t => [t.slug, t.hi])) as Record<ToolSlug, string>
+
+const NUM = ['०१', '०२', '०३', '०४', '०५', '०६', '०७', '०८']
+
+/** Orbit rings drawn over each tool's window; they turn a little on hover. */
+function Orbits() {
+  return (
+    <svg viewBox="0 0 200 140" className="mj-obs-orbits pointer-events-none absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+      <g fill="none" stroke="#C9A24B" strokeOpacity="0.45">
+        <ellipse cx="100" cy="70" rx="92" ry="30" strokeWidth="0.6" strokeDasharray="1.5 3" transform="rotate(-14 100 70)" />
+        <ellipse cx="100" cy="70" rx="70" ry="58" strokeWidth="0.5" transform="rotate(22 100 70)" />
+      </g>
+      <circle cx="186" cy="48" r="2.4" fill="#E4C572" />
+      <circle cx="48" cy="18" r="1.6" fill="#E4C572" fillOpacity="0.8" />
+    </svg>
+  )
+}
+
+/**
+ * The eight tools as a night observatory: an indigo sky with fine blueprint
+ * orbits, bento tiles (Kundli Match as the feature, Vivah Muhurat wide), each
+ * tool's illustration in a cream window under orbit rings, its Devanagari name
+ * and a Devanagari index. A gold spotlight follows the pointer on desktop
+ * (PointerGlow); the rings turn on hover. Nothing loops. Links, order and copy
+ * are the hub's own.
+ */
 export function ToolGrid() {
   return (
-    <ul className="astro-grid grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 lg:gap-5" role="list">
+    <ul className="mj-obs-grid grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 lg:gap-5" role="list">
       {CARDS.map((c, i) => {
-        const featured = c.slug === 'kundli-match'
+        const feature = c.size === 'feature'
+        const span = feature ? 'col-span-2 md:row-span-2' : c.size === 'wide' ? 'col-span-2' : ''
         return (
-          <li key={c.slug} className="astro-tool-in flex" style={{ animationDelay: `${80 + i * 60}ms` }}>
-            <Link href={c.href} className={`astro-tool group w-full ${featured ? 'astro-tool--featured' : ''}`} aria-label={`${c.title} — ${c.subtitle}. ${c.cta}`}>
-              <div className="astro-tool-art">
-                {featured ? <MatchArt /> : <ToolArt tool={c.slug as Exclude<ToolSlug, 'kundli-match'>} className="h-full w-full" />}
+          <li key={c.slug} className={`astro-tool-in flex ${span}`} style={{ animationDelay: `${80 + i * 60}ms` }}>
+            <Link
+              href={c.href}
+              className={`mj-obs-card mj-glow-host group relative flex w-full overflow-hidden rounded-[20px] ${feature ? 'flex-col' : c.size === 'wide' ? 'flex-col sm:flex-row' : 'flex-col'}`}
+              aria-label={`${c.title} — ${c.subtitle}. ${c.cta}`}
+            >
+              <PointerGlow />
+              <div className={`mj-obs-window relative overflow-hidden ${feature ? 'm-3 aspect-[16/10] rounded-[14px] md:m-4 md:mb-2 md:min-h-[300px] md:flex-1 md:aspect-auto' : c.size === 'wide' ? 'm-3 aspect-[10/7] rounded-[14px] sm:w-[46%] sm:shrink-0 sm:aspect-auto' : 'm-3 aspect-[10/7] rounded-[14px]'}`}>
+                {feature ? <MatchArt /> : <ToolArt tool={c.slug as Exclude<ToolSlug, 'kundli-match'>} className="relative h-full w-full" />}
+                {!feature && <Orbits />}
               </div>
-              <div className="flex flex-1 flex-col px-3 pb-3 pt-2 lg:px-5 lg:pb-5">
-                <h3 className="font-serif text-maroon text-[17px] leading-tight lg:text-[23px]">{c.title}</h3>
-                <span className="astro-tool-rule" aria-hidden="true" />
-                <p className="font-serif italic text-[12px] leading-snug text-[#8B1235] min-h-[2.75em] lg:min-h-0 lg:text-[15px]">{c.subtitle}</p>
-                <p className="mt-1 mb-2.5 min-h-[2.75em] text-[12px] leading-snug text-ink-soft lg:hidden">{c.short}</p>
-                <p className="mt-1.5 mb-4 hidden text-[14px] leading-relaxed text-ink-soft lg:block">{c.description}</p>
-                <span className="astro-tool-cta">
-                  <span className="hidden lg:inline">{c.cta}</span>
-                  <span className="lg:hidden">Open</span>
+              <div className={`relative flex flex-col px-4 pb-4 pt-1 ${feature ? 'flex-1 md:flex-none md:px-6 md:pb-6' : c.size === 'wide' ? 'flex-1 sm:justify-center sm:py-4 sm:pl-1' : 'flex-1'}`}>
+                <div className="flex items-baseline justify-between gap-2">
+                  <h3 className={`font-serif leading-tight text-cream ${feature ? 'text-[22px] md:text-[30px]' : 'text-[17px] lg:text-[21px]'}`}>{c.title}</h3>
+                  <span className="shrink-0 text-[12px] tracking-[0.12em] text-gold/70" style={{ fontFamily: 'var(--font-mukta), Mukta, sans-serif' }} aria-hidden="true">{NUM[i]}</span>
+                </div>
+                <p className="mt-0.5 font-deva text-[13px] leading-tight text-gold-lt/90 lg:text-[14.5px]" lang="hi">{HI[c.slug]}</p>
+                <p className="mt-2 font-serif text-[12.5px] italic leading-snug text-[#E9D9BE] lg:text-[14px]">{c.subtitle}</p>
+                <p className={`mt-1.5 text-[12px] leading-snug text-[#BFB6CF] ${feature || c.size === 'wide' ? 'hidden sm:block sm:text-[13.5px]' : 'hidden lg:block lg:text-[13px]'}`}>{c.description}</p>
+                <p className={`mt-1 text-[12px] leading-snug text-[#BFB6CF] ${feature || c.size === 'wide' ? 'sm:hidden' : 'lg:hidden'}`}>{c.short}</p>
+                <span className="mj-obs-cta mt-auto pt-3">
+                  <span className={feature || c.size === 'wide' ? '' : 'hidden lg:inline'}>{c.cta}</span>
+                  <span className={feature || c.size === 'wide' ? 'hidden' : 'lg:hidden'}>Open</span>
                   <Arrow />
                 </span>
               </div>
