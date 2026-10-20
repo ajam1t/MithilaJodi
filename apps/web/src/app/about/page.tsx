@@ -87,16 +87,6 @@ function Icon({ d, className = 'h-5 w-5' }: { d: string; className?: string }) {
   )
 }
 
-function Eyebrow({ children, center = false }: { children: React.ReactNode; center?: boolean }) {
-  return (
-    <p className={`flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.28em] text-terra ${center ? 'justify-center' : ''}`}>
-      <span className="h-px w-6 bg-gold/70" aria-hidden="true" />
-      {children}
-      {center && <span className="h-px w-6 bg-gold/70" aria-hidden="true" />}
-    </p>
-  )
-}
-
 const H2 = 'font-serif text-[28px] leading-[1.15] text-maroon sm:text-[36px]'
 
 // ─── Content ─────────────────────────────────────────────────────────────────
@@ -105,12 +95,13 @@ const DIFFERENCE = [
   {
     icon: I.roots,
     title: 'Roots',
+    hi: 'मूल',
     chips: ['Gotra', 'Maternal Gotra', 'Mool', 'Native Village'],
     body: 'The family and ancestral details that can matter when families consider a matrimonial match.',
   },
-  { icon: I.family, title: 'Family', body: 'A matrimonial experience designed with family involvement in mind.' },
-  { icon: I.story, title: 'Your Story', body: 'Digital Profile and marriage biodata that let you present yourself in the way that feels right for you and your family.' },
-  { icon: I.culture, title: 'Culture', body: "A platform that keeps Mithila's traditions and cultural identity close to the experience." },
+  { icon: I.family, title: 'Family', hi: 'परिवार', body: 'A matrimonial experience designed with family involvement in mind.' },
+  { icon: I.story, title: 'Your Story', hi: 'कथा', body: 'Digital Profile and marriage biodata that let you present yourself in the way that feels right for you and your family.' },
+  { icon: I.culture, title: 'Culture', hi: 'संस्कृति', body: "A platform that keeps Mithila's traditions and cultural identity close to the experience." },
 ]
 
 const SUPPORTING = [
@@ -190,6 +181,39 @@ const jsonLd = {
 }
 
 // ─── Page ────────────────────────────────────────────────────────────────────
+//
+// Redesigned 2026-10-20 as one editorial sequence, each section numbered in
+// Devanagari (०१ …). Styles mixed deliberately, one per section: gradient
+// mesh + kinetic headline (hero), Art Deco (difference cards, founders),
+// orbit linework (ecosystem), Madhubani paper vs blueprint glass (tradition →
+// modern), glass on indigo (privacy). Motion is CSS in styles/about.css and
+// runs once; reduced motion gets the finished page. Wording is unchanged.
+
+const NUM = ['०१', '०२', '०३', '०४', '०५', '०६', '०७', '०८']
+
+/** Section number + eyebrow, the page's editorial rhythm. */
+function Mark({ n, children, center = false, light = false }: { n: number; children: React.ReactNode; center?: boolean; light?: boolean }) {
+  return (
+    <p className={`flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.28em] ${light ? 'text-gold-lt' : 'text-terra'} ${center ? 'justify-center' : ''}`}>
+      <span className={`ab-num text-[15px] tracking-normal ${light ? 'text-gold-lt' : 'text-gold'}`} aria-hidden="true">{NUM[n - 1]}</span>
+      <span className={`h-px w-6 ${light ? 'bg-gold-lt/60' : 'bg-gold/70'}`} aria-hidden="true" />
+      {children}
+    </p>
+  )
+}
+
+/** Art Deco corner brackets for a framed card. */
+function DecoCorners({ light = false }: { light?: boolean }) {
+  const c = `ab-corner ${light ? 'border-gold-lt/70' : 'border-gold/60'}`
+  return (
+    <>
+      <span className={`${c} left-2.5 top-2.5 border-l border-t`} aria-hidden="true" />
+      <span className={`${c} right-2.5 top-2.5 border-r border-t`} aria-hidden="true" />
+      <span className={`${c} bottom-2.5 left-2.5 border-b border-l`} aria-hidden="true" />
+      <span className={`${c} bottom-2.5 right-2.5 border-b border-r`} aria-hidden="true" />
+    </>
+  )
+}
 
 export default function AboutPage() {
   return (
@@ -198,29 +222,31 @@ export default function AboutPage() {
       <MithilaHeader />
 
       <main id="main-content" className="flex-1">
-        {/* ── 1. Hero ── */}
-        <section aria-labelledby="about-h1" className="relative bg-[radial-gradient(ellipse_70%_60%_at_85%_30%,#FBEEDF,transparent_70%)] pb-12 pt-6 sm:pb-16 sm:pt-10">
-          <div className="wrap px-5 sm:px-6">
-            <nav aria-label="Breadcrumb" className="mb-6 sm:mb-8">
+        {/* ── ०१ Hero — gradient mesh, kinetic headline, Deco arch ── */}
+        <section aria-labelledby="about-h1" className="ab-hero relative overflow-hidden pb-14 pt-6 sm:pb-20 sm:pt-10">
+          <span className="ab-watermark pointer-events-none absolute -right-6 top-6 font-deva text-[120px] leading-none sm:text-[200px] lg:text-[260px]" lang="hi" aria-hidden="true">मिथिला</span>
+          <div className="wrap relative px-5 sm:px-6">
+            <nav aria-label="Breadcrumb" className="mb-6 sm:mb-10">
               <ol className="flex items-center gap-2 text-[12.5px] text-ink-soft">
                 <li><Link href="/" className="hover:text-maroon">Home</Link></li>
                 <li aria-hidden="true" className="text-gold">›</li>
                 <li aria-current="page" className="font-medium text-maroon">About</li>
               </ol>
             </nav>
-            <div className="grid items-center gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12">
+            <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14">
               <div>
-                <Eyebrow>About Mithila Jodi</Eyebrow>
-                <h1 id="about-h1" className="mt-4 font-display text-[38px] leading-[1.06] text-maroon sm:text-[52px] lg:text-[58px]">
-                  Made for Mithila.
-                  <span className="block text-[#9A6F1E]">Made for meaningful beginnings.</span>
+                <Mark n={1}>About Mithila Jodi</Mark>
+                <h1 id="about-h1" className="mt-5 font-display text-[40px] leading-[1.04] text-maroon sm:text-[56px] lg:text-[64px]">
+                  <span className="ab-kin block" style={{ animationDelay: '0.05s' }}>Made for Mithila.</span>{' '}
+                  <span className="ab-kin block text-[#9A6F1E]" style={{ animationDelay: '0.25s' }}>Made for meaningful</span>{' '}
+                  <span className="ab-kin block text-[#9A6F1E]" style={{ animationDelay: '0.4s' }}>beginnings.</span>
                 </h1>
-                <p className="mt-5 max-w-xl text-[16px] leading-relaxed text-ink sm:text-[18px]">{DEFINITION}</p>
-                <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <p className="ab-kin mt-6 max-w-xl text-[16px] leading-relaxed text-ink sm:text-[18px]" style={{ animationDelay: '0.6s' }}>{DEFINITION}</p>
+                <div className="ab-kin mt-8 flex flex-col gap-3 sm:flex-row sm:items-center" style={{ animationDelay: '0.75s' }}>
                   <Link href="/register?start=1" className="btn-primary justify-center gap-2 rounded-full px-6 py-3.5 text-[15.5px]">
                     Create Your Free Profile<Icon d={I.arrow} className="h-4 w-4" />
                   </Link>
-                  <Link href="/explore" className="btn justify-center gap-2 rounded-full border border-maroon/35 bg-cream px-6 py-3.5 text-[15.5px] font-semibold text-maroon hover:bg-white">
+                  <Link href="/explore" className="btn justify-center gap-2 rounded-full border border-maroon/35 bg-cream/80 px-6 py-3.5 text-[15.5px] font-semibold text-maroon backdrop-blur-sm hover:bg-white">
                     Explore Mithila Jodi<Icon d={I.arrow} className="h-4 w-4" />
                   </Link>
                 </div>
@@ -228,18 +254,32 @@ export default function AboutPage() {
                   Private by design <span className="text-gold" aria-hidden="true">·</span> Free to join <span className="text-gold" aria-hidden="true">·</span> Built for Mithila families
                 </p>
               </div>
-              <HeroConnection />
+              {/* The connection illustration, held in an Art Deco stepped arch. */}
+              <div className="ab-arch relative mx-auto w-full max-w-[460px]">
+                <svg viewBox="0 0 460 420" className="pointer-events-none absolute inset-0 h-full w-full" fill="none" aria-hidden="true">
+                  <path d="M30 410V190a200 170 0 0 1 400 0v220" stroke="#B98A2E" strokeOpacity="0.55" strokeWidth="1.4" />
+                  <path d="M48 410V196a182 154 0 0 1 364 0v214" stroke="#B98A2E" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="2 5" />
+                  <path d="M30 230h-14v-26h-10M430 230h14v-26h10" stroke="#B98A2E" strokeOpacity="0.5" strokeWidth="1.2" />
+                  {Array.from({ length: 13 }, (_, k) => {
+                    const a = Math.PI + (k / 12) * Math.PI
+                    return <path key={k} d={`M${(230 + 150 * Math.cos(a)).toFixed(1)} ${(190 + 128 * Math.sin(a)).toFixed(1)}L${(230 + 186 * Math.cos(a)).toFixed(1)} ${(190 + 158 * Math.sin(a)).toFixed(1)}`} stroke="#B98A2E" strokeOpacity="0.28" strokeWidth="1" />
+                  })}
+                </svg>
+                <div className="relative px-8 pb-6 pt-16 sm:pt-20"><HeroConnection /></div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* ── 2. Why ── */}
-        <section aria-labelledby="about-why" className="border-y border-gold/15 bg-cream py-14 sm:py-20">
+        {/* ── ०२ Why ── */}
+        <section aria-labelledby="about-why" className="border-y border-gold/15 bg-cream py-16 sm:py-24">
           <div className="wrap grid items-center gap-10 px-5 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
             <div data-mj-reveal>
-              <Eyebrow>Why Mithila Jodi</Eyebrow>
-              <h2 id="about-why" className={`mt-4 ${H2}`}>Marriage is more than two profiles.</h2>
-              <p className="mt-5 max-w-xl text-[16px] leading-relaxed text-ink-soft sm:text-[17px]">
+              <Mark n={2}>Why Mithila Jodi</Mark>
+              <h2 id="about-why" className="mt-5 font-display text-[34px] leading-[1.08] text-maroon sm:text-[48px]">
+                Marriage is more than <span className="ab-underline">two profiles.</span>
+              </h2>
+              <p className="mt-6 max-w-xl text-[16px] leading-relaxed text-ink-soft sm:text-[17px]">
                 For many Mithila families, finding a life partner is also about understanding family, roots, values and
                 traditions. Mithila Jodi was created to bring those considerations into a modern matrimonial experience —
                 without losing the cultural context that makes them meaningful.
@@ -249,55 +289,63 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* ── 3. What makes it different ── */}
-        <section aria-labelledby="about-different" className="py-14 sm:py-20">
+        {/* ── ०३ What makes it different — Deco-framed cards with a Devanagari watermark ── */}
+        <section aria-labelledby="about-different" className="py-16 sm:py-24">
           <div className="wrap px-5 sm:px-6">
             <div className="max-w-2xl" data-mj-reveal>
-              <Eyebrow>Built with Mithila in mind</Eyebrow>
-              <h2 id="about-different" className={`mt-4 ${H2}`}>The details that matter, thoughtfully included.</h2>
+              <Mark n={3}>Built with Mithila in mind</Mark>
+              <h2 id="about-different" className={`mt-5 ${H2}`}>The details that matter, thoughtfully included.</h2>
             </div>
-            <div data-mj-stagger className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div data-mj-stagger className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {DIFFERENCE.map(c => (
-                <article key={c.title} className="group rounded-[18px] border border-gold/25 bg-[#FFFBF3] p-5 shadow-mj-xs transition duration-300 hover:-translate-y-0.5 hover:border-gold/55 motion-reduce:hover:translate-y-0">
-                  <span className="grid h-10 w-10 place-items-center rounded-full border border-gold/30 bg-paper-2 text-maroon transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:rotate-[-6deg] motion-reduce:transform-none">
+                <article key={c.title} className="ab-card group relative overflow-hidden rounded-[20px] border border-gold/30 bg-[#FFFBF3] p-6 shadow-mj-xs">
+                  <DecoCorners />
+                  <span className="ab-card-word pointer-events-none absolute -bottom-3 -right-1 font-deva text-[64px] leading-none text-gold/[0.13]" lang="hi" aria-hidden="true">{c.hi}</span>
+                  <span className="relative grid h-12 w-12 place-items-center rounded-full border border-gold/40 bg-paper-2 text-maroon shadow-[0_0_0_4px_rgba(255,251,243,1),0_0_0_5px_rgba(185,138,46,0.25)] transition-transform duration-500 group-hover:rotate-[-8deg] motion-reduce:transform-none">
                     <Icon d={c.icon} />
                   </span>
-                  <h3 className="mt-4 font-serif text-[20px] text-maroon">{c.title}</h3>
+                  <h3 className="relative mt-5 font-serif text-[21px] text-maroon">{c.title}</h3>
                   {c.chips && (
-                    <p className="mt-2 text-[12.5px] font-semibold leading-relaxed tracking-wide text-[#8A6516]">
+                    <p className="relative mt-2 text-[12.5px] font-semibold leading-relaxed tracking-wide text-[#8A6516]">
                       {c.chips.join(' · ')}
                     </p>
                   )}
-                  <p className="mt-2 text-[14px] leading-relaxed text-ink-soft">{c.body}</p>
+                  <p className="relative mt-2 text-[14px] leading-relaxed text-ink-soft">{c.body}</p>
                 </article>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ── 4. Ecosystem — matrimony first, everything else in support ── */}
-        <section aria-labelledby="about-ecosystem" className="border-t border-gold/15 bg-[#FBF3E6] py-14 sm:py-20">
-          <div className="wrap px-5 sm:px-6">
+        {/* ── ०४ Ecosystem — matrimony at the centre, orbit lines out to the rest ── */}
+        <section aria-labelledby="about-ecosystem" className="ab-eco relative overflow-hidden border-t border-gold/15 py-16 sm:py-24">
+          <div className="wrap relative px-5 sm:px-6">
             <div className="max-w-2xl" data-mj-reveal>
-              <Eyebrow>More than a matrimonial profile</Eyebrow>
-              <h2 id="about-ecosystem" className={`mt-4 ${H2}`}>Everything around your matrimonial journey.</h2>
+              <Mark n={4}>More than a matrimonial profile</Mark>
+              <h2 id="about-ecosystem" className={`mt-5 ${H2}`}>Everything around your matrimonial journey.</h2>
               <p className="mt-4 text-[16px] leading-relaxed text-ink-soft">
                 Mithila Jodi brings together the tools that can be useful throughout the matrimonial and wedding journey.
               </p>
             </div>
 
-            <div className="mt-8 grid gap-4 lg:grid-cols-[0.95fr_1.6fr]">
+            <div className="mt-10 grid gap-4 lg:grid-cols-[0.95fr_1.6fr]">
               {/* Primary */}
-              <article data-mj-reveal className="relative flex flex-col overflow-hidden rounded-[20px] bg-maroon-gradient p-6 text-cream shadow-mj-sm sm:p-7">
-                <span className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full border border-gold-lt/20" aria-hidden="true" />
-                <span className="pointer-events-none absolute -right-4 -top-4 h-28 w-28 rounded-full border border-gold-lt/20" aria-hidden="true" />
-                <span className="text-[10.5px] font-semibold uppercase tracking-[0.26em] text-gold-lt">At the heart of it</span>
-                <span className="mt-4 grid h-11 w-11 place-items-center rounded-full border border-gold-lt/40 text-gold-lt"><Icon d={I.heart} className="h-6 w-6" /></span>
-                <h3 className="mt-4 font-serif text-[26px] leading-tight">Mithila Matrimony</h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-cream/90">
+              <article data-mj-reveal className="ab-primary relative flex flex-col overflow-hidden rounded-[22px] p-6 text-cream shadow-mj sm:p-8">
+                <svg viewBox="0 0 300 300" className="pointer-events-none absolute -right-16 -top-16 h-72 w-72 opacity-60" fill="none" aria-hidden="true">
+                  <circle cx="150" cy="150" r="140" stroke="#E4C572" strokeOpacity="0.35" strokeDasharray="2 6" />
+                  <ellipse cx="150" cy="150" rx="140" ry="54" stroke="#E4C572" strokeOpacity="0.3" transform="rotate(-24 150 150)" />
+                  <ellipse cx="150" cy="150" rx="100" ry="40" stroke="#E4C572" strokeOpacity="0.25" transform="rotate(30 150 150)" />
+                  <circle cx="270" cy="96" r="4" fill="#E4C572" />
+                  <circle cx="64" cy="210" r="3" fill="#E4C572" fillOpacity="0.8" />
+                </svg>
+                <DecoCorners light />
+                <span className="relative text-[10.5px] font-semibold uppercase tracking-[0.26em] text-gold-lt">At the heart of it</span>
+                <span className="relative mt-5 grid h-12 w-12 place-items-center rounded-full border border-gold-lt/50 text-gold-lt"><Icon d={I.heart} className="h-6 w-6" /></span>
+                <h3 className="relative mt-5 font-serif text-[28px] leading-tight">Mithila Matrimony</h3>
+                <p className="relative mt-2 text-[15px] leading-relaxed text-cream/90">
                   Find meaningful matrimonial connections with people and families connected to Mithila.
                 </p>
-                <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 lg:mt-auto lg:pt-6">
+                <div className="relative mt-6 flex flex-wrap gap-x-5 gap-y-2 lg:mt-auto lg:pt-8">
                   <Link href="/explore" className="inline-flex items-center gap-1.5 text-[14.5px] font-semibold text-gold-lt hover:text-cream">
                     Browse profiles<Icon d={I.arrow} className="h-4 w-4" />
                   </Link>
@@ -310,9 +358,9 @@ export default function AboutPage() {
               {/* Supporting */}
               <div data-mj-stagger className="grid gap-4 sm:grid-cols-2">
                 {SUPPORTING.map(s => (
-                  <article key={s.title} className="group relative flex flex-col rounded-[18px] border border-gold/25 bg-cream p-5 shadow-mj-xs transition duration-300 hover:-translate-y-0.5 hover:border-gold/55 motion-reduce:hover:translate-y-0">
+                  <article key={s.title} className="ab-card group relative flex flex-col rounded-[18px] border border-gold/30 bg-cream/90 p-5 shadow-mj-xs backdrop-blur-[2px]">
                     <div className="flex items-center gap-3">
-                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-paper-2 text-maroon transition-transform duration-300 group-hover:-translate-y-0.5 motion-reduce:transform-none">
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-maroon text-gold-lt transition-transform duration-300 group-hover:-translate-y-0.5 motion-reduce:transform-none">
                         <Icon d={s.icon} className="h-[18px] w-[18px]" />
                       </span>
                       <h3 className="font-serif text-[18px] leading-tight text-maroon">
@@ -332,7 +380,7 @@ export default function AboutPage() {
               </div>
             </div>
 
-            <p className="mt-6 text-[14px] text-ink-soft">
+            <p className="mt-7 text-[14px] text-ink-soft">
               And around it all, <span className="font-semibold text-ink">Mithila Culture</span> — festivals, traditions, songs and heritage.{' '}
               <Link href="/festivals" className="inline-flex items-center gap-1 font-semibold text-maroon underline-offset-2 hover:underline">
                 Explore Mithila culture<Icon d={I.arrow} className="h-3.5 w-3.5" />
@@ -341,11 +389,12 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* ── 5. Tradition → Modern ── */}
-        <section aria-labelledby="about-tradition" className="py-14 sm:py-20">
+        {/* ── ०५ Tradition → Modern — Madhubani paper meets blueprint glass ── */}
+        <section aria-labelledby="about-tradition" className="py-16 sm:py-24">
           <div className="wrap px-5 sm:px-6">
             <div className="mx-auto max-w-2xl text-center" data-mj-reveal>
-              <h2 id="about-tradition" className={H2}>
+              <Mark n={5} center>Tradition, carried forward</Mark>
+              <h2 id="about-tradition" className={`mt-5 ${H2}`}>
                 Our roots are traditional.
                 <span className="block text-[#9A6F1E]">Our experience doesn&apos;t have to be.</span>
               </h2>
@@ -355,13 +404,13 @@ export default function AboutPage() {
               </p>
             </div>
 
-            <div data-mj-reveal className="mx-auto mt-10 grid max-w-4xl items-center gap-0 md:grid-cols-[1fr_auto_1fr]">
-              <div className="ab-roots rounded-[20px] border border-gold/35 bg-[#FFFBF3] p-6 shadow-mj-xs">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#8A6516]">Mithila Roots</p>
-                <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3">
+            <div data-mj-reveal className="mx-auto mt-12 grid max-w-4xl items-stretch gap-0 md:grid-cols-[1fr_auto_1fr]">
+              <div className="ab-roots ab-madhubani relative overflow-hidden rounded-[22px] p-7 shadow-mj-sm">
+                <p className="relative text-[11px] font-semibold uppercase tracking-[0.26em] text-maroon">Mithila Roots</p>
+                <ul className="relative mt-5 grid grid-cols-2 gap-x-4 gap-y-4">
                   {ROOTS.map(r => (
                     <li key={r.en} className="flex flex-col leading-tight">
-                      <span lang="hi" className="font-deva text-[19px] text-maroon">{r.hi}</span>
+                      <span lang="hi" className="font-deva text-[22px] text-maroon">{r.hi}</span>
                       <span className="text-[12px] text-ink-soft">{r.en}</span>
                     </li>
                   ))}
@@ -369,20 +418,24 @@ export default function AboutPage() {
               </div>
 
               {/* The bridge: across on wide screens, down on phones */}
-              <div aria-hidden="true" className="ab-bridge flex flex-col items-center justify-center py-2 md:flex-row md:px-3 md:py-0">
-                <span className="ab-bridge-y block h-8 w-px bg-gradient-to-b from-gold/30 to-gold md:hidden" />
-                <span className="ab-bridge-x hidden h-px w-12 bg-gradient-to-r from-gold/30 to-gold md:block" />
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-gold/60 bg-cream text-maroon shadow-mj-xs">
+              <div aria-hidden="true" className="ab-bridge flex flex-col items-center justify-center py-3 md:flex-row md:px-3 md:py-0">
+                <span className="ab-bridge-y block h-10 w-px bg-gradient-to-b from-gold/30 to-gold md:hidden" />
+                <span className="ab-bridge-x hidden h-px w-14 bg-gradient-to-r from-gold/30 to-gold md:block" />
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-gold bg-maroon text-gold-lt shadow-mj-sm">
                   <Icon d={I.arrow} className="h-4 w-4 rotate-90 md:rotate-0" />
                 </span>
+                <span className="ab-bridge-x hidden h-px w-14 bg-gradient-to-r from-gold to-[#2E3A6E]/50 md:block" />
+                <span className="ab-bridge-y block h-10 w-px bg-gradient-to-b from-gold to-[#2E3A6E]/50 md:hidden" />
               </div>
 
-              <div className="ab-modern rounded-[20px] border border-maroon/15 bg-cream p-6 shadow-mj-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-maroon">Modern Experience</p>
-                <ul className="mt-4 flex flex-col gap-2.5">
-                  {MODERN.map(m => (
-                    <li key={m} className="flex items-center gap-2.5 text-[15px] text-ink">
-                      <span className="h-1.5 w-1.5 rotate-45 bg-gold" aria-hidden="true" />{m}
+              <div className="ab-modern ab-blueprint relative overflow-hidden rounded-[22px] p-7 shadow-mj-sm">
+                <p className="relative text-[11px] font-semibold uppercase tracking-[0.26em] text-[#2E3A6E]">Modern Experience</p>
+                <ul className="relative mt-5 flex flex-col gap-3">
+                  {MODERN.map((m, i) => (
+                    <li key={m} className="flex items-center gap-3 text-[15px] text-ink">
+                      <span className="w-6 text-[11px] tabular-nums text-[#2E3A6E]/70" style={{ fontFamily: 'ui-monospace, monospace' }} aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+                      <span className="h-px w-4 bg-[#2E3A6E]/30" aria-hidden="true" />
+                      {m}
                     </li>
                   ))}
                 </ul>
@@ -391,64 +444,73 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* ── 6. Privacy ── */}
-        <section aria-labelledby="about-privacy" className="border-y border-gold/15 bg-cream py-14 sm:py-16">
-          <div className="wrap grid gap-8 px-5 sm:px-6 lg:grid-cols-[0.9fr_1.4fr] lg:items-center lg:gap-12">
+        {/* ── ०६ Privacy — glass steps on an indigo-maroon ground ── */}
+        <section aria-labelledby="about-privacy" className="ab-privacy relative overflow-hidden py-16 text-cream sm:py-20">
+          <div className="wrap relative grid gap-8 px-5 sm:px-6 lg:grid-cols-[0.9fr_1.4fr] lg:items-center lg:gap-12">
             <div data-mj-reveal>
-              <h2 id="about-privacy" className={H2}>Your story belongs to you.</h2>
-              <p className="mt-4 text-[16px] leading-relaxed text-ink-soft">
+              <Mark n={6} light>Privacy</Mark>
+              <h2 id="about-privacy" className="mt-5 font-serif text-[28px] leading-[1.15] text-cream sm:text-[36px]">Your story belongs to you.</h2>
+              <p className="mt-4 text-[16px] leading-relaxed text-[#E9DCC8]">
                 Mithila Jodi is designed to give members control over the information they choose to include and share.
               </p>
-              <Link href="/safety" className="mt-5 inline-flex items-center gap-1.5 text-[15px] font-semibold text-maroon hover:underline hover:underline-offset-4">
+              <Link href="/safety" className="mt-5 inline-flex items-center gap-1.5 text-[15px] font-semibold text-gold-lt hover:text-cream hover:underline hover:underline-offset-4">
                 Learn more about Safety &amp; Privacy<Icon d={I.arrow} className="h-4 w-4" />
               </Link>
             </div>
             <ol data-mj-stagger className="grid gap-3 sm:grid-cols-3">
               {PRIVACY.map((p, i) => (
-                <li key={p.title} className="rounded-[16px] border border-gold/25 bg-[#FFFBF3] p-4 sm:p-5">
+                <li key={p.title} className="ab-glass relative rounded-[18px] p-5">
+                  <span className="absolute right-4 top-3 text-[13px] text-gold-lt/60" style={{ fontFamily: 'var(--font-mukta), Mukta, sans-serif' }} aria-hidden="true">{NUM[i]}</span>
                   <div className="flex items-center gap-3 sm:flex-col sm:items-start">
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-maroon text-cream"><Icon d={p.icon} className="h-[18px] w-[18px]" /></span>
-                    <h3 className="text-[15px] font-semibold leading-snug text-ink">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gold-lt text-maroon"><Icon d={p.icon} className="h-[18px] w-[18px]" /></span>
+                    <h3 className="text-[15px] font-semibold leading-snug text-cream">
                       <span className="sr-only">{i + 1}. </span>{p.title}
                     </h3>
                   </div>
-                  <p className="mt-2 text-[13.5px] leading-relaxed text-ink-soft">{p.body}</p>
+                  <p className="mt-2 text-[13.5px] leading-relaxed text-[#E0D2BE]">{p.body}</p>
                 </li>
               ))}
             </ol>
           </div>
         </section>
 
-        {/* ── 7. Founders ── */}
-        <section aria-labelledby="about-founder" className="py-14 sm:py-20">
+        {/* ── ०७ Founders — Art Deco medallions ── */}
+        <section aria-labelledby="about-founder" className="py-16 sm:py-24">
           <div className="wrap px-5 sm:px-6">
             <div className="text-center" data-mj-reveal>
-              <Eyebrow center>The family behind Mithila Jodi</Eyebrow>
-              <h2 id="about-founder" className={`mt-4 ${H2}`}>Meet the Founders</h2>
+              <Mark n={7} center>The family behind Mithila Jodi</Mark>
+              <h2 id="about-founder" className={`mt-5 ${H2}`}>Meet the Founders</h2>
             </div>
 
-            <article data-mj-reveal className="relative mx-auto mt-8 max-w-4xl overflow-hidden rounded-[22px] border border-gold/35 bg-[#FFFBF3] shadow-mj-sm">
+            <article data-mj-reveal className="relative mx-auto mt-10 max-w-4xl overflow-hidden rounded-[24px] border border-gold/40 bg-[#FFFBF3] shadow-mj-sm">
+              <DecoCorners />
               <div className="h-[3px] bg-gradient-to-r from-maroon-deep/20 via-gold to-maroon-deep/20" aria-hidden="true" />
-              <div className="p-6 sm:p-8">
-                <ul className="grid gap-5 sm:grid-cols-2" aria-label="Founders">
+              <div className="p-6 sm:p-10">
+                <ul className="grid gap-6 sm:grid-cols-2" aria-label="Founders">
                   {FOUNDERS.map(f => (
-                    <li key={f.id} className="flex items-center gap-4">
-                      <span className="grid h-[76px] w-[76px] shrink-0 place-items-center rounded-full bg-maroon-gradient font-serif text-[26px] font-bold text-gold-lt ring-[3px] ring-gold/60 ring-offset-[3px] ring-offset-[#FFFBF3] sm:h-[88px] sm:w-[88px] sm:text-[30px]" aria-hidden="true">
-                        {f.initials}
+                    <li key={f.id} className="flex items-center gap-5">
+                      <span className="ab-medal relative grid h-[92px] w-[92px] shrink-0 place-items-center sm:h-[104px] sm:w-[104px]" aria-hidden="true">
+                        <svg viewBox="0 0 104 104" className="absolute inset-0 h-full w-full" fill="none">
+                          <path d="M52 2 64 8l14-2 6 12 12 6-2 14 6 12-6 12 2 14-12 6-6 12-14-2-12 6-12-6-14 2-6-12-12-6 2-14-6-12 6-12-2-14 12-6 6-12 14 2Z" fill="#B98A2E" fillOpacity="0.16" stroke="#B98A2E" strokeOpacity="0.6" />
+                        </svg>
+                        <span className="ab-foil relative grid h-[72px] w-[72px] place-items-center overflow-hidden rounded-full bg-maroon-gradient font-serif text-[26px] font-bold text-gold-lt ring-[3px] ring-gold/60 ring-offset-[3px] ring-offset-[#FFFBF3] sm:h-[80px] sm:w-[80px] sm:text-[29px]">
+                          {f.initials}
+                        </span>
                       </span>
                       <div>
-                        <h3 className="font-serif text-[22px] leading-tight text-maroon">{f.name}</h3>
+                        <h3 className="font-serif text-[23px] leading-tight text-maroon">{f.name}</h3>
                         <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8A6516]">{f.role}</p>
                       </div>
                     </li>
                   ))}
                 </ul>
 
-                <div className="mt-7 min-w-0">
-                  <blockquote className="relative border-l-2 border-gold/60 pl-4 font-serif text-[18px] italic leading-snug text-maroon sm:text-[20px]">
-                    “In Mithila, a marriage begins when two families sit together. We built Mithila Jodi to keep that warmth, and to make the search a little easier.”
+                <div className="mt-8 min-w-0">
+                  <blockquote className="relative pl-8 font-serif text-[20px] italic leading-snug text-maroon sm:text-[24px]">
+                    <span className="absolute -top-3 left-0 font-serif text-[56px] not-italic leading-none text-gold/60" aria-hidden="true">&ldquo;</span>
+                    In Mithila, a marriage begins when two families sit together. We built Mithila Jodi to keep that warmth, and to make the search a little easier.
                   </blockquote>
-                  <div className="mt-5 space-y-3 text-[15px] leading-relaxed text-ink-soft">
+                  <div className="mt-6 space-y-3 text-[15px] leading-relaxed text-ink-soft">
                     <p>
                       Manoj Jha and Babita Jha founded Mithila Jodi on a belief that has guided Maithil families for generations:
                       a marriage is not only the union of two people, but the coming together of two families, with their gram,
@@ -461,11 +523,11 @@ export default function AboutPage() {
                       make the search simpler and safer, for every Maithil family, wherever in the world they live.
                     </p>
                   </div>
-                  <p className="mt-5 font-deva text-[19px] text-maroon" lang="mai">अहाँक परिवार लेल उचित जोड़ी, इएह हमर संकल्प अछि।</p>
+                  <p className="mt-6 font-deva text-[20px] text-maroon" lang="mai">अहाँक परिवार लेल उचित जोड़ी, इएह हमर संकल्प अछि।</p>
                   <p className="mt-1 text-[13px] text-ink-soft">The right match for your family: that is our promise.</p>
-                  <ul className="mt-5 flex flex-wrap gap-2" aria-label="Focus areas">
+                  <ul className="mt-6 flex flex-wrap gap-2" aria-label="Focus areas">
                     {FOUNDER_CHIPS.map(c => (
-                      <li key={c} className="rounded-full border border-gold/35 bg-cream px-3 py-1 text-[12px] font-medium text-ink">{c}</li>
+                      <li key={c} className="rounded-full border border-gold/40 bg-cream px-3 py-1 text-[12px] font-medium text-ink">{c}</li>
                     ))}
                   </ul>
                 </div>
@@ -474,42 +536,44 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* ── 8. FAQ ── */}
-        <section aria-labelledby="about-faq" className="border-t border-gold/15 bg-[#FBF3E6] py-14 sm:py-20">
-          <div className="wrap max-w-3xl px-5 sm:px-6">
-            <div className="text-center" data-mj-reveal>
-              <h2 id="about-faq" className={H2}>A little more about Mithila Jodi</h2>
+        {/* ── ०८ FAQ — heading beside the questions on wide screens ── */}
+        <section aria-labelledby="about-faq" className="border-t border-gold/15 bg-[#FBF3E6] py-16 sm:py-24">
+          <div className="wrap grid gap-8 px-5 sm:px-6 lg:grid-cols-[0.8fr_1.4fr] lg:gap-14">
+            <div data-mj-reveal className="lg:sticky lg:top-28 lg:self-start">
+              <Mark n={8}>Questions</Mark>
+              <h2 id="about-faq" className={`mt-5 ${H2}`}>A little more about Mithila Jodi</h2>
             </div>
-            <div className="mt-8 divide-y divide-gold/20 overflow-hidden rounded-[18px] border border-gold/30 bg-cream">
+            <div className="divide-y divide-gold/20 overflow-hidden rounded-[20px] border border-gold/30 bg-cream shadow-mj-xs">
               {FAQ.map((f, i) => (
                 <details key={f.q} className="ab-faq group" {...(i === 0 ? { open: true } : {})}>
-                  <summary className="flex min-h-[56px] cursor-pointer list-none items-center gap-4 px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-maroon/40">
+                  <summary className="flex min-h-[60px] cursor-pointer list-none items-center gap-4 px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-maroon/40 sm:px-6">
                     <h3 className="flex-1 text-[15.5px] font-semibold leading-snug text-ink sm:text-[16px]">{f.q}</h3>
-                    <span className="ab-faq-plus grid h-7 w-7 shrink-0 place-items-center rounded-full border border-gold/40 text-maroon transition-transform duration-200" aria-hidden="true">
+                    <span className="ab-faq-plus grid h-8 w-8 shrink-0 place-items-center rounded-full border border-gold/40 text-maroon transition-transform duration-200" aria-hidden="true">
                       <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
                     </span>
                   </summary>
-                  <p className="px-5 pb-5 text-[15px] leading-relaxed text-ink-soft">{f.a}</p>
+                  <p className="px-5 pb-5 text-[15px] leading-relaxed text-ink-soft sm:px-6">{f.a}</p>
                 </details>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ── 9. Final CTA ── */}
-        <section aria-labelledby="about-final" className="py-14 sm:py-16">
+        {/* ── Final CTA — maroon mesh, lines rise in ── */}
+        <section aria-labelledby="about-final" className="py-16 sm:py-20">
           <div className="wrap px-5 sm:px-6">
-            <div data-mj-reveal className="mx-auto max-w-2xl rounded-[22px] border border-gold/35 bg-cream px-6 py-9 text-center shadow-mj-xs sm:px-10">
-              <h2 id="about-final" className="font-display text-[30px] leading-[1.12] text-maroon sm:text-[38px]">
-                <span className="block">Your roots.</span>
-                <span className="block text-[#9A6F1E]">Your family.</span>
-                <span className="block">Your journey.</span>
+            <div data-mj-reveal className="ab-final relative mx-auto max-w-3xl overflow-hidden rounded-[26px] px-6 py-12 text-center shadow-mj sm:px-12 sm:py-14">
+              <DecoCorners light />
+              <h2 id="about-final" className="relative font-display text-[34px] leading-[1.1] text-cream sm:text-[46px]">
+                <span className="ab-rise block">Your roots.</span>{' '}
+                <span className="ab-rise block text-gold-lt" style={{ animationDelay: '0.15s' }}>Your family.</span>{' '}
+                <span className="ab-rise block" style={{ animationDelay: '0.3s' }}>Your journey.</span>
               </h2>
-              <p className="mt-3 text-[16px] text-ink-soft">Find meaningful connections with Mithila Jodi.</p>
-              <Link href="/register?start=1" className="btn-primary mt-6 inline-flex gap-2 rounded-full px-7 py-3.5 text-[15.5px]">
+              <p className="relative mt-4 text-[16px] text-[#EBDDC6]">Find meaningful connections with Mithila Jodi.</p>
+              <Link href="/register?start=1" className="relative mt-7 inline-flex items-center gap-2 rounded-full bg-gold-gradient px-7 py-3.5 text-[15.5px] font-semibold text-maroon-deep shadow-mj-sm transition-transform hover:-translate-y-0.5">
                 Create Your Free Profile<Icon d={I.arrow} className="h-4 w-4" />
               </Link>
-              <p className="mt-3 text-[12.5px] text-ink-soft">Currently free for all members</p>
+              <p className="relative mt-3 text-[12.5px] text-[#D9C8AE]">Currently free for all members</p>
             </div>
           </div>
         </section>
