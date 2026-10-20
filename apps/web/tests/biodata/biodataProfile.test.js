@@ -36,7 +36,10 @@ test('maps a complete profile to form fields', () => {
   assert.equal(d.mool, 'Sarisab')
   assert.equal(d.gram, 'Rajnagar')
   assert.equal(d.marital_status, 'Never Married')
-  assert.equal(d.education, 'B.Tech, Computer Science — NIT Patna')
+  assert.equal(d.education, undefined, 'the one-line summary is only for legacy profiles')
+  assert.equal(d.degree, 'B.Tech')
+  assert.equal(d.specialization, 'Computer Science')
+  assert.equal(d.institution, 'NIT Patna')
   assert.equal(d.profession, 'Software Engineer')
   assert.equal(d.employer, 'TCS')
   assert.equal(d.income, '₹10–15 LPA')
@@ -67,10 +70,54 @@ test('has no blood group, medical or system fields', () => {
 })
 
 test('legacy records: education and profession fall back in order', () => {
-  assert.equal(profileToBiodata({ education_detail: 'MBA, IIM' }, null, resolved({ educationLevel: 'Post Graduate' })).education, 'MBA, IIM')
+  const legacy = profileToBiodata({ education_detail: 'MBA, IIM' }, null, resolved({ educationLevel: 'Post Graduate' }))
+  assert.equal(legacy.education_detail, 'MBA, IIM')
+  assert.equal(legacy.education, undefined)
   assert.equal(profileToBiodata({}, null, resolved({ educationLevel: 'Post Graduate' })).education, 'Post Graduate')
-  assert.equal(profileToBiodata({ profession_detail: 'Doctor' }, null, resolved({ profession: 'Medical' })).profession, 'Doctor')
   assert.equal(profileToBiodata({}, null, resolved({ profession: 'Medical' })).profession, 'Medical')
+})
+
+test('every education and career detail the Digital Profile shows', () => {
+  const d = profileToBiodata({
+    degree: 'Graduate', specialization: 'Accounts', institution: 'Mumbai University', passing_year: 2017,
+    education_detail: 'Bachelors in Accounting and Finance', job_title: 'Subject Matter Expert', employer: 'Accenture',
+    industry: 'healthcare', employment_type: 'private', work_type: 'full_time', experience_years: 9, profession_detail: 'SME',
+    marriage_timeline: 'open',
+  }, null, resolved({ workLocation: 'Navi Mumbai, Maharashtra' }))
+  assert.equal(d.degree, 'Graduate')
+  assert.equal(d.specialization, 'Accounts')
+  assert.equal(d.institution, 'Mumbai University')
+  assert.equal(d.passing_year, '2017')
+  assert.equal(d.education_detail, 'Bachelors in Accounting and Finance')
+  assert.equal(d.profession, 'Subject Matter Expert')
+  assert.equal(d.industry, 'Healthcare')
+  assert.equal(d.employment_type, 'Private')
+  assert.equal(d.work_type, 'Full time')
+  assert.equal(d.experience, '9 years')
+  assert.equal(d.work_location, 'Navi Mumbai, Maharashtra')
+  assert.equal(d.career_detail, 'SME')
+  assert.equal(d.marriage_timeline, 'Open')
+})
+
+test('whose mobile it is, only alongside a contact number', () => {
+  LABELS.contact_relation = { father: 'Father' }
+  assert.equal(profileToBiodata({}, { contact_mobile: '98670', contact_relation: 'father' }, resolved()).contact_relation, 'Father')
+  assert.equal(profileToBiodata({}, { contact_relation: 'father' }, resolved()).contact_relation, undefined)
+})
+
+test('partner preferences come through as the Digital Profile words them', () => {
+  const d = profileToBiodata({}, null, resolved({ preferences: {
+    ageRange: '24–27 years', lookingFor: 'Bride', community: 'Brahmin, Maithil brahmin', manglik: 'Non manglik only',
+    location: 'Bihar, Maharashtra', livingArrangement: 'With family', career: 'either', notes: '  ',
+  } }))
+  assert.equal(d.pref_age, '24–27 years')
+  assert.equal(d.pref_looking_for, 'Bride')
+  assert.equal(d.pref_community, 'Brahmin, Maithil brahmin')
+  assert.equal(d.pref_manglik, 'Non manglik only')
+  assert.equal(d.pref_location, 'Bihar, Maharashtra')
+  assert.equal(d.pref_living, 'With family')
+  assert.equal(d.pref_career, 'either')
+  assert.ok(!('pref_notes' in d))
 })
 
 test('duplicate family text is not repeated', () => {

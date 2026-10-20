@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { getCommunityLabels, labelFor } from '@/lib/communityLabels'
 import { ensurePrimaryShare } from '@/lib/digitalProfileOwner'
 import { SITE_URL } from '@/lib/constants'
+import { loadPartnerPreferences } from '@/lib/partnerPreferences'
 import type { BiodataData } from '@/lib/biodata'
 import { profileToBiodata, type PrivateRow, type ProfileRow } from '@/lib/biodataProfile'
 
@@ -20,15 +21,16 @@ const PROFILE_COLUMNS = [
   'id', 'first_name', 'last_name', 'gender', 'dob', 'height_cm', 'marital_status', 'mother_tongue',
   'religion', 'caste', 'sub_caste', 'self_gotra', 'maternal_gotra', 'mool', 'gram',
   'diet', 'smoking', 'drinking',
-  'education_level_id', 'degree', 'specialization', 'institution', 'education_detail',
-  'profession_id', 'job_title', 'profession_detail', 'employer',
-  'current_loc_id', 'native_place_id',
+  'education_level_id', 'degree', 'specialization', 'institution', 'passing_year', 'education_detail',
+  'profession_id', 'job_title', 'profession_detail', 'employer', 'industry', 'employment_type', 'work_type',
+  'experience_years', 'marriage_timeline',
+  'current_loc_id', 'native_place_id', 'job_loc_id',
   'about_me', 'family_about', 'family_introduction', 'family_type', 'family_values',
   'parents_info', 'siblings_info', 'family_expectations',
 ].join(', ')
 
 const PRIVATE_COLUMNS =
-  'income_range, income_min_lpa, income_max_lpa, rashi, nakshatra, mangalik, birth_time, birth_place, contact_mobile, contact_email, address'
+  'income_range, income_min_lpa, income_max_lpa, rashi, nakshatra, mangalik, birth_time, birth_place, contact_mobile, contact_relation, contact_email, address'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Admin = any
@@ -84,12 +86,13 @@ export async function loadOwnBiodata(accountId: string): Promise<{ data: Biodata
     getCommunityLabels(admin),
   ])
   if (!rawProfile) return null
-  const p = rawProfile as ProfileRow & { education_level_id?: number | null; profession_id?: number | null; current_loc_id?: number | null; native_place_id?: number | null }
+  const p = rawProfile as ProfileRow & { education_level_id?: number | null; profession_id?: number | null; current_loc_id?: number | null; native_place_id?: number | null; job_loc_id?: number | null }
 
-  const [places, edu, prof] = await Promise.all([
-    placeNames(admin, [p.current_loc_id, p.native_place_id].filter((v): v is number => typeof v === 'number')),
+  const [places, edu, prof, preferences] = await Promise.all([
+    placeNames(admin, [p.current_loc_id, p.native_place_id, p.job_loc_id].filter((v): v is number => typeof v === 'number')),
     p.education_level_id ? admin.from('education_levels').select('label_en').eq('id', p.education_level_id).maybeSingle() : null,
     p.profession_id ? admin.from('professions').select('label_en').eq('id', p.profession_id).maybeSingle() : null,
+    loadPartnerPreferences(admin, profileId).catch(() => null),
   ])
 
   const data = profileToBiodata(p, (rawPrivate as PrivateRow | null) ?? null, {
@@ -98,6 +101,8 @@ export async function loadOwnBiodata(accountId: string): Promise<{ data: Biodata
     profession: (prof?.data as { label_en?: string } | null)?.label_en ?? null,
     currentLocation: p.current_loc_id ? places[p.current_loc_id] ?? null : null,
     nativePlace: p.native_place_id ? places[p.native_place_id] ?? null : null,
+    workLocation: p.job_loc_id ? places[p.job_loc_id] ?? null : null,
+    preferences,
   })
   // The member's own live Digital Profile link, as the member Home shows it.
   // A member who switched their link off gets none; the biodata works without it.

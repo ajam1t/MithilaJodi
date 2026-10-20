@@ -55,7 +55,7 @@ type FieldSpec = {
   half?: boolean
 }
 
-type CategoryId = 'personal' | 'family' | 'cultural' | 'contact'
+type CategoryId = 'personal' | 'family' | 'preferences' | 'cultural' | 'contact'
 
 type GroupSpec = {
   id: string
@@ -68,6 +68,7 @@ type GroupSpec = {
 const CATEGORIES: { id: CategoryId; title: string; hint?: string }[] = [
   { id: 'personal', title: 'Personal Information' },
   { id: 'family', title: 'Family Information' },
+  { id: 'preferences', title: 'Looking For', hint: 'Partner preferences. Leave blank and the section is left out of the document.' },
   { id: 'cultural', title: 'Mithila Cultural Details', hint: 'Gotra, mool and gram, plus horoscope — the fields Maithil families ask for first.' },
   { id: 'contact', title: 'Contact Details', hint: 'Only add what you are comfortable sharing with the families who receive this.' },
 ]
@@ -106,10 +107,21 @@ const GROUPS: GroupSpec[] = [
     category: 'personal',
     title: 'Education & career',
     fields: [
-      { key: 'education', label: 'Education', placeholder: 'B.Tech, Computer Science — NIT Patna' },
-      { key: 'profession', label: 'Profession', placeholder: 'Software Engineer' },
+      { key: 'education', label: 'Education (in one line)', placeholder: 'B.Tech, Computer Science — NIT Patna' },
+      { key: 'degree', label: 'Degree', placeholder: 'Graduate', half: true },
+      { key: 'specialization', label: 'Specialisation', placeholder: 'Accounts', half: true },
+      { key: 'institution', label: 'Institution', placeholder: 'Mumbai University', half: true },
+      { key: 'passing_year', label: 'Year', placeholder: '2017', half: true },
+      { key: 'education_detail', label: 'Education details', placeholder: 'Bachelors in Accounting and Finance' },
+      { key: 'profession', label: 'Role / designation', placeholder: 'Software Engineer', half: true },
       { key: 'employer', label: 'Employer', placeholder: 'Tata Consultancy Services', half: true },
+      { key: 'industry', label: 'Industry', placeholder: 'Healthcare', half: true },
+      { key: 'employment_type', label: 'Employment', placeholder: 'Private', half: true },
+      { key: 'work_type', label: 'Work type', placeholder: 'Full time', half: true },
+      { key: 'experience', label: 'Experience', placeholder: '5 years', half: true },
+      { key: 'work_location', label: 'Works in', placeholder: 'Navi Mumbai', half: true },
       { key: 'income', label: 'Annual income', placeholder: '₹12 LPA', half: true },
+      { key: 'career_detail', label: 'Career details', placeholder: 'Optional.' },
     ],
   },
   {
@@ -129,6 +141,7 @@ const GROUPS: GroupSpec[] = [
       { key: 'diet', label: 'Diet', placeholder: 'Vegetarian', half: true },
       { key: 'smoking', label: 'Smoking', placeholder: 'No', half: true },
       { key: 'drinking', label: 'Drinking', placeholder: 'No', half: true },
+      { key: 'marriage_timeline', label: 'Marriage timeline', placeholder: 'Within a year', half: true },
     ],
   },
   {
@@ -144,6 +157,27 @@ const GROUPS: GroupSpec[] = [
       { key: 'siblings', label: 'Siblings', placeholder: 'One younger brother, studying' },
       { key: 'family_about', label: 'About the family', type: 'textarea', placeholder: 'A short introduction to the family.' },
       { key: 'expectations', label: 'Family expectations', type: 'textarea', placeholder: 'What the family hopes for in a match.' },
+    ],
+  },
+  {
+    id: 'preferences',
+    category: 'preferences',
+    title: 'Partner preferences',
+    fields: [
+      { key: 'pref_age', label: 'Age', placeholder: '24–27 years', half: true },
+      { key: 'pref_looking_for', label: 'Bride / Groom', placeholder: 'Bride', half: true },
+      { key: 'pref_community', label: 'Community', placeholder: 'Maithil Brahmin' },
+      { key: 'pref_marital_status', label: 'Marital status', placeholder: 'Never married', half: true },
+      { key: 'pref_diet', label: 'Diet', placeholder: 'Vegetarian', half: true },
+      { key: 'pref_education', label: 'Education', placeholder: 'Graduate, Post Graduate' },
+      { key: 'pref_profession', label: 'Profession', placeholder: 'Any' },
+      { key: 'pref_location', label: 'Location', placeholder: 'Bihar, Delhi, Mumbai' },
+      { key: 'pref_timeline', label: 'Timeline', placeholder: 'Open', half: true },
+      { key: 'pref_manglik', label: 'Manglik', placeholder: 'Non manglik only', half: true },
+      { key: 'pref_children', label: 'Children', placeholder: 'Children ok', half: true },
+      { key: 'pref_living', label: 'Living', placeholder: 'With family', half: true },
+      { key: 'pref_career', label: 'Career', placeholder: 'Either', half: true },
+      { key: 'pref_notes', label: 'Notes', type: 'textarea', placeholder: 'Anything else the family hopes for.' },
     ],
   },
   {
@@ -173,6 +207,7 @@ const GROUPS: GroupSpec[] = [
     title: 'Contact',
     fields: [
       { key: 'mobile', label: 'Mobile', type: 'tel', placeholder: '+91 98765 43210', half: true },
+      { key: 'contact_relation', label: 'Whose number', placeholder: 'Father', half: true },
       { key: 'email', label: 'Email', type: 'email', placeholder: 'name@example.com', half: true },
       { key: 'address', label: 'Address', type: 'textarea', placeholder: 'Optional.' },
       { key: 'profile_link', label: 'Mithila Jodi Digital Profile link', type: 'url', placeholder: 'https://mithilajodi.com/p/…' },

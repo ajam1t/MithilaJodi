@@ -23,11 +23,18 @@ import type { BiodataData } from './biodata'
  *   gram              profiles.gram (free text)
  *   diet, smoking, drinking
  *                     profiles.* (master or legacy free text)
- *   education         profiles.degree + specialization, else education_detail,
- *                     else the education level's label; then institution
- *   profession        profiles.job_title, else profession_detail, else the
- *                     profession's label
- *   employer          profiles.employer
+ *   degree, specialization, institution, passing_year, education_detail
+ *                     profiles.* — each its own line, as the Digital Profile
+ *                     shows them
+ *   education         only when none of those exist: the education level's
+ *                     label (legacy profiles)
+ *   profession        profiles.job_title, else the profession's label
+ *   employer, industry, employment_type, work_type
+ *                     profiles.*
+ *   experience        profiles.experience_years, as "9 years"
+ *   work_location     profiles.job_loc_id → india_locations
+ *   career_detail     profiles.profession_detail
+ *   marriage_timeline profiles.marriage_timeline
  *   income            profile_private.income_range, else income_min/max_lpa
  *   current_location  profiles.current_loc_id → india_locations, with state
  *   native_place      profiles.native_place_id → india_locations, with state
@@ -44,10 +51,14 @@ import type { BiodataData } from './biodata'
  *                     profile_private.*
  *   mobile, email, address
  *                     profile_private.contact_mobile / contact_email / address
+ *   contact_relation  profile_private.contact_relation (whose number), only
+ *                     with a contact_mobile, as the Digital Profile does
+ *   pref_*            profile_preferences, through formatPartnerPreferences —
+ *                     the Digital Profile's own "Looking for" text
  *
  * Deliberately left out: account and system fields (ids, status, moderation,
- * completeness, timestamps), managed_by, visibility settings, partner
- * preferences, the kundli link, and anything medical. The profile has no
+ * completeness, timestamps), managed_by, visibility settings, the kundli
+ * link, and anything medical. The profile has no
  * father's or mother's name columns, so those stay for the member to type;
  * nothing is invented to fill a gap.
  */
@@ -73,10 +84,16 @@ export type ProfileRow = {
   degree?: string | null
   specialization?: string | null
   institution?: string | null
+  passing_year?: number | null
   education_detail?: string | null
   job_title?: string | null
   profession_detail?: string | null
   employer?: string | null
+  industry?: string | null
+  employment_type?: string | null
+  work_type?: string | null
+  experience_years?: number | null
+  marriage_timeline?: string | null
   about_me?: string | null
   family_about?: string | null
   family_introduction?: string | null
@@ -97,8 +114,27 @@ export type PrivateRow = {
   birth_time?: string | null
   birth_place?: string | null
   contact_mobile?: string | null
+  contact_relation?: string | null
   contact_email?: string | null
   address?: string | null
+}
+
+/** The Digital Profile's "Looking for", already display text (lib/partnerPreferences). */
+export type PreferencesText = {
+  ageRange?: string | null
+  lookingFor?: string | null
+  community?: string | null
+  maritalStatus?: string | null
+  education?: string | null
+  profession?: string | null
+  location?: string | null
+  diet?: string | null
+  marriageTimeline?: string | null
+  manglik?: string | null
+  children?: string | null
+  livingArrangement?: string | null
+  career?: string | null
+  notes?: string | null
 }
 
 /** Ids and master keys already resolved to display labels by the loader. */
@@ -109,6 +145,8 @@ export type ResolvedLabels = {
   profession?: string | null
   currentLocation?: string | null
   nativePlace?: string | null
+  workLocation?: string | null
+  preferences?: PreferencesText | null
 }
 
 /** Trims, and turns blank or whitespace-only strings into null. */
@@ -162,10 +200,11 @@ export function profileToBiodata(p: ProfileRow, priv: PrivateRow | null, r: Reso
   const q = priv ?? {}
   const L = (type: string, v: string | null | undefined) => r.label(type, clean(v))
 
-  const education = joinDistinct([
-    clean(p.degree) ? joinDistinct([p.degree, p.specialization], ', ') : (clean(p.education_detail) ?? r.educationLevel),
-    p.institution,
-  ], ' — ')
+  const detailed = [p.degree, p.specialization, p.institution, p.education_detail].some(v => clean(v)) || p.passing_year != null
+  const year = p.passing_year != null && p.passing_year > 1900 && p.passing_year < 2100 ? String(p.passing_year) : null
+  const exp = p.experience_years != null && p.experience_years >= 0 && p.experience_years < 70 ? p.experience_years : null
+  const role = clean(p.job_title) ?? clean(r.profession)
+  const pf = r.preferences ?? {}
 
   const out: BiodataData = {
     full_name: joinDistinct([p.first_name, p.last_name], ' '),
@@ -187,10 +226,22 @@ export function profileToBiodata(p: ProfileRow, priv: PrivateRow | null, r: Reso
     smoking: humanize(p.smoking),
     drinking: humanize(p.drinking),
 
-    education,
-    profession: clean(p.job_title) ?? clean(p.profession_detail) ?? clean(r.profession),
+    education: detailed ? null : clean(r.educationLevel),
+    degree: clean(p.degree),
+    specialization: clean(p.specialization),
+    institution: clean(p.institution),
+    passing_year: year,
+    education_detail: clean(p.education_detail),
+    profession: role,
     employer: clean(p.employer),
+    industry: humanize(p.industry),
+    employment_type: humanize(p.employment_type),
+    work_type: humanize(p.work_type),
+    experience: exp == null ? null : `${exp} ${exp === 1 ? 'year' : 'years'}`,
+    work_location: clean(r.workLocation),
+    career_detail: clean(p.profession_detail) && clean(p.profession_detail)?.toLowerCase() !== role?.toLowerCase() ? clean(p.profession_detail) : null,
     income: income(q, r.label),
+    marriage_timeline: humanize(p.marriage_timeline),
 
     current_location: clean(r.currentLocation),
     native_place: clean(r.nativePlace),
@@ -211,8 +262,24 @@ export function profileToBiodata(p: ProfileRow, priv: PrivateRow | null, r: Reso
     birth_place: clean(q.birth_place),
 
     mobile: clean(q.contact_mobile),
+    contact_relation: clean(q.contact_mobile) ? L('contact_relation', q.contact_relation) : null,
     email: clean(q.contact_email),
     address: clean(q.address),
+
+    pref_age: clean(pf.ageRange),
+    pref_looking_for: clean(pf.lookingFor),
+    pref_community: clean(pf.community),
+    pref_marital_status: clean(pf.maritalStatus),
+    pref_education: clean(pf.education),
+    pref_profession: clean(pf.profession),
+    pref_location: clean(pf.location),
+    pref_diet: clean(pf.diet),
+    pref_timeline: clean(pf.marriageTimeline),
+    pref_manglik: clean(pf.manglik),
+    pref_children: clean(pf.children),
+    pref_living: clean(pf.livingArrangement),
+    pref_career: clean(pf.career),
+    pref_notes: clean(pf.notes),
   }
 
   // Only populated fields travel; an absent key never blanks what the member typed.

@@ -2,7 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import type { BiodataData, BiodataLanguage } from '@/lib/biodata'
-import { BIODATA_LABELS } from '@/lib/biodata'
+import { biodataLabels } from '@/lib/biodata'
 import {
   DEFAULT_PHOTO_STYLE, PHOTO_SHAPES, resolveBiodataTemplate,
   type BiodataPalette, type BiodataTemplate, type PhotoShape, type PhotoStyle,
@@ -60,12 +60,12 @@ type RowSpec = { label: string; value: string | null | undefined; wide?: boolean
 const hasValue = (v: unknown) => v != null && String(v).trim() !== ''
 
 /** Label : value pairs, two to a line; long values take the full width. */
-function Rows({ rows, p, cols = 2 }: { rows: RowSpec[]; p: BiodataPalette; cols?: 1 | 2 }) {
+function Rows({ rows, p, cols = 2, flush = false }: { rows: RowSpec[]; p: BiodataPalette; cols?: 1 | 2; flush?: boolean }) {
   const shown = rows.filter(r => hasValue(r.value))
   // A full-width row's label lines up with the half-width rows' labels.
   const wideLabel = cols === 2 ? 'calc((100% - 22px) / 2 * 0.42)' : '38%'
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: cols === 2 ? '1fr 1fr' : '1fr', columnGap: 22, rowGap: 2, padding: '6px 8px 0' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: cols === 2 ? '1fr 1fr' : '1fr', columnGap: 22, rowGap: 2, padding: flush ? '2px 8px 0' : '6px 8px 0' }}>
       {shown.map(r => {
         const wide = cols === 1 || r.wide || String(r.value).length > 26
         return (
@@ -236,14 +236,12 @@ function PhotoFrame({ url, alt, style, p, width }: { url: string; alt: string; s
 
 type Plan = { scale: number; pages: number[][] }
 
-function paginate(hs: number[], cap1: number, capN: number, forced: number): Plan {
-  const total = hs.reduce((a, b) => a + b, 0)
-  const all = hs.map((_, i) => i)
-  if (total <= cap1) return { scale: 1, pages: [all] }
-  if (total * MIN_FIT <= cap1) return { scale: Math.floor((cap1 / total) * 1000) / 1000, pages: [all] }
+/** Fills pages in order at a given text scale. */
+function flow(hs: number[], cap1: number, capN: number, forced: number, scale: number): number[][] {
   const pages: number[][] = [[]]
   let used = 0, cap = cap1
-  hs.forEach((h, i) => {
+  hs.forEach((raw, i) => {
+    const h = raw * scale
     const page = pages[pages.length - 1]
     if (i >= forced && page.length > 0 && used + h > cap) {
       pages.push([i]); used = h; cap = capN
@@ -251,7 +249,21 @@ function paginate(hs: number[], cap1: number, capN: number, forced: number): Pla
       page.push(i); used += h
     }
   })
-  return { scale: 1, pages }
+  return pages
+}
+
+/**
+ * Full size, unless easing the text down a little (never below MIN_FIT)
+ * saves a whole page — then the largest scale that does. A biodata a few
+ * lines over two pages becomes two full pages, not two and a near-empty third.
+ */
+function paginate(hs: number[], cap1: number, capN: number, forced: number): Plan {
+  let best: Plan = { scale: 1, pages: flow(hs, cap1, capN, forced, 1) }
+  for (let s = 0.99; s >= MIN_FIT - 1e-9; s -= 0.01) {
+    const pages = flow(hs, cap1, capN, forced, s)
+    if (pages.length < best.pages.length) best = { scale: Math.round(s * 100) / 100, pages }
+  }
+  return best
 }
 
 const samePlan = (a: Plan, b: Plan) => a.scale === b.scale && JSON.stringify(a.pages) === JSON.stringify(b.pages)
@@ -277,12 +289,14 @@ export function BiodataDocument({
 }) {
   const t = resolveBiodataTemplate(templateSlug)
   const p = t.palette
-  const L = BIODATA_LABELS[language] ?? BIODATA_LABELS.en
+  const L = biodataLabels(language)
   const titleFont = language === 'en' ? LATIN_DISPLAY : DEVA_DISPLAY
   const photo = photoStyle ?? DEFAULT_PHOTO_STYLE
 
   // ── Blocks, in reading order ──
-  const blocks: Array<{ key: string; node: ReactNode }> = []
+  /** `gap` is the space after a block; parts of one section sit closer together. */
+  type Block = { key: string; node: ReactNode; gap?: number }
+  const blocks: Block[] = []
 
   blocks.push({
     key: 'header',
@@ -357,12 +371,20 @@ export function BiodataDocument({
         { label: L.dob, value: data.dob }, { label: L.height, value: data.height },
         { label: L.complexion, value: data.complexion },
         { label: L.diet, value: data.diet }, { label: L.smoking, value: data.smoking }, { label: L.drinking, value: data.drinking },
+        { label: L.marriage_timeline, value: data.marriage_timeline },
       ],
     },
     {
       key: 'career', icon: 'career', title: L.career, rows: [
-        { label: L.education, value: data.education, wide: true }, { label: L.profession, value: data.profession },
-        { label: L.employer, value: data.employer }, { label: L.income, value: data.income },
+        { label: L.education, value: data.education, wide: true },
+        { label: L.degree, value: data.degree }, { label: L.specialization, value: data.specialization },
+        { label: L.institution, value: data.institution }, { label: L.passing_year, value: data.passing_year },
+        { label: L.education_detail, value: data.education_detail, wide: true },
+        { label: L.profession, value: data.profession }, { label: L.employer, value: data.employer },
+        { label: L.industry, value: data.industry }, { label: L.employment_type, value: data.employment_type },
+        { label: L.work_type, value: data.work_type }, { label: L.experience, value: data.experience },
+        { label: L.work_location, value: data.work_location }, { label: L.income, value: data.income },
+        { label: L.career_detail, value: data.career_detail, wide: true },
       ],
     },
     {
@@ -382,6 +404,20 @@ export function BiodataDocument({
       ],
     },
     {
+      key: 'preferences', icon: 'heart', title: L.preferences, rows: [
+        { label: L.pref_age, value: data.pref_age }, { label: L.pref_looking_for, value: data.pref_looking_for },
+        { label: L.pref_community, value: data.pref_community, wide: true },
+        { label: L.pref_marital_status, value: data.pref_marital_status }, { label: L.pref_diet, value: data.pref_diet },
+        { label: L.pref_education, value: data.pref_education, wide: true },
+        { label: L.pref_profession, value: data.pref_profession, wide: true },
+        { label: L.pref_location, value: data.pref_location, wide: true },
+        { label: L.pref_timeline, value: data.pref_timeline }, { label: L.pref_manglik, value: data.pref_manglik },
+        { label: L.pref_children, value: data.pref_children }, { label: L.pref_living, value: data.pref_living },
+        { label: L.pref_career, value: data.pref_career },
+        { label: L.pref_notes, value: data.pref_notes, wide: true },
+      ],
+    },
+    {
       key: 'astrology', icon: 'sun', title: L.astrology, rows: [
         { label: L.rashi, value: data.rashi }, { label: L.nakshatra, value: data.nakshatra },
         { label: L.mangalik, value: data.mangalik }, { label: L.birth_time, value: data.birth_time },
@@ -390,7 +426,8 @@ export function BiodataDocument({
     },
     {
       key: 'contact', icon: 'phone', title: L.contact, rows: [
-        { label: L.mobile, value: data.mobile }, { label: L.email, value: data.email },
+        { label: data.contact_relation ? `${L.mobile} (${data.contact_relation})` : L.mobile, value: data.mobile },
+        { label: L.email, value: data.email },
         { label: L.address, value: data.address, wide: true },
       ],
     },
@@ -410,30 +447,37 @@ export function BiodataDocument({
 
   /**
    * A full-width section as one or more blocks, so long writing can continue
-   * on the next page instead of being cut off at the bottom of this one: About
-   * Me breaks between paragraphs, and family descriptions row by row. The
-   * heading always stays with the first part.
+   * on the next page instead of being cut off — or leaving half a page empty
+   * because the whole section would not fit. Text breaks between paragraphs,
+   * details line by line. The heading always stays with the first line.
    */
-  const splitSection = (s: (typeof sections)[number]): Array<{ key: string; node: ReactNode }> => {
+  const splitSection = (s: (typeof sections)[number]): Block[] => {
     const textStyle: CSSProperties = { margin: 0, padding: '6px 8px 0', fontSize: 13.5, lineHeight: 1.55, color: p.ink, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }
     if (!s.rows) {
       const paras = String(s.text ?? '').split(/\n\s*\n/).map(x => x.trim()).filter(Boolean)
       if (paras.length < 2) return [{ key: s.key, node: renderSection(s, 2) }]
       return paras.map((para, i) => ({
         key: `${s.key}-${i}`,
+        gap: i < paras.length - 1 ? 6 : BLOCK_GAP,
         node: i === 0
           ? <div><SectionHeading title={s.title} icon={s.icon} t={t} font={titleFont} /><p style={textStyle}>{para}</p></div>
           : <p style={{ ...textStyle, paddingTop: 0 }}>{para}</p>,
       }))
     }
-    const filled = s.rows.filter(r => hasValue(r.value))
-    const long = filled.filter(r => String(r.value).length > 160)
-    if (long.length < 2) return [{ key: s.key, node: renderSection(s, 2) }]
-    const first = filled.filter(r => !long.includes(r)).concat(long[0])
-    return [
-      { key: s.key, node: renderSection({ ...s, rows: first }, 2) },
-      ...long.slice(1).map((r, i) => ({ key: `${s.key}-${i + 1}`, node: <Rows rows={[r]} p={p} cols={2} /> })),
-    ]
+    // Lines as Rows lays them out: two short details side by side, a long one alone.
+    const lines: RowSpec[][] = []
+    for (const r of s.rows.filter(row => hasValue(row.value))) {
+      const wide = r.wide || String(r.value).length > 26
+      const last = lines[lines.length - 1]
+      if (!wide && last && last.length === 1 && !(last[0].wide || String(last[0].value).length > 26)) last.push(r)
+      else lines.push([r])
+    }
+    if (lines.length < 2) return [{ key: s.key, node: renderSection(s, 2) }]
+    return lines.map((line, i) => ({
+      key: `${s.key}-${i}`,
+      gap: i < lines.length - 1 ? 0 : BLOCK_GAP,
+      node: i === 0 ? renderSection({ ...s, rows: line }, 2) : <Rows rows={line} p={p} cols={2} flush />,
+    }))
   }
 
   // Short sections sit side by side, A4 is wide enough; long ones span the page.
@@ -443,6 +487,7 @@ export function BiodataDocument({
     { left: ['career'], right: ['astrology'] },
     { left: ['about'] },
     { left: ['family'] },
+    { left: ['preferences'] },
     { left: ['contact'] },
   ]
   for (const row of LAYOUT) {
@@ -471,7 +516,7 @@ export function BiodataDocument({
       key: 'profile-link',
       node: (
         <div style={{ margin: '4px 24px 0', padding: '9px 14px', textAlign: 'center', border: `1px solid ${p.gold}`, borderRadius: 10, background: 'rgba(255,250,240,0.85)' }}>
-          <p style={{ margin: 0, fontFamily: titleFont, fontSize: 13.5, lineHeight: 1.35, color: p.heading }}>{L.more_details ?? BIODATA_LABELS.en.more_details}</p>
+          <p style={{ margin: 0, fontFamily: titleFont, fontSize: 13.5, lineHeight: 1.35, color: p.heading }}>{L.more_details}</p>
           <a
             href={link}
             data-pdf-link={link}
@@ -533,7 +578,7 @@ export function BiodataDocument({
           aria-hidden="true"
           style={{ position: 'absolute', left: 0, top: 0, width: contentW, height: 0, overflow: 'hidden', visibility: 'hidden', pointerEvents: 'none', fontFamily: BODY_FONT, color: p.ink }}
         >
-          {blocks.map(b => <div key={b.key} style={{ paddingBottom: BLOCK_GAP }}>{b.node}</div>)}
+          {blocks.map(b => <div key={b.key} style={{ paddingBottom: b.gap ?? BLOCK_GAP }}>{b.node}</div>)}
         </div>
       )}
 
@@ -550,8 +595,8 @@ export function BiodataDocument({
           >
             <FrameArt id={t.id} />
             <div style={{ position: 'absolute', left: `${t.safe.side}mm`, right: `${t.safe.side}mm`, top: `${pi === 0 ? t.safe.top : t.safe.contTop}mm`, bottom: `${t.safe.bottom}mm` }}>
-              <div style={pi === 0 && scale < 1 ? { width: contentW / scale, transform: `scale(${scale})`, transformOrigin: 'top left' } : undefined}>
-                {idxs.map(i => <div key={blocks[i].key} style={{ paddingBottom: BLOCK_GAP }}>{blocks[i].node}</div>)}
+              <div style={scale < 1 ? { width: contentW / scale, transform: `scale(${scale})`, transformOrigin: 'top left' } : undefined}>
+                {idxs.map(i => <div key={blocks[i].key} style={{ paddingBottom: blocks[i].gap ?? BLOCK_GAP }}>{blocks[i].node}</div>)}
               </div>
               <p style={{ position: 'absolute', left: 0, right: 0, bottom: 0, margin: 0, textAlign: 'center', fontSize: 10.5, letterSpacing: '0.03em', color: p.heading }}>
                 Created with <strong style={{ fontWeight: 600 }}>Mithila Jodi</strong>

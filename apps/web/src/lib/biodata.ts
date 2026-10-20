@@ -49,10 +49,24 @@ export type BiodataData = {
   dob?: string | null
   complexion?: string | null
 
+  /** A one-line summary — what a guest types, or a legacy profile's only value. */
   education?: string | null
+  degree?: string | null
+  specialization?: string | null
+  institution?: string | null
+  passing_year?: string | null
+  education_detail?: string | null
+  /** The role / designation. */
   profession?: string | null
   employer?: string | null
+  industry?: string | null
+  employment_type?: string | null
+  work_type?: string | null
+  experience?: string | null
+  work_location?: string | null
+  career_detail?: string | null
   income?: string | null
+  marriage_timeline?: string | null
 
   current_location?: string | null
   native_place?: string | null
@@ -78,11 +92,75 @@ export type BiodataData = {
   kundli?: string | null
 
   mobile?: string | null
+  /** Whose number it is — Father, Brother… — printed as "Mobile (Father)". */
+  contact_relation?: string | null
   email?: string | null
   address?: string | null
 
   /** The member's Digital Profile link (mithilajodi.com/p/…), printed at the foot. */
   profile_link?: string | null
+
+  /** "Looking for" — the family's partner preferences, as display text. */
+  pref_age?: string | null
+  pref_looking_for?: string | null
+  pref_community?: string | null
+  pref_marital_status?: string | null
+  pref_education?: string | null
+  pref_profession?: string | null
+  pref_location?: string | null
+  pref_diet?: string | null
+  pref_timeline?: string | null
+  pref_manglik?: string | null
+  pref_children?: string | null
+  pref_living?: string | null
+  pref_career?: string | null
+  pref_notes?: string | null
+}
+
+/**
+ * Labels added after the first four-language set. Languages without their own
+ * wording here fall back to English (see `biodataLabels`).
+ */
+const EXTRA_LABELS: Record<BiodataLanguage, BiodataLabels> = {
+  en: {
+    degree: 'Degree', specialization: 'Specialisation', institution: 'Institution', passing_year: 'Year',
+    education_detail: 'Education Details', industry: 'Industry', employment_type: 'Employment',
+    work_type: 'Work Type', experience: 'Experience', work_location: 'Works in', career_detail: 'Career Details',
+    marriage_timeline: 'Marriage Timeline',
+    preferences: 'Looking For', pref_age: 'Age', pref_looking_for: 'Bride / Groom', pref_community: 'Community',
+    pref_marital_status: 'Marital Status', pref_education: 'Education', pref_profession: 'Profession',
+    pref_location: 'Location', pref_diet: 'Diet', pref_timeline: 'Timeline', pref_manglik: 'Manglik',
+    pref_children: 'Children', pref_living: 'Living', pref_career: 'Career', pref_notes: 'Notes',
+  },
+  hi: {
+    degree: 'डिग्री', specialization: 'विशेषज्ञता', institution: 'संस्थान', passing_year: 'वर्ष',
+    education_detail: 'शिक्षा विवरण', industry: 'उद्योग', employment_type: 'रोज़गार',
+    work_type: 'कार्य प्रकार', experience: 'अनुभव', work_location: 'कार्यस्थल', career_detail: 'करियर विवरण',
+    marriage_timeline: 'विवाह समय-सीमा',
+    preferences: 'जीवनसाथी की अपेक्षा', pref_age: 'आयु', pref_looking_for: 'वधू / वर', pref_community: 'समुदाय',
+    pref_marital_status: 'वैवाहिक स्थिति', pref_education: 'शिक्षा', pref_profession: 'पेशा',
+    pref_location: 'स्थान', pref_diet: 'आहार', pref_timeline: 'समय-सीमा', pref_manglik: 'मांगलिक',
+    pref_children: 'बच्चे', pref_living: 'निवास', pref_career: 'करियर', pref_notes: 'टिप्पणी',
+  },
+  mai: {
+    degree: 'डिग्री', specialization: 'विशेषज्ञता', institution: 'संस्थान', passing_year: 'वर्ष',
+    education_detail: 'शिक्षा विवरण', industry: 'उद्योग', employment_type: 'रोजगार',
+    work_type: 'काजक प्रकार', experience: 'अनुभव', work_location: 'कार्यस्थल', career_detail: 'करियर विवरण',
+    marriage_timeline: 'विवाहक समय',
+    preferences: 'जीवनसाथीक अपेक्षा', pref_age: 'आयु', pref_looking_for: 'कनियाँ / वर', pref_community: 'समुदाय',
+    pref_marital_status: 'वैवाहिक स्थिति', pref_education: 'शिक्षा', pref_profession: 'पेशा',
+    pref_location: 'स्थान', pref_diet: 'आहार', pref_timeline: 'समय', pref_manglik: 'मांगलिक',
+    pref_children: 'बच्चा', pref_living: 'निवास', pref_career: 'करियर', pref_notes: 'टिप्पणी',
+  },
+  sa: {
+    degree: 'उपाधिः', institution: 'संस्थानम्', passing_year: 'वर्षम्', experience: 'अनुभवः',
+    preferences: 'वाञ्छितजीवनसाथी', pref_age: 'वयः', pref_education: 'शिक्षा', pref_location: 'स्थानम्',
+  },
+}
+
+/** Every label for a language, English filling any gap. */
+export function biodataLabels(language: BiodataLanguage): BiodataLabels {
+  return { ...BIODATA_LABELS.en, ...EXTRA_LABELS.en, ...(BIODATA_LABELS[language] ?? {}), ...(EXTRA_LABELS[language] ?? {}) }
 }
 
 export type BiodataLabels = Record<string, string>
