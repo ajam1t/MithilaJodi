@@ -821,3 +821,73 @@ footer :focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .mj-spin { animation-duration: 1.6s !important; animation-iteration-count: infinite !important; }
 }
+
+/* ── Why Mithila Jodi: the Kohbar band (components/home/FeatureStrip) ─────
+   A deep maroon ground with a restrained gold gradient mesh and a faint
+   halftone of gold dots that fades toward the centre; Art Deco corner
+   brackets on each card; numerals that rise in once on reveal; the aripan
+   ring turns a little on hover. Nothing loops. */
+.mj-kohbar {
+  background:
+    radial-gradient(42% 60% at 12% 18%, rgba(201, 162, 75, 0.16), transparent 70%),
+    radial-gradient(40% 55% at 90% 85%, rgba(201, 162, 75, 0.12), transparent 70%),
+    linear-gradient(160deg, #5A0E19 0%, #6E1322 45%, #4A0B15 100%);
+}
+.mj-kohbar::before {
+  content: '';
+  position: absolute;
+  inset: 22px 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(228, 197, 114, 0.16) 1px, transparent 1.4px);
+  background-size: 14px 14px;
+  -webkit-mask-image: radial-gradient(ellipse 75% 70% at 50% 50%, transparent 35%, #000 100%);
+          mask-image: radial-gradient(ellipse 75% 70% at 50% 50%, transparent 35%, #000 100%);
+}
+.mj-why-card { transition: border-color 0.3s ease, background-color 0.3s ease, translate 0.3s ease; }
+.mj-why-card:hover { border-color: rgba(228, 197, 114, 0.6); background-color: rgba(255, 255, 255, 0.06); }
+.mj-why-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: rgba(228, 197, 114, 0.7);
+  pointer-events: none;
+}
+.mj-why-ring { transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1); }
+.mj-why-card:hover .mj-why-ring { transform: rotate(30deg); }
+@keyframes mjNumRise {
+  from { opacity: 0; translate: 0 14px; }
+  to   { opacity: 1; translate: none; }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .mj-why-card:hover { translate: 0 -3px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .mj-why-grid.mj-in .mj-why-num { animation: mjNumRise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+}
+
+/* ── Community stories: the letter card (components/home/CommunityStories) ──
+   Laid paper with a gold halftone fading out of the top-right corner; the
+   chosen family's words fade in when the selection changes. */
+.mj-letter {
+  background-image:
+    radial-gradient(circle at 100% 0%, rgba(185, 138, 46, 0.22) 1.1px, transparent 1.6px),
+    repeating-linear-gradient(0deg, transparent 0 31px, rgba(185, 138, 46, 0.07) 31px 32px);
+  background-size: 9px 9px, auto;
+}
+.mj-letter::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 100% 0%, transparent 0 120px, #FFFAF0 260px);
+  z-index: 0;
+}
+.mj-letter > :not(.absolute) { position: relative; z-index: 1; }
+.mj-letter > .absolute { z-index: 1; }
+@keyframes mjLetterIn {
+  from { opacity: 0; translate: 0 8px; }
+  to   { opacity: 1; translate: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .mj-letter-in { animation: mjLetterIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+}

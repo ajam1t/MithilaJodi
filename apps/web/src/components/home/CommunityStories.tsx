@@ -1,11 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import { Modal } from '@/components/ui/Modal'
+import { useRef, useState, type KeyboardEvent } from 'react'
 
 /**
- * Community stories — four compact family selectors in one row; the full
- * story opens in a dialog, so the homepage never carries the long text.
+ * Community stories — the chosen family's words, with four compact family
+ * selectors in one row beneath them.
  *
  * These are presented as real member stories, on the site owner's confirmation
  * that they are.
@@ -61,52 +60,84 @@ const STORIES: Story[] = [
 /** "The Jha family" → "Jha Family" for the compact selector. */
 const shortName = (family: string) => family.replace(/^The\s+/i, '').replace(/family$/i, 'Family')
 
+/**
+ * Laid out as a letter: the chosen family's words sit on a paper card, in
+ * large editorial type with a faint gold halftone in one corner, and the
+ * four families stay a compact selector beneath it (a tab list — arrow keys
+ * move between them). Changing family fades the new words in; nothing
+ * changes on its own.
+ */
 export function CommunityStories() {
-  const [open, setOpen] = useState<Story | null>(null)
+  const [active, setActive] = useState(0)
+  const tabs = useRef<Array<HTMLButtonElement | null>>([])
+  const s = STORIES[active]
+
+  function onKey(e: KeyboardEvent, i: number) {
+    const n = STORIES.length
+    const next: Record<string, number> = { ArrowRight: (i + 1) % n, ArrowLeft: (i + n - 1) % n, Home: 0, End: n - 1 }
+    if (e.key in next) {
+      e.preventDefault()
+      setActive(next[e.key])
+      tabs.current[next[e.key]]?.focus()
+    }
+  }
+
   return (
-    <section className="bg-paper py-8 sm:py-11" aria-label="Community stories">
+    <section className="bg-paper py-10 sm:py-14" aria-labelledby="stories-heading">
       <div className="wrap">
-        {/* Same compact heading as "Why Mithila Jodi" above it. */}
-        <div data-mj-reveal className="mb-5 text-center sm:mb-7">
+        <div data-mj-reveal className="mb-6 text-center sm:mb-8">
           <p className="eyebrow mb-1.5">From Mithila Families</p>
-          <h2 className="section-heading">Stories From Our Community</h2>
+          <h2 id="stories-heading" className="section-heading">Stories From Our Community</h2>
           <div className="ornament-line mx-auto mt-2 w-16" />
-          <p className="mt-2.5 text-[13.5px] text-ink-soft sm:text-[14.5px]">Real stories from Mithila families — tap one to read it.</p>
         </div>
 
-        {/* Always four across — on a phone too. */}
-        <ul data-mj-reveal className="mx-auto grid max-w-3xl grid-cols-4 gap-2 sm:gap-4">
-          {STORIES.map(s => (
-            <li key={s.family}>
-              <button
-                type="button"
-                onClick={() => setOpen(s)}
-                aria-haspopup="dialog"
-                className="group flex h-full w-full flex-col items-center rounded-mj-sm border border-paper-3 bg-cream px-1 py-3 text-center transition-colors hover:border-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold sm:px-3 sm:py-4"
-              >
-                <span className="grid h-10 w-10 place-items-center rounded-full border border-gold/50 bg-paper-2 font-serif text-[17px] leading-none text-maroon transition-colors group-hover:border-gold sm:h-12 sm:w-12 sm:text-[20px]" aria-hidden="true">
-                  {s.initial}
-                </span>
-                <span className="mt-2 block font-serif text-[12.5px] leading-tight text-maroon sm:text-[15px]">{shortName(s.family)}</span>
-                <span className="mt-0.5 block text-[11px] leading-tight text-ink-soft sm:text-[12.5px]">{s.place}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
+        <div data-mj-reveal className="mx-auto max-w-3xl">
+          <div
+            id="story-panel"
+            role="tabpanel"
+            aria-labelledby={`story-tab-${active}`}
+            className="mj-letter relative overflow-hidden rounded-[22px] border border-gold/40 bg-cream px-6 pb-7 pt-9 shadow-mj-sm sm:px-12 sm:pb-9 sm:pt-11"
+          >
+            <span className="pointer-events-none absolute left-5 top-1 font-serif text-[96px] leading-none text-gold/35 sm:left-8 sm:text-[120px]" aria-hidden="true">&ldquo;</span>
+            <span className="pointer-events-none absolute right-6 top-4 font-deva text-[14px] text-gold/70 sm:right-8 sm:top-5 sm:text-[15px]" lang="mai" aria-hidden="true">परिवारक बात</span>
+            <figure key={active} className="mj-letter-in relative">
+              <blockquote className="font-serif text-[19px] leading-[1.55] text-ink sm:text-[23px]">{s.quote}</blockquote>
+              <figcaption className="mt-5 flex items-center gap-3">
+                <span className="h-px w-10 bg-gold" aria-hidden="true" />
+                <span className="font-serif text-[15px] text-maroon sm:text-[16px]">{s.family}, {s.place}</span>
+              </figcaption>
+            </figure>
+          </div>
 
-      <Modal open={!!open} onClose={() => setOpen(null)} title={open ? shortName(open.family) : undefined}>
-        {open && (
-          <figure>
-            <p className="-mt-2 mb-3 text-[13px] text-ink-soft">{open.place}</p>
-            <span className="font-serif text-[28px] leading-none text-gold" aria-hidden="true">&ldquo;</span>
-            <blockquote className="mt-1 text-[16px] leading-relaxed text-ink">{open.quote}</blockquote>
-            <figcaption className="mt-4 border-t border-paper-3 pt-3 font-serif text-[14px] text-maroon">
-              {open.family}, {open.place}
-            </figcaption>
-          </figure>
-        )}
-      </Modal>
+          <div role="tablist" aria-label="Choose a family’s story" className="mt-4 grid grid-cols-4 gap-2 sm:mt-5 sm:gap-3">
+            {STORIES.map((st, i) => {
+              const on = i === active
+              return (
+                <button
+                  key={st.family}
+                  ref={el => { tabs.current[i] = el }}
+                  type="button"
+                  role="tab"
+                  id={`story-tab-${i}`}
+                  aria-selected={on}
+                  aria-controls="story-panel"
+                  tabIndex={on ? 0 : -1}
+                  onClick={() => setActive(i)}
+                  onKeyDown={e => onKey(e, i)}
+                  className={`group flex flex-col items-center rounded-mj-sm border px-1 py-2.5 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold sm:py-3 ${on ? 'border-gold bg-cream shadow-mj-xs' : 'border-paper-3 bg-paper-2/60 hover:border-gold/60'}`}
+                >
+                  <span className={`relative grid h-10 w-10 place-items-center rounded-full font-serif text-[17px] leading-none transition-colors sm:h-11 sm:w-11 sm:text-[19px] ${on ? 'bg-maroon text-cream' : 'border border-gold/50 bg-cream text-maroon'}`} aria-hidden="true">
+                    {st.initial}
+                    <span className={`absolute -inset-[5px] rounded-full border border-dashed border-gold/60 transition-opacity ${on ? 'opacity-100' : 'opacity-0'}`} />
+                  </span>
+                  <span className="mt-2 block font-serif text-[12.5px] leading-tight text-maroon sm:text-[14.5px]">{shortName(st.family)}</span>
+                  <span className="mt-0.5 block text-[10.5px] leading-tight text-ink-soft sm:text-[12px]">{st.place}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
     </section>
   )
 }

@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { PointerGlow } from '@/components/motion/PointerGlow'
 
 type Feature = {
   id: string
@@ -162,139 +163,130 @@ const FEATURES: Feature[] = [
   },
 ]
 
+/** Devanagari numerals, set in Mukta: Rozha One draws these digits in Latin shapes. */
+const NUMERALS = ['१', '२', '३', '४', '५', '६']
+
+/** A Madhubani border band — repeating lotus buds between fine gold rules. */
+function KohbarBand({ id, flip = false }: { id: string; flip?: boolean }) {
+  return (
+    <svg className="block h-[22px] w-full" aria-hidden="true" focusable="false" style={flip ? { transform: 'scaleY(-1)' } : undefined}>
+      <defs>
+        <pattern id={id} width="44" height="22" patternUnits="userSpaceOnUse">
+          <path d="M0 3.5H44M0 18.5H44" stroke="#C9A24B" strokeWidth="1" strokeOpacity="0.7" />
+          <path d="M22 6c3.2 2.6 3.2 7.4 0 10-3.2-2.6-3.2-7.4 0-10Z" fill="#C9A24B" fillOpacity="0.85" />
+          <path d="M14.5 11c2.6-1.4 5-1.2 6.4 0-1.4 1.6-3.8 1.6-6.4 0ZM29.5 11c-2.6-1.4-5-1.2-6.4 0 1.4 1.6 3.8 1.6 6.4 0Z" fill="#C9A24B" fillOpacity="0.55" />
+          <circle cx="0" cy="11" r="1.6" fill="#C9A24B" fillOpacity="0.7" />
+          <circle cx="44" cy="11" r="1.6" fill="#C9A24B" fillOpacity="0.7" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="22" fill={`url(#${id})`} />
+    </svg>
+  )
+}
+
+/** Aripan petal ring around each icon; it turns a little when its card is hovered. */
+function PetalRing() {
+  return (
+    <svg viewBox="-40 -40 80 80" className="mj-why-ring absolute inset-0 h-full w-full" aria-hidden="true" focusable="false">
+      <circle r="36.5" fill="none" stroke="#C9A24B" strokeOpacity="0.45" strokeWidth="0.8" strokeDasharray="1 3" />
+      {Array.from({ length: 12 }, (_, k) => (
+        <ellipse key={k} cx="0" cy="-33" rx="2.1" ry="4.4" fill="#C9A24B" fillOpacity={k % 2 ? 0.45 : 0.85} transform={`rotate(${k * 30})`} />
+      ))}
+    </svg>
+  )
+}
+
+/**
+ * "Why Mithila Jodi" — the six promises, as a Kohbar-maroon band.
+ *
+ * Art Deco framing (gold corner brackets, stepped rules) on a restrained
+ * maroon gradient mesh, Devanagari numerals that rise in once when the grid is
+ * revealed, aripan medallions around the icons, and — on hover-capable
+ * pointers only — a gold spotlight following the cursor (PointerGlow).
+ *
+ * Every card's details are readable without interaction on tablets and up;
+ * on phones each card opens with its own button, so the band stays compact.
+ */
 export function WhyMithilaJodi() {
-  const [activeId, setActiveId] = useState<string | null>(null)
-
-  function toggle(id: string) {
-    setActiveId(prev => (prev === id ? null : id))
-  }
-
-  const active = FEATURES.find(f => f.id === activeId) ?? null
+  const [openId, setOpenId] = useState<string | null>(null)
 
   return (
-    <section id="how" className="relative bg-cream py-9 sm:py-12" aria-label="Why choose Mithila Jodi">
-      <div className="wrap">
-        {/* Section header */}
-        <div data-mj-reveal className="text-center mb-7 sm:mb-9">
-          <p className="eyebrow mb-1.5">The Mithila Jodi Difference</p>
-          <h2 className="section-heading">Why Mithila Jodi</h2>
-          <div className="ornament-line w-16 mx-auto mt-2" />
-        </div>
-
-        {/* 3 × 2 card grid.
-            Revealed as one block (data-mj-reveal), not per card
-            (data-mj-stagger). The buttons carry `transition-all duration-200`
-            for their own active/hover states, which means they also transition
-            opacity and translate — the two properties the reveal drives — so a
-            per-card reveal put two mechanisms on the same properties and the
-            cards never faded in cleanly. The grid wrapper has no transitions
-            of its own, so revealing that instead leaves the buttons' existing
-            interaction states completely untouched. */}
-        <div data-mj-reveal className="grid grid-cols-3 gap-2.5 sm:gap-4">
-          {FEATURES.map(({ id, icon, title }) => {
-            const isActive = activeId === id
-            return (
-              <button
-                key={id}
-                onClick={() => toggle(id)}
-                aria-expanded={isActive}
-                aria-controls={`feature-panel-${id}`}
-                className={[
-                  'group flex flex-col items-center text-center gap-2 py-4 px-2 sm:py-5 sm:px-4 rounded-mj-sm border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold',
-                  isActive
-                    ? 'border-gold bg-paper shadow-mj-sm scale-[1.02]'
-                    : 'border-paper-3 bg-paper hover:border-gold hover:shadow-mj-xs hover:scale-[1.01]',
-                ].join(' ')}
-              >
-                {/* Icon circle */}
-                <div
-                  className={[
-                    'w-11 h-11 sm:w-13 sm:h-13 rounded-full flex items-center justify-center border transition-all duration-200 flex-shrink-0',
-                    isActive
-                      ? 'bg-cream border-gold shadow-mj-xs'
-                      : 'bg-cream border-gold border-opacity-40 group-hover:border-opacity-70',
-                  ].join(' ')}
-                >
-                  {icon}
-                </div>
-
-                {/* Title */}
-                <span
-                  className={[
-                    'font-serif text-[11px] sm:text-[13px] leading-snug transition-colors duration-200',
-                    isActive ? 'text-maroon font-semibold' : 'text-maroon',
-                  ].join(' ')}
-                >
-                  {title}
-                </span>
-
-                {/* Active indicator dot */}
-                <span
-                  className={[
-                    'w-1.5 h-1.5 rounded-full bg-gold transition-all duration-200',
-                    isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-0',
-                  ].join(' ')}
-                  aria-hidden="true"
-                />
-              </button>
-            )
-          })}
-        </div>
-
-        {/* Expand panel — smooth CSS grid row trick */}
-        <div
-          className={[
-            'grid transition-all duration-300 ease-in-out',
-            active ? 'grid-rows-[1fr] mt-4 sm:mt-5' : 'grid-rows-[0fr] mt-0',
-          ].join(' ')}
-        >
-          <div className="overflow-hidden">
-            {active && (
-              <div
-                id={`feature-panel-${active.id}`}
-                role="region"
-                aria-label={active.title}
-                className="rounded-mj-sm border border-gold border-opacity-50 bg-paper px-5 py-5 sm:px-8 sm:py-6 shadow-mj-xs"
-              >
-                {/* Gold top accent */}
-                <div className="h-px w-full bg-gradient-to-r from-transparent via-gold to-transparent mb-4" />
-
-                <p className="font-serif text-[17px] sm:text-[20px] text-maroon font-semibold leading-snug mb-1">
-                  {active.title}
-                </p>
-                <p className="font-serif italic text-[12px] sm:text-[13px] text-ink-soft mb-4">
-                  {active.tagline}
-                </p>
-
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6">
-                  {active.bullets.map(b => (
-                    <li key={b} className="flex items-start gap-2.5 text-[12px] sm:text-[13px] text-ink leading-snug">
-                      {/* Gold diamond bullet */}
-                      <svg viewBox="0 0 10 10" width="8" height="8" className="mt-[3px] flex-shrink-0" aria-hidden="true">
-                        <path d="M5 1 L9 5 L5 9 L1 5 Z" fill="#B98A2E" />
-                      </svg>
-                      {b}
-                    </li>
-                  ))}
-                </ul>
-
-                {active.links && (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {active.links.map(l => (
-                      <Link key={l.href} href={l.href} className="inline-flex items-center rounded-full border border-gold/60 bg-cream px-3 py-1.5 text-[12.5px] font-medium text-maroon hover:border-gold hover:bg-white">
-                        {l.label} →
-                      </Link>
-                    ))}
-                  </div>
-                )}
-
-                {/* Gold bottom accent */}
-                <div className="h-px w-full bg-gradient-to-r from-transparent via-gold to-transparent mt-4 opacity-40" />
-              </div>
-            )}
+    <section id="how" className="mj-kohbar relative text-cream" aria-labelledby="why-heading">
+      <KohbarBand id="why-band-top" />
+      <div className="wrap py-10 sm:py-14">
+        <div data-mj-reveal className="mb-8 text-center sm:mb-11">
+          <p className="eyebrow mb-2 !text-gold-lt">The Mithila Jodi Difference</p>
+          <h2 id="why-heading" className="font-serif text-[28px] leading-tight text-cream sm:text-[40px]">Why Mithila Jodi</h2>
+          <p className="mt-1.5 font-deva text-[16px] text-gold-lt sm:text-[19px]" lang="mai">मिथिला जोड़ी किएक</p>
+          <div className="mx-auto mt-3.5 flex items-center justify-center gap-2" aria-hidden="true">
+            <span className="h-px w-12 bg-gradient-to-r from-transparent to-gold" />
+            <span className="h-2 w-2 rotate-45 border border-gold" />
+            <span className="h-px w-12 bg-gradient-to-l from-transparent to-gold" />
           </div>
         </div>
+
+        <ul data-mj-reveal className="mj-why-grid grid gap-3.5 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {FEATURES.map(({ id, icon, title, tagline, bullets, links }, i) => {
+            const open = openId === id
+            return (
+              <li key={id} className="mj-why-card mj-glow-host group relative overflow-hidden rounded-[18px] border border-gold/30 bg-white/[0.04] p-5 sm:p-6">
+                <PointerGlow />
+                {/* Art Deco corner brackets */}
+                <span className="mj-why-corner left-2.5 top-2.5 border-l border-t" aria-hidden="true" />
+                <span className="mj-why-corner right-2.5 top-2.5 border-r border-t" aria-hidden="true" />
+                <span className="mj-why-corner bottom-2.5 left-2.5 border-b border-l" aria-hidden="true" />
+                <span className="mj-why-corner bottom-2.5 right-2.5 border-b border-r" aria-hidden="true" />
+                <span className="mj-why-num pointer-events-none absolute right-5 top-1 text-[56px] font-light leading-none text-gold/25 sm:text-[66px]" style={{ animationDelay: `${0.1 + i * 0.08}s`, fontFamily: 'var(--font-mukta), Mukta, sans-serif' }} aria-hidden="true">
+                  {NUMERALS[i]}
+                </span>
+
+                <div className="relative flex items-center gap-4">
+                  <span className="relative grid h-[74px] w-[74px] shrink-0 place-items-center">
+                    <PetalRing />
+                    <span className="grid h-[50px] w-[50px] place-items-center rounded-full bg-cream shadow-[0_0_0_3px_rgba(201,162,75,0.35)]">{icon}</span>
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-serif text-[18px] leading-snug text-cream sm:text-[19px]">{title}</h3>
+                    <p className="mt-0.5 font-serif text-[13.5px] italic leading-snug text-gold-lt">{tagline}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setOpenId(open ? null : id)}
+                    aria-expanded={open}
+                    aria-controls={`why-${id}`}
+                    aria-label={`${open ? 'Hide' : 'Show'} details: ${title}`}
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-gold/40 text-gold-lt transition-colors hover:border-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold md:hidden"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true" className={`transition-transform ${open ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9" /></svg>
+                  </button>
+                </div>
+
+                <div id={`why-${id}`} className={`relative mt-4 md:block ${open ? 'block' : 'hidden'}`}>
+                  <div className="mb-3 h-px w-full bg-gradient-to-r from-gold/60 via-gold/25 to-transparent" aria-hidden="true" />
+                  <ul className="space-y-1.5">
+                    {bullets.map(b => (
+                      <li key={b} className="flex items-start gap-2.5 text-[13.5px] leading-snug text-[#EFE2C8]">
+                        <span className="mt-[6px] h-1.5 w-1.5 shrink-0 rotate-45 bg-gold" aria-hidden="true" />
+                        {b}
+                      </li>
+                    ))}
+                  </ul>
+                  {links && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {links.map(l => (
+                        <Link key={l.href} href={l.href} className="inline-flex items-center rounded-full border border-gold/60 px-3 py-1.5 text-[12.5px] font-medium text-gold-lt transition-colors hover:border-gold-lt hover:bg-gold/10">
+                          {l.label} →
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </li>
+            )
+          })}
+        </ul>
       </div>
+      <KohbarBand id="why-band-bottom" flip />
     </section>
   )
 }
