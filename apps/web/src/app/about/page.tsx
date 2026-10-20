@@ -183,10 +183,10 @@ const jsonLd = {
 // ─── Page ────────────────────────────────────────────────────────────────────
 //
 // Redesigned 2026-10-20 as one editorial sequence, each section numbered in
-// Devanagari (०१ …). Styles mixed deliberately, one per section: gradient
-// mesh + kinetic headline (hero), Art Deco (difference cards, founders),
+// Devanagari (०१ …). Styles mixed deliberately, one per section: kinetic
+// headline (hero), Art Deco (difference cards, founders),
 // orbit linework (ecosystem), Madhubani paper vs blueprint glass (tradition →
-// modern), glass on indigo (privacy). Motion is CSS in styles/about.css and
+// modern). Section backgrounds stay the site's ivory and cream throughout. Motion is CSS in styles/about.css and
 // runs once; reduced motion gets the finished page. Wording is unchanged.
 
 const NUM = ['०१', '०२', '०३', '०४', '०५', '०६', '०७', '०८']
@@ -222,8 +222,8 @@ export default function AboutPage() {
       <MithilaHeader />
 
       <main id="main-content" className="flex-1">
-        {/* ── ०१ Hero — gradient mesh, kinetic headline, Deco arch ── */}
-        <section aria-labelledby="about-h1" className="ab-hero relative overflow-hidden pb-14 pt-6 sm:pb-20 sm:pt-10">
+        {/* ── ०१ Hero — kinetic headline, Deco arch ── */}
+        <section aria-labelledby="about-h1" className="relative overflow-hidden bg-[radial-gradient(ellipse_70%_60%_at_85%_30%,#FBEEDF,transparent_70%)] pb-14 pt-6 sm:pb-20 sm:pt-10">
           <span className="ab-watermark pointer-events-none absolute -right-6 top-6 font-deva text-[120px] leading-none sm:text-[200px] lg:text-[260px]" lang="hi" aria-hidden="true">मिथिला</span>
           <div className="wrap relative px-5 sm:px-6">
             <nav aria-label="Breadcrumb" className="mb-6 sm:mb-10">
@@ -318,7 +318,7 @@ export default function AboutPage() {
         </section>
 
         {/* ── ०४ Ecosystem — matrimony at the centre, orbit lines out to the rest ── */}
-        <section aria-labelledby="about-ecosystem" className="ab-eco relative overflow-hidden border-t border-gold/15 py-16 sm:py-24">
+        <section aria-labelledby="about-ecosystem" className="relative overflow-hidden border-t border-gold/15 bg-[#FBF3E6] py-16 sm:py-24">
           <div className="wrap relative px-5 sm:px-6">
             <div className="max-w-2xl" data-mj-reveal>
               <Mark n={4}>More than a matrimonial profile</Mark>
@@ -444,30 +444,30 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* ── ०६ Privacy — glass steps on an indigo-maroon ground ── */}
-        <section aria-labelledby="about-privacy" className="ab-privacy relative overflow-hidden py-16 text-cream sm:py-20">
+        {/* ── ०६ Privacy ── */}
+        <section aria-labelledby="about-privacy" className="relative overflow-hidden border-y border-gold/15 bg-cream py-16 sm:py-20">
           <div className="wrap relative grid gap-8 px-5 sm:px-6 lg:grid-cols-[0.9fr_1.4fr] lg:items-center lg:gap-12">
             <div data-mj-reveal>
-              <Mark n={6} light>Privacy</Mark>
-              <h2 id="about-privacy" className="mt-5 font-serif text-[28px] leading-[1.15] text-cream sm:text-[36px]">Your story belongs to you.</h2>
-              <p className="mt-4 text-[16px] leading-relaxed text-[#E9DCC8]">
+              <Mark n={6}>Privacy</Mark>
+              <h2 id="about-privacy" className={`mt-5 ${H2}`}>Your story belongs to you.</h2>
+              <p className="mt-4 text-[16px] leading-relaxed text-ink-soft">
                 Mithila Jodi is designed to give members control over the information they choose to include and share.
               </p>
-              <Link href="/safety" className="mt-5 inline-flex items-center gap-1.5 text-[15px] font-semibold text-gold-lt hover:text-cream hover:underline hover:underline-offset-4">
+              <Link href="/safety" className="mt-5 inline-flex items-center gap-1.5 text-[15px] font-semibold text-maroon hover:underline hover:underline-offset-4">
                 Learn more about Safety &amp; Privacy<Icon d={I.arrow} className="h-4 w-4" />
               </Link>
             </div>
             <ol data-mj-stagger className="grid gap-3 sm:grid-cols-3">
               {PRIVACY.map((p, i) => (
-                <li key={p.title} className="ab-glass relative rounded-[18px] p-5">
-                  <span className="absolute right-4 top-3 text-[13px] text-gold-lt/60" style={{ fontFamily: 'var(--font-mukta), Mukta, sans-serif' }} aria-hidden="true">{NUM[i]}</span>
+                <li key={p.title} className="ab-card relative rounded-[18px] border border-gold/30 bg-[#FFFBF3] p-5 shadow-mj-xs">
+                  <span className="absolute right-4 top-3 text-[13px] text-gold" style={{ fontFamily: 'var(--font-mukta), Mukta, sans-serif' }} aria-hidden="true">{NUM[i]}</span>
                   <div className="flex items-center gap-3 sm:flex-col sm:items-start">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gold-lt text-maroon"><Icon d={p.icon} className="h-[18px] w-[18px]" /></span>
-                    <h3 className="text-[15px] font-semibold leading-snug text-cream">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-maroon text-cream"><Icon d={p.icon} className="h-[18px] w-[18px]" /></span>
+                    <h3 className="text-[15px] font-semibold leading-snug text-ink">
                       <span className="sr-only">{i + 1}. </span>{p.title}
                     </h3>
                   </div>
-                  <p className="mt-2 text-[13.5px] leading-relaxed text-[#E0D2BE]">{p.body}</p>
+                  <p className="mt-2 text-[13.5px] leading-relaxed text-ink-soft">{p.body}</p>
                 </li>
               ))}
             </ol>
@@ -559,21 +559,21 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* ── Final CTA — maroon mesh, lines rise in ── */}
+        {/* ── Final CTA — lines rise in ── */}
         <section aria-labelledby="about-final" className="py-16 sm:py-20">
           <div className="wrap px-5 sm:px-6">
-            <div data-mj-reveal className="ab-final relative mx-auto max-w-3xl overflow-hidden rounded-[26px] px-6 py-12 text-center shadow-mj sm:px-12 sm:py-14">
-              <DecoCorners light />
-              <h2 id="about-final" className="relative font-display text-[34px] leading-[1.1] text-cream sm:text-[46px]">
+            <div data-mj-reveal className="relative mx-auto max-w-3xl overflow-hidden rounded-[26px] border border-gold/35 bg-cream px-6 py-12 text-center shadow-mj-xs sm:px-12 sm:py-14">
+              <DecoCorners />
+              <h2 id="about-final" className="relative font-display text-[34px] leading-[1.1] text-maroon sm:text-[46px]">
                 <span className="ab-rise block">Your roots.</span>{' '}
-                <span className="ab-rise block text-gold-lt" style={{ animationDelay: '0.15s' }}>Your family.</span>{' '}
+                <span className="ab-rise block text-[#9A6F1E]" style={{ animationDelay: '0.15s' }}>Your family.</span>{' '}
                 <span className="ab-rise block" style={{ animationDelay: '0.3s' }}>Your journey.</span>
               </h2>
-              <p className="relative mt-4 text-[16px] text-[#EBDDC6]">Find meaningful connections with Mithila Jodi.</p>
-              <Link href="/register?start=1" className="relative mt-7 inline-flex items-center gap-2 rounded-full bg-gold-gradient px-7 py-3.5 text-[15.5px] font-semibold text-maroon-deep shadow-mj-sm transition-transform hover:-translate-y-0.5">
+              <p className="relative mt-4 text-[16px] text-ink-soft">Find meaningful connections with Mithila Jodi.</p>
+              <Link href="/register?start=1" className="btn-primary relative mt-7 inline-flex gap-2 rounded-full px-7 py-3.5 text-[15.5px]">
                 Create Your Free Profile<Icon d={I.arrow} className="h-4 w-4" />
               </Link>
-              <p className="relative mt-3 text-[12.5px] text-[#D9C8AE]">Currently free for all members</p>
+              <p className="relative mt-3 text-[12.5px] text-ink-soft">Currently free for all members</p>
             </div>
           </div>
         </section>

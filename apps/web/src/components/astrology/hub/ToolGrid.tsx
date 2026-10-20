@@ -115,8 +115,8 @@ function Orbits() {
 }
 
 /**
- * The eight tools as a night observatory: an indigo sky with fine blueprint
- * orbits, bento tiles (Kundli Match as the feature, Vivah Muhurat wide), each
+ * The eight tools as bento tiles on the hub's ivory ground, with fine gold
+ * orbit linework behind them: tiles (Kundli Match as the feature, Vivah Muhurat wide), each
  * tool's illustration in a cream window under orbit rings, its Devanagari name
  * and a Devanagari index. A gold spotlight follows the pointer on desktop
  * (PointerGlow); the rings turn on hover. Nothing loops. Links, order and copy
@@ -142,13 +142,13 @@ export function ToolGrid() {
               </div>
               <div className={`relative flex flex-col px-4 pb-4 pt-1 ${feature ? 'flex-1 md:flex-none md:px-6 md:pb-6' : c.size === 'wide' ? 'flex-1 sm:justify-center sm:py-4 sm:pl-1' : 'flex-1'}`}>
                 <div className="flex items-baseline justify-between gap-2">
-                  <h3 className={`font-serif leading-tight text-cream ${feature ? 'text-[22px] md:text-[30px]' : 'text-[17px] lg:text-[21px]'}`}>{c.title}</h3>
-                  <span className="shrink-0 text-[12px] tracking-[0.12em] text-gold/70" style={{ fontFamily: 'var(--font-mukta), Mukta, sans-serif' }} aria-hidden="true">{NUM[i]}</span>
+                  <h3 className={`font-serif leading-tight text-maroon ${feature ? 'text-[22px] md:text-[30px]' : 'text-[17px] lg:text-[21px]'}`}>{c.title}</h3>
+                  <span className="shrink-0 text-[12px] tracking-[0.12em] text-gold" style={{ fontFamily: 'var(--font-mukta), Mukta, sans-serif' }} aria-hidden="true">{NUM[i]}</span>
                 </div>
-                <p className="mt-0.5 font-deva text-[13px] leading-tight text-gold-lt/90 lg:text-[14.5px]" lang="hi">{HI[c.slug]}</p>
-                <p className="mt-2 font-serif text-[12.5px] italic leading-snug text-[#E9D9BE] lg:text-[14px]">{c.subtitle}</p>
-                <p className={`mt-1.5 text-[12px] leading-snug text-[#BFB6CF] ${feature || c.size === 'wide' ? 'hidden sm:block sm:text-[13.5px]' : 'hidden lg:block lg:text-[13px]'}`}>{c.description}</p>
-                <p className={`mt-1 text-[12px] leading-snug text-[#BFB6CF] ${feature || c.size === 'wide' ? 'sm:hidden' : 'lg:hidden'}`}>{c.short}</p>
+                <p className="mt-0.5 font-deva text-[13px] leading-tight text-[#9A6F1E] lg:text-[14.5px]" lang="hi">{HI[c.slug]}</p>
+                <p className="mt-2 font-serif text-[12.5px] italic leading-snug text-[#8B1235] lg:text-[14px]">{c.subtitle}</p>
+                <p className={`mt-1.5 text-[12px] leading-snug text-ink-soft ${feature || c.size === 'wide' ? 'hidden sm:block sm:text-[13.5px]' : 'hidden lg:block lg:text-[13px]'}`}>{c.description}</p>
+                <p className={`mt-1 text-[12px] leading-snug text-ink-soft ${feature || c.size === 'wide' ? 'sm:hidden' : 'lg:hidden'}`}>{c.short}</p>
                 <span className="mj-obs-cta mt-auto pt-3">
                   <span className={feature || c.size === 'wide' ? '' : 'hidden lg:inline'}>{c.cta}</span>
                   <span className={feature || c.size === 'wide' ? 'hidden' : 'lg:hidden'}>Open</span>

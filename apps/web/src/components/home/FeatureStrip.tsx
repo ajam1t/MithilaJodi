@@ -197,93 +197,130 @@ function PetalRing() {
 }
 
 /**
- * "Why Mithila Jodi" — the six promises, as a Kohbar-maroon band.
+ * "Why Mithila Jodi" — the six promises, on the site's own cream ground.
  *
- * Art Deco framing (gold corner brackets, stepped rules) on a restrained
- * maroon gradient mesh, Devanagari numerals that rise in once when the grid is
+ * Art Deco framing (gold corner brackets, stepped rules), Devanagari numerals that rise in once when the grid is
  * revealed, aripan medallions around the icons, and — on hover-capable
  * pointers only — a gold spotlight following the cursor (PointerGlow).
  *
- * Every card's details are readable without interaction on tablets and up;
- * on phones each card opens with its own button, so the band stays compact.
+ * On tablets and up every card shows its details. Phones get a compact 3 × 2
+ * grid of medallion tiles instead — six full cards stacked were far too tall —
+ * and the chosen tile's details open in one panel beneath the grid.
  */
 export function WhyMithilaJodi() {
   const [openId, setOpenId] = useState<string | null>(null)
+  const active = FEATURES.find(f => f.id === openId) ?? null
+
+  const details = (f: Feature) => (
+    <>
+      <ul className="space-y-1.5">
+        {f.bullets.map(b => (
+          <li key={b} className="flex items-start gap-2.5 text-[13.5px] leading-snug text-ink">
+            <span className="mt-[6px] h-1.5 w-1.5 shrink-0 rotate-45 bg-gold" aria-hidden="true" />
+            {b}
+          </li>
+        ))}
+      </ul>
+      {f.links && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {f.links.map(l => (
+            <Link key={l.href} href={l.href} className="inline-flex items-center rounded-full border border-gold/60 bg-cream px-3 py-1.5 text-[12.5px] font-medium text-maroon transition-colors hover:border-gold hover:bg-white">
+              {l.label} →
+            </Link>
+          ))}
+        </div>
+      )}
+    </>
+  )
+
+  const corners = (
+    <>
+      <span className="mj-why-corner left-2 top-2 border-l border-t" aria-hidden="true" />
+      <span className="mj-why-corner right-2 top-2 border-r border-t" aria-hidden="true" />
+      <span className="mj-why-corner bottom-2 left-2 border-b border-l" aria-hidden="true" />
+      <span className="mj-why-corner bottom-2 right-2 border-b border-r" aria-hidden="true" />
+    </>
+  )
 
   return (
-    <section id="how" className="mj-kohbar relative text-cream" aria-labelledby="why-heading">
+    <section id="how" className="relative bg-cream" aria-labelledby="why-heading">
       <KohbarBand id="why-band-top" />
-      <div className="wrap py-10 sm:py-14">
-        <div data-mj-reveal className="mb-8 text-center sm:mb-11">
-          <p className="eyebrow mb-2 !text-gold-lt">The Mithila Jodi Difference</p>
-          <h2 id="why-heading" className="font-serif text-[28px] leading-tight text-cream sm:text-[40px]">Why Mithila Jodi</h2>
-          <p className="mt-1.5 font-deva text-[16px] text-gold-lt sm:text-[19px]" lang="mai">मिथिला जोड़ी किएक</p>
-          <div className="mx-auto mt-3.5 flex items-center justify-center gap-2" aria-hidden="true">
+      <div className="wrap py-9 sm:py-14">
+        <div data-mj-reveal className="mb-6 text-center sm:mb-11">
+          <p className="eyebrow mb-2">The Mithila Jodi Difference</p>
+          <h2 id="why-heading" className="section-heading">Why Mithila Jodi</h2>
+          <p className="mt-1.5 font-deva text-[16px] text-gold sm:text-[19px]" lang="mai">मिथिला जोड़ी किएक</p>
+          <div className="mx-auto mt-3 flex items-center justify-center gap-2" aria-hidden="true">
             <span className="h-px w-12 bg-gradient-to-r from-transparent to-gold" />
             <span className="h-2 w-2 rotate-45 border border-gold" />
             <span className="h-px w-12 bg-gradient-to-l from-transparent to-gold" />
           </div>
         </div>
 
-        <ul data-mj-reveal className="mj-why-grid grid gap-3.5 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map(({ id, icon, title, tagline, bullets, links }, i) => {
-            const open = openId === id
-            return (
-              <li key={id} className="mj-why-card mj-glow-host group relative overflow-hidden rounded-[18px] border border-gold/30 bg-white/[0.04] p-5 sm:p-6">
-                <PointerGlow />
-                {/* Art Deco corner brackets */}
-                <span className="mj-why-corner left-2.5 top-2.5 border-l border-t" aria-hidden="true" />
-                <span className="mj-why-corner right-2.5 top-2.5 border-r border-t" aria-hidden="true" />
-                <span className="mj-why-corner bottom-2.5 left-2.5 border-b border-l" aria-hidden="true" />
-                <span className="mj-why-corner bottom-2.5 right-2.5 border-b border-r" aria-hidden="true" />
-                <span className="mj-why-num pointer-events-none absolute right-5 top-1 text-[56px] font-light leading-none text-gold/25 sm:text-[66px]" style={{ animationDelay: `${0.1 + i * 0.08}s`, fontFamily: 'var(--font-mukta), Mukta, sans-serif' }} aria-hidden="true">
-                  {NUMERALS[i]}
-                </span>
-
-                <div className="relative flex items-center gap-4">
-                  <span className="relative grid h-[74px] w-[74px] shrink-0 place-items-center">
-                    <PetalRing />
-                    <span className="grid h-[50px] w-[50px] place-items-center rounded-full bg-cream shadow-[0_0_0_3px_rgba(201,162,75,0.35)]">{icon}</span>
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-serif text-[18px] leading-snug text-cream sm:text-[19px]">{title}</h3>
-                    <p className="mt-0.5 font-serif text-[13.5px] italic leading-snug text-gold-lt">{tagline}</p>
-                  </div>
+        {/* ── Phones: compact tiles, one shared details panel ── */}
+        <div data-mj-reveal className="md:hidden">
+          <ul className="mj-why-grid grid grid-cols-3 gap-2">
+            {FEATURES.map(({ id, icon, title }, i) => {
+              const on = openId === id
+              return (
+                <li key={id} className="flex">
                   <button
                     type="button"
-                    onClick={() => setOpenId(open ? null : id)}
-                    aria-expanded={open}
-                    aria-controls={`why-${id}`}
-                    aria-label={`${open ? 'Hide' : 'Show'} details: ${title}`}
-                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-gold/40 text-gold-lt transition-colors hover:border-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold md:hidden"
+                    onClick={() => setOpenId(on ? null : id)}
+                    aria-expanded={on}
+                    aria-controls="why-panel"
+                    className={`mj-why-card relative flex w-full flex-col items-center rounded-[14px] border px-1 pb-2.5 pt-3 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${on ? 'border-gold bg-cream shadow-mj-xs' : 'border-gold/30 bg-paper'}`}
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true" className={`transition-transform ${open ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9" /></svg>
+                    {corners}
+                    <span className="mj-why-num pointer-events-none absolute right-2 top-0.5 text-[20px] font-light leading-none text-gold/30" style={{ animationDelay: `${0.1 + i * 0.06}s`, fontFamily: 'var(--font-mukta), Mukta, sans-serif' }} aria-hidden="true">{NUMERALS[i]}</span>
+                    <span className="relative grid h-[54px] w-[54px] place-items-center">
+                      <PetalRing />
+                      <span className="grid h-[36px] w-[36px] place-items-center rounded-full bg-cream shadow-[0_0_0_2px_rgba(201,162,75,0.35)] [&>svg]:h-6 [&>svg]:w-6">{icon}</span>
+                    </span>
+                    <span className="mt-1.5 font-serif text-[11.5px] leading-tight text-maroon">{title}</span>
+                    <span className={`mt-1 h-1 w-1 rounded-full bg-gold transition-opacity ${on ? 'opacity-100' : 'opacity-0'}`} aria-hidden="true" />
                   </button>
-                </div>
+                </li>
+              )
+            })}
+          </ul>
+          <div id="why-panel" aria-live="polite">
+            {active && (
+              <div key={active.id} className="mj-bd-open relative mt-3 overflow-hidden rounded-[16px] border border-gold/40 bg-paper p-4 shadow-mj-xs">
+                {corners}
+                <h3 className="font-serif text-[17px] leading-snug text-maroon">{active.title}</h3>
+                <p className="mb-3 mt-0.5 font-serif text-[13px] italic leading-snug text-terra">{active.tagline}</p>
+                {details(active)}
+              </div>
+            )}
+          </div>
+        </div>
 
-                <div id={`why-${id}`} className={`relative mt-4 md:block ${open ? 'block' : 'hidden'}`}>
-                  <div className="mb-3 h-px w-full bg-gradient-to-r from-gold/60 via-gold/25 to-transparent" aria-hidden="true" />
-                  <ul className="space-y-1.5">
-                    {bullets.map(b => (
-                      <li key={b} className="flex items-start gap-2.5 text-[13.5px] leading-snug text-[#EFE2C8]">
-                        <span className="mt-[6px] h-1.5 w-1.5 shrink-0 rotate-45 bg-gold" aria-hidden="true" />
-                        {b}
-                      </li>
-                    ))}
-                  </ul>
-                  {links && (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {links.map(l => (
-                        <Link key={l.href} href={l.href} className="inline-flex items-center rounded-full border border-gold/60 px-3 py-1.5 text-[12.5px] font-medium text-gold-lt transition-colors hover:border-gold-lt hover:bg-gold/10">
-                          {l.label} →
-                        </Link>
-                      ))}
-                    </div>
-                  )}
+        {/* ── Tablet and up: full cards ── */}
+        <ul data-mj-reveal className="mj-why-grid hidden gap-5 md:grid md:grid-cols-2 lg:grid-cols-3">
+          {FEATURES.map((f, i) => (
+            <li key={f.id} className="mj-why-card mj-glow-host group relative overflow-hidden rounded-[18px] border border-gold/30 bg-paper p-6 shadow-mj-xs">
+              <PointerGlow />
+              {corners}
+              <span className="mj-why-num pointer-events-none absolute right-5 top-1 text-[66px] font-light leading-none text-gold/25" style={{ animationDelay: `${0.1 + i * 0.08}s`, fontFamily: 'var(--font-mukta), Mukta, sans-serif' }} aria-hidden="true">
+                {NUMERALS[i]}
+              </span>
+              <div className="relative flex items-center gap-4">
+                <span className="relative grid h-[74px] w-[74px] shrink-0 place-items-center">
+                  <PetalRing />
+                  <span className="grid h-[50px] w-[50px] place-items-center rounded-full bg-cream shadow-[0_0_0_3px_rgba(201,162,75,0.35)]">{f.icon}</span>
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-serif text-[19px] leading-snug text-maroon">{f.title}</h3>
+                  <p className="mt-0.5 font-serif text-[13.5px] italic leading-snug text-terra">{f.tagline}</p>
                 </div>
-              </li>
-            )
-          })}
+              </div>
+              <div className="relative mt-4">
+                <div className="mb-3 h-px w-full bg-gradient-to-r from-gold/60 via-gold/25 to-transparent" aria-hidden="true" />
+                {details(f)}
+              </div>
+            </li>
+          ))}
         </ul>
       </div>
       <KohbarBand id="why-band-bottom" flip />
