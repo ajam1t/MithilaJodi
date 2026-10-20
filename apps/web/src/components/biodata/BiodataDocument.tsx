@@ -29,8 +29,11 @@ import { SectionIcon, type SectionIconName } from './BiodataIcons'
 
 const PX_PER_MM = 96 / 25.4
 const FOOTER_MM = 8
-/** Below this, shrinking to one page would make the text too small; paginate instead. */
-const MIN_FIT = 0.78
+/**
+ * A document only slightly too long for one page is eased onto it; anything
+ * more goes onto further pages at full size rather than shrinking the text.
+ */
+const MIN_FIT = 0.93
 const BLOCK_GAP = 10
 
 const BODY_FONT = "var(--font-mukta), 'Mukta', 'Nirmala UI', 'Mangal', system-ui, sans-serif"
@@ -352,7 +355,7 @@ export function BiodataDocument({
       key: 'personal', icon: 'person', title: L.personal, rows: [
         { label: L.marital_status, value: data.marital_status }, { label: L.mother_tongue, value: data.mother_tongue },
         { label: L.dob, value: data.dob }, { label: L.height, value: data.height },
-        { label: L.complexion, value: data.complexion }, { label: L.blood_group, value: data.blood_group },
+        { label: L.complexion, value: data.complexion },
         { label: L.diet, value: data.diet }, { label: L.smoking, value: data.smoking }, { label: L.drinking, value: data.drinking },
       ],
     },
@@ -405,6 +408,34 @@ export function BiodataDocument({
     </div>
   )
 
+  /**
+   * A full-width section as one or more blocks, so long writing can continue
+   * on the next page instead of being cut off at the bottom of this one: About
+   * Me breaks between paragraphs, and family descriptions row by row. The
+   * heading always stays with the first part.
+   */
+  const splitSection = (s: (typeof sections)[number]): Array<{ key: string; node: ReactNode }> => {
+    const textStyle: CSSProperties = { margin: 0, padding: '6px 8px 0', fontSize: 13.5, lineHeight: 1.55, color: p.ink, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }
+    if (!s.rows) {
+      const paras = String(s.text ?? '').split(/\n\s*\n/).map(x => x.trim()).filter(Boolean)
+      if (paras.length < 2) return [{ key: s.key, node: renderSection(s, 2) }]
+      return paras.map((para, i) => ({
+        key: `${s.key}-${i}`,
+        node: i === 0
+          ? <div><SectionHeading title={s.title} icon={s.icon} t={t} font={titleFont} /><p style={textStyle}>{para}</p></div>
+          : <p style={{ ...textStyle, paddingTop: 0 }}>{para}</p>,
+      }))
+    }
+    const filled = s.rows.filter(r => hasValue(r.value))
+    const long = filled.filter(r => String(r.value).length > 160)
+    if (long.length < 2) return [{ key: s.key, node: renderSection(s, 2) }]
+    const first = filled.filter(r => !long.includes(r)).concat(long[0])
+    return [
+      { key: s.key, node: renderSection({ ...s, rows: first }, 2) },
+      ...long.slice(1).map((r, i) => ({ key: `${s.key}-${i + 1}`, node: <Rows rows={[r]} p={p} cols={2} /> })),
+    ]
+  }
+
   // Short sections sit side by side, A4 is wide enough; long ones span the page.
   // Gotra, mool and gram stay near the top, as the public page promises.
   const LAYOUT: Array<{ left: string[]; right?: string[] }> = [
@@ -428,7 +459,7 @@ export function BiodataDocument({
         node: <div style={{ display: 'flex', gap: 18, alignItems: 'flex-start' }}>{column(left)}{column(right)}</div>,
       })
     } else {
-      for (const s of [...left, ...right]) blocks.push({ key: s.key, node: renderSection(s, 2) })
+      for (const s of [...left, ...right]) blocks.push(...splitSection(s))
     }
   }
 
@@ -502,7 +533,8 @@ export function BiodataDocument({
                 {idxs.map(i => <div key={blocks[i].key} style={{ paddingBottom: BLOCK_GAP }}>{blocks[i].node}</div>)}
               </div>
               <p style={{ position: 'absolute', left: 0, right: 0, bottom: 0, margin: 0, textAlign: 'center', fontSize: 10.5, letterSpacing: '0.03em', color: p.heading }}>
-                Made with <span aria-label="love">♥</span> on <strong style={{ fontWeight: 600 }}>Mithila Jodi</strong>
+                Created with <strong style={{ fontWeight: 600 }}>Mithila Jodi</strong>
+                <span style={{ color: p.inkSoft }}> · mithilajodi.com</span>
                 {shown.length > 1 && <span style={{ color: p.inkSoft }}> · {pi + 1} / {shown.length}</span>}
               </p>
             </div>

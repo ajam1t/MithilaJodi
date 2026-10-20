@@ -58,6 +58,10 @@ const FAQ = [
     a: 'No. Nothing you type on this page is sent to us — not the details, not the photo. It stays in your browser and is gone when you close the tab. That also means we cannot recover it for you, so download the PDF before you leave.',
   },
   {
+    q: 'I am a Mithila Jodi member. Do I have to type everything again?',
+    a: 'No. When you are signed in, the details from your own Digital Profile — name, education and career, gotra, mool and gram, family, About Me and your approved photo — are filled in for you. Everything stays editable, and changes you make here are for this biodata only: your Digital Profile is never changed by this page.',
+  },
+  {
     q: 'Does it include gotra, mool and gram?',
     a: 'Yes, and they are near the top rather than buried at the bottom. Most general biodata makers have no field for them at all, which is why Maithil families end up writing them in by hand.',
   },
@@ -114,21 +118,31 @@ export default function MarriageBiodataPage() {
 
       <main id="main-content" className="min-h-screen bg-paper">
         {/* Intro */}
-        <section className="no-print bg-paper-2 py-8 sm:py-10">
+        <section
+          className="no-print relative py-8 sm:py-10"
+          style={{ background: 'radial-gradient(ellipse 90% 85% at 50% 0%, #FFFAF0 0%, #F5EBDD 100%)' }}
+        >
+          <div className="gold-strip absolute top-0 inset-x-0" aria-hidden="true" />
           <div className="wrap text-center max-w-3xl mx-auto">
-            <p className="eyebrow mb-1.5">Free · No login</p>
-            <h1 className="font-serif text-maroon leading-tight text-[24px] sm:text-[30px] lg:text-[34px]">
-              Marriage Biodata Maker
+            <p className="eyebrow !text-gold mb-1.5">✦ Mithila Jodi · Free</p>
+            <h1 className="font-serif text-maroon leading-tight text-[26px] sm:text-[32px] lg:text-[36px]">
+              Simple Marriage Biodata
             </h1>
+            <p className="font-deva text-gold text-[16px] sm:text-[18px] mt-1.5" lang="hi">विवाह परिचय पत्र</p>
             <div className="ornament-line w-16 mx-auto mt-2.5" />
-            <p className="text-ink-soft text-[14.5px] leading-relaxed mt-3.5">
-              Fill in a simple form and download a printable marriage biodata as a PDF —
-              with <span className="text-maroon font-medium">gotra, mool and gram</span> where a Maithil
+            <p className="text-ink text-[14.5px] sm:text-[15.5px] leading-relaxed mt-3.5">
+              Create your marriage biodata effortlessly using your Mithila Jodi profile. Review your details,
+              personalize your biodata and download a beautifully formatted PDF ready to share with your family.
+            </p>
+            <p className="text-ink-soft text-[13.5px] leading-relaxed mt-2">
+              With <span className="text-maroon font-medium">gotra, mool and gram</span> where a Maithil
               family expects to find them, in{' '}
               <span className="font-deva text-maroon">मैथिली</span>, हिन्दी, English or संस्कृत.
+              No account? Fill it in yourself — no login needed.
             </p>
-            <p className="text-ink-soft text-[13px] leading-relaxed mt-2">
-              Everything happens in your browser. Nothing you type here is uploaded, stored or seen by us.
+            <p className="text-ink-soft text-[12.5px] leading-relaxed mt-2">
+              Members’ profile details fill in automatically. What you type stays in your browser — nothing
+              here is uploaded or saved, and your Digital Profile is never changed.
             </p>
           </div>
         </section>

@@ -35,6 +35,10 @@ import {
  * The one thing a visitor loses is that closing the tab loses the draft, which
  * is what the "create a free account" prompt is for.
  *
+ * A signed-in member's form starts filled from their own Digital Profile
+ * (GET /api/biodata/me, which reads only the session's profile). That is a
+ * read: edits still stay in the browser and are never written back.
+ *
  * Flow: Step 1 picks a design (BiodataTemplatePicker); step 2 combines "add
  * your details" and "preview and download" into one screen, since the live
  * preview beside the form already shows the exact document that downloads —
@@ -79,7 +83,6 @@ const GROUPS: GroupSpec[] = [
       { key: 'height', label: 'Height', placeholder: `5'4" (162 cm)`, half: true },
       { key: 'marital_status', label: 'Marital status', placeholder: 'Never married', half: true },
       { key: 'complexion', label: 'Complexion', placeholder: 'Fair', half: true },
-      { key: 'blood_group', label: 'Blood group', placeholder: 'B+', half: true },
     ],
   },
   {
@@ -136,8 +139,10 @@ const GROUPS: GroupSpec[] = [
       { key: 'mother_name', label: "Mother's name", placeholder: 'Smt. Sunita Devi', half: true },
       { key: 'family_type', label: 'Family type', placeholder: 'Nuclear', half: true },
       { key: 'family_values', label: 'Family values', placeholder: 'Traditional', half: true },
+      { key: 'parents', label: 'Parents', type: 'textarea', placeholder: 'Father: retired teacher. Mother: homemaker.' },
       { key: 'siblings', label: 'Siblings', placeholder: 'One younger brother, studying' },
       { key: 'family_about', label: 'About the family', type: 'textarea', placeholder: 'A short introduction to the family.' },
+      { key: 'expectations', label: 'Family expectations', type: 'textarea', placeholder: 'What the family hopes for in a match.' },
     ],
   },
   {
@@ -174,6 +179,52 @@ const GROUPS: GroupSpec[] = [
 ]
 
 const EMPTY: BiodataData = {}
+
+/** Every key the form can edit — profile data outside this set is ignored. */
+const FORM_KEYS = new Set<string>(GROUPS.flatMap(g => g.fields.map(f => f.key)))
+
+/**
+ * Where the Digital Profile prefill stands. A guest gets a 401 and sees the
+ * manual form exactly as before; a member's details are filled in once.
+ */
+type Prefill =
+  | { kind: 'checking' }
+  | { kind: 'guest' }
+  | { kind: 'loaded'; count: number }
+  | { kind: 'no_profile' }
+  | { kind: 'error' }
+
+type ProfileFetch =
+  | { kind: 'guest' | 'no_profile' }
+  | { kind: 'loaded'; data: BiodataData; photo: Blob | null }
+
+/**
+ * Reads the signed-in member's own profile (the session decides whose — no id
+ * is sent), plus their approved primary photo when they have one. A photo that
+ * fails to load is simply left out; the details still prefill.
+ */
+async function fetchOwnProfile(signal: AbortSignal): Promise<ProfileFetch> {
+  const res = await fetch('/api/biodata/me', { signal, cache: 'no-store', credentials: 'same-origin' })
+  if (res.status === 401) return { kind: 'guest' }
+  if (res.status === 404) return { kind: 'no_profile' }
+  const json = await res.json().catch(() => null)
+  if (!res.ok || !json?.ok) throw new Error('profile unavailable')
+  const data = Object.fromEntries(
+    Object.entries((json.data ?? {}) as Record<string, unknown>)
+      .filter(([k, v]) => FORM_KEYS.has(k) && typeof v === 'string' && v.trim() !== ''),
+  ) as BiodataData
+  let photo: Blob | null = null
+  if (json.hasPhoto) {
+    try {
+      const r = await fetch('/api/biodata/me/photo', { signal, cache: 'no-store', credentials: 'same-origin' })
+      const b = r.ok ? await r.blob() : null
+      if (b && b.size > 0 && b.type.startsWith('image/')) photo = b
+    } catch (err) {
+      if (signal.aborted) throw err
+    }
+  }
+  return { kind: 'loaded', data, photo }
+}
 
 /** The document is a fixed 210 mm wide; below this the preview has to shrink. */
 const PAGE_WIDTH_PX = 794
@@ -348,12 +399,16 @@ function PhotoEditor({ url, style, onChange }: { url: string; style: PhotoStyle;
 }
 
 function PhotoCard({
-  photoUrl, photoError, photoStyle, fileRef, onPick, onClear, onStyle,
+  photoUrl, photoError, photoStyle, fileRef, fromProfile, onUseProfile, onPick, onClear, onStyle,
 }: {
   photoUrl: string | null
   photoError: string
   photoStyle: PhotoStyle
   fileRef: React.RefObject<HTMLInputElement | null>
+  /** The photo shown is the member's Digital Profile photo. */
+  fromProfile: boolean
+  /** Offered when a profile photo exists but another (or none) is in use. */
+  onUseProfile: (() => void) | null
   onPick: (file: File | undefined) => void
   onClear: () => void
   onStyle: (s: PhotoStyle) => void
@@ -361,7 +416,11 @@ function PhotoCard({
   return (
     <section className="card p-4">
       <h3 className="font-semibold text-ink text-[14.5px] leading-tight">Photograph</h3>
-      <p className="text-[11.5px] text-ink-soft leading-snug mt-0.5">Optional. Stays on your device — it is never uploaded.</p>
+      <p className="text-[11.5px] text-ink-soft leading-snug mt-0.5">
+        {fromProfile
+          ? 'Your Digital Profile photo. Choose another, or remove it, for this biodata only.'
+          : 'Optional. Stays on your device — it is never uploaded.'}
+      </p>
       <div className="flex items-center gap-2 mt-2.5">
         <input
           ref={fileRef}
@@ -377,6 +436,11 @@ function PhotoCard({
           </button>
         )}
       </div>
+      {onUseProfile && (
+        <button type="button" onClick={onUseProfile} className="mt-2 text-[12px] font-medium text-maroon hover:underline">
+          Use my profile photo
+        </button>
+      )}
       {photoError && <p className="text-[11.5px] text-terra mt-1">{photoError}</p>}
       {photoUrl && <PhotoEditor url={photoUrl} style={photoStyle} onChange={onStyle} />}
     </section>
@@ -411,6 +475,76 @@ type ImageState =
   | { kind: 'saved'; count: number }
   | { kind: 'error'; message: string }
 
+/** The member's prefill status, above the form. Guests see nothing here. */
+function PrefillNotice({
+  prefill, slow, refreshing, refreshError, onRefresh, onRetry,
+}: {
+  prefill: Prefill
+  slow: boolean
+  refreshing: boolean
+  refreshError: boolean
+  onRefresh: () => void
+  onRetry: () => void
+}) {
+  if (prefill.kind === 'guest') return null
+  if (prefill.kind === 'checking') {
+    return slow ? (
+      <p className="card px-4 py-3 text-[13px] text-ink-soft flex items-center gap-2" role="status">
+        <span className="inline-block h-3.5 w-3.5 rounded-full border-2 border-gold border-t-transparent motion-safe:animate-spin" aria-hidden="true" />
+        Looking for your Mithila Jodi profile…
+      </p>
+    ) : null
+  }
+  if (prefill.kind === 'error') {
+    return (
+      <div className="card px-4 py-3 border-terra/30 bg-terra/[0.04]" role="status">
+        <p className="text-[13px] text-ink leading-snug">
+          We couldn’t load your Digital Profile details just now. You can fill in the form yourself.
+        </p>
+        <button type="button" onClick={onRetry} className="mt-1.5 text-[12.5px] font-medium text-maroon hover:underline">
+          Try again
+        </button>
+      </div>
+    )
+  }
+  if (prefill.kind === 'no_profile') {
+    return (
+      <div className="card px-4 py-3 bg-cream" role="status">
+        <p className="text-[13px] text-ink leading-snug">
+          You’re signed in, but there is no Digital Profile to fill this from yet. Fill in the form below, or{' '}
+          <Link href="/profile/edit" className="font-medium text-maroon underline underline-offset-2">complete your profile</Link> first.
+        </p>
+      </div>
+    )
+  }
+  return (
+    <div className="card px-4 py-3 border-gold/50 bg-[#FFFAF0]" role="status">
+      <p className="text-[13px] text-ink leading-snug flex gap-2">
+        <span className="text-gold shrink-0" aria-hidden="true">✦</span>
+        <span>
+          {prefill.count > 0
+            ? 'Your Digital Profile information has been prefilled. Review and edit your details before generating your biodata.'
+            : 'Your Digital Profile has no details to fill in yet — add them below.'}
+        </span>
+      </p>
+      <p className="text-[11.5px] text-ink-soft leading-snug mt-1 pl-5">
+        Changes here are for this biodata only; your Digital Profile stays as it is.
+      </p>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 pl-5">
+        <button type="button" onClick={onRefresh} disabled={refreshing} className="text-[12.5px] font-medium text-maroon hover:underline disabled:opacity-60">
+          {refreshing ? 'Refreshing…' : 'Refresh from Profile'}
+        </button>
+        <Link href="/profile/edit" className="text-[12.5px] font-medium text-maroon hover:underline">
+          Edit Digital Profile
+        </Link>
+      </div>
+      {refreshError && (
+        <p className="text-[11.5px] text-terra mt-1.5 pl-5" role="alert">Could not refresh just now — your form is unchanged.</p>
+      )}
+    </div>
+  )
+}
+
 export function BiodataBuilder() {
   const [step, setStep] = useState<'design' | 'details'>('design')
   const [template, setTemplate] = useState<BiodataTemplateId>('mayur')
@@ -424,6 +558,20 @@ export function BiodataBuilder() {
   const [image, setImage] = useState<ImageState>({ kind: 'idle' })
   const fileRef = useRef<HTMLInputElement>(null)
 
+  const [prefill, setPrefill] = useState<Prefill>({ kind: 'checking' })
+  const [prefillSlow, setPrefillSlow] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  const [refreshError, setRefreshError] = useState(false)
+  const [photoFromProfile, setPhotoFromProfile] = useState(false)
+  const [hasProfilePhoto, setHasProfilePhoto] = useState(false)
+  /** Fields the member has typed in — a profile response never overwrites these. */
+  const touched = useRef(new Set<string>())
+  /** Set once the member picks or removes a photo themselves. */
+  const photoTouched = useRef(false)
+  const profilePhoto = useRef<Blob | null>(null)
+  /** Only the latest request may apply its result. */
+  const loadSeq = useRef(0)
+
   // Ctrl+P / the browser menu skip the button; mount the print copy synchronously then too.
   useEffect(() => {
     const onBeforePrint = () => flushSync(() => setPrintMounted(true))
@@ -435,7 +583,78 @@ export function BiodataBuilder() {
   useEffect(() => () => { if (photoUrl) URL.revokeObjectURL(photoUrl) }, [photoUrl])
 
   function set(key: keyof BiodataData, value: string) {
+    touched.current.add(key)
     setData(d => ({ ...d, [key]: value }))
+  }
+
+  function showPhoto(blob: Blob, fromProfile: boolean) {
+    setPhotoUrl(URL.createObjectURL(blob))
+    setPhotoFromProfile(fromProfile)
+    setPhotoStyle(s => ({ ...s, zoom: 1, x: 50, y: 50 }))
+  }
+
+  /**
+   * Fills the form from the Digital Profile. The first load only fills fields
+   * that are still empty and untouched, so typing before it arrives is safe;
+   * "Refresh from Profile" (after a confirm) replaces the profile's fields.
+   * Nothing here writes to the profile.
+   */
+  async function loadProfile(mode: 'initial' | 'refresh', signal: AbortSignal) {
+    const seq = ++loadSeq.current
+    try {
+      const result = await fetchOwnProfile(signal)
+      if (seq !== loadSeq.current || signal.aborted) return
+      if (result.kind !== 'loaded') { setPrefill({ kind: result.kind }); return }
+      const entries = Object.entries(result.data) as Array<[keyof BiodataData, string]>
+      if (mode === 'refresh') {
+        entries.forEach(([k]) => touched.current.delete(k))
+        setData(d => ({ ...d, ...result.data }))
+      } else {
+        setData(d => {
+          const next = { ...d }
+          for (const [k, v] of entries) if (!touched.current.has(k) && !String(d[k] ?? '').trim()) next[k] = v
+          return next
+        })
+      }
+      profilePhoto.current = result.photo
+      setHasProfilePhoto(!!result.photo)
+      if (result.photo && (mode === 'refresh' || !photoTouched.current)) {
+        photoTouched.current = false
+        showPhoto(result.photo, true)
+      }
+      setPrefill({ kind: 'loaded', count: entries.length })
+    } catch {
+      if (seq !== loadSeq.current || signal.aborted) return
+      // A failed refresh keeps the form as it is; a failed first load falls back to manual entry.
+      if (mode === 'refresh') setRefreshError(true)
+      else setPrefill({ kind: 'error' })
+    }
+  }
+
+  // One request when the maker opens — never per keystroke or preview update.
+  useEffect(() => {
+    const ctrl = new AbortController()
+    void loadProfile('initial', ctrl.signal)
+    const slow = setTimeout(() => setPrefillSlow(true), 600)
+    return () => { ctrl.abort(); clearTimeout(slow) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  async function refreshFromProfile() {
+    const ok = window.confirm(
+      'Replace the details in this form with the ones saved in your Digital Profile? Changes you made here to those fields will be lost.',
+    )
+    if (!ok) return
+    setRefreshing(true)
+    setRefreshError(false)
+    await loadProfile('refresh', new AbortController().signal)
+    setRefreshing(false)
+  }
+
+  async function retryProfile() {
+    setPrefill({ kind: 'checking' })
+    setPrefillSlow(true)
+    await loadProfile('initial', new AbortController().signal)
   }
 
   function pickPhoto(file: File | undefined) {
@@ -443,16 +662,28 @@ export function BiodataBuilder() {
     if (!file) return
     if (!file.type.startsWith('image/')) { setPhotoError('That file is not an image.'); return }
     if (file.size > MAX_PHOTO_BYTES) { setPhotoError('Please choose an image under 8 MB.'); return }
+    photoTouched.current = true
     if (photoUrl) URL.revokeObjectURL(photoUrl)
-    setPhotoUrl(URL.createObjectURL(file))
-    setPhotoStyle(s => ({ ...s, zoom: 1, x: 50, y: 50 }))
+    showPhoto(file, false)
   }
 
   function clearPhoto() {
+    photoTouched.current = true
     if (photoUrl) URL.revokeObjectURL(photoUrl)
     setPhotoUrl(null)
+    setPhotoFromProfile(false)
     if (fileRef.current) fileRef.current.value = ''
   }
+
+  function restoreProfilePhoto() {
+    if (!profilePhoto.current) return
+    photoTouched.current = true
+    if (photoUrl) URL.revokeObjectURL(photoUrl)
+    if (fileRef.current) fileRef.current.value = ''
+    showPhoto(profilePhoto.current, true)
+  }
+
+  const isMember = prefill.kind === 'loaded' || prefill.kind === 'no_profile'
 
   function chooseTemplate(id: BiodataTemplateId) {
     setTemplate(id)
@@ -554,6 +785,12 @@ export function BiodataBuilder() {
               Every design holds the same fields — pick the one that feels right. You can change it
               any time from the next screen.
             </p>
+            {prefill.kind === 'loaded' && prefill.count > 0 && (
+              <p className="text-[12.5px] text-maroon mt-2" role="status">
+                <span className="text-gold" aria-hidden="true">✦ </span>
+                Your Digital Profile details are ready — they are filled in on the next step.
+              </p>
+            )}
           </div>
           <BiodataTemplatePicker selected={template} onSelect={chooseTemplate} photoShape={photoStyle.shape} language={language} />
           <div className="flex justify-center mt-6">
@@ -594,11 +831,17 @@ export function BiodataBuilder() {
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)] gap-6 items-start">
         {/* ── Form ── */}
         <div className="no-print space-y-3 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:pr-1">
+          <PrefillNotice
+            prefill={prefill} slow={prefillSlow} refreshing={refreshing} refreshError={refreshError}
+            onRefresh={() => void refreshFromProfile()} onRetry={() => void retryProfile()}
+          />
           <div className="card p-4">
             <h2 className="font-serif text-maroon text-[17px]">Your details</h2>
             <p className="text-[12.5px] text-ink-soft mt-1 leading-snug">
               Fill in as much or as little as you like — empty sections are left out of the document.
-              Everything stays in this browser; nothing is uploaded or saved.
+              {isMember
+                ? ' What you change here stays in this browser and is never saved to your profile.'
+                : ' Everything stays in this browser; nothing is uploaded or saved.'}
             </p>
 
             <div className="mt-3">
@@ -637,6 +880,8 @@ export function BiodataBuilder() {
               {cat.id === 'personal' && (
                 <PhotoCard
                   photoUrl={photoUrl} photoError={photoError} photoStyle={photoStyle} fileRef={fileRef}
+                  fromProfile={photoFromProfile && !!photoUrl}
+                  onUseProfile={hasProfilePhoto && !(photoFromProfile && photoUrl) ? restoreProfilePhoto : null}
                   onPick={pickPhoto} onClear={clearPhoto} onStyle={setPhotoStyle}
                 />
               )}
@@ -706,6 +951,19 @@ export function BiodataBuilder() {
             </div>
           ))}
 
+          {isMember ? (
+            <div className="card p-4 bg-cream">
+              <p className="text-[13px] text-ink leading-snug">
+                Edits made here are not saved — closing this tab clears them. Your Digital Profile is unchanged.
+              </p>
+              <p className="text-[12.5px] text-ink-soft leading-snug mt-1">
+                To change what families see on Mithila Jodi, and what fills in here next time, update your profile.
+              </p>
+              <Link href="/profile/edit" className="btn-primary w-full justify-center mt-3 text-sm py-2">
+                Update your Digital Profile
+              </Link>
+            </div>
+          ) : (
           <div className="card p-4 bg-cream">
             <p className="text-[13px] text-ink leading-snug">
               Closing this tab clears everything — there is nowhere for it to be saved.
@@ -718,6 +976,7 @@ export function BiodataBuilder() {
               Create a free account
             </Link>
           </div>
+          )}
         </div>
 
         {/* ── Live preview ── */}

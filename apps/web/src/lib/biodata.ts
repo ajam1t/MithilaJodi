@@ -48,7 +48,6 @@ export type BiodataData = {
   drinking?: string | null
   dob?: string | null
   complexion?: string | null
-  blood_group?: string | null
 
   education?: string | null
   profession?: string | null
@@ -109,7 +108,7 @@ export const BIODATA_LABELS: Record<BiodataLanguage, BiodataLabels> = {
     family_introduction: 'Family Introduction',
     income: 'Income', rashi: 'Rashi', nakshatra: 'Nakshatra', mangalik: 'Mangalik',
     birth_time: 'Birth time', birth_place: 'Birth place', dob: 'Date of Birth',
-    complexion: 'Complexion', blood_group: 'Blood Group',
+    complexion: 'Complexion',
     kundli: 'Kundli', address: 'Address',
     age: 'Age', gender: 'Gender', religion: 'Religion', caste: 'Caste', years: 'years',
   },
@@ -132,7 +131,7 @@ export const BIODATA_LABELS: Record<BiodataLanguage, BiodataLabels> = {
     family_introduction: 'परिवार परिचय',
     income: 'आय', rashi: 'राशि', nakshatra: 'नक्षत्र', mangalik: 'मांगलिक',
     birth_time: 'जन्म समय', birth_place: 'जन्म स्थान', dob: 'जन्म तिथि',
-    complexion: 'वर्ण', blood_group: 'रक्त समूह',
+    complexion: 'वर्ण',
     kundli: 'कुंडली', address: 'पता',
     age: 'आयु', gender: 'लिंग', religion: 'धर्म', caste: 'जाति', years: 'वर्ष',
   },
@@ -155,7 +154,7 @@ export const BIODATA_LABELS: Record<BiodataLanguage, BiodataLabels> = {
     family_introduction: 'परिवार परिचय',
     income: 'आय', rashi: 'राशि', nakshatra: 'नक्षत्र', mangalik: 'मांगलिक',
     birth_time: 'जन्म समय', birth_place: 'जन्म स्थान', dob: 'जन्म तिथि',
-    complexion: 'रंग', blood_group: 'रक्त समूह',
+    complexion: 'रंग',
     kundli: 'कुंडली', address: 'पता',
     age: 'आयु', gender: 'लिंग', religion: 'धर्म', caste: 'जाति', years: 'वर्ष',
   },
@@ -178,7 +177,7 @@ export const BIODATA_LABELS: Record<BiodataLanguage, BiodataLabels> = {
     family_introduction: 'कुटुम्बपरिचयः',
     income: 'आयः', rashi: 'राशिः', nakshatra: 'नक्षत्रम्', mangalik: 'माङ्गलिकम्',
     birth_time: 'जन्मसमयः', birth_place: 'जन्मस्थानम्', dob: 'जन्मतिथिः',
-    complexion: 'वर्णः', blood_group: 'रक्तवर्गः',
+    complexion: 'वर्णः',
     kundli: 'कुण्डली', address: 'पता',
     age: 'वयः', gender: 'लिङ्गम्', religion: 'धर्मः', caste: 'जातिः', years: 'वर्षाणि',
   },
