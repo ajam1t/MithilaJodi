@@ -6,8 +6,10 @@ import { fieldErrors, kundliMatchRequestSchema, type FieldErrors } from '@/lib/a
 import type { ChartData, KundliMatchRequest, MoonSegmentChoice, PersonInput, Role } from '@/lib/astrology/types'
 import { BirthDetailsCard, EMPTY_DRAFT, PREFILL_KEY, type PersonDraft } from '../kundli/BirthDetailsCard'
 import { MoonWindowChooser } from '../kundli/MoonWindowChooser'
+import { AstroCeremony, prefersReducedMotion } from '../ceremony/AstroCeremony'
+import type { Scene } from '../ceremony/scenes'
 
-type Phase = 'form' | 'loading' | 'choose' | 'done'
+type Phase = 'form' | 'loading' | 'ceremony' | 'choose' | 'done'
 type Segments = Partial<Record<Role, number | 'all'>>
 
 type PairResponse<R> =
@@ -33,6 +35,8 @@ type Props<R> = {
   charts: (r: R) => { bride: ChartData; groom: ChartData }
   tabTitle: (r: R) => string
   announceResult: (r: R) => string
+  /** The calculation ceremony, built from the (first) result. */
+  ceremony?: { scene: (r: R | null) => Scene; waiting: { hi: string; en: string } }
 }
 
 function todayIso(): string {
@@ -54,7 +58,9 @@ function toInput(d: PersonDraft, moonSegment?: number | 'all'): PersonInput {
  * Two people's birth details → calculation → (which part of the day?) →
  * report. Shared by Kundli Match and Compatibility.
  */
-export function PairChartExperience<R>({ endpoint, ctaLabel, note, Report, charts, tabTitle, announceResult }: Props<R>) {
+export function PairChartExperience<R>({ endpoint, ctaLabel, note, Report, charts, tabTitle, announceResult, ceremony }: Props<R>) {
+  const [cerOn, setCerOn] = useState(false)
+  const [cerResult, setCerResult] = useState<R | null>(null)
   const [drafts, setDrafts] = useState<Record<Role, PersonDraft>>({ bride: EMPTY_DRAFT, groom: EMPTY_DRAFT })
   const [phase, setPhase] = useState<Phase>('form')
   const [errors, setErrors] = useState<FieldErrors>({})
@@ -151,6 +157,12 @@ export function PairChartExperience<R>({ endpoint, ctaLabel, note, Report, chart
     setErrors({})
     setPhase('loading')
     setAnnounce('Calculating both birth charts…')
+    const playCeremony = !!ceremony && !prefersReducedMotion()
+    if (playCeremony) {
+      setCerResult(null)
+      setCerOn(true)
+      topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
     try {
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -159,6 +171,7 @@ export function PairChartExperience<R>({ endpoint, ctaLabel, note, Report, chart
       })
       const json = await res.json().catch(() => ({ ok: false, message: 'The server sent an unexpected reply.' }))
       if (!res.ok || !json.ok) {
+        setCerOn(false)
         setPhase('form')
         setBanner(json.message ?? 'We could not complete the calculation. Please try again.')
         if (json.fields) { setErrors(json.fields); setTimeout(() => focusFirstError(json.fields), 0) }
@@ -168,6 +181,7 @@ export function PairChartExperience<R>({ endpoint, ctaLabel, note, Report, chart
       }
       const body = json as PairResponse<R> & { ok: true }
       if (body.kind === 'needs_moon_choice') {
+        setCerOn(false)
         setChoices(body.choices)
         setPhase('choose')
         setAnnounce('One more question: when in the day was the birth?')
@@ -176,19 +190,20 @@ export function PairChartExperience<R>({ endpoint, ctaLabel, note, Report, chart
       setLastRequest(req)
       setResponse(body)
       setScenarioIndex(0)
-      setPhase('done')
       const r = body.kind === 'result' ? body.result : body.scenarios[0].result
+      if (playCeremony) { setCerResult(r); setPhase('ceremony') } else setPhase('done')
       setAnnounce(
         body.kind === 'result'
           ? announceResult(r)
           : `Complete, with ${body.scenarios.length} possible results because a birth time is unknown.`,
       )
     } catch {
+      setCerOn(false)
       setPhase('form')
       setBanner('You seem to be offline, or the connection dropped. Your details are still here — please try again.')
       setAnnounce('')
     }
-  }, [drafts, maxDate, endpoint, announceResult])
+  }, [drafts, maxDate, endpoint, announceResult, ceremony])
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -234,7 +249,15 @@ export function PairChartExperience<R>({ endpoint, ctaLabel, note, Report, chart
     <div ref={topRef} className="scroll-mt-24">
       <p className="sr-only" role="status" aria-live="polite">{announce}</p>
 
-      {(phase === 'form' || phase === 'loading') && (
+      {cerOn && ceremony && (phase === 'loading' || phase === 'ceremony') && (() => {
+        const sc = ceremony.scene(cerResult)
+        return (
+          <AstroCeremony scene={sc.draw} waiting={ceremony.waiting} landed={sc.landed} ready={phase === 'ceremony'}
+            onDone={() => { setCerOn(false); setPhase('done') }} />
+        )
+      })()}
+
+      {(phase === 'form' || (phase === 'loading' && !cerOn)) && (
         <form onSubmit={onSubmit} noValidate aria-describedby="kd-form-intro">
           <p id="kd-form-intro" className="sr-only">Enter the bride’s and the groom’s birth details. Fields are required unless marked otherwise.</p>
           {banner && (

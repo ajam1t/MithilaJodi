@@ -7,6 +7,8 @@ import type { ChartData, MoonSegmentChoice, PersonInput } from '@/lib/astrology/
 import { BirthDetailsCard, EMPTY_DRAFT, type PersonDraft } from '../kundli/BirthDetailsCard'
 import { MoonWindowChooser } from '../kundli/MoonWindowChooser'
 import { nakshatraOf, rashiOf } from '../kundli/format'
+import { AstroCeremony, prefersReducedMotion } from '../ceremony/AstroCeremony'
+import type { Scene } from '../ceremony/scenes'
 
 /** sessionStorage key carrying one person's details between single-chart tools. */
 export const SINGLE_PREFILL_KEY = 'mj-single-prefill'
@@ -28,6 +30,8 @@ type Props<R extends WithChart> = {
   Report: ComponentType<SingleReportProps<R>>
   /** For tools where the person may not have a name yet (Baby Names). */
   nameField?: { label: string; placeholder: string; initial: string }
+  /** The calculation ceremony: a scene built from the (first) result, and its waiting caption. */
+  ceremony?: { scene: (r: R | null) => Scene; waiting: { hi: string; en: string } }
 }
 
 function todayIso(): string {
@@ -39,11 +43,14 @@ function todayIso(): string {
  * Form → calculation → (which part of the day?) → report, for every tool that
  * reads one person's chart. Each tool supplies only its endpoint and report.
  */
-export function SingleChartExperience<R extends WithChart>({ endpoint, ctaLabel, announceResult, Report, nameField }: Props<R>) {
+export function SingleChartExperience<R extends WithChart>({ endpoint, ctaLabel, announceResult, Report, nameField, ceremony }: Props<R>) {
   const initialDraft = nameField ? { ...EMPTY_DRAFT, name: nameField.initial } : EMPTY_DRAFT
   const [draft, setDraft] = useState<PersonDraft>(initialDraft)
   const [segment, setSegment] = useState<number | 'all' | undefined>(undefined)
-  const [phase, setPhase] = useState<'form' | 'loading' | 'choose' | 'done'>('form')
+  const [phase, setPhase] = useState<'form' | 'loading' | 'ceremony' | 'choose' | 'done'>('form')
+  // The ceremony plays from the moment the request is sent until the report takes over.
+  const [cerOn, setCerOn] = useState(false)
+  const [cerResult, setCerResult] = useState<R | null>(null)
   const [errors, setErrors] = useState<FieldErrors>({})
   const [banner, setBanner] = useState<string | null>(null)
   const [choices, setChoices] = useState<MoonSegmentChoice[]>([])
@@ -119,10 +126,17 @@ export function SingleChartExperience<R extends WithChart>({ endpoint, ctaLabel,
     setBanner(null)
     setPhase('loading')
     setAnnounce('Calculating…')
+    const playCeremony = !!ceremony && !prefersReducedMotion()
+    if (playCeremony) {
+      setCerResult(null)
+      setCerOn(true)
+      topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
     try {
       const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ person: input }) })
       const json = await res.json().catch(() => ({ ok: false, message: 'The server sent an unexpected reply.' }))
       if (!res.ok || !json.ok) {
+        setCerOn(false)
         setPhase('form')
         setBanner(json.message ?? 'We could not complete the calculation. Please try again.')
         if (json.fields) { setErrors(json.fields); setTimeout(() => focusFirstError(json.fields), 0) }
@@ -131,6 +145,7 @@ export function SingleChartExperience<R extends WithChart>({ endpoint, ctaLabel,
       }
       const body = json as Response<R>
       if (body.kind === 'needs_moon_choice') {
+        setCerOn(false)
         setChoices(body.choices)
         setPhase('choose')
         setAnnounce('One more question: when in the day was the birth?')
@@ -139,9 +154,15 @@ export function SingleChartExperience<R extends WithChart>({ endpoint, ctaLabel,
       setPerson(input)
       setResponse(body)
       setScenarioIndex(0)
-      setPhase('done')
+      if (playCeremony) {
+        setCerResult(body.kind === 'result' ? body.result : body.scenarios[0].result)
+        setPhase('ceremony')
+      } else {
+        setPhase('done')
+      }
       setAnnounce(body.kind === 'result' ? announceResult(body.result) : `Ready, with ${body.scenarios.length} possibilities because the birth time is unknown.`)
     } catch {
+      setCerOn(false)
       setPhase('form')
       setBanner('You seem to be offline, or the connection dropped. Your details are still here — please try again.')
       setAnnounce('')
@@ -173,7 +194,20 @@ export function SingleChartExperience<R extends WithChart>({ endpoint, ctaLabel,
     <div ref={topRef} className="scroll-mt-24">
       <p className="sr-only" role="status" aria-live="polite">{announce}</p>
 
-      {(phase === 'form' || phase === 'loading') && (
+      {cerOn && ceremony && (phase === 'loading' || phase === 'ceremony') && (() => {
+        const sc = ceremony.scene(cerResult)
+        return (
+          <AstroCeremony
+            scene={sc.draw}
+            waiting={ceremony.waiting}
+            landed={sc.landed}
+            ready={phase === 'ceremony'}
+            onDone={() => { setCerOn(false); setPhase('done') }}
+          />
+        )
+      })()}
+
+      {(phase === 'form' || (phase === 'loading' && !cerOn)) && (
         <form onSubmit={e => { e.preventDefault(); void run(segment) }} noValidate className="max-w-2xl mx-auto">
           {banner && (
             <div role="alert" className="mb-5 rounded-mj border border-error/30 bg-error-soft px-4 py-3 text-[14px] text-error-fg flex flex-wrap items-center justify-between gap-3">

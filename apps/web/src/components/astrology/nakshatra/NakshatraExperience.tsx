@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import type { NakshatraReading } from '@/lib/astrology/types'
+import { nakshatraScene } from '../ceremony/scenes'
 import { SingleChartExperience, type SingleReportProps } from '../single/SingleChartExperience'
 import { nakshatraOf, rashiOf } from '../kundli/format'
 
@@ -13,6 +14,7 @@ const NakshatraReport = dynamic(() => import('./NakshatraReport').then(m => m.Na
 export function NakshatraExperience() {
   return (
     <SingleChartExperience<NakshatraReading>
+      ceremony={{ scene: nakshatraScene, waiting: { hi: 'चन्द्रमा नक्षत्र पथ पर…', en: 'Following the Moon through the 27 nakshatras…' } }}
       endpoint="/api/astrology/nakshatra"
       ctaLabel="Find my nakshatra"
       Report={NakshatraReport}

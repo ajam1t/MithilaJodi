@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import type { CompatibilityResult } from '@/lib/astrology/types'
+import { compatibilityScene } from '../ceremony/scenes'
 import { PairChartExperience, type PairReportProps } from '../pair/PairChartExperience'
 import { points } from '../kundli/format'
 
@@ -17,6 +18,7 @@ export function CompatibilityExperience() {
       ctaLabel="Compare charts"
       note="Bride and groom are asked for separately because several kootas are not symmetric. Details are used for this calculation only and are not stored."
       Report={CompatibilityReport}
+      ceremony={{ scene: compatibilityScene, waiting: { hi: 'दो कुण्डलियाँ मिल रही हैं…', en: 'Bringing the two birth charts together…' } }}
       charts={r => r.match}
       tabTitle={r => `${points(r.match.total)} / 36`}
       announceResult={r => `Compatibility complete: ${points(r.match.total)} of 36 Guna — ${r.match.band.label}, with ${r.comparison.contacts.length} cross-chart contacts.`}

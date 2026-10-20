@@ -8,6 +8,8 @@ import type { BirthPlace, VivahMuhuratRequest, VivahMuhuratResult } from '@/lib/
 import { RASHIS } from '@/lib/astrology/vedic/zodiac'
 import { BirthPlaceSelector } from '../kundli/BirthPlaceSelector'
 import { MuhuratResults } from './MuhuratResults'
+import { AstroCeremony, prefersReducedMotion } from '../ceremony/AstroCeremony'
+import { vivahScene } from '../ceremony/scenes'
 
 const PERIODS = [
   { months: 1, label: '1 month' },
@@ -35,6 +37,9 @@ export function VivahMuhuratExperience({ initial }: { initial: VivahMuhuratResul
   const [banner, setBanner] = useState<string | null>(null)
   const [announce, setAnnounce] = useState('')
   const resultsRef = useRef<HTMLDivElement>(null)
+  // The ceremony plays in the results area while the panchang is read, then hands over.
+  const [cerOn, setCerOn] = useState(false)
+  const [cerResult, setCerResult] = useState<VivahMuhuratResult | null>(null)
 
   async function run(e: React.FormEvent) {
     e.preventDefault()
@@ -52,28 +57,42 @@ export function VivahMuhuratExperience({ initial }: { initial: VivahMuhuratResul
     setBanner(null)
     setBusy(true)
     setAnnounce('Finding muhurats…')
+    const playCeremony = !prefersReducedMotion()
+    if (playCeremony) {
+      setCerResult(null)
+      setCerOn(true)
+      setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0)
+    }
     try {
       const res = await fetch('/api/astrology/vivah-muhurat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const json = await res.json().catch(() => ({ ok: false, message: 'The server sent an unexpected reply.' }))
       if (!res.ok || !json.ok) {
+        setCerOn(false)
         setBanner(json.message ?? 'We could not find the muhurats just now. Please try again.')
         if (json.fields) setErrors(json.fields)
         setAnnounce('')
         return
       }
       const r = json.result as VivahMuhuratResult
-      setResult(r)
       setAnnounce(`Found ${r.days.length} dates with a muhurat.`)
-      setTimeout(() => {
-        resultsRef.current?.scrollIntoView({ behavior: 'instant' as ScrollBehavior, block: 'start' })
-        document.getElementById('kd-result-title')?.focus({ preventScroll: true })
-      }, 0)
+      if (playCeremony) setCerResult(r)
+      else showResult(r)
     } catch {
+      setCerOn(false)
       setBanner('You seem to be offline, or the connection dropped. Please try again.')
       setAnnounce('')
     } finally {
       setBusy(false)
     }
+  }
+
+  function showResult(r: VivahMuhuratResult) {
+    setResult(r)
+    setCerOn(false)
+    setTimeout(() => {
+      resultsRef.current?.scrollIntoView({ behavior: 'instant' as ScrollBehavior, block: 'start' })
+      document.getElementById('kd-result-title')?.focus({ preventScroll: true })
+    }, 0)
   }
 
   const rashiSelect = (id: string, label: string, value: number | null, set: (v: number | null) => void) => (
@@ -136,7 +155,14 @@ export function VivahMuhuratExperience({ initial }: { initial: VivahMuhuratResul
       </form>
 
       <div ref={resultsRef} className="mt-10 rounded-mj-lg bg-paper text-ink p-4 sm:p-6 lg:p-8 scroll-mt-24" aria-busy={busy}>
-        <MuhuratResults result={result} />
+        {cerOn ? (() => {
+          const sc = vivahScene(cerResult)
+          return (
+            <AstroCeremony scene={sc.draw} landed={sc.landed} ready={!!cerResult}
+              waiting={{ hi: 'पंचांग पढ़ रहे हैं…', en: 'Reading the panchang, month by month…' }}
+              onDone={() => { if (cerResult) showResult(cerResult) }} duration={2.6} />
+          )
+        })() : <MuhuratResults result={result} />}
       </div>
     </div>
   )

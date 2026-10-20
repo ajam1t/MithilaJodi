@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import type { RashiReading } from '@/lib/astrology/types'
+import { rashiScene } from '../ceremony/scenes'
 import { SingleChartExperience, type SingleReportProps } from '../single/SingleChartExperience'
 import { rashiOf } from '../kundli/format'
 
@@ -13,6 +14,7 @@ const RashiReport = dynamic(() => import('./RashiReport').then(m => m.RashiRepor
 export function RashiExperience() {
   return (
     <SingleChartExperience<RashiReading>
+      ceremony={{ scene: rashiScene, waiting: { hi: 'राशिचक्र घूम रहा है…', en: 'Turning the zodiac to your Moon sign…' } }}
       endpoint="/api/astrology/rashi"
       ctaLabel="Find my rashi"
       Report={RashiReport}
