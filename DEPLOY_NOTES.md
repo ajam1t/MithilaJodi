@@ -5,9 +5,10 @@ the live database or the Vercel environment.
 
 ## 1. Run the pending SQL migrations (in order)
 
-Paste the **contents** of each file into the Supabase SQL editor — not the path.
-Both are written with plain statements only (no dollar-quoting), because the
-Supabase SQL editor in this project mis-parses dollar-quoted blocks.
+Paste the **contents** of each file into the Supabase SQL editor — not the path —
+and run the whole file at once (select nothing, press Run). Some files contain
+`$$ … $$` blocks (function bodies, article text); they run fine when the whole
+file is executed together.
 
 | Order | File | What it does |
 |---|---|---|
@@ -17,6 +18,8 @@ Supabase SQL editor in this project mis-parses dollar-quoted blocks.
 | 4 | `supabase/migrations/20261017000001_wedding_invite_photos.sql` | Optional bride/groom photos on premium invitations (`wedding_invites.photos`, `photos_consent_at`). Until it runs, invitations keep working but adding photos shows "Photos cannot be saved just yet". |
 | 5 | `supabase/migrations/20261017000002_admin_active_members.sql` | Admin → Members → Active members lists only members who have a profile. Until it runs, the app hides "No profile yet" rows itself, but the page count can be slightly off. |
 | 6 | `supabase/migrations/20261021000001_contact_preferences.sql` | **Applied 2026-10-21.** Contact preferences on Digital Profiles (best way to reach, days, hours, "connect only if", a note). Until it runs, the Contact tab still shows the number and profile link, and the new fields are simply not offered when editing. |
+
+| 7 | `supabase/migrations/20260826000001_blog_marriage_rituals.sql` | **Publishes 10 Maithil wedding-ritual articles** in the Journal (Complete Guide to Maithil Vivah, Kohbar, Tilak, Siddhant, Sindoor Daan, Chaturthi, Dwiragaman, Parichhan, Naina Jogin, wedding songs) and renames the category to "Mithila Marriage Rituals & Traditions". Read the articles first — they go live the moment it runs, dated today. Safe to run twice (existing slugs are skipped). |
 
 Migration 2 is the important one. Until it runs, those 13 tables are reachable
 with the `anon` key.

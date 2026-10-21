@@ -3,6 +3,7 @@
 -- 1. Rename category: Mithila Marriage & Traditions
 --    → Mithila Marriage Rituals & Traditions (slug unchanged)
 -- 2. Insert 10 new articles on Maithil wedding rituals
+--    (safe to run again: existing slugs are skipped)
 -- ============================================================
 
 -- ────────────────────────────────────────────────────────────
@@ -138,7 +139,8 @@ $$,
   'published',
   true,
   now()
-FROM blog_categories c WHERE c.slug = 'mithila-marriage-traditions';
+FROM blog_categories c WHERE c.slug = 'mithila-marriage-traditions'
+ON CONFLICT (slug) DO NOTHING;
 
 
 -- ── Article B: Kohbar and Kohbar Ghar ──
@@ -239,7 +241,8 @@ $$,
   'published',
   false,
   now()
-FROM blog_categories c WHERE c.slug = 'mithila-marriage-traditions';
+FROM blog_categories c WHERE c.slug = 'mithila-marriage-traditions'
+ON CONFLICT (slug) DO NOTHING;
 
 
 -- ── Article C: Tilak Ceremony ──
@@ -350,7 +353,8 @@ $$,
   'published',
   false,
   now()
-FROM blog_categories c WHERE c.slug = 'mithila-marriage-traditions';
+FROM blog_categories c WHERE c.slug = 'mithila-marriage-traditions'
+ON CONFLICT (slug) DO NOTHING;
 
 
 -- ── Article D: Siddhant Ceremony ──
@@ -467,7 +471,8 @@ $$,
   'published',
   false,
   now()
-FROM blog_categories c WHERE c.slug = 'mithila-marriage-traditions';
+FROM blog_categories c WHERE c.slug = 'mithila-marriage-traditions'
+ON CONFLICT (slug) DO NOTHING;
 
 
 -- ── Article E: Chaturthi ──
@@ -554,7 +559,8 @@ $$,
   'published',
   false,
   now()
-FROM blog_categories c WHERE c.slug = 'mithila-marriage-traditions';
+FROM blog_categories c WHERE c.slug = 'mithila-marriage-traditions'
+ON CONFLICT (slug) DO NOTHING;
 
 
 -- ── Article F: Sindoor Daan ──
@@ -637,7 +643,8 @@ $$,
   'published',
   false,
   now()
-FROM blog_categories c WHERE c.slug = 'mithila-marriage-traditions';
+FROM blog_categories c WHERE c.slug = 'mithila-marriage-traditions'
+ON CONFLICT (slug) DO NOTHING;
 
 
 -- ── Article G: Dwiragaman ──
@@ -732,7 +739,8 @@ $$,
   'published',
   false,
   now()
-FROM blog_categories c WHERE c.slug = 'mithila-marriage-traditions';
+FROM blog_categories c WHERE c.slug = 'mithila-marriage-traditions'
+ON CONFLICT (slug) DO NOTHING;
 
 
 -- ── Article H: Maithili Wedding Songs ──
@@ -832,7 +840,8 @@ $$,
   'published',
   false,
   now()
-FROM blog_categories c WHERE c.slug = 'mithila-marriage-traditions';
+FROM blog_categories c WHERE c.slug = 'mithila-marriage-traditions'
+ON CONFLICT (slug) DO NOTHING;
 
 
 -- ── Article I: Parichhan ──
@@ -929,7 +938,8 @@ $$,
   'published',
   false,
   now()
-FROM blog_categories c WHERE c.slug = 'mithila-marriage-traditions';
+FROM blog_categories c WHERE c.slug = 'mithila-marriage-traditions'
+ON CONFLICT (slug) DO NOTHING;
 
 
 -- ── Article J: Naina Jogin ──
@@ -1027,4 +1037,5 @@ $$,
   'published',
   false,
   now()
-FROM blog_categories c WHERE c.slug = 'mithila-marriage-traditions';
+FROM blog_categories c WHERE c.slug = 'mithila-marriage-traditions'
+ON CONFLICT (slug) DO NOTHING;

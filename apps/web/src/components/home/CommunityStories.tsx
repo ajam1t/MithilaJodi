@@ -6,16 +6,13 @@ import { useRef, useState, type KeyboardEvent } from 'react'
  * Community stories — the chosen family's words, with four compact family
  * selectors in one row beneath them.
  *
- * These are presented as real member stories, on the site owner's confirmation
- * that they are.
+ * These are real member stories, shared by the families themselves — the site
+ * owner has confirmed both the words and the families' consent to publish.
  *
- * IF YOU EDIT THIS FILE, READ THIS FIRST: the `quote` strings below were
- * originally drafted as placeholder wording, not transcribed from the families.
- * Replace each one with what the family actually said, and get their written
- * permission before publishing it (see the Privacy Policy). Real testimonials
- * are worth far more than invented ones, and in India publishing invented
- * testimonial advertising engages the Consumer Protection Act 2019 and the ASCI
- * code — so the words matter, not just the names.
+ * IF YOU ADD OR CHANGE A STORY: use the family's own words and get their
+ * written permission first (see the Privacy Policy). Never publish a story a
+ * family did not give — in India invented testimonials in advertising engage
+ * the Consumer Protection Act 2019 and the ASCI code.
  */
 
 type Story = {
