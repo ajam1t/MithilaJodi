@@ -559,7 +559,7 @@ export default function ProfileEditPage() {
         // Only an actual auth failure should send someone to /login. Previously
         // *any* rejection here did, so a transient network blip looked exactly
         // like a logout and silently discarded whatever was on screen.
-        if (r.status === 401) { router.push('/login'); return null }
+        if (r.status === 401) { router.push('/login?next=/profile/edit'); return null }
         if (!r.ok) throw new Error(`profile load failed: ${r.status}`)
         return r.json()
       })

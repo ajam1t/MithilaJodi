@@ -13,6 +13,7 @@ import { latestDob, minAgeError, yearsAgo, MIN_AGE } from '@/lib/ageRules'
 import { track } from '@/lib/track'
 import type { RegStep } from '@/lib/analytics'
 import type { OnboardingState } from '@/lib/onboarding'
+import { recallJoinNext, rememberJoinNext, withNext } from '@/lib/safeNext'
 
 /**
  * The profile questions after the account exists (/register is "Account"),
@@ -175,7 +176,18 @@ function ContinueButton({ busy, disabled, label = 'Continue', onClick }: { busy?
 
 /* ── The flow ──────────────────────────────────────────────────────────── */
 
-export function WelcomeFlow({ initial, options }: { initial: OnboardingState; options: WelcomeOptions }) {
+/**
+ * The Ready screen's way back to `returnTo` — the page the member was on when
+ * they chose to join (see lib/safeNext). A shared or member profile gets the
+ * warmer wording.
+ */
+function returnLabel(path: string): string {
+  return /^\/(?:p|profile)\/(?!edit\b|preferences\b)[^/?#]+/.test(path)
+    ? 'Back to the profile you were viewing'
+    : 'Continue where you left off'
+}
+
+export function WelcomeFlow({ initial, options, returnTo: returnToProp }: { initial: OnboardingState; options: WelcomeOptions; returnTo: string | null }) {
   const v = initial.values
   const returning = !!initial.profileId && !initial.complete
 
@@ -197,6 +209,16 @@ export function WelcomeFlow({ initial, options }: { initial: OnboardingState; op
   const [maternalGotra, setMaternalGotra] = useState(v.maternalGotra ?? '')
   const [gram, setGram] = useState(v.gram ?? '')
   const [restored, setRestored] = useState(false)
+
+  // Where to send the member once onboarding is done. The URL carries it (from
+  // /register); the tab's copy covers a step that lost it. Only the place they
+  // land afterwards changes — every required step still has to be completed.
+  const [returnTo, setReturnTo] = useState(returnToProp)
+  useEffect(() => {
+    if (returnToProp) return
+    const kept = recallJoinNext()
+    if (kept && !/^\/welcome(?:[/?#]|$)/.test(kept)) setReturnTo(kept)
+  }, [returnToProp])
 
   const [profileExists, setProfileExists] = useState(!!initial.profileId)
   const [photoCount, setPhotoCount] = useState(initial.photoCount)
@@ -297,7 +319,7 @@ export function WelcomeFlow({ initial, options }: { initial: OnboardingState; op
     setFormError('')
     try {
       const res = await fetch('/api/onboarding', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      if (res.status === 401) { window.location.href = '/login?next=/welcome'; return false }
+      if (res.status === 401) { window.location.href = withNext('/login', withNext('/welcome', returnTo)); return false }
       const j = await res.json().catch(() => ({}))
       if (!res.ok || !j.ok) { setFormError(j.message ?? 'Could not save. Please try again.'); return false }
       if (typeof j.strength === 'number') setStrength(j.strength)
@@ -336,8 +358,10 @@ export function WelcomeFlow({ initial, options }: { initial: OnboardingState; op
   function finish() {
     reg('completed')
     try { sessionStorage.removeItem(DRAFT_KEY) } catch { /* ignore */ }
-    // A refresh keeps the Ready screen instead of jumping to /home.
-    window.history.replaceState(null, '', '/welcome?done=1')
+    // A refresh keeps the Ready screen (and the way back) instead of jumping
+    // to /home. The URL now holds the return path, so the tab's copy can go.
+    window.history.replaceState(null, '', withNext('/welcome?done=1', returnTo))
+    rememberJoinNext(null)
     go('ready')
   }
 
@@ -695,10 +719,23 @@ export function WelcomeFlow({ initial, options }: { initial: OnboardingState; op
             </div>
           )}
 
-          <Link href={`/profile/edit${firstSection ? `#${firstSection}` : ''}`} onClick={() => reg('profile_completion_started')}
-            className="btn-primary mt-5 w-full justify-center py-3 text-[15px]">
-            Complete my profile
-          </Link>
+          {returnTo ? (
+            <>
+              <Link href={returnTo} onClick={() => rememberJoinNext(null)}
+                className="btn-primary mt-5 w-full justify-center py-3 text-[15px]">
+                {returnLabel(returnTo)} →
+              </Link>
+              <Link href={`/profile/edit${firstSection ? `#${firstSection}` : ''}`} onClick={() => reg('profile_completion_started')}
+                className="btn-ghost mt-2.5 w-full justify-center py-2.5 text-sm">
+                Complete my profile
+              </Link>
+            </>
+          ) : (
+            <Link href={`/profile/edit${firstSection ? `#${firstSection}` : ''}`} onClick={() => reg('profile_completion_started')}
+              className="btn-primary mt-5 w-full justify-center py-3 text-[15px]">
+              Complete my profile
+            </Link>
+          )}
           <div className="mt-2.5 grid grid-cols-2 gap-2.5">
             <Link href="/profile" className="btn-ghost justify-center py-2.5 text-sm">View my profile</Link>
             <Link href="/search" className="btn-ghost justify-center py-2.5 text-sm">Explore profiles</Link>
