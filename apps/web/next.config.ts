@@ -2,6 +2,13 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   images: {
+    // Served as-is, never through Vercel's image optimiser. Member photos are
+    // signed URLs that change every hour, so each one counted as a new source
+    // image; the plan's optimisation quota ran out and the optimiser answered
+    // 402 (OPTIMIZED_IMAGE_REQUEST_PAYMENT_REQUIRED), leaving broken photos
+    // across the site. Photos are already sized when uploaded, and the static
+    // images are small, so nothing here needs resizing on the fly.
+    unoptimized: true,
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       {
