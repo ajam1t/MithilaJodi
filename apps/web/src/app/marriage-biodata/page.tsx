@@ -1,18 +1,17 @@
-import type { Metadata } from 'next'
 import Link from 'next/link'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { BiodataBuilder } from './BiodataBuilder'
-import { SITE_URL } from '@/lib/constants'
-import { breadcrumbJsonLd, organizationJsonLd } from '@/lib/seo'
-import { organizationRef } from '@/lib/seo'
+import { BIODATA_LANGUAGE_PAGES } from '@/lib/biodataLanguagePages'
+import {
+  breadcrumbJsonLd, canonicalUrl, faqJsonLd, jsonLdScript, organizationJsonLd, organizationRef, pageMetadata,
+} from '@/lib/seo'
 import { RelatedGuides } from '@/components/journal/RelatedGuides'
 
-const CANONICAL = `${SITE_URL}/marriage-biodata`
-
-export const metadata: Metadata = {
-  title: 'Free Marriage Biodata Maker — 4 Languages',
+export const metadata = pageMetadata({
+  path: '/marriage-biodata',
+  title: 'Mithila Marriage Biodata Maker — Maithili, Hindi, English, Sanskrit',
   description:
     'Build a marriage biodata free in your browser — gotra, mool and gram included, in Maithili, Hindi, English or Sanskrit. Download a PDF, no login needed.',
   keywords: [
@@ -21,22 +20,8 @@ export const metadata: Metadata = {
     'Mithila marriage biodata', 'biodata maker in Hindi', 'gotra mool biodata',
     'bio data for marriage Bihar', 'vivah biodata', 'marriage biodata template free',
   ],
-  alternates: { canonical: CANONICAL },
-  openGraph: {
-    type: 'website',
-    images: ['/og-card.png'],
-    url: CANONICAL,
-    siteName: 'Mithila Jodi',
-    title: 'Free Marriage Biodata Maker — Maithili, Hindi, English & Sanskrit',
-    description:
-      'Fill a simple form and download a printable marriage biodata as PDF. Gotra, mool and gram included. Free, no login.',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Free Marriage Biodata Maker — Mithila Jodi',
-    description: 'Create and download a printable marriage biodata in Maithili, Hindi, English or Sanskrit. Free, no login.',
-  },
-}
+  socialTitle: 'Free Marriage Biodata Maker — Maithili, Hindi, English & Sanskrit',
+})
 
 const STEPS = [
   { n: '1', title: 'Choose a design', body: 'Mayur, Royal Kamal, Matsya or Kohbar — four Madhubani designs with peacocks, lotus, fish and hand-drawn borders. You can change it any time.' },
@@ -80,21 +65,11 @@ const FAQ = [
 ]
 
 export default function MarriageBiodataPage() {
-  const faqJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: FAQ.map(item => ({
-      '@type': 'Question',
-      name: item.q,
-      acceptedAnswer: { '@type': 'Answer', text: item.a },
-    })),
-  }
-
   const appJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
     name: 'Marriage Biodata Maker',
-    url: CANONICAL,
+    url: canonicalUrl('/marriage-biodata'),
     applicationCategory: 'BusinessApplication',
     operatingSystem: 'Any',
     inLanguage: ['en', 'hi', 'mai', 'sa'],
@@ -111,7 +86,7 @@ export default function MarriageBiodataPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify([organizationJsonLd(), appJsonLd, faqJsonLd, breadcrumb]) }}
+        dangerouslySetInnerHTML={jsonLdScript(organizationJsonLd(), appJsonLd, faqJsonLd(FAQ), breadcrumb)}
       />
 
       <MithilaHeader />
@@ -126,23 +101,25 @@ export default function MarriageBiodataPage() {
           <div className="wrap text-center max-w-3xl mx-auto">
             <p className="eyebrow !text-gold mb-1.5">✦ Mithila Jodi · Free</p>
             <h1 className="font-serif text-maroon leading-tight text-[26px] sm:text-[32px] lg:text-[36px]">
-              Simple Marriage Biodata
+              Mithila Marriage Biodata Maker
             </h1>
             <p className="font-deva text-gold text-[16px] sm:text-[18px] mt-1.5" lang="hi">विवाह परिचय पत्र</p>
             <div className="ornament-line w-16 mx-auto mt-2.5" />
             <p className="text-ink text-[14.5px] sm:text-[15.5px] leading-relaxed mt-3.5">
-              Create your marriage biodata effortlessly using your Mithila Jodi profile. Review your details,
-              personalize your biodata and download a beautifully formatted PDF ready to share with your family.
+              Pick a design, fill in your details and download a print-ready PDF or a WhatsApp image — free,
+              with no login and no account needed.
             </p>
             <p className="text-ink-soft text-[13.5px] leading-relaxed mt-2">
               With <span className="text-maroon font-medium">gotra, mool and gram</span> where a Maithil
               family expects to find them, in{' '}
               <span className="font-deva text-maroon">मैथिली</span>, हिन्दी, English or संस्कृत.
-              No account? Fill it in yourself — no login needed.
+              Not sure of the spelling?{' '}
+              <Link href="/gotra" className="text-maroon underline underline-offset-2">Check gotra</Link> ·{' '}
+              <Link href="/mool" className="text-maroon underline underline-offset-2">Mool list</Link>
             </p>
             <p className="text-ink-soft text-[12.5px] leading-relaxed mt-2">
-              Members’ profile details fill in automatically. What you type stays in your browser — nothing
-              here is uploaded or saved, and your Digital Profile is never changed.
+              What you type stays in your browser — nothing here is uploaded or saved. Signed-in members’
+              profile details fill in automatically, and their Digital Profile is never changed.
             </p>
           </div>
         </section>
@@ -197,6 +174,7 @@ export default function MarriageBiodataPage() {
             also={[
               { href: '/digital-profile', label: 'Share it as a Digital Profile' },
               { href: '/blogs/biodata-matrimonial-tips', label: 'All biodata tips' },
+              ...BIODATA_LANGUAGE_PAGES.map(l => ({ href: `/marriage-biodata/${l.slug}`, label: `Biodata in ${l.name}` })),
             ]}
             intro="What families look for in a biodata, and the gotra, mool and gram details it asks for."
           />

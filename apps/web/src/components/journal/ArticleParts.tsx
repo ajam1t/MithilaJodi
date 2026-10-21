@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ArticleCard } from '@/components/journal/ArticleCard'
-import { formatDate, wasUpdated, type Heading, type JournalCta, type JournalTool } from '@/lib/journal'
+import { formatDate, isRootsOnly, wasUpdated, type Heading, type JournalCta, type JournalTool } from '@/lib/journal'
 import type { JournalPost } from '@/lib/journalData'
 
 export function ArticleHeader({ post }: { post: JournalPost }) {
@@ -78,10 +78,12 @@ export function ArticleTOCDesktop({ headings }: { headings: Heading[] }) {
 
 /**
  * "Read it, then try it" — only for articles that explain a real tool. It
- * carries the Explore Astrology Tools call, so the page shows no second CTA.
+ * carries the Explore Astrology Tools call (or, for gotra and mool pieces, the
+ * match-score explainer), so the page shows no second CTA.
  */
 export function ArticleToolLinks({ tools }: { tools: JournalTool[] }) {
   if (tools.length === 0) return null
+  const roots = isRootsOnly(tools)
   return (
     <aside className="mt-10 rounded-mj border border-paper-3 bg-paper/60 p-5">
       <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-terra">Try the free tool</p>
@@ -99,10 +101,21 @@ export function ArticleToolLinks({ tools }: { tools: JournalTool[] }) {
         ))}
       </ul>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="max-w-md text-[12px] leading-relaxed text-ink-soft">
-          For understanding and family conversation — not a prediction or a guarantee about any marriage.
-        </p>
-        <Link href="/astrology" className="btn-primary btn-sm">Explore Astrology Tools →</Link>
+        {roots ? (
+          <>
+            <p className="max-w-md text-[12px] leading-relaxed text-ink-soft">
+              Every Mithila Jodi match score flags a same-gotra clash.
+            </p>
+            <Link href="/match-score" className="btn-primary btn-sm">How the match score works →</Link>
+          </>
+        ) : (
+          <>
+            <p className="max-w-md text-[12px] leading-relaxed text-ink-soft">
+              For understanding and family conversation — not a prediction or a guarantee about any marriage.
+            </p>
+            <Link href="/astrology" className="btn-primary btn-sm">Explore Astrology Tools →</Link>
+          </>
+        )}
       </div>
     </aside>
   )

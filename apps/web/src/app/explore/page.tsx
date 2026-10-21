@@ -104,7 +104,10 @@ export default async function ExplorePage() {
             <p className="text-ink-soft text-[14px] leading-relaxed mt-2.5">
               The profiles above are a small featured selection. Members can search the full
               community by gotra, mool, gram, native district and city — and every match carries a
-              score that explains itself rather than showing a bare percentage.
+              score that explains itself rather than showing a bare percentage.{' '}
+              <Link href="/match-score" className="text-maroon underline underline-offset-2">
+                How the match score works
+              </Link>
             </p>
 
             <h3 className="font-serif text-maroon text-[16px] leading-tight mt-5">

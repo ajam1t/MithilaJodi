@@ -29,6 +29,8 @@ const FAQS: Array<{ q: string; a: string; more?: Array<{ href: string; label: st
     more: [
       { href: '/blogs/gotra-family-lineage/what-is-maternal-gotra', label: 'Maternal gotra' },
       { href: '/blogs/gotra-family-lineage/what-is-mool-in-mithila', label: 'Mool in Mithila' },
+      { href: '/gotra', label: 'Gotra checker' },
+      { href: '/mool', label: 'Mool list' },
     ],
   },
   {
@@ -62,6 +64,7 @@ const FAQS: Array<{ q: string; a: string; more?: Array<{ href: string; label: st
   {
     q: 'Does it cost anything?',
     a: 'No. Mithila Jodi is currently free for all members. Creating an account, building a profile, generating a biodata PDF, searching, sending and accepting interests, and messaging your matches are all included at no cost.',
+    more: [{ href: '/pricing', label: 'Pricing' }],
   },
   {
     q: 'Is Mithila Jodi available outside India?',

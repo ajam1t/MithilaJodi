@@ -18,7 +18,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { SITE_URL, stripBrandSuffix } from '@/lib/constants'
 import { ctaFor, extractHeadings, headingId, toolsForArticle, wasUpdated } from '@/lib/journal'
 import { card, getJournalPosts, relatedPosts } from '@/lib/journalData'
-import { organizationJsonLd, organizationRef } from '@/lib/seo'
+import { organizationJsonLd, organizationRef, jsonLdScript } from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
 
@@ -150,8 +150,8 @@ export default async function ArticlePage(
     <div className="flex min-h-screen flex-col overflow-x-clip bg-paper">
       <ReadingProgress />
       <MithilaHeader />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd(crumbs)) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(articleJsonLd)} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(breadcrumbJsonLd(crumbs))} />
 
       <main id="main-content" className="flex-1">
         <Breadcrumbs items={crumbs} />

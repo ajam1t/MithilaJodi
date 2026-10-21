@@ -6,7 +6,8 @@ import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { GotraChecker } from '@/components/roots/GotraChecker'
 import { GuideFaq } from '@/components/roots/GuideFaq'
-import { GOTRAS, getGotra, gotraAliases } from '@/lib/mithilaRoots'
+import { GOTRAS, getGotra, gotraAliases, isIndexableGotra } from '@/lib/mithilaRoots'
+import { articleDates } from '@/lib/contentDates'
 import { breadcrumbJsonLd, canonicalUrl, faqJsonLd, jsonLdScript, organizationJsonLd, organizationRef, pageMetadata } from '@/lib/seo'
 
 type Props = { params: Promise<{ slug: string }> }
@@ -20,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const g = getGotra((await params).slug)
   if (!g) return { title: 'Gotra not found', robots: { index: false } }
   const alias = gotraAliases(g)[0]
-  return pageMetadata({
+  const meta = pageMetadata({
     path: `/gotra/${g.slug}`,
     title: `${g.name} Gotra (${g.deva}) — Origin & Marriage Rules`,
     description: `${g.name}${alias ? ` (${alias})` : ''} gotra in Mithila: its lineage, can ${g.name} marry ${g.name}, which gotras it matches with, and a free gotra match checker.`,
@@ -30,6 +31,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ],
     ogType: 'article',
   })
+  // A gotra with no lineage note renders the shared template with only the
+  // name changed — thin, near-duplicate pages. Keep them out of the index (but
+  // followable, so their links still count) until a lineage is added to
+  // lib/mithilaRoots; isIndexableGotra then turns indexing, the sitemap entry
+  // and the llms.txt line back on together.
+  return isIndexableGotra(g) ? meta : { ...meta, robots: { index: false, follow: true } }
 }
 
 export default async function GotraPage({ params }: Props) {
@@ -68,6 +75,7 @@ export default async function GotraPage({ params }: Props) {
     author: organizationRef(),
     publisher: organizationRef(),
     mainEntityOfPage: canonicalUrl(path),
+    ...articleDates(path),
   }
   const crumbs = breadcrumbJsonLd([
     { name: 'Mithila Jodi', path: '/' },

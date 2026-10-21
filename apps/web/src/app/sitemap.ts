@@ -3,8 +3,10 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { FESTIVALS } from '@/lib/festivals'
 import { SITE_URL } from '@/lib/constants'
 import { canonicalUrl } from '@/lib/seo'
-import { GOTRAS } from '@/lib/mithilaRoots'
+import { INDEXABLE_GOTRAS } from '@/lib/mithilaRoots'
+import { contentDate } from '@/lib/contentDates'
 import { COMPETITORS } from '@/lib/compare'
+import { BIODATA_LANGUAGE_PAGES } from '@/lib/biodataLanguagePages'
 
 const SITE = SITE_URL
 
@@ -15,74 +17,9 @@ const SITE = SITE_URL
 // silently emitted a sitemap containing no blog URLs.)
 export const revalidate = 3600
 
-/**
- * When these hand-written pages last actually changed.
- *
- * This used to be `new Date()`. Combined with `revalidate = 3600` that made 30
- * of the 61 entries claim a fresh modification date every hour and on every
- * deploy, whether or not a single word had changed. Google treats a lastmod
- * that is always "now" as noise and stops using it to decide what to re-crawl,
- * which removes the one signal that tells it which pages are worth its limited
- * crawl budget — and unindexed pages showed up in Search Console as
- * "Discovered – currently not indexed".
- *
- * So these are real dates, edited by hand when a page's content changes. A
- * slightly stale date is honest and useful; a date that is always current is
- * neither. The blog entries below already do the right thing by reading
- * `updated_at` from the database.
- */
-const CONTENT_UPDATED = {
-  // Legal documents gained the published Grievance Officer section.
-  '/legal/terms': '2026-09-07',
-  '/legal/privacy': '2026-09-07',
-  // Astrology tools — Phase 1 launch date; Kundli Match went live 2026-10-04.
-  '/astrology/kundli-match': '2026-10-04',
-  '/astrology/nakshatra': '2026-10-05',
-  '/astrology/manglik': '2026-10-05',
-  '/astrology/janam-kundli': '2026-10-05',
-  '/astrology/rashi': '2026-10-05',
-  '/astrology/vivah-muhurat': '2026-10-05',
-  '/astrology/baby-names': '2026-10-05',
-  '/astrology/compatibility': '2026-10-05',
-  '/digital-profile': '2026-10-07',
-  // 2026-10-07: the Journal redesign, and Journal reading lists added to the
-  // biodata maker, invitation pages and every festival guide.
-  '/blogs': '2026-10-07',
-  '/marriage-biodata': '2026-10-07',
-  '/marriage-invitation': '2026-10-07',
-  '/marriage-invitation/basic': '2026-10-07',
-  '/marriage-invitation/premium': '2026-10-07',
-  '/marriage-invitation/scratch-reveal': '2026-10-18',
-  '/marriage-invitation/blush-lace': '2026-10-19',
-  '/festivals/chhath-puja': '2026-10-07',
-  '/festivals/sama-chakeva': '2026-10-07',
-  '/festivals/madhushravani': '2026-10-07',
-  '/festivals/vivah-panchami': '2026-10-07',
-  '/festivals/kojagara': '2026-10-07',
-  '/festivals/diwali': '2026-10-07',
-  '/festivals/durga-puja': '2026-10-07',
-  '/festivals/holi': '2026-10-07',
-  // Hub description now names all eight tools.
-  '/astrology': '2026-10-07',
-  // Everything else last had a substantive content change with the content
-  // build on this date. Bump a path here when you actually edit that page.
-  // New: the gotra and mool guides and the comparison pages.
-  '/gotra': '2026-10-20', '/mool': '2026-10-20', '/compare': '2026-10-20', '/match-score': '2026-10-21',
-  ...Object.fromEntries([
-    ...GOTRAS.map(g => [`/gotra/${g.slug}`, '2026-10-20']),
-    ...COMPETITORS.map(c => [`/compare/${c.slug}`, '2026-10-20']),
-  ]),
-  DEFAULT: '2026-08-23',
-} as const
-
-function contentDate(path: string): Date {
-  const map = CONTENT_UPDATED as Record<string, string>
-  return new Date(map[path] ?? CONTENT_UPDATED.DEFAULT)
-}
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fallback only, for a database row with no updated_at of its own. Never used
-  // as the lastmod of a hand-written page — see CONTENT_UPDATED above.
+  // as the lastmod of a hand-written page — see CONTENT_UPDATED in lib/contentDates.
   const now = new Date()
 
   // Only genuinely public, indexable, content-bearing pages belong here.
@@ -103,6 +40,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/marriage-invitation/blush-lace', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/digital-profile', priority: 0.9, changeFrequency: 'monthly' },
     { path: '/marriage-biodata', priority: 0.9, changeFrequency: 'monthly' },
+    ...BIODATA_LANGUAGE_PAGES.map(l => ({ path: `/marriage-biodata/${l.slug}`, priority: 0.7, changeFrequency: 'monthly' as const })),
     { path: '/about', priority: 0.6, changeFrequency: 'monthly' },
     { path: '/explore', priority: 0.7, changeFrequency: 'daily' },
     { path: '/safety', priority: 0.6, changeFrequency: 'monthly' },
@@ -127,7 +65,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/astrology/compatibility', priority: 0.7, changeFrequency: 'monthly' },
     // Mithila roots guides and the comparison pages.
     { path: '/gotra', priority: 0.9, changeFrequency: 'monthly' },
-    ...GOTRAS.map(g => ({ path: `/gotra/${g.slug}`, priority: 0.7, changeFrequency: 'monthly' as const })),
+    // Only gotras with a lineage note; the rest are noindex (see isIndexableGotra).
+    ...INDEXABLE_GOTRAS.map(g => ({ path: `/gotra/${g.slug}`, priority: 0.7, changeFrequency: 'monthly' as const })),
     { path: '/mool', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/compare', priority: 0.6, changeFrequency: 'monthly' },
     { path: '/match-score', priority: 0.8, changeFrequency: 'monthly' },

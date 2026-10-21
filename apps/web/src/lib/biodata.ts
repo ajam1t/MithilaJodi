@@ -269,7 +269,8 @@ export const BIODATA_LABELS: Record<BiodataLanguage, BiodataLabels> = {
 }
 
 export function isBiodataLanguage(v: string): v is BiodataLanguage {
-  return v in BIODATA_LABELS
+  // Own keys only: `in` would also accept 'constructor', 'toString', …
+  return Object.prototype.hasOwnProperty.call(BIODATA_LABELS, v)
 }
 
 /** Humanize a master-data slug (e.g. "never_married" → "Never married"). */

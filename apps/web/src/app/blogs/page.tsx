@@ -11,7 +11,7 @@ import {
 import { SITE_URL } from '@/lib/constants'
 import { START_HERE, pillarRank } from '@/lib/journal'
 import { card, getJournalCategories, getJournalPosts, pick, searchPosts } from '@/lib/journalData'
-import { pageMetadata } from '@/lib/seo'
+import { pageMetadata, jsonLdScript } from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
 
@@ -86,8 +86,8 @@ export default async function JournalPage({ searchParams }: { searchParams: Prom
   return (
     <div className="flex min-h-screen flex-col overflow-x-clip bg-paper">
       <MithilaHeader />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd(CRUMBS)) }} />
-      {!q && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }} />}
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(breadcrumbJsonLd(CRUMBS))} />
+      {!q && <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(collectionJsonLd)} />}
 
       <main id="main-content" className="flex-1">
         <Breadcrumbs items={CRUMBS} />

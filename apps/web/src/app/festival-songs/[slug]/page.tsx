@@ -8,7 +8,7 @@ import { FestivalHeroArt } from '@/components/festivals/FestivalHeroArt'
 import { SongsPlayer } from '@/components/festivals/SongsPlayer'
 import { festivalsWithSongs, getFestival, getRelatedFestivals } from '@/lib/festivals'
 import { SITE_URL } from '@/lib/constants'
-import { clamp } from '@/lib/seo'
+import { clamp, jsonLdScript } from '@/lib/seo'
 
 /** One page per festival that has songs — statically generated. */
 export function generateStaticParams() {
@@ -80,6 +80,14 @@ export default async function FestivalSongsPage(
   const short = festival.name.split('—')[0].trim()
   const canonical = `${SITE_URL}/festival-songs/${festival.slug}`
   const related = getRelatedFestivals(festival).filter((f) => f.songs.length > 0)
+  // The page's own copy comes from the songs, not the festival guide — the
+  // festival's intro and Mithila prose live on /festivals/[slug], and repeating
+  // them here made the two pages near-duplicates. A lyrical or audio upload of
+  // the same song is folded into its title for the summary line.
+  const baseTitle = (t: string) => t.replace(/\s*\((lyrical|lyrics|audio|video)\)\s*$/i, '')
+  const titles = [...new Set(festival.songs.map((s) => baseTitle(s.title)))]
+  const artists = [...new Set(festival.songs.map((s) => s.artist))]
+  const listFormat = new Intl.ListFormat('en', { style: 'long', type: 'conjunction' })
 
   // Only breadcrumbs are described in structured data. We deliberately do NOT
   // emit MusicRecording/ItemList markup for individual songs — Mithila Jodi is
@@ -99,7 +107,7 @@ export default async function FestivalSongsPage(
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
       <MithilaHeader />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(jsonLd)} />
 
       <main id="main-content" className="flex-1">
         {/* ── Hero ── */}
@@ -130,7 +138,8 @@ export default async function FestivalSongsPage(
         <section className="bg-cream border-b border-paper-3">
           <div className="wrap py-5 max-w-3xl">
             <p className="text-[14.5px] sm:text-[15.5px] text-ink leading-relaxed">
-              {festival.intro}
+              {festival.songs.length} {festival.songs.length === 1 ? 'recording' : 'recordings'} of Maithili {short} geet
+              — {listFormat.format(titles)} — from {listFormat.format(artists)}.
             </p>
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3 text-[12.5px]">
               <span className="text-ink-soft">
@@ -165,37 +174,38 @@ export default async function FestivalSongsPage(
           </p>
         </section>
 
-        {/* ── Context: the festival in Mithila ──────────────────────────────
-            Reuses festival.mithilaConnection — prose already written for and
-            shown on /festivals/[slug]. These pages were otherwise a short intro
-            plus a player, which is thin enough to sit in "Discovered – currently
-            not indexed"; this gives each one a few paragraphs of unique,
-            genuinely relevant text (the songs are the oral half of exactly this
-            cultural thread) without inventing anything. */}
-        {festival.mithilaConnection.length > 0 && (
-          <section className="bg-cream border-t border-paper-3 py-8 sm:py-10" aria-label={`${short} in Mithila`}>
-            <div className="wrap max-w-3xl">
-              <h2 className="font-serif text-[20px] sm:text-[24px] text-maroon mb-4">
-                {short} in Mithila
-              </h2>
-              <ul className="space-y-3">
-                {festival.mithilaConnection.map((point, i) => (
-                  <li key={i} className="flex items-start gap-3 text-[14.5px] sm:text-[15px] text-ink leading-relaxed">
-                    <span className="text-marigold text-base leading-none mt-1 flex-shrink-0" aria-hidden="true">◆</span>
-                    <span>{point}</span>
-                  </li>
-                ))}
-              </ul>
-              <p className="text-[13.5px] text-ink-soft mt-5">
-                Read the full story of{' '}
-                <Link href={`/festivals/${festival.slug}`} className="text-maroon font-semibold hover:text-terra transition-colors">
-                  {short} in Mithila
-                </Link>
-                .
-              </p>
-            </div>
-          </section>
-        )}
+        {/* ── The songs, as text ──────────────────────────────────────────
+            Server-rendered from each song's own fields in lib/festivals, so the
+            page's indexable copy is about these recordings and is not shared
+            with /festivals/[slug]. The festival itself gets one line and a link. */}
+        <section className="bg-cream border-t border-paper-3 py-8 sm:py-10" aria-labelledby="song-notes">
+          <div className="wrap max-w-3xl">
+            <h2 id="song-notes" className="font-serif text-[20px] sm:text-[24px] text-maroon mb-4">
+              About these {short} songs
+            </h2>
+            <ol className="space-y-4">
+              {festival.songs.map((song) => (
+                <li key={song.youtubeId} className="flex items-start gap-3 text-[14.5px] sm:text-[15px] text-ink leading-relaxed">
+                  <span className="text-marigold text-base leading-none mt-1 flex-shrink-0" aria-hidden="true">◆</span>
+                  <span>
+                    <span className="font-serif text-maroon text-[16px]">{song.title}</span>
+                    {song.titleDeva && (
+                      <span className="font-deva text-terra text-[14.5px]" lang="hi"> · {song.titleDeva}</span>
+                    )}
+                    <span className="block text-[12.5px] text-ink-soft">{song.artist}</span>
+                    <span className="block">{song.note}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+            <p className="text-[13.5px] text-ink-soft mt-6">
+              {short}: {festival.tagline}.{' '}
+              <Link href={`/festivals/${festival.slug}`} className="text-maroon font-semibold hover:text-terra transition-colors">
+                Read about {short} in Mithila →
+              </Link>
+            </p>
+          </div>
+        </section>
 
         {/* ── Other festivals ── */}
         {related.length > 0 && (

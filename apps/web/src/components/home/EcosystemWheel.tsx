@@ -148,7 +148,7 @@ export function EcosystemWheel() {
                   role="tab"
                   id={`eco-tab-${it.id}`}
                   aria-selected={i === active}
-                  aria-controls="eco-panel"
+                  aria-controls={`eco-panel-${it.id}`}
                   tabIndex={i === active ? 0 : -1}
                   onClick={() => select(i)}
                   onKeyDown={e => onKey(e, i)}
@@ -163,17 +163,31 @@ export function EcosystemWheel() {
             </div>
           </div>
 
-          {/* ── The card: one line about the part, one link to it ── */}
-          <div id="eco-panel" role="tabpanel" aria-labelledby={`eco-tab-${item.id}`}>
-            <div className="card relative overflow-hidden px-4 py-4 sm:px-6 sm:py-5">
-              <p className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                <span className="font-serif text-[16px] leading-tight text-ink-soft sm:text-[19px]">{item.lead}</span>
-                <SplitFlap text={item.flap} />
-              </p>
-              <Link href={item.cta.href} className="mt-3 inline-flex items-center gap-1.5 text-[14.5px] font-semibold text-maroon underline-offset-4 hover:underline">
-                {item.cta.label} <span aria-hidden="true">→</span>
-              </Link>
-            </div>
+          {/* ── The card: one line about the part, one link to it ──
+              Every part has its panel in the server HTML, so all ten links are
+              crawlable; the inactive ones carry `hidden` (not shown, not
+              focusable) and only the active one renders the card. */}
+          <div>
+            {ITEMS.map((it, i) => i === active ? (
+              // A stable key keeps one card (and its split-flap board) mounted
+              // across selections, so the tiles still flip to the new word.
+              <div key="active" id={`eco-panel-${it.id}`} role="tabpanel" aria-labelledby={`eco-tab-${it.id}`}>
+                <div className="card relative overflow-hidden px-4 py-4 sm:px-6 sm:py-5">
+                  <p className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <span className="font-serif text-[16px] leading-tight text-ink-soft sm:text-[19px]">{it.lead}</span>
+                    <SplitFlap text={it.flap} />
+                  </p>
+                  <Link href={it.cta.href} className="mt-3 inline-flex items-center gap-1.5 text-[14.5px] font-semibold text-maroon underline-offset-4 hover:underline">
+                    {it.cta.label} <span aria-hidden="true">→</span>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div key={it.id} id={`eco-panel-${it.id}`} role="tabpanel" aria-labelledby={`eco-tab-${it.id}`} hidden>
+                <p>{it.lead} {it.flap.toLowerCase()}</p>
+                <Link href={it.cta.href}>{it.cta.label}</Link>
+              </div>
+            ))}
           </div>
         </div>
       </div>

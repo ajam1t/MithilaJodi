@@ -15,7 +15,7 @@ import { SAMPLE_INVITE } from '@/lib/wedding/sample'
 import { PRODUCTS, productOf } from '@/lib/wedding/products'
 import type { Invite } from '@/lib/wedding/schema'
 import { SITE_URL } from '@/lib/constants'
-import { organizationJsonLd, organizationRef } from '@/lib/seo'
+import { organizationJsonLd, organizationRef, jsonLdScript } from '@/lib/seo'
 import { RelatedGuides } from '@/components/journal/RelatedGuides'
 
 const PRODUCT = PRODUCTS.lace
@@ -102,7 +102,7 @@ export default async function BlushLaceInvitationPage({ searchParams }: Props) {
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
       <MithilaHeader />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(jsonLd)} />
 
       <main id="main-content" className="flex-1">
         <section className="relative overflow-hidden" style={{ background: 'radial-gradient(ellipse 90% 80% at 30% 20%, #FFF8F6 0%, #F7E3E3 55%, #EBCDD1 100%)' }}>

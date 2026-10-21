@@ -4,14 +4,14 @@ import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { MoolList } from '@/components/roots/MoolList'
 import { GuideFaq } from '@/components/roots/GuideFaq'
-import { MOOLS } from '@/lib/mithilaRoots'
+import { MOOL_GROUPS } from '@/lib/mithilaRoots'
 import { breadcrumbJsonLd, faqJsonLd, jsonLdScript, organizationJsonLd, pageMetadata } from '@/lib/seo'
 
 export const metadata = pageMetadata({
   path: '/mool',
-  title: `Maithil Mool List — All ${MOOLS.length} Mithila Mools`,
+  title: `Maithil Mool List — All ${MOOL_GROUPS.length} Mithila Mools`,
   description:
-    `Find your mool: ${MOOLS.length} Maithil Brahmin mools of the Mithila Panji, from Sarisab and Khandwala to Pandua and Digho — what mool means and how it is used in marriage.`,
+    `Find your mool: ${MOOL_GROUPS.length} Maithil Brahmin mools of the Mithila Panji, from Sarisab and Khandwala to Pandua and Digho — what mool means and how it is used in marriage.`,
   keywords: [
     'maithil mool list', 'mool list', 'maithil brahmin mool', 'mithila mool', 'what is mool',
     'mool in mithila marriage', 'sarisab mool', 'khandwala mool', 'mithila panji mool',
@@ -38,10 +38,16 @@ const FAQ = [
 ]
 
 export default function MoolPage() {
+  const list = {
+    '@type': 'ItemList',
+    name: 'Mools of the Mithila Panji',
+    numberOfItems: MOOL_GROUPS.length,
+    itemListElement: MOOL_GROUPS.map((m, i) => ({ '@type': 'ListItem', position: i + 1, name: m.name })),
+  }
   const crumbs = breadcrumbJsonLd([{ name: 'Mithila Jodi', path: '/' }, { name: 'Maithil Mool List', path: '/mool' }])
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
-      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(organizationJsonLd(), faqJsonLd(FAQ), crumbs)} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(organizationJsonLd(), list, faqJsonLd(FAQ), crumbs)} />
       <MithilaHeader />
       <main id="main-content" className="flex-1">
         <section className="py-9 sm:py-12" style={{ background: 'radial-gradient(ellipse 90% 85% at 50% 0%, #FFFAF0 0%, #F5EBDD 100%)' }}>
@@ -51,7 +57,7 @@ export default function MoolPage() {
             <p className="font-deva text-gold text-[17px] sm:text-[19px] mt-1.5" lang="hi">मैथिल मूल सूची</p>
             <div className="ornament-line w-16 mx-auto mt-3" />
             <p className="text-ink text-[15px] sm:text-[16px] leading-relaxed mt-4">
-              {MOOLS.length} mools of the Mithila Panji, as Maithil families write them — with what a mool is, how it differs
+              {MOOL_GROUPS.length} mools of the Mithila Panji, spelled as Maithil families write them — with what a mool is, how it differs
               from gotra and gram, and why it is asked before a marriage.
             </p>
           </div>

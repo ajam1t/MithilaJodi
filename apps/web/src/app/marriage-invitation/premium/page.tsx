@@ -12,7 +12,7 @@ import { decodeInvite } from '@/lib/wedding/codec.server'
 import { loadForEdit } from '@/lib/wedding/invites.server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { SITE_URL } from '@/lib/constants'
-import { organizationJsonLd, organizationRef } from '@/lib/seo'
+import { organizationJsonLd, organizationRef, jsonLdScript } from '@/lib/seo'
 import { RelatedGuides } from '@/components/journal/RelatedGuides'
 import { productOf } from '@/lib/wedding/products'
 
@@ -107,7 +107,7 @@ export default async function PremiumInvitationPage({ searchParams }: Props) {
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
       <MithilaHeader />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(jsonLd)} />
 
       <main id="main-content" className="flex-1">
         <section className="relative overflow-hidden bg-maroon-deep">

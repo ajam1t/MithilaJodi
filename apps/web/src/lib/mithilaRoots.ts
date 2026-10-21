@@ -42,11 +42,24 @@ export const GOTRAS: Gotra[] = [
   { slug: 'upamanyu', name: 'Upamanyu', deva: 'उपमन्यु', aliases: ['Upmanyu'], lineage: 'Upamanyu gotra traces its line to Rishi Upamanyu.' },
   { slug: 'kapila', name: 'Kapila', deva: 'कपिल', aliases: ['Kapil'], lineage: 'Kapila gotra traces its line to Rishi Kapila.' },
   { slug: 'vishnuvriddhi', name: 'Vishnuvriddhi', deva: 'विष्णुवृद्धि', aliases: ['Vishnu Vriddhi', 'Vishnubriddhi'] },
-  { slug: 'tandi', name: 'Tandilya', deva: 'ताण्डिल्य', aliases: ['Tandi', 'Tandil'] },
+  // The URL slug follows the name the page shows; the profile value in
+  // community_masters is still 'tandi' (the alias keeps it matching).
+  { slug: 'tandilya', name: 'Tandilya', deva: 'ताण्डिल्य', aliases: ['Tandi', 'Tandil'] },
   { slug: 'jatukarnya', name: 'Jatukarnya', deva: 'जातुकर्ण्य', aliases: ['Jatukarna', 'Jatukarn'] },
 ]
 
 export const getGotra = (slug: string) => GOTRAS.find(g => g.slug === slug)
+
+/**
+ * Whether a gotra's guide page is worth indexing. Without a lineage note the
+ * page is the shared template with only the name changed, so it is served
+ * `noindex, follow` and left out of the sitemap and llms.txt. To re-enable a
+ * gotra, add its (well-attested) `lineage` above — nothing else needs changing.
+ */
+export const isIndexableGotra = (g: Gotra) => !!g.lineage
+
+/** The gotras whose pages are indexable — the ones the sitemap and llms.txt list. */
+export const INDEXABLE_GOTRAS = GOTRAS.filter(isIndexableGotra)
 
 /** Distinct alternative spellings, without the name itself. */
 export const gotraAliases = (g: Gotra) => [...new Set(g.aliases)].filter(a => a.toLowerCase() !== g.name.toLowerCase())
@@ -78,6 +91,53 @@ export const MOOLS: string[] = [
   'Tilaimahar / Tilayi', 'Tilayi', 'Tisautaya', 'Tisuri', 'Ujativara', 'Uttamapur',
   'Uttampur', 'Vrishtiwal',
 ]
+
+/**
+ * Spellings in MOOLS that are plainly one mool. Only obvious variants are
+ * grouped — a doubled letter, a trailing -a/-aya, au/ou — never two names that
+ * merely look alike, since the Panji does record distinct mools with close names.
+ * The first spelling is the one shown; the rest are listed beside it.
+ */
+const MOOL_VARIANTS: string[][] = [
+  ['Brahmapur', 'Brahmapura'],
+  ['Budhaur', 'Budhaura'],
+  ['Ekhara', 'Ekharaya'],
+  ['Gangoli / Gangauli', 'Gangouli'],
+  ['Ghosiyam', 'Ghosiyama'],
+  ['Hoiar', 'Hoiara'],
+  ['Jalaki', 'Jallaki'],
+  ['Jamugam', 'Jamugama'],
+  ['Karmah / Karmahaya', 'Karmahaya'],
+  ['Khandwala', 'Khandavala'],
+  ['Kodaria', 'Kodariya'],
+  ['Mararh', 'Mararha'],
+  ['Pandaul', 'Pandauli', 'Pandouli'],
+  ['Panichobh', 'Panichobhaya'],
+  ['Parsanda', 'Parasanda'],
+  ['Tilaimahar / Tilayi', 'Tilayi'],
+  ['Uttampur', 'Uttamapur'],
+]
+
+export type MoolGroup = { name: string; variants: string[] }
+
+/**
+ * MOOLS with spelling variants folded together, alphabetical — for the /mool
+ * page, whose count is the number of distinct mools rather than spellings.
+ * MOOLS itself stays flat for anything matching on a single spelling.
+ */
+export const MOOL_GROUPS: MoolGroup[] = (() => {
+  const grouped = new Map<string, string>()
+  for (const [name, ...rest] of MOOL_VARIANTS) rest.forEach(v => grouped.set(v, name))
+  const groups = new Map<string, MoolGroup>()
+  for (const m of MOOLS) {
+    const name = grouped.get(m) ?? m
+    const g = groups.get(name) ?? { name, variants: [] }
+    // A spelling already written into a combined name ("Karmah / Karmahaya") is not repeated.
+    if (m !== name && !name.split(' / ').includes(m)) g.variants.push(m)
+    groups.set(name, g)
+  }
+  return [...groups.values()].sort((a, b) => a.name.localeCompare(b.name))
+})()
 
 export type GotraVerdict =
   | { kind: 'incomplete' }
