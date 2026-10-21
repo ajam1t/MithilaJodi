@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { type SearchCard } from '@/types/profile'
 import { ProfileCard3D } from '@/components/ProfileCard3D'
+import { sendInterest } from '@/lib/interestNotes'
 import { LocationPicker } from '@/components/LocationPicker'
 import { MasterCombo, type Option } from '@/components/profile/MasterCombo'
 import { Button, EmptyState, Skeleton, useToast } from '@/components/ui'
@@ -521,20 +522,17 @@ export default function SearchPageContent() {
             : `${FILTER_LABELS[k] ?? k}: ${optionLabel(k) ?? prettyValue(filters[k])}`,
     }))
 
-  // Send interest directly from a search card. Throws on failure so the card
-  // does not show a false "Sent!" state; the message is surfaced to the user.
-  async function handleSendInterest(profileId: string) {
-    const res = await fetch('/api/interests', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ to_profile_id: profileId }),
-    })
-    const json = await res.json().catch(() => ({}))
-    if (!res.ok || !json.ok) {
-      toast(json.message ?? 'Could not send interest. Please try again.', { type: 'error' })
-      throw new Error(json.message ?? 'send interest failed')
+  // Send interest (with the note from the card's sheet) directly from a search
+  // card. Throws on failure so the card does not show a false "Sent!" state;
+  // the message is surfaced to the user.
+  async function handleSendInterest(profileId: string, note: string) {
+    const r = await sendInterest(profileId, note)
+    if (!r.ok) {
+      toast(r.message, { type: 'error' })
+      throw new Error(r.message)
     }
-    toast('Interest sent', { type: 'success' })
+    toast(r.matched ? "It's a Match! ❤️ You can now message each other." : 'Interest sent', { type: 'success' })
+    return { matched: r.matched }
   }
 
   // Shortlist directly from a search card.

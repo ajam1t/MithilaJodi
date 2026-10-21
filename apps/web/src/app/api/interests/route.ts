@@ -11,6 +11,8 @@ import { getLocationIndex } from '@/lib/locationIndex'
 import { scoreMatch, type MatchResult } from '@/lib/matchScore'
 import { SCORE_COLUMNS, SCORE_PREF_COLUMNS, toScoreProfile, toScorePrefs } from '@/lib/matchInputs'
 import { signPhotos } from '@/lib/photoWeb'
+import { openMatch } from '@/lib/interestMatch'
+import { INTEREST_NOTE_MAX } from '@/lib/interestNotes'
 
 const DAILY_INTEREST_LIMIT = 30
 const DECLINE_COOLDOWN_MS = 90 * 86_400_000
@@ -420,10 +422,50 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, message: 'Unable to send interest' }, { status: 422 })
   }
 
-  // Cap free-text message length to prevent oversized/garbage storage.
+  // They already sent you an interest that is still waiting: sending one back
+  // is a yes, so it is accepted through the same path as the Inbox's Accept
+  // (conversation and match notifications once) instead of a second row in
+  // the other direction that neither of you could act on.
+  const { data: reverse } = await admin
+    .from('interests')
+    .select('id, from_profile, to_profile')
+    .eq('from_profile', to_profile_id)
+    .eq('to_profile', me.id)
+    .eq('status', 'sent')
+    .maybeSingle()
+
+  if (reverse) {
+    const { data: acct } = await admin
+      .from('accounts')
+      .select('account_status, deleted_at')
+      .eq('id', target.account_id)
+      .maybeSingle()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ac = acct as any
+    if (!ac || ac.deleted_at || ac.account_status !== 'active') {
+      return NextResponse.json({ ok: false, message: 'This profile is not available' }, { status: 422 })
+    }
+    const { data: accepted } = await admin
+      .from('interests')
+      .update({ status: 'accepted', responded_at: new Date().toISOString() })
+      .eq('id', reverse.id)
+      .eq('status', 'sent')
+      .select('id')
+    // Guarded like PATCH: if it was withdrawn or answered a moment ago, carry
+    // on and send a fresh interest below.
+    if (accepted && accepted.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const rv = reverse as any
+      const conversationId = await openMatch(admin, { id: rv.id, from_profile: rv.from_profile, to_profile: rv.to_profile })
+      return NextResponse.json({ ok: true, matched: true, interest_id: rv.id, conversation_id: conversationId })
+    }
+  }
+
+  // Notes are optional and short: an introduction, not a letter. Trimmed and
+  // capped here whatever the form allows.
   const cleanMessage =
     typeof message === 'string' && message.trim().length > 0
-      ? message.trim().slice(0, 500)
+      ? message.trim().slice(0, INTEREST_NOTE_MAX)
       : null
 
   const { data: newInterest, error: insertError } = await admin

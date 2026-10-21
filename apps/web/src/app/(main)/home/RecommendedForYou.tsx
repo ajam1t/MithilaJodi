@@ -1,9 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useToast } from '@/components/ui'
 import type { SearchCard } from '@/types/profile'
+import { InterestNoteSheet } from '@/components/interests/InterestNoteSheet'
+import { sendInterest } from '@/lib/interestNotes'
 import { BTN, EmptyCard, MatchCard, MatchedActions, ViewProfile, fromSearch } from '@/components/inbox/MatchPieces'
 
 /**
@@ -15,7 +17,10 @@ export function RecommendedForYou({ limit = 3 }: { limit?: number }) {
   const toast = useToast()
   const [items, setItems] = useState<SearchCard[] | null>(null)
   const [sent, setSent] = useState<Set<string>>(new Set())
-  const [busy, setBusy] = useState<string | null>(null)
+  // Sending back to someone who already asked makes a match on the spot.
+  const [matched, setMatched] = useState<Map<string, string | null>>(new Map())
+  const [noteFor, setNoteFor] = useState<SearchCard | null>(null)
+  const closeNote = useCallback(() => setNoteFor(null), [])
 
   // A failed load is not the same as "nobody to suggest": only a successful,
   // empty answer may point the member at their profile. `attempt` re-runs it.
@@ -32,21 +37,17 @@ export function RecommendedForYou({ limit = 3 }: { limit?: number }) {
       .catch(() => setFailed(true))
   }, [limit, attempt])
 
-  async function send(id: string) {
-    setBusy(id)
-    try {
-      const res = await fetch('/api/interests', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to_profile_id: id }),
-      })
-      const json = await res.json().catch(() => ({}))
-      if (!res.ok || !json.ok) { toast(json.message ?? 'Could not send interest. Please try again.', { type: 'error' }); return }
+  async function send(id: string, note: string): Promise<boolean | string> {
+    const r = await sendInterest(id, note)
+    if (!r.ok) return r.message
+    if (r.matched) {
+      setMatched(m => new Map(m).set(id, r.conversationId))
+      toast("It's a Match! ❤️ You can now message each other.", { type: 'success' })
+    } else {
       setSent(s => new Set(s).add(id))
       toast('Interest sent', { type: 'success' })
-    } finally {
-      setBusy(null)
     }
+    return true
   }
 
   if (failed) {
@@ -87,11 +88,11 @@ export function RecommendedForYou({ limit = 3 }: { limit?: number }) {
   return (
     <div className="space-y-3">
       {items.map(c => {
-        const state = sent.has(c.id) ? 'sent' : c.interest
+        const state = matched.has(c.id) ? 'match' : sent.has(c.id) ? 'sent' : c.interest
         return (
           <MatchCard key={c.id} c={fromSearch(c)}>
             {state === 'match' ? (
-              <MatchedActions id={c.id} />
+              <MatchedActions id={c.id} conversationId={matched.get(c.id)} />
             ) : (
               <>
                 <ViewProfile id={c.id} />
@@ -100,7 +101,7 @@ export function RecommendedForYou({ limit = 3 }: { limit?: number }) {
                 ) : state === 'received' ? (
                   <Link href="/inbox?tab=interests" className={`${BTN} bg-maroon-gradient border-maroon text-cream`}>Respond</Link>
                 ) : (
-                  <button type="button" disabled={busy === c.id} onClick={() => send(c.id)} className={`${BTN} bg-maroon-gradient border-maroon text-cream`}>
+                  <button type="button" onClick={() => setNoteFor(c)} className={`${BTN} bg-maroon-gradient border-maroon text-cream`}>
                     Send Interest
                   </button>
                 )}
@@ -109,6 +110,12 @@ export function RecommendedForYou({ limit = 3 }: { limit?: number }) {
           </MatchCard>
         )
       })}
+      <InterestNoteSheet
+        open={noteFor !== null}
+        onClose={closeNote}
+        name={noteFor?.display_name.split(' ')[0] ?? ''}
+        onSend={note => (noteFor ? send(noteFor.id, note) : Promise.resolve(false as boolean | string))}
+      />
     </div>
   )
 }

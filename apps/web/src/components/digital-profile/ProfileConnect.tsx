@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import Link from 'next/link'
+import { InterestNoteSheet } from '@/components/interests/InterestNoteSheet'
+import { sendInterest } from '@/lib/interestNotes'
 
 /**
  * What a signed-in member can do on someone else's Digital Profile, from the
@@ -18,25 +20,20 @@ export function ProfileConnect({
   conversationId: string | null
 }) {
   const [state, setState] = useState<ConnectState>(initial)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
+  const [noteOpen, setNoteOpen] = useState(false)
+  const [convId, setConvId] = useState(conversationId)
+  const closeNote = useCallback(() => setNoteOpen(false), [])
 
-  async function send() {
-    setBusy(true)
-    setError('')
-    try {
-      const res = await fetch('/api/interests', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to_profile_id: profileId }),
-      })
-      const json = await res.json().catch(() => ({}))
-      if (res.ok && json.ok) setState('sent')
-      else if (res.status === 409) setState('sent')
-      else setError(json.message ?? 'Could not send interest. Please try again.')
-    } finally {
-      setBusy(false)
+  async function send(note: string): Promise<boolean | string> {
+    const r = await sendInterest(profileId, note)
+    if (r.ok) {
+      // Their interest was still waiting, so this one made it a match.
+      if (r.matched) { setState('match'); setConvId(r.conversationId) }
+      else setState('sent')
+      return true
     }
+    if (r.status === 409) { setState('sent'); return true }
+    return r.message
   }
 
   const btn = 'inline-flex min-h-[46px] flex-1 items-center justify-center gap-2 rounded-full px-5 text-[15px] font-semibold transition-colors'
@@ -48,20 +45,20 @@ export function ProfileConnect({
         {state === 'match' ? (
           <>
             <span className={`${btn} border border-gold bg-gold/15 text-maroon`}>It&rsquo;s a Match! <span aria-hidden="true">❤️</span></span>
-            {conversationId && <Link href={`/messages/${conversationId}`} className={`${btn} bg-maroon-gradient text-cream`}>Message {firstName}</Link>}
+            {convId && <Link href={`/messages/${convId}`} className={`${btn} bg-maroon-gradient text-cream`}>Message {firstName}</Link>}
           </>
         ) : state === 'sent' ? (
           <span className={`${btn} border border-green/30 bg-green/[0.07] text-green`}>Interest Sent <span aria-hidden="true">✓</span></span>
         ) : state === 'received' ? (
           <Link href="/inbox?tab=interests" className={`${btn} bg-maroon-gradient text-cream`}>{firstName} sent you an interest — Respond</Link>
         ) : state === 'none' ? (
-          <button type="button" disabled={busy} onClick={send} className={`${btn} bg-maroon-gradient text-cream disabled:opacity-60`}>
-            {busy ? 'Sending…' : <>Send Interest <span aria-hidden="true">❤️</span></>}
+          <button type="button" onClick={() => setNoteOpen(true)} className={`${btn} bg-maroon-gradient text-cream`}>
+            Send Interest <span aria-hidden="true">❤️</span>
           </button>
         ) : null}
         <Link href={`/profile/${profileId}`} className={`${btn} border border-maroon/30 bg-cream text-maroon hover:bg-maroon/5`}>View full profile</Link>
       </div>
-      {error && <p className="mt-2 text-[13px] text-error-fg">{error}</p>}
+      <InterestNoteSheet open={noteOpen} onClose={closeNote} name={firstName} onSend={send} />
     </section>
   )
 }
