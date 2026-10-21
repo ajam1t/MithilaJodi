@@ -16,7 +16,7 @@ Supabase SQL editor in this project mis-parses dollar-quoted blocks.
 | 3 | `supabase/migrations/20260826000005_search_indexes_and_report_fk.sql` | `pg_trgm` search indexes, partial sort indexes, and fixes the unsatisfiable `reports` FK |
 | 4 | `supabase/migrations/20261017000001_wedding_invite_photos.sql` | Optional bride/groom photos on premium invitations (`wedding_invites.photos`, `photos_consent_at`). Until it runs, invitations keep working but adding photos shows "Photos cannot be saved just yet". |
 | 5 | `supabase/migrations/20261017000002_admin_active_members.sql` | Admin → Members → Active members lists only members who have a profile. Until it runs, the app hides "No profile yet" rows itself, but the page count can be slightly off. |
-| 6 | `supabase/migrations/20261021000001_contact_preferences.sql` | Contact preferences on Digital Profiles (best way to reach, days, hours, "connect only if", a note). Until it runs, the Contact tab still shows the number and profile link, and the new fields are simply not offered when editing. |
+| 6 | `supabase/migrations/20261021000001_contact_preferences.sql` | **Applied 2026-10-21.** Contact preferences on Digital Profiles (best way to reach, days, hours, "connect only if", a note). Until it runs, the Contact tab still shows the number and profile link, and the new fields are simply not offered when editing. |
 
 Migration 2 is the important one. Until it runs, those 13 tables are reachable
 with the `anon` key.
