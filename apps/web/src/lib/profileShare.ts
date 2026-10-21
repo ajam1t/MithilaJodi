@@ -63,6 +63,15 @@ export type SharedProfile = {
   about: string | null
   horoscope: { rashi: string | null; nakshatra: string | null; manglik: string | null; birthTime: string | null; birthPlace: string | null } | null
   contact: { mobile: string | null; relation: string | null; email: string | null; address: string | null } | null
+  /** How the family would like to be contacted — only on a link that shares contact. */
+  contactPrefs: {
+    via: 'call' | 'whatsapp' | 'either' | null
+    days: string[]
+    timeFrom: string | null
+    timeTo: string | null
+    rules: Array<'age' | 'location' | 'community' | 'interest_first'>
+    note: string | null
+  } | null
   preferences: PartnerPreferencesDisplay | null
 }
 
@@ -203,6 +212,17 @@ export async function loadSharedProfile(
       .maybeSingle()
     priv = data ?? null
   }
+  // Contact preferences come from their own columns (migration 20261021000001);
+  // read separately so a database without them still serves the link.
+  let howTo: any = null
+  if (granted.has('contact')) {
+    const { data, error } = await admin
+      .from('profile_private')
+      .select('contact_via, contact_days, contact_time_from, contact_time_to, contact_rules, contact_note')
+      .eq('profile_id', p.id)
+      .maybeSingle()
+    howTo = error ? null : data ?? null
+  }
 
   // Community values are stored as option keys; the shared page is display-only,
   // so they are resolved to labels here.
@@ -299,6 +319,16 @@ export async function loadSharedProfile(
       email: priv?.contact_email ?? null,
       address: priv?.address ?? null,
     }),
+    contactPrefs: granted.has('contact') && howTo && (howTo.contact_via || howTo.contact_days?.length || howTo.contact_time_from || howTo.contact_rules?.length || howTo.contact_note)
+      ? {
+          via: howTo.contact_via ?? null,
+          days: howTo.contact_days ?? [],
+          timeFrom: howTo.contact_time_from ?? null,
+          timeTo: howTo.contact_time_to ?? null,
+          rules: howTo.contact_rules ?? [],
+          note: howTo.contact_note ?? null,
+        }
+      : null,
 
     // Already null when the family stated nothing, so an enabled-but-empty
     // section drops out of the page rather than printing an empty panel.

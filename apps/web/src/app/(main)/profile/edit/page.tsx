@@ -512,6 +512,11 @@ type SaveState = 'idle' | 'saving' | 'success' | 'error'
 export default function ProfileEditPage() {
   const router = useRouter()
   const [form, setForm] = useState<FormData>(EMPTY_FORM)
+  // How the family would like to be contacted (Digital Profile → Contact).
+  // Kept apart from the form: offered, and sent, only once the database has
+  // the columns (migration 20261021000001).
+  const [contactPrefsOn, setContactPrefsOn] = useState(false)
+  const [cp, setCp] = useState({ via: '', days: [] as string[], from: '', to: '', rules: [] as string[], note: '' })
   const [photos, setPhotos] = useState<PhotoRow[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -560,6 +565,14 @@ export default function ProfileEditPage() {
       })
       .then(j => {
         if (!j) return
+        if (j.private && 'contact_via' in j.private) {
+          setContactPrefsOn(true)
+          setCp({
+            via: j.private.contact_via ?? '', days: j.private.contact_days ?? [],
+            from: j.private.contact_time_from ?? '', to: j.private.contact_time_to ?? '',
+            rules: j.private.contact_rules ?? [], note: j.private.contact_note ?? '',
+          })
+        }
         if (j.profile) {
           const p = j.profile
           setProfileComplete(p.profile_complete ?? 0)
@@ -771,6 +784,10 @@ export default function ProfileEditPage() {
 
     const payload = {
       ...form,
+      ...(contactPrefsOn ? {
+        contact_via: cp.via || null, contact_days: cp.days, contact_time_from: cp.from || null,
+        contact_time_to: cp.to || null, contact_rules: cp.rules, contact_note: cp.note.trim() || null,
+      } : {}),
       height_cm: form.height_cm ? parseInt(form.height_cm) : null,
       native_place_id: form.native_place_id,
       current_loc_id: form.current_loc_id,
@@ -1714,6 +1731,52 @@ export default function ProfileEditPage() {
               <MasterCombo label="This number belongs to" value={form.contact_relation}
                 opts={options.contact_relation ?? []} onChange={v => set('contact_relation', v)}
                 placeholder="Self, father, brother…" allowOther={false} />
+
+              {/* How to be reached — shown on the Contact tab of a Digital
+                  Profile link that shares contact details. */}
+              {contactPrefsOn && (
+                <div className="col-span-2 rounded-mj-sm border border-gold/35 bg-[#FFFBF3] p-3.5">
+                  <p className="text-sm font-semibold text-ink">How families should reach you</p>
+                  <p className="mt-0.5 text-xs text-ink-soft">Shown only on Digital Profile links that share your contact details.</p>
+                  <p className="mt-3 text-[13px] font-medium text-ink">Best way</p>
+                  <div className="mt-1.5 flex flex-wrap gap-2" role="radiogroup" aria-label="Best way to reach you">
+                    {([['call', '📞 Call'], ['whatsapp', 'WhatsApp first'], ['either', 'Either']] as const).map(([v, l]) => (
+                      <button key={v} type="button" role="radio" aria-checked={cp.via === v} onClick={() => setCp(c => ({ ...c, via: c.via === v ? '' : v }))}
+                        className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium ${cp.via === v ? 'border-maroon bg-maroon text-cream' : 'border-ink/20 bg-white text-ink'}`}>{l}</button>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-[13px] font-medium text-ink">Days</p>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const).map(d => (
+                      <button key={d} type="button" aria-pressed={cp.days.includes(d)} onClick={() => setCp(c => ({ ...c, days: c.days.includes(d) ? c.days.filter(x => x !== d) : [...c.days, d] }))}
+                        className={`h-9 w-11 rounded-mj-sm border text-[12.5px] font-semibold capitalize ${cp.days.includes(d) ? 'border-maroon bg-maroon text-cream' : 'border-ink/20 bg-white text-ink'}`}>{d}</button>
+                    ))}
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <label className="block text-[13px] font-medium text-ink">From
+                      <input type="time" value={cp.from} onChange={e => setCp(c => ({ ...c, from: e.target.value }))} className="mt-1 w-full rounded-mj-sm border border-ink/20 px-3 py-2 text-sm focus:border-maroon focus:outline-none" />
+                    </label>
+                    <label className="block text-[13px] font-medium text-ink">To
+                      <input type="time" value={cp.to} onChange={e => setCp(c => ({ ...c, to: e.target.value }))} className="mt-1 w-full rounded-mj-sm border border-ink/20 px-3 py-2 text-sm focus:border-maroon focus:outline-none" />
+                    </label>
+                  </div>
+                  <p className="mt-1 text-xs text-ink-soft">India time.</p>
+                  <p className="mt-3 text-[13px] font-medium text-ink">Please connect only if</p>
+                  <div className="mt-1.5 space-y-1.5">
+                    {([['age', 'Their age is within my preferred range'], ['location', 'They live in my preferred locations'], ['community', 'They are from my preferred community'], ['interest_first', 'They have sent an interest on Mithila Jodi first']] as const).map(([v, l]) => (
+                      <label key={v} className="flex cursor-pointer items-start gap-2.5 text-[13.5px] text-ink">
+                        <input type="checkbox" checked={cp.rules.includes(v)} onChange={() => setCp(c => ({ ...c, rules: c.rules.includes(v) ? c.rules.filter(x => x !== v) : [...c.rules, v] }))} className="mt-0.5 h-4 w-4 accent-maroon" />
+                        {l}
+                      </label>
+                    ))}
+                  </div>
+                  <p className="mt-1 text-xs text-ink-soft">Age, location and community are read from your partner preferences.</p>
+                  <label className="mt-3 block text-[13px] font-medium text-ink">A note for families <span className="font-normal text-ink-soft">(optional)</span>
+                    <textarea value={cp.note} maxLength={280} rows={2} onChange={e => setCp(c => ({ ...c, note: e.target.value }))} placeholder="e.g. Please WhatsApp a short family introduction first; we will call back."
+                      className="mt-1 w-full rounded-mj-sm border border-ink/20 px-3 py-2 text-sm focus:border-maroon focus:outline-none" />
+                  </label>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-ink mb-1">Contact email</label>

@@ -60,7 +60,13 @@ export const DEMO_PROFILE: SharedProfile = {
     'Vidyapati geet my grandmother sings, and long evening walks.\n\n' +
     'I am looking for someone kind and grounded, who respects both families and enjoys building a life together.',
   horoscope: { rashi: 'Kanya (Virgo)', nakshatra: 'Hasta', manglik: 'No', birthTime: '9:15 AM', birthPlace: 'Madhubani, Bihar' },
+  // No number on the sample — a made-up number could be someone's real one.
   contact: null,
+  contactPrefs: {
+    via: 'whatsapp', days: ['sat', 'sun'], timeFrom: '18:00', timeTo: '20:30',
+    rules: ['age', 'location', 'interest_first'],
+    note: 'Please send a short introduction about your family on WhatsApp first. We will call back.',
+  },
   preferences: {
     ageRange: '25 – 30 years',
     lookingFor: 'Groom',

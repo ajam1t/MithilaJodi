@@ -196,3 +196,39 @@
 .dpc-place { position: relative; margin-top: 3px; display: inline-flex; align-items: center; gap: 5px; font-size: 14px; color: #6B5A50; }
 .dpc-place svg { color: #B98A2E; flex: none; }
 @media (prefers-reduced-motion: no-preference) { .dpc-place { animation: dpcIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.55s both; } }
+
+/* ── Contact tab (components/digital-profile/ContactCard) ─────────────── */
+.dpk { padding: 20px 16px 16px; border-radius: 26px; border: 1px solid rgba(185, 138, 46, 0.45); background: radial-gradient(130% 90% at 0% 0%, #FBF1DD, #FFFDF8 60%); }
+.dpk-eyebrow { font-size: 10.5px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: #8A6516; }
+.dpk-title { margin-top: 4px; font: 400 25px/1.15 'Marcellus', Georgia, serif; color: #7A1220; }
+.dpk-number { margin-top: 14px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px; border-radius: 18px; border: 1.5px solid #2A1A16; background: #FFFDF8; box-shadow: 4px 4px 0 #E9C977; }
+.dpk-label { font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #8A6516; }
+.dpk-digits { margin-top: 2px; font: 600 22px/1.2 'Mukta', sans-serif; letter-spacing: 0.04em; color: #2A1A16; }
+.dpk-actions { display: flex; gap: 8px; }
+.dpk-btn { display: inline-flex; align-items: center; min-height: 42px; padding: 0 16px; border-radius: 9999px; font-size: 14px; font-weight: 600; color: #7A1220; border: 1.5px solid rgba(122, 18, 32, 0.4); background: #FFFDF8; }
+.dpk-btn.is-wa { color: #1F6B3A; border-color: rgba(31, 107, 58, 0.45); }
+.dpk-btn.is-main { color: #FFF6E2; border-color: transparent; background: linear-gradient(120deg, #8A1414, #6B0A0A); }
+.dpk-btn.is-wa.is-main { background: linear-gradient(120deg, #25A35A, #1F7A47); }
+.dpk-btn:focus-visible { outline: 2px solid #B98A2E; outline-offset: 2px; }
+.dpk-empty { margin-top: 12px; font-size: 14px; line-height: 1.55; color: #5A4A42; }
+.dpk-when { margin-top: 14px; display: grid; gap: 10px; padding: 14px; border-radius: 18px; border: 1px solid rgba(185, 138, 46, 0.35); background: rgba(255, 253, 248, 0.9); font-size: 14.5px; color: #2A1A16; }
+.dpk-when > p, .dpk-when > div { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.dpk-k { display: inline-block; min-width: 64px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #8A6516; }
+.dpk-days { display: inline-flex; gap: 4px; }
+.dpk-days i { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; font: 600 11.5px 'Mukta', sans-serif; font-style: normal; color: #B8AFA6; border: 1px solid rgba(185, 138, 46, 0.25); }
+.dpk-days i[data-on] { color: #FFF6E2; background: #7A1220; border-color: #7A1220; }
+.dpk-live { font-size: 13px; font-weight: 600; color: #8A6516; }
+.dpk-live span { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 9999px; background: #C9B9A6; }
+.dpk-live.is-now { color: #1F7A47; }
+.dpk-live.is-now span { background: #2F8F4E; box-shadow: 0 0 0 4px rgba(47, 143, 78, 0.2); }
+.dpk-rules { margin-top: 14px; padding: 14px; border-radius: 18px; border: 1px dashed rgba(185, 138, 46, 0.6); background: #FFF8EC; }
+.dpk-rules ul { margin-top: 8px; display: grid; gap: 6px; }
+.dpk-rules li { display: flex; gap: 8px; font-size: 14.5px; line-height: 1.4; color: #2A1A16; }
+.dpk-rules li span { color: #B98A2E; font-weight: 700; }
+.dpk-note { margin-top: 14px; font: italic 400 16px/1.5 'Marcellus', Georgia, serif; color: #3B2A24; border-left: 3px solid #E9C977; padding-left: 12px; }
+.dpk-link { margin-top: 16px; display: flex; align-items: center; gap: 12px; padding: 10px 14px 10px 10px; border-radius: 16px; border: 1px solid rgba(185, 138, 46, 0.5); background: linear-gradient(120deg, #FFFDF8, #FBF1DD); }
+.dpk-link-icon { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 12px; background: #FFFAF0; border: 1px solid rgba(185, 138, 46, 0.5); }
+.dpk-link-icon img { width: 26px; height: auto; }
+.dpk-link:focus-visible { outline: 2px solid #B98A2E; outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) { .dpk-live.is-now span { animation: dpkPulse 1.8s ease-out infinite; } }
+@keyframes dpkPulse { 0% { box-shadow: 0 0 0 0 rgba(47, 143, 78, 0.45); } 100% { box-shadow: 0 0 0 10px rgba(47, 143, 78, 0); } }

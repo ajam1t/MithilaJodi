@@ -85,6 +85,15 @@ const ProfileSchema = z.object({
   address: z.string().max(500).optional().nullable(),
   kundli_url: z.string().max(500).optional().nullable(),
   photo_visibility: z.string().max(50).optional().nullable(),
+  // How the family would like to be contacted (Digital Profile → Contact).
+  // Optional; saved separately so a database without these columns still saves
+  // everything else (migration 20261021000001).
+  contact_via: z.enum(['call', 'whatsapp', 'either']).optional().nullable(),
+  contact_days: z.array(z.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])).max(7).optional().nullable(),
+  contact_time_from: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional().nullable().or(z.literal('')),
+  contact_time_to: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional().nullable().or(z.literal('')),
+  contact_rules: z.array(z.enum(['age', 'location', 'community', 'interest_first'])).max(4).optional().nullable(),
+  contact_note: z.string().max(280).optional().nullable(),
 
   // Partner preferences
   pref_age_min: z.coerce.number().int().min(18).max(100).optional().nullable(),
@@ -542,6 +551,20 @@ async function savePrivateAndPreferences(admin: Awaited<ReturnType<typeof create
     photo_visibility: data.photo_visibility || null,
   })
   if (privateError) throw new Error(privateError.message)
+
+  // Contact preferences, only when the editor sent them (it does so only once
+  // the columns exist). A missing column is logged, never fatal.
+  if (data.contact_via !== undefined || data.contact_days !== undefined || data.contact_rules !== undefined) {
+    const { error: contactError } = await admin.from('profile_private').update({
+      contact_via: data.contact_via || null,
+      contact_days: data.contact_days?.length ? data.contact_days : null,
+      contact_time_from: data.contact_time_from || null,
+      contact_time_to: data.contact_time_to || null,
+      contact_rules: data.contact_rules?.length ? data.contact_rules : null,
+      contact_note: data.contact_note?.trim() || null,
+    }).eq('profile_id', profileId)
+    if (contactError) console.error('[profile] contact preferences not saved:', contactError.message)
+  }
 
   const { error: preferenceError } = await admin.from('profile_preferences').upsert({
     profile_id: profileId,

@@ -5,6 +5,7 @@ import type { SharedProfile } from '@/lib/profileShare'
 import { ProfilePhotos } from '@/components/digital-profile/ProfilePhotos'
 import { ProfileGallery } from '@/components/digital-profile/ProfileGallery'
 import { ProfileModes } from '@/components/digital-profile/ProfileModes'
+import { ContactCard } from '@/components/digital-profile/ContactCard'
 import { ProfileStory } from '@/components/profile/ProfileStory'
 import { ProfileCover, type CoverFact } from '@/components/digital-profile/ProfileCover'
 import { GOTRAS } from '@/lib/mithilaRoots'
@@ -219,6 +220,16 @@ export function DigitalProfileView({
             }}
           />
         }
+        contact={mode === 'demo' && !p.contactPrefs ? undefined : (
+          <ContactCard
+            first={first}
+            contact={p.contact}
+            prefs={p.contactPrefs}
+            partner={p.preferences}
+            audience={mode === 'demo' ? 'visitor' : audience}
+            profileHref={mode === 'demo' ? null : audience === 'visitor' ? '/register?start=1' : profileId ? `/profile/${profileId}` : null}
+          />
+        )}
         details={<>
       {/* ── Photographs: the one place they appear. */}
       <ProfilePhotos photos={photos} name={p.displayName} demo={mode === 'demo'} style={{ ['--i' as string]: 1 }} />
@@ -349,13 +360,6 @@ export function DigitalProfileView({
         </Panel>
       )}
 
-      {hasAny(p.contact) && p.contact && (
-        <Panel h={h} title="Contact" i={n++}>
-          <Fact label={p.contact.relation ? `Mobile (${p.contact.relation})` : 'Mobile'} value={p.contact.mobile} />
-          <Fact label="Email" value={p.contact.email} />
-          <Fact label="Address" value={p.contact.address} />
-        </Panel>
-      )}
 
         </>}
       />
