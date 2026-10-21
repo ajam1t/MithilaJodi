@@ -356,9 +356,8 @@ export default function ProfilePage() {
       <div className="mx-auto max-w-2xl px-4 pb-4 pt-5">
 
         {/* ── Identity: photo in a Mithila arch, completion drawn as a gold ring
-               around it, name rising in, a sheen across the card. ── */}
+               around it, name rising in. ── */}
         <section className="mj-me" aria-label="Your profile">
-          <div className="mj-me-mesh" aria-hidden="true"><i /><i /></div>
           <div className="relative flex items-center gap-4">
             <div className="mj-me-photo">
               {profile && <CompletionRing pct={pct} />}

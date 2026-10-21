@@ -119,8 +119,8 @@ export function ContextualPromoStrip({ set }: { set: PromoSet }) {
         )
       })}
 
-      {/* The shimmering gold rule that frames the header group. */}
-      <span className="mj-line mj-line--delayed pointer-events-none absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-maroon-deep via-gold to-maroon-deep" aria-hidden="true" />
+      {/* A thin, still gold rule closes the header group. */}
+      <span className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-maroon-deep via-gold/60 to-maroon-deep" aria-hidden="true" />
     </nav>
   )
 }

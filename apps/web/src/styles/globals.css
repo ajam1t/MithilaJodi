@@ -29,12 +29,9 @@
     --ink: #2B211C;
     --ink-soft: #6A5A4E;
     --line: rgba(122, 18, 32, 0.18);
-    --gold-line: rgba(185, 138, 46, 0.55);
-    --shadow: 0 26px 55px -26px rgba(58, 20, 12, 0.5);
-    --shadow-s: 0 14px 30px -18px rgba(58, 20, 12, 0.4);
-    /* Warmer, softer premium shadow for cards */
-    --shadow-soft: 0 10px 28px -14px rgba(90, 40, 20, 0.28), 0 2px 6px -3px rgba(90, 40, 20, 0.14);
-    --sheen: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    /* Cards: a warm hairline and the smallest shadow — no glow. */
+    --shadow-xs: 0 4px 12px -4px rgba(58, 20, 12, 0.25); /* = shadow-mj-xs */
+    --hairline: #EADFCB; /* = border-line */
   }
 
   html { scroll-behavior: smooth; }
@@ -72,24 +69,19 @@
     @apply inline-flex items-center gap-2 rounded-full px-6 py-3.5 font-semibold text-[15px]
            cursor-pointer border border-transparent transition-all duration-200 font-sans;
   }
+  /* Solid maroon; on hover it darkens and lifts a pixel. No rim, no glow. */
   .btn-primary {
-    @apply btn bg-maroon-gradient text-cream shadow-mj-sm
-           hover:-translate-y-0.5 hover:shadow-mj;
-    /* Subtle top sheen + fine gold rim for a premium, minted feel */
-    box-shadow: var(--shadow-s), var(--sheen);
-    border-color: rgba(228, 197, 114, 0.35);
+    @apply btn bg-maroon text-cream shadow-mj-xs
+           hover:bg-maroon-deep hover:-translate-y-px;
   }
-  .btn-primary:hover {
-    box-shadow: var(--shadow), var(--sheen);
-  }
+  /* Cream with a warm hairline; gold appears only on hover / focus. */
   .btn-ghost {
-    @apply btn bg-cream text-maroon border-gold hover:bg-white;
-    box-shadow: var(--sheen);
+    @apply btn bg-cream text-maroon border-line
+           hover:border-gold focus-visible:border-gold;
   }
   .btn-gold {
-    @apply btn bg-gold-gradient text-amber-900 shadow-mj-sm
-           hover:-translate-y-0.5 hover:shadow-mj;
-    box-shadow: var(--shadow-s), var(--sheen);
+    @apply btn bg-gold-gradient text-amber-900 shadow-mj-xs
+           hover:brightness-95 hover:-translate-y-px;
   }
   .btn-terra {
     @apply btn bg-terra text-cream hover:-translate-y-0.5 hover:shadow-mj-sm;
@@ -180,15 +172,15 @@
     @apply transition-all duration-300;
   }
   .card-hover:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow), var(--sheen);
+    transform: translateY(-2px);
+    border-color: var(--gold);
   }
 
   /* ── Cards ───────────────────────────────────────────────── */
   .card {
     @apply bg-cream rounded-mj;
-    border: 1px solid var(--gold-line);
-    box-shadow: var(--shadow-soft), var(--sheen);
+    border: 1px solid var(--hairline);
+    box-shadow: var(--shadow-xs);
   }
 
   /* ── Section container ───────────────────────────────────── */
@@ -210,8 +202,6 @@
   /* ── Decorative line ─────────────────────────────────────── */
   .ornament-line {
     @apply h-[2px] bg-gradient-to-r from-maroon-deep via-gold to-maroon-deep opacity-70;
-    /* Faint champagne glow so gold rules read as polished metal, not paint */
-    box-shadow: 0 0 6px rgba(228, 197, 114, 0.45);
   }
 
   /* ── Section heading ─────────────────────────────────────── */
@@ -260,49 +250,9 @@
 
 /* ── Homepage animation keyframes ────────────────────────── */
 
-@keyframes petalFall {
-  0%   { transform: translateY(-30px) translateX(0) rotate(0deg); opacity: 0.9; }
-  50%  { transform: translateY(280px) translateX(30px) rotate(180deg); opacity: 0.7; }
-  100% { transform: translateY(600px) translateX(-20px) rotate(360deg); opacity: 0; }
-}
-
-@keyframes flameDance {
-  0%   { transform: scaleY(1) scaleX(1); }
-  25%  { transform: scaleY(1.15) scaleX(0.88); }
-  50%  { transform: scaleY(0.9) scaleX(1.1); }
-  75%  { transform: scaleY(1.08) scaleX(0.92); }
-  100% { transform: scaleY(1) scaleX(1); }
-}
-
-@keyframes mithilaFloat {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-8px); }
-}
-
-@keyframes garlandSway {
-  0%, 100% { transform: rotate(-1.5deg) translateY(0); }
-  50%       { transform: rotate(1.5deg) translateY(3px); }
-}
-
-@keyframes shimmerGold {
-  0%   { opacity: 0.5; }
-  50%  { opacity: 1; }
-  100% { opacity: 0.5; }
-}
-
 @keyframes slideInLeft {
   from { opacity: 0; transform: translateX(-32px); }
   to   { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes slideInRight {
-  from { opacity: 0; transform: translateX(32px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(24px); }
-  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes mjShimmer {
@@ -328,88 +278,8 @@
   .mj-ticker { animation: none; transform: none; }
 }
 
-/* ── Petal elements ────────────────────────────────────── */
-.petal {
-  position: absolute;
-  top: -20px;
-  width: 10px;
-  height: 14px;
-  background: #FF91A4;
-  border-radius: 50% 0 50% 0;
-  opacity: 0;
-  animation: petalFall linear infinite;
-  pointer-events: none;
-  will-change: transform, opacity;
-}
-.petal:nth-child(2n)  { background: #FFD700; width: 8px; height: 11px; }
-.petal:nth-child(3n)  { background: #FF8C00; width: 9px; height: 12px; }
-.petal:nth-child(4n)  { background: #FF91A4; border-radius: 0 50% 0 50%; }
-.petal:nth-child(5n)  { background: #FFFF99; }
-
-/* ── Hero animation classes ────────────────────────────── */
+/* ── Hero entrance (plays once) ────────────────────────── */
 .hero-text-enter { animation: slideInLeft 0.8s ease forwards; }
-.hero-art-enter  { animation: slideInRight 0.9s ease forwards; }
-.fade-up         { animation: fadeUp 0.7s ease forwards; }
-.float-anim      { animation: mithilaFloat 4s ease-in-out infinite; }
-.garland-anim    { animation: garlandSway 3s ease-in-out infinite; transform-origin: center top; }
-.flame-anim      { animation: flameDance 0.7s ease-in-out infinite; transform-origin: bottom center; }
-.gold-shimmer    { animation: shimmerGold 2s ease-in-out infinite; }
-
-/* ── Decorative gold line shimmer ──────────────────────────────────────────
-   A single slow highlight travelling along a gold rule. Used for the hairlines
-   that frame the Mithila Jodi branding in the sticky header, the festivals
-   strip, and the Festival section heading rules, so all of them read as one
-   design system.
-
-   Implemented as a transform-only pseudo-element sweep — no scroll listener, no
-   IntersectionObserver, no JavaScript. The parent keeps its own gradient
-   background, so if the animation never runs the line is still fully visible;
-   the shimmer is purely additive. That is what makes it safe under
-   prefers-reduced-motion, where the global rule collapses the duration.
-
-   `overflow: hidden` is scoped to the line itself (it is only 1-3px tall) and
-   deliberately does NOT clip anything else. */
-.mj-line {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-}
-.mj-line::after {
-  content: '';
-  position: absolute;
-  inset-block: 0;
-  left: 0;
-  width: 34%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 250, 240, 0.85),
-    rgba(228, 197, 114, 0.9),
-    transparent
-  );
-  transform: translate3d(-120%, 0, 0);
-  animation: mjLineSweep 6.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  will-change: transform;
-  pointer-events: none;
-}
-/* Offset so the two framing lines do not sweep in lockstep. */
-.mj-line--delayed::after { animation-delay: 3.25s; }
-
-@keyframes mjLineSweep {
-  0%   { transform: translate3d(-120%, 0, 0); }
-  /* Long dwell off-screen keeps it subtle rather than a repeating flash. */
-  55%  { transform: translate3d(400%, 0, 0); }
-  100% { transform: translate3d(400%, 0, 0); }
-}
-
-/* Opt-in animated variant of .ornament-line. Applied to Festival headings only —
-   .ornament-line itself is used in 17 files and must not change globally. */
-.ornament-line.mj-line::after { opacity: 0.75; }
-
-@media (prefers-reduced-motion: reduce) {
-  /* Remove the sweep entirely; the underlying gold gradient stays. */
-  .mj-line::after { display: none; }
-}
 
 /* ContextualPromoStrip: a label too long for the strip slides across once
    during its 4s turn (hold, slide, hold), so the strip never grows a line.
@@ -595,7 +465,7 @@ footer :focus-visible {
   }
   .mj-lift:hover {
     transform: perspective(900px) translateY(-5px) rotateX(2.2deg) scale(1.012);
-    box-shadow: var(--shadow), var(--sheen);
+    box-shadow: var(--shadow-xs);
   }
 
   /* Media inside a hovered card drifts in a little. Put .mj-zoom on the media
@@ -663,36 +533,6 @@ footer :focus-visible {
     animation: mjRevealUp 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
     animation-delay: var(--mj-word-delay, 0ms);
   }
-}
-
-/* ── Gold sweep across a heading ──────────────────────────────────────────
-   Reuses the brand gold. Opt-in per heading; .section-heading is used in
-   dozens of places and is not touched.
-
-   Three passes, not infinite. `background-clip: text` cannot be promoted to
-   the compositor, so every frame of this repaints the glyphs — cheap for a few
-   seconds on one heading, wasteful forever on a 52px hero line on a phone. It
-   also simply looks better: it draws the eye on arrival and then leaves the
-   headline alone. At rest the gold band sits outside the box and the text
-   renders as plain maroon, so the end state needs no fill mode. */
-@media (prefers-reduced-motion: no-preference) {
-  .mj-shine {
-    background: linear-gradient(
-      100deg,
-      var(--maroon) 0%, var(--maroon) 42%,
-      #d8b45a 50%,
-      var(--maroon) 58%, var(--maroon) 100%
-    );
-    background-size: 220% 100%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: mjShineSweep 7s ease-in-out 1.2s 3;
-  }
-}
-@keyframes mjShineSweep {
-  0%, 70%, 100% { background-position: 120% 0; }
-  85%           { background-position: -20% 0; }
 }
 
 /* The reading-progress bar needs no CSS of its own: components/motion/
@@ -944,7 +784,6 @@ footer :focus-visible {
 @keyframes mjEntryFade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes mjEntryRise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @keyframes mjEntryHalo { 0% { transform: scale(0.9); opacity: 0.9; } 100% { transform: scale(1.45); opacity: 0; } }
-@keyframes mjEntryFlame { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.08) translateY(-0.4px); } }
 @media (prefers-reduced-motion: no-preference) {
   .mj-entry-draw:not([stroke-dasharray]) { stroke-dasharray: 1; stroke-dashoffset: 1; animation: mjEntryDraw 1.3s cubic-bezier(0.45, 0, 0.2, 1) forwards; }
   .mj-entry-fade { opacity: 0; animation: mjEntryFade 0.6s ease forwards; }
@@ -954,7 +793,6 @@ footer :focus-visible {
   ul.mj-entry-copy { animation-delay: 0.75s; }
   /* the halo ripples a few times to say "this moves", then rests */
   .mj-entry-halo { animation: mjEntryHalo 1.6s ease-out 1.4s 3 both; }
-  .mj-entry-flame { transform-origin: 16px 15px; animation: mjEntryFlame 1.8s ease-in-out infinite; }
   .mj-entry.is-leaving .mj-entry-copy { animation: none; transition: opacity 0.4s ease, transform 0.4s ease; opacity: 0; transform: translateY(-8px); }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1002,59 +840,36 @@ footer :focus-visible {
   box-shadow: 0 0 0 4px rgba(233, 201, 119, 0.28), 0 6px 16px -10px rgba(185, 138, 46, 0.6);
 }
 .mj-auth-card .bg-paper.border-r { background: #FBF1DD; border-color: rgba(185, 138, 46, 0.35); color: #7A1220; }
-.mj-auth-card .btn-primary {
-  position: relative; overflow: hidden; border-radius: 9999px; justify-content: center; text-align: center;
-  box-shadow: inset 0 0 0 1px rgba(233, 201, 119, 0.55), 0 10px 22px -12px rgba(122, 18, 32, 0.7);
-}
-.mj-auth-card .btn-primary::after { /* a gold light that crosses once on hover */
-  content: ''; position: absolute; top: 0; bottom: 0; left: -40%; width: 30%;
-  background: linear-gradient(100deg, transparent, rgba(255, 231, 166, 0.45), transparent);
-  transform: skewX(-18deg); pointer-events: none; opacity: 0;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .mj-auth-card .btn-primary:not(:disabled):hover::after { opacity: 1; left: 120%; transition: left 0.7s ease, opacity 0.1s; }
-}
+.mj-auth-card .btn-primary { border-radius: 9999px; justify-content: center; text-align: center; }
 
 /* ── Footer (components/home/MithilaFooter) ────────────────────────────────
    The official logo's own warm maroon, deepening downwards; the four
-   community tiles are ivory discs in that maroon with a gold ring that traces
-   itself once when the footer comes into view, and turns on hover. */
+   community tiles carry each platform's own logo on a quiet ivory hairline. */
 .mj-footer { background: linear-gradient(180deg, #6B0A0A 0%, #5A0708 55%, #4A0506 100%); }
 .mj-soc {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 12px 2px 10px; border-radius: 18px;
-  border: 1px solid rgba(233, 201, 119, 0.22);
-  background: linear-gradient(180deg, rgba(255, 250, 240, 0.07), rgba(255, 250, 240, 0.015));
+  padding: 12px 2px 10px; border-radius: 16px;
+  border: 1px solid rgba(255, 250, 240, 0.12);
   color: #FBF1DD;
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.3s ease, background-color 0.3s ease;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.25s ease, background-color 0.25s ease;
   -webkit-tap-highlight-color: transparent;
 }
-.mj-soc:hover { border-color: rgba(233, 201, 119, 0.65); background-color: rgba(255, 250, 240, 0.06); transform: translateY(-3px); }
-.mj-soc:active { transform: translateY(0) scale(0.97); }
+.mj-soc:hover { border-color: rgba(233, 201, 119, 0.55); background-color: rgba(255, 250, 240, 0.05); transform: translateY(-2px); }
+.mj-soc:active { transform: translateY(0) scale(0.98); }
 .mj-soc:focus-visible { outline: 2px solid #E9C977; outline-offset: 2px; }
-.mj-soc-disc {
-  position: relative; display: grid; place-items: center; width: 52px; height: 52px; margin-bottom: 6px;
-  border-radius: 14px; overflow: visible;
-}
-.mj-soc-icon { width: 100%; height: 100%; border-radius: 12px; box-shadow: 0 8px 18px -8px rgba(0, 0, 0, 0.6); transition: transform 0.35s cubic-bezier(0.22, 1.3, 0.36, 1); }
-.mj-soc:hover .mj-soc-icon { transform: scale(1.07); }
-.mj-soc-ring { position: absolute; inset: -6px; width: calc(100% + 12px); height: calc(100% + 12px); overflow: visible; }
-.mj-soc-ring rect { fill: none; stroke: #E9C977; stroke-width: 1.4; opacity: 0.8; }
+.mj-soc-disc { display: grid; place-items: center; width: 52px; height: 52px; margin-bottom: 6px; }
+.mj-soc-icon { width: 100%; height: 100%; border-radius: 12px; }
 .mj-soc-name { font-size: 11.5px; font-weight: 600; letter-spacing: 0.01em; color: #FBF1DD; line-height: 1.2; }
 .mj-soc-verb { font-size: 10px; color: #E9C977; opacity: 0.85; line-height: 1.2; }
 @media (min-width: 640px) {
   .mj-soc-disc { width: 58px; height: 58px; }
   .mj-soc-name { font-size: 12.5px; }
 }
-@keyframes mjSocRing { from { stroke-dashoffset: 1; stroke-dasharray: 1 1; } to { stroke-dashoffset: 0; stroke-dasharray: 1 1; } }
-@media (prefers-reduced-motion: no-preference) {
-  [data-mj-armed].mj-in .mj-soc-ring rect { animation: mjSocRing 1.1s cubic-bezier(0.45, 0, 0.2, 1) 0.25s backwards; }
-}
 
 /* ── Login portal (components/auth/LoginPortal) ────────────────────────────
-   Opens from the Log In button into a deep-maroon sky; gold aripan rings rush
-   towards the viewer with light streaming past; on success it flares to the
-   site's ivory, which the next page continues. */
+   Opens once from the Log In button into a deep-maroon sky with the mark and
+   a welcome at its centre; on success it fades to the site's ivory, which the
+   next page continues. Nothing loops. */
 .mj-portal { position: fixed; inset: 0; z-index: 200; pointer-events: none; visibility: hidden; transition: visibility 0s linear 0.75s; }
 .mj-portal.is-on { visibility: visible; pointer-events: auto; transition-delay: 0s; }
 .mj-portal-sky {
@@ -1064,59 +879,27 @@ footer :focus-visible {
   transition: clip-path 0.75s cubic-bezier(0.7, 0, 0.2, 1);
 }
 .mj-portal.is-on .mj-portal-sky { clip-path: circle(150% at var(--ox) var(--oy)); }
-.mj-portal-tunnel {
-  position: absolute; left: 50%; top: 46%; width: min(92vmin, 620px); aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-  transition: transform 0.9s cubic-bezier(0.6, 0, 0.3, 1), opacity 0.6s ease;
+.mj-portal-core {
+  position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%) scale(0.92); display: grid; place-items: center;
+  opacity: 0; transition: opacity 0.5s ease 0.3s, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.3s;
 }
-.mj-portal-ring { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; overflow: visible; }
-.mj-portal-spin { transform-origin: 100px 100px; }
-.mj-portal-streaks { position: absolute; left: 50%; top: 46%; width: 0; height: 0; }
-.mj-portal-streaks > span { position: absolute; left: 0; top: 0; width: 0; height: 0; }
-.mj-portal-streaks i {
-  position: absolute; top: 0; left: 0; display: block; height: 18vmax; margin-left: -1px;
-  background: linear-gradient(180deg, rgba(255, 231, 166, 0), rgba(255, 231, 166, 0.85));
-  border-radius: 2px; transform-origin: 0 0; opacity: 0;
-}
-.mj-portal-core { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); display: grid; place-items: center; }
-.mj-portal-glow { position: absolute; width: 220px; height: 220px; border-radius: 9999px; background: radial-gradient(circle, rgba(255, 231, 166, 0.75), rgba(233, 201, 119, 0.18) 45%, rgba(233, 201, 119, 0) 70%); }
+.mj-portal.is-on .mj-portal-core { opacity: 1; transform: translate(-50%, -50%); }
 .mj-portal-mark {
   position: relative; display: grid; place-items: center; width: 66px; height: 66px; border-radius: 9999px;
-  background: #FFFAF0; box-shadow: 0 0 0 2px #E9C977, 0 0 0 8px rgba(233, 201, 119, 0.18), 0 0 40px rgba(255, 231, 166, 0.6);
+  background: #FFFAF0; box-shadow: 0 0 0 1px #E4C572;
 }
 .mj-portal-mark img { width: 44px; height: auto; }
 .mj-portal-words { position: absolute; left: 0; right: 0; bottom: 16%; text-align: center; opacity: 0; transition: opacity 0.6s ease 0.45s; }
-.mj-portal-words p { text-shadow: 0 0 18px #120305, 0 0 6px #120305; }
 .mj-portal.is-on .mj-portal-words { opacity: 1; }
 .mj-portal-flare {
   position: absolute; inset: 0; opacity: 0; pointer-events: none;
-  background: radial-gradient(circle at 50% 46%, #FFFFFF 0%, #FFFAF0 35%, #FCF5E7 70%);
+  background: #FCF5E7;
   transition: opacity 0.55s ease 0.15s;
 }
 .mj-portal.is-arrive .mj-portal-flare { opacity: 1; }
-.mj-portal.is-arrive .mj-portal-tunnel { transform: translate(-50%, -50%) scale(2.4); opacity: 0; }
-@keyframes mjTunnel {
-  0%   { transform: scale(0.04); opacity: 0; }
-  18%  { opacity: 0.95; }
-  100% { transform: scale(3.6); opacity: 0; }
-}
-@keyframes mjSpin { to { transform: rotate(360deg); } }
-@keyframes mjStreak {
-  0%   { transform: translateY(4vmax) scaleY(0.15); opacity: 0; }
-  30%  { opacity: 0.9; }
-  100% { transform: translateY(70vmax) scaleY(1.6); opacity: 0; }
-}
-@keyframes mjCore { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
-@media (prefers-reduced-motion: no-preference) {
-  .mj-portal.is-on .mj-portal-ring { animation: mjTunnel 2.6s cubic-bezier(0.55, 0, 0.9, 0.6) infinite; }
-  .mj-portal.is-on .mj-portal-spin { animation: mjSpin 14s linear infinite; }
-  .mj-portal.is-on .mj-portal-streaks i { animation: mjStreak 1.1s cubic-bezier(0.5, 0, 1, 1) infinite; }
-  .mj-portal.is-on .mj-portal-glow { animation: mjCore 1.6s ease-in-out infinite; }
-}
 @media (prefers-reduced-motion: reduce) {
   .mj-portal-sky { clip-path: none; opacity: 0; transition: opacity 0.3s ease; }
   .mj-portal.is-on .mj-portal-sky { opacity: 1; }
-  .mj-portal-tunnel, .mj-portal-streaks { display: none; }
 }
 
 /* ── How-to-join video (components/auth/HowToJoinVideo) ─────────────────── */
@@ -1140,179 +923,62 @@ footer :focus-visible {
 .mj-howto-full { display: block; max-height: 86vh; width: auto; max-width: 92vw; aspect-ratio: 9 / 16; border-radius: 18px; border: 2px solid #E9C977; background: #FCF5E7; }
 .mj-howto-close { position: absolute; right: -6px; top: -14px; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 9999px; background: #FFFAF0; color: #7A1220; border: 1px solid #E9C977; font-size: 15px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
 
-/* ── Site menu (components/home/MenuDrawer) ───────────────────────────────
-   Ivory, with a large faint aripan that turns as the drawer opens; each
-   section in the form that suits it, rising in one after another. */
-.mj-menu { background: radial-gradient(120% 60% at 100% 0%, #FBF1DD 0%, #FFFAF0 45%, #FFFBF3 100%); }
-.mj-menu-aripan { position: absolute; right: -90px; top: -90px; width: 300px; height: 300px; opacity: 0.22; pointer-events: none; }
-.mj-menu-close { background: rgba(255, 250, 240, 0.9); border: 1px solid rgba(185, 138, 46, 0.45); transition: transform 0.35s cubic-bezier(0.22, 1.3, 0.36, 1), background-color 0.2s; }
-.mj-menu-close:hover { transform: rotate(90deg); background: #FBF1DD; }
-.mj-menu-cta {
-  position: relative; display: flex; min-height: 58px; align-items: center; gap: 12px; overflow: hidden;
-  border-radius: 16px; padding: 0 16px 0 10px; color: #FFF6E2; font-weight: 600;
-  background: linear-gradient(120deg, #8A1414, #6B0A0A 60%, #5A0708);
-  box-shadow: inset 0 0 0 1px rgba(233, 201, 119, 0.5), 0 12px 26px -16px rgba(107, 10, 10, 0.9);
-}
-.mj-menu-cta::after { content: ''; position: absolute; top: 0; bottom: 0; left: -40%; width: 30%; transform: skewX(-18deg); background: linear-gradient(100deg, transparent, rgba(255, 231, 166, 0.35), transparent); }
-.mj-menu-cta:focus-visible { outline: 2px solid #E9C977; outline-offset: 2px; }
-.mj-menu-cta-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 9999px; background: rgba(255, 250, 240, 0.12); border: 1px solid rgba(233, 201, 119, 0.6); color: #E9C977; }
-.mj-menu-sec { margin-top: 18px; }
-.mj-menu-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding: 0 2px; font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #8A6516; }
-.mj-menu-rule { height: 1px; flex: 1; background: linear-gradient(90deg, rgba(185, 138, 46, 0.6), transparent); transform-origin: left; }
-.mj-menu-tile, .mj-menu-wide, .mj-menu-chip, .mj-menu-orbit { -webkit-tap-highlight-color: transparent; transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s, border-color 0.2s, color 0.2s; }
-.mj-menu-tile:active, .mj-menu-wide:active, .mj-menu-chip:active, .mj-menu-orbit:active { transform: scale(0.96); }
-.mj-menu-tile:focus-visible, .mj-menu-wide:focus-visible, .mj-menu-chip:focus-visible, .mj-menu-orbit:focus-visible { outline: 2px solid #B98A2E; outline-offset: 2px; }
-.mj-menu-tile {
-  display: flex; height: 100%; min-height: 92px; flex-direction: column; align-items: center; justify-content: center; gap: 7px;
-  padding: 10px 4px; border-radius: 16px; text-align: center; color: #2A1A16;
-  border: 1px solid rgba(185, 138, 46, 0.3); background: rgba(255, 253, 248, 0.9);
-}
-.mj-menu-wide { display: flex; height: 100%; min-height: 62px; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 16px; color: #2A1A16; border: 1px solid rgba(185, 138, 46, 0.3); background: rgba(255, 253, 248, 0.9); }
-.mj-menu-tile:hover, .mj-menu-wide:hover { border-color: #B98A2E; background: #FFFDF8; }
-.mj-menu-disc { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 9999px; color: #7A1220; background: radial-gradient(circle at 35% 30%, #FFFFFF, #FBF1DD 75%); border: 1px solid rgba(185, 138, 46, 0.5); }
-.mj-menu-label { font-size: 12.5px; font-weight: 500; line-height: 1.2; }
-.mj-menu-tile[data-on], .mj-menu-wide[data-on] { background: linear-gradient(160deg, #8A1414, #6B0A0A); border-color: #6B0A0A; color: #FFF6E2; }
-.mj-menu-tile[data-on] .mj-menu-disc, .mj-menu-wide[data-on] .mj-menu-disc { background: rgba(255, 250, 240, 0.14); color: #E9C977; border-color: rgba(233, 201, 119, 0.6); }
-/* astrology: each tool a small planet with a moon on its orbit */
-.mj-menu-orbit { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; color: #2A1A16; }
-.mj-menu-planet {
-  position: relative; display: grid; place-items: center; width: 50px; height: 50px; border-radius: 9999px; color: #7A1220;
-  background: radial-gradient(circle at 35% 30%, #FFFFFF, #FBF1DD 70%);
-  box-shadow: 0 0 0 1px rgba(185, 138, 46, 0.45), 0 0 0 5px rgba(255, 250, 240, 0.9), 0 0 0 6px rgba(185, 138, 46, 0.25);
-}
-.mj-menu-moon { position: absolute; inset: -6px; border-radius: 9999px; transform: rotate(calc(var(--k, 0) * 45deg)); }
-.mj-menu-moon::before { content: ''; position: absolute; left: 50%; top: -2px; width: 6px; height: 6px; margin-left: -3px; border-radius: 9999px; background: #B98A2E; box-shadow: 0 0 6px rgba(233, 201, 119, 0.9); }
-.mj-menu-orbit .mj-menu-label { font-size: 11px; }
-.mj-menu-orbit:hover .mj-menu-planet { color: #9B2233; }
-.mj-menu-orbit[data-on] .mj-menu-planet { background: linear-gradient(160deg, #8A1414, #6B0A0A); color: #E9C977; }
-.mj-menu-chip { display: inline-flex; min-height: 40px; align-items: center; gap: 7px; padding: 0 14px; border-radius: 9999px; font-size: 13px; font-weight: 500; color: #7A1220; border: 1px solid rgba(185, 138, 46, 0.45); background: rgba(255, 253, 248, 0.9); }
-.mj-menu-chip:hover { border-color: #B98A2E; }
-.mj-menu-chip[data-on] { background: #6B0A0A; color: #FFF6E2; border-color: #6B0A0A; }
-.mj-menu-social { display: grid; place-items: center; border-radius: 11px; transition: transform 0.3s cubic-bezier(0.22, 1.3, 0.36, 1); box-shadow: 0 6px 14px -8px rgba(0, 0, 0, 0.45); }
-.mj-menu-social:hover { transform: translateY(-2px) scale(1.05); }
-.mj-menu-social:focus-visible { outline: 2px solid #B98A2E; outline-offset: 2px; }
-@keyframes mjMenuIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-@keyframes mjMenuRule { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-@keyframes mjMenuTurn { from { transform: rotate(-40deg) scale(0.9); opacity: 0; } to { transform: none; opacity: 0.22; } }
-@keyframes mjMenuSheen { to { left: 130%; } }
-@keyframes mjMenuMoon { from { transform: rotate(calc(var(--k, 0) * 45deg - 120deg)); } to { transform: rotate(calc(var(--k, 0) * 45deg)); } }
-@media (prefers-reduced-motion: no-preference) {
-  .mj-menu-in, .mj-menu-head { animation: mjMenuIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i, 0) * 55ms + 80ms); }
-  .mj-menu-rule { animation: mjMenuRule 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: 0.3s; }
-  .mj-menu-aripan { animation: mjMenuTurn 1.2s cubic-bezier(0.22, 1, 0.36, 1) both; }
-  .mj-menu-cta::after { animation: mjMenuSheen 1.1s ease 0.6s both; }
-  .mj-menu-moon { animation: mjMenuMoon 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both; }
-}
-
-/* ── Bottom nav: the centre tab (Join / Login, or the member's Profile) ───
-   Same size as every tab. Join / Login's icon is a small story — two figures
-   meet and a heart appears — and a gold sheen crosses the tab now and then.
-   The member's Profile shows their photo in a thin, slowly turning gold ring. */
-.mj-cta-tab { overflow: hidden; }
-.mj-cta-tab::after {
-  content: ''; position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(100deg, transparent 35%, rgba(255, 231, 166, 0.26) 50%, transparent 65%) no-repeat;
-  background-size: 250% 100%; background-position: 160% 0;
-}
-.mj-jodi-l, .mj-jodi-r, .mj-jodi-h { transform-box: fill-box; transform-origin: center; }
-.mj-nav-ring { position: relative; display: grid; place-items: center; width: 30px; height: 30px; }
-.mj-nav-rim { position: absolute; inset: 0; width: 100%; height: 100%; }
-.mj-nav-photo { position: relative; width: 25px; height: 25px; border-radius: 9999px; object-fit: cover; border: 1.5px solid #FFFAF0; }
-@keyframes mjCtaTurn { to { transform: rotate(360deg); } }
-@keyframes mjCtaSheen { 0%, 78% { background-position: 160% 0; } 100% { background-position: -60% 0; } }
-@keyframes mjJodiL { 0%, 18% { transform: translateX(0); } 42%, 82% { transform: translateX(1.8px); } 100% { transform: translateX(0); } }
-@keyframes mjJodiR { 0%, 18% { transform: translateX(0); } 42%, 82% { transform: translateX(-1.8px); } 100% { transform: translateX(0); } }
-@keyframes mjJodiH { 0%, 40% { transform: translateY(3px) scale(0); opacity: 0; } 52% { transform: translateY(-1px) scale(1.25); opacity: 1; } 60%, 82% { transform: none; opacity: 1; } 94%, 100% { transform: scale(0.4); opacity: 0; } }
-@media (prefers-reduced-motion: no-preference) {
-  .mj-cta-tab::after { animation: mjCtaSheen 7s ease-in-out 2s infinite; }
-  .mj-jodi-l { animation: mjJodiL 4.2s cubic-bezier(0.45, 0, 0.2, 1) 0.6s infinite; }
-  .mj-jodi-r { animation: mjJodiR 4.2s cubic-bezier(0.45, 0, 0.2, 1) 0.6s infinite; }
-  .mj-jodi-h { animation: mjJodiH 4.2s cubic-bezier(0.45, 0, 0.2, 1) 0.6s infinite; }
-  .mj-nav-rim { animation: mjCtaTurn 18s linear infinite; }
-}
-
-/* ── Orbit Console: the half-height menu sheet (components/home/MenuDrawer) ─
-   Glass over the page, rising from the bottom within thumb reach. A gradient
-   mesh drifts behind a faint blueprint grid; the five sections sit on an arc
-   dial (wireframe orbits, a travelling gold marker, a burst of particles);
-   the section name flips in on split-flap tiles; links are frosted cards with
-   a holographic sheen. */
-.mj-orb-scrim { background: rgba(42, 10, 14, 0.38); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+/* ── Menu sheet (components/home/MenuDrawer) ──────────────────────────────
+   A half-height ivory sheet rising from the bottom, within thumb reach. The
+   sections sit on an arc of tabs; the chosen one fills maroon. Hairline
+   borders throughout — gold marks only focus and hover. */
+.mj-orb-scrim { background: rgba(42, 10, 14, 0.38); }
 .mj-orb {
-  overflow: hidden; border-radius: 28px 28px 0 0;
-  background: linear-gradient(180deg, rgba(255, 252, 246, 0.9), rgba(252, 245, 231, 0.94));
-  backdrop-filter: blur(18px) saturate(1.2); -webkit-backdrop-filter: blur(18px) saturate(1.2);
-  border: 1px solid rgba(233, 201, 119, 0.7); border-bottom: 0;
-  box-shadow: 0 -18px 48px -18px rgba(107, 10, 10, 0.45), inset 0 1px 0 #fff;
+  overflow: hidden; border-radius: 24px 24px 0 0;
+  background: #FFFAF0;
+  border: 1px solid #EADFCB; border-bottom: 0;
+  box-shadow: 0 -8px 24px -12px rgba(58, 20, 12, 0.25);
   transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.mj-orb::before { /* blueprint grid */
-  content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.5;
-  background-image: linear-gradient(rgba(185, 138, 46, 0.09) 1px, transparent 1px), linear-gradient(90deg, rgba(185, 138, 46, 0.09) 1px, transparent 1px);
-  background-size: 22px 22px;
-  mask-image: linear-gradient(180deg, #000 0%, transparent 70%); -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 70%);
-}
-.mj-orb-mesh { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-.mj-orb-mesh i { position: absolute; width: 260px; height: 260px; border-radius: 9999px; filter: blur(40px); opacity: 0.55; }
-.mj-orb-mesh i:nth-child(1) { left: -80px; top: -90px; background: #F6D9A8; }
-.mj-orb-mesh i:nth-child(2) { right: -90px; top: -40px; background: #F2C6C6; opacity: 0.4; }
-.mj-orb-mesh i:nth-child(3) { left: 30%; top: 120px; background: #FBE7BF; opacity: 0.45; }
-.mj-orb-handle { position: absolute; left: 50%; top: 7px; width: 44px; height: 5px; margin-left: -22px; border-radius: 9999px; background: linear-gradient(90deg, #E9C977, #B98A2E, #E9C977); }
-.mj-orb-seg { fill: rgba(255, 253, 248, 0.85); stroke: rgba(185, 138, 46, 0.55); stroke-width: 1; cursor: pointer; transition: fill 0.35s ease; }
-.mj-orb-seg[data-on] { fill: #6B0A0A; stroke: #E9C977; }
-.mj-orb-marker { transition: cx 0.55s cubic-bezier(0.22, 1, 0.36, 1), cy 0.55s cubic-bezier(0.22, 1, 0.36, 1); filter: drop-shadow(0 0 4px rgba(233, 201, 119, 0.9)); }
-.mj-orb-tab { color: #7A1220; transition: color 0.3s ease, transform 0.3s ease; -webkit-tap-highlight-color: transparent; }
-.mj-orb-tab[data-on] { color: #E9C977; }
+.mj-orb-handle { position: absolute; left: 50%; top: 7px; width: 40px; height: 4px; margin-left: -20px; border-radius: 9999px; background: #E0D2B8; }
+.mj-menu-close { background: #FFFAF0; border: 1px solid #EADFCB; transition: border-color 0.2s, background-color 0.2s; }
+.mj-menu-close:hover { border-color: #B98A2E; background: #FBF1DD; }
+.mj-orb-seg { fill: #FFFDF8; stroke: #EADFCB; stroke-width: 1; cursor: pointer; transition: fill 0.3s ease, stroke 0.3s ease; }
+.mj-orb-seg:hover { fill: #FBF1DD; }
+.mj-orb-seg[data-on] { fill: #7A1220; stroke: #7A1220; }
+.mj-orb-tab { color: #7A1220; transition: color 0.3s ease; -webkit-tap-highlight-color: transparent; }
+.mj-orb-tab[data-on] { color: #FFFAF0; }
 .mj-orb-tab:focus-visible { outline: 2px solid #B98A2E; outline-offset: 2px; }
-.mj-flaps-sm { flex: none; gap: 2px; }
-.mj-flaps-sm .mj-flap { width: 19px; max-width: 19px; flex: none; font-size: 12.5px; border-radius: 4px; box-shadow: inset 0 1px 0 #fff, 0 2px 6px -2px rgba(122, 18, 32, 0.25); }
+.mj-orb-title { margin-top: -2px; text-align: center; font-size: 11.5px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: #7A1220; }
 .mj-orb-card {
-  position: relative; display: flex; min-height: 54px; align-items: center; gap: 10px; overflow: hidden;
-  padding: 8px 12px 8px 8px; border-radius: 16px; color: #2A1A16;
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.85), rgba(255, 250, 240, 0.6));
-  border: 1px solid rgba(185, 138, 46, 0.35);
-  box-shadow: inset 0 1px 0 #fff, 0 8px 18px -14px rgba(107, 10, 10, 0.5);
-  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s;
+  position: relative; display: flex; min-height: 54px; align-items: center; gap: 10px;
+  padding: 8px 12px 8px 8px; border-radius: 14px; color: #2A1A16;
+  background: #FFFDF8; border: 1px solid #EADFCB;
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s, background-color 0.2s;
   -webkit-tap-highlight-color: transparent;
 }
-.mj-orb-card::after { /* holographic sheen */
-  content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0; mix-blend-mode: soft-light;
-  background: linear-gradient(115deg, transparent 20%, rgba(255, 214, 165, 0.9) 35%, rgba(230, 190, 255, 0.7) 45%, rgba(170, 230, 255, 0.7) 55%, transparent 70%);
-  background-size: 250% 100%; background-position: 120% 0; transition: opacity 0.3s, background-position 0.9s ease;
-}
-.mj-orb-card:hover::after, .mj-orb-card:focus-visible::after { opacity: 1; background-position: -20% 0; }
-.mj-orb-card:active { transform: scale(0.97); }
+.mj-orb-card:hover { border-color: #B98A2E; }
+.mj-orb-card:active { transform: scale(0.98); }
 .mj-orb-card:focus-visible { outline: 2px solid #B98A2E; outline-offset: 2px; }
-.mj-orb-card[data-on] { background: linear-gradient(160deg, #8A1414, #6B0A0A); color: #FFF6E2; border-color: #6B0A0A; }
-.mj-orb-icon { display: grid; place-items: center; flex: none; width: 38px; height: 38px; border-radius: 12px; color: #7A1220; background: radial-gradient(circle at 35% 30%, #FFFFFF, #FBF1DD 75%); border: 1px solid rgba(185, 138, 46, 0.5); }
-.mj-orb-card[data-on] .mj-orb-icon { background: rgba(255, 250, 240, 0.14); color: #E9C977; border-color: rgba(233, 201, 119, 0.6); }
+.mj-orb-card[data-on] { background: #7A1220; color: #FFF6E2; border-color: #7A1220; }
+.mj-orb-icon { display: grid; place-items: center; flex: none; width: 38px; height: 38px; border-radius: 10px; color: #7A1220; background: #FBF1DD; }
+.mj-orb-card[data-on] .mj-orb-icon { background: rgba(255, 250, 240, 0.14); color: #E9C977; }
 .mj-orb-cta {
-  position: relative; display: flex; min-height: 46px; align-items: center; justify-content: center; gap: 8px; overflow: hidden;
+  display: flex; min-height: 46px; align-items: center; justify-content: center; gap: 8px;
   border-radius: 9999px; color: #FFF6E2; font-size: 15px; font-weight: 600;
-  background: linear-gradient(120deg, #8A1414, #6B0A0A 60%, #5A0708);
-  box-shadow: inset 0 0 0 1px rgba(233, 201, 119, 0.6), 0 10px 22px -14px rgba(107, 10, 10, 0.9);
+  background: #7A1220; transition: background-color 0.2s;
 }
-.mj-orb-cta::after { content: ''; position: absolute; top: 0; bottom: 0; left: -40%; width: 30%; transform: skewX(-18deg); background: linear-gradient(100deg, transparent, rgba(255, 231, 166, 0.4), transparent); }
+.mj-orb-cta:hover { background: #5A0E19; }
 .mj-orb-cta:focus-visible { outline: 2px solid #B98A2E; outline-offset: 2px; }
+.mj-menu-social { display: grid; place-items: center; border-radius: 11px; transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1); }
+.mj-menu-social:hover { transform: translateY(-1px); }
+.mj-menu-social:focus-visible { outline: 2px solid #B98A2E; outline-offset: 2px; }
+/* Small split-flap tiles (components/digital-profile/ProfileCover). */
+.mj-flaps-sm { flex: none; gap: 2px; }
+.mj-flaps-sm .mj-flap { width: 19px; max-width: 19px; flex: none; font-size: 12.5px; border-radius: 4px; box-shadow: inset 0 1px 0 #fff, 0 2px 6px -2px rgba(122, 18, 32, 0.25); }
 @keyframes mjOrbUp { from { transform: translateY(100%); } to { transform: none; } }
-@keyframes mjOrbItem { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
-@keyframes mjOrbBurst { 0% { opacity: 1; transform: translate(0, 0); } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)); } }
-@keyframes mjOrbMesh1 { 50% { transform: translate(40px, 30px) scale(1.1); } }
-@keyframes mjOrbMesh2 { 50% { transform: translate(-30px, 40px) scale(0.9); } }
-@keyframes mjOrbMesh3 { 50% { transform: translate(-40px, -20px) scale(1.15); } }
+@keyframes mjOrbItem { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @keyframes mjOrbFade { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: no-preference) {
-  .mj-orb { animation: mjOrbUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
-  .mj-orb-scrim { animation: mjOrbFade 0.3s ease both; }
-  .mj-orb-item { animation: mjOrbItem 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--k, 0) * 45ms + 60ms); }
-  .mj-orb-burst circle { transform-box: fill-box; animation: mjOrbBurst 0.8s cubic-bezier(0.22, 1, 0.36, 1) both; }
-  .mj-orb-mesh i:nth-child(1) { animation: mjOrbMesh1 9s ease-in-out infinite; }
-  .mj-orb-mesh i:nth-child(2) { animation: mjOrbMesh2 11s ease-in-out infinite; }
-  .mj-orb-mesh i:nth-child(3) { animation: mjOrbMesh3 13s ease-in-out infinite; }
-  .mj-orb-cta::after { animation: mjMenuSheen 1.1s ease 0.5s both; }
+  .mj-orb { animation: mjOrbUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .mj-orb-scrim, .mj-orb-title { animation: mjOrbFade 0.3s ease both; }
+  .mj-orb-item { animation: mjOrbItem 0.3s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--k, 0) * 35ms + 40ms); }
 }
-@media (prefers-reduced-motion: reduce) { .mj-orb-burst { display: none; } }
 
 /* The Digital Profile tab's ID card (components/AuthBottomNav). */
 .mj-idcard {
@@ -1434,14 +1100,9 @@ footer :focus-visible {
 
 /* ── My profile card (/profile) ───────────────────────────────────────────
    Photo in a Mithila arch with completion traced around it in gold; the name
-   rises in; a soft gradient mesh drifts behind; roots shown as small chips. */
-.mj-me { position: relative; overflow: hidden; padding: 18px 16px 16px; border-radius: 24px; border: 1px solid rgba(185, 138, 46, 0.45); background: linear-gradient(160deg, #FFFDF8, #FBF1DD); box-shadow: inset 0 1px 0 #fff, 0 18px 40px -28px rgba(107, 10, 10, 0.55); }
+   rises in; roots shown as small chips. */
+.mj-me { position: relative; overflow: hidden; padding: 18px 16px 16px; border-radius: 24px; border: 1px solid #EADFCB; background: #FFFDF8; box-shadow: 0 4px 12px -4px rgba(58, 20, 12, 0.25); }
 @media (min-width: 640px) { .mj-me { padding: 22px; } }
-.mj-me::after { content: ''; position: absolute; top: 0; bottom: 0; left: -40%; width: 30%; pointer-events: none; transform: skewX(-18deg); background: linear-gradient(100deg, transparent, rgba(255, 231, 166, 0.5), transparent); }
-.mj-me-mesh { position: absolute; inset: 0; pointer-events: none; }
-.mj-me-mesh i { position: absolute; width: 220px; height: 220px; border-radius: 9999px; filter: blur(40px); opacity: 0.5; }
-.mj-me-mesh i:first-child { right: -80px; top: -90px; background: #F6D9A8; }
-.mj-me-mesh i:last-child { left: -90px; bottom: -110px; background: #F2C6C6; opacity: 0.35; }
 .mj-me-photo { position: relative; flex: none; width: 96px; height: 112px; }
 .mj-me-ring { position: absolute; inset: -7px; width: calc(100% + 14px); height: calc(100% + 14px); overflow: visible; }
 .mj-me-arch { position: absolute; inset: 0; overflow: hidden; border-radius: 48px 48px 16px 16px; background: #FBF1DD; border: 2px solid #FFFAF0; box-shadow: 0 12px 24px -14px rgba(107, 10, 10, 0.6); }
@@ -1452,20 +1113,14 @@ footer :focus-visible {
 .mj-me-vis { margin-top: 8px; display: inline-flex; align-items: center; gap: 7px; padding: 4px 11px; border-radius: 9999px; font-size: 12px; font-weight: 600; color: #2A1A16; border: 1px solid rgba(185, 138, 46, 0.4); background: rgba(255, 253, 248, 0.85); }
 .mj-me-dot { position: relative; width: 8px; height: 8px; border-radius: 9999px; background: #B8B0A6; }
 .mj-me-dot.is-on { background: #2F8F4E; }
-.mj-me-dot.is-on::after { content: ''; position: absolute; inset: -4px; border-radius: inherit; border: 2px solid rgba(47, 143, 78, 0.45); }
 .mj-me-roots { position: relative; margin-top: 16px; display: flex; flex-wrap: wrap; gap: 6px; }
 .mj-me-roots li { display: inline-flex; align-items: baseline; gap: 6px; padding: 5px 11px; border-radius: 9999px; font-size: 13px; color: #7A1220; border: 1px solid rgba(185, 138, 46, 0.45); background: rgba(255, 253, 248, 0.9); }
 .mj-me-roots span { font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #8A6516; }
 @keyframes mjMeRing { from { stroke-dasharray: 0 100; } }
 @keyframes mjMeName { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-@keyframes mjMeDot { 0% { transform: scale(0.7); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
-@keyframes mjMeMesh { 50% { transform: translate(-30px, 20px) scale(1.1); } }
 @media (prefers-reduced-motion: no-preference) {
   .mj-me-ring-fill { animation: mjMeRing 1.4s cubic-bezier(0.45, 0, 0.2, 1) 0.2s backwards; }
   .mj-me-name { animation: mjMeName 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both; }
-  .mj-me-dot.is-on::after { animation: mjMeDot 1.8s ease-out infinite; }
-  .mj-me::after { animation: mjCtaSheenX 7s ease-in-out 1s infinite; }
-  .mj-me-mesh i:first-child { animation: mjMeMesh 10s ease-in-out infinite; }
 }
 
 /* Digital Profile: the Story / Details switch (components/digital-profile/ProfileModes). */
@@ -1476,18 +1131,14 @@ footer :focus-visible {
 .mj-modes-btn:focus-visible { outline: 2px solid #B98A2E; outline-offset: 2px; }
 
 /* ── Video bubble (components/ui/VideoBubble) ─────────────────────────────
-   A round, silently looping preview inside a turning gold ring. */
-.mj-bubble { display: inline-flex; align-items: center; gap: 12px; padding: 6px 16px 6px 6px; border-radius: 9999px; border: 1px solid rgba(185, 138, 46, 0.45); background: rgba(255, 253, 248, 0.92); box-shadow: 0 12px 26px -18px rgba(107, 10, 10, 0.55); transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
-.mj-bubble:hover { transform: translateY(-2px); }
+   A round, silently looping preview inside a still hairline ring. */
+.mj-bubble { display: inline-flex; align-items: center; gap: 12px; padding: 6px 16px 6px 6px; border-radius: 9999px; border: 1px solid #EADFCB; background: #FFFDF8; box-shadow: 0 4px 12px -4px rgba(58, 20, 12, 0.25); transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s; }
+.mj-bubble:hover { transform: translateY(-2px); border-color: #B98A2E; }
 .mj-bubble:focus-visible { outline: 2px solid #B98A2E; outline-offset: 3px; }
-.mj-bubble-ring { position: relative; display: block; flex: none; width: 76px; height: 76px; padding: 3px; border-radius: 9999px;
-  background: conic-gradient(from var(--mj-bub, 0deg), #E9C977, #8A1414, #F2C6C6, #B98A2E, #E9C977); }
+.mj-bubble-ring { position: relative; display: block; flex: none; width: 76px; height: 76px; padding: 2px; border-radius: 9999px; background: #EADFCB; }
 .mj-bubble-in { display: block; width: 100%; height: 100%; overflow: hidden; border-radius: 9999px; border: 2px solid #FFFAF0; background: #FCF5E7; }
 .mj-bubble-in video { width: 100%; height: 100%; object-fit: cover; }
 .mj-bubble-play { position: absolute; right: -2px; bottom: -2px; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 9999px; color: #FFF6E2; background: #7A1220; box-shadow: 0 0 0 2px #FFFDF8; }
-@property --mj-bub { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
-@keyframes mjBub { to { --mj-bub: 360deg; } }
-@media (prefers-reduced-motion: no-preference) { .mj-bubble-ring { animation: mjBub 6s linear infinite; } }
 
 /* ── Match score page (/match-score) ── */
 .mjs-hero { background: radial-gradient(ellipse 90% 85% at 70% 0%, #FFFAF0 0%, #F5EBDD 100%); }
