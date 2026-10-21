@@ -1,214 +1,221 @@
 'use client'
 
+import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
 import Link from 'next/link'
-import { MithilaCouple } from '@/components/astrology/hub/MithilaCouple'
+import { useRouter } from 'next/navigation'
 
 /**
  * The entrance to Mithila Jodi (/register before any step is chosen).
  *
- * Two equal ways in — Create Account and Welcome Back — as whole-card links
- * with the same size, border, type and CTA. The registration stepper only
- * appears once Create Account is chosen. No auth logic lives here.
+ * One control, two ways in: a track with "Create account" at one end and
+ * "Log in" at the other, and a diya in the middle. Tap either end — they are
+ * ordinary links, reachable by keyboard and screen readers — or slide the diya
+ * towards one. Above it an aripan, drawn in fine gold line, turns with the
+ * diya and fills from the side it is moving to: maroon for joining, gold for
+ * returning. On choosing, the aripan opens towards the viewer and the next
+ * page follows.
+ *
+ * No auth logic lives here. prefers-reduced-motion keeps the layout and the
+ * links but drops the drawing, the turning and the opening.
  */
 
-function Check() {
-  return (
-    <svg viewBox="0 0 16 16" className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" aria-hidden="true">
-      <circle cx="8" cy="8" r="7.2" fill="#B98A2E" />
-      <path d="M4.6 8.3 7 10.6l4.4-4.8" fill="none" stroke="#FFFAF0" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
+const JOIN = '/register?start=1'
+const LOGIN = '/login'
 
-function JoinIcon() {
-  return (
-    <svg viewBox="0 0 32 32" className="h-7 w-7" fill="none" stroke="#7A1220" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
-      <circle cx="14" cy="11" r="5" />
-      <path d="M5 26c.8-5 4.4-8 9-8 2 0 3.8.5 5.2 1.5" />
-      <circle cx="24" cy="23" r="5.4" fill="#7A1220" stroke="none" />
-      <path d="M24 20.6v4.8M21.6 23h4.8" stroke="#FFFAF0" strokeWidth="1.7" />
-    </svg>
-  )
-}
+type Side = 'join' | 'login'
 
-function LoginIcon() {
-  return (
-    <svg viewBox="0 0 32 32" className="h-7 w-7" fill="none" stroke="#7A1220" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M18 6h6a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2h-6" />
-      <path d="M6 16h13M14 11l5 5-5 5" />
-    </svg>
-  )
+// ── The aripan: rice-flour floor art, as line ────────────────────────────────
+const AC = 120
+const r2 = (n: number) => Math.round(n * 100) / 100
+const at = (r: number, deg: number) => {
+  const a = ((deg - 90) * Math.PI) / 180
+  return [r2(AC + r * Math.cos(a)), r2(AC + r * Math.sin(a))] as const
 }
-
-function Arrow() {
-  return (
-    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-maroon-gradient text-cream shadow-mj-sm transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transform-none" aria-hidden="true">
-      <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 10h11M11 5.5 15.5 10 11 14.5" />
-      </svg>
-    </span>
-  )
+/** A full circle as a path, so pathLength (and the draw-in) works everywhere. */
+const ring = (r: number) => `M${AC} ${AC - r}A${r} ${r} 0 1 1 ${AC} ${AC + r}A${r} ${r} 0 1 1 ${AC} ${AC - r}Z`
+/** A petal from radius r0 to r1 along angle deg, w wide. */
+function petal(r0: number, r1: number, deg: number, w: number) {
+  const [x0, y0] = at(r0, deg), [x1, y1] = at(r1, deg)
+  const mid = (r0 + r1) / 2
+  const [lx, ly] = at(mid, deg - w), [rx, ry] = at(mid, deg + w)
+  return `M${x0} ${y0}Q${lx} ${ly} ${x1} ${y1}Q${rx} ${ry} ${x0} ${y0}Z`
 }
+const BIG = Array.from({ length: 8 }, (_, i) => petal(30, 84, i * 45, 15))
+const SMALL = Array.from({ length: 16 }, (_, i) => petal(92, 108, i * 22.5 + 11.25, 4.2))
+const DOTS = Array.from({ length: 32 }, (_, i) => at(100, i * 11.25))
+const SEEDS = Array.from({ length: 8 }, (_, i) => at(58, i * 45 + 22.5))
 
-type CardProps = {
-  href: string
-  title: string
-  eyebrow: string
-  body: string
-  benefits: string[]
-  icon: React.ReactNode
-  emphasis?: boolean
-}
-
-/** One way in. Both cards share this, so they cannot drift apart. */
-function EntryCard({ href, title, eyebrow, body, benefits, icon, emphasis }: CardProps) {
+function Aripan({ p, open }: { p: number; open: boolean }) {
+  // p: −1 (towards Create account) … 0 … +1 (towards Log in)
+  const join = Math.max(0, -p), back = Math.max(0, p)
   return (
-    <Link
-      href={href}
-      className={`group flex flex-col overflow-hidden rounded-[18px] border bg-cream transition duration-200 hover:-translate-y-0.5 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold motion-reduce:transform-none ${
-        emphasis ? 'border-gold/70 shadow-mj-sm hover:shadow-mj' : 'border-gold/45 shadow-mj-xs hover:shadow-mj-sm'
-      }`}
-    >
-      <div className="flex flex-1 items-center gap-3 px-3.5 pb-2.5 pt-3.5 sm:gap-4 sm:px-5 sm:pb-3 sm:pt-4">
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-gold/40 bg-paper-2/70 sm:h-14 sm:w-14" aria-hidden="true">{icon}</span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-terra">{eyebrow}</span>
-          <span className="mt-0.5 block font-serif text-[21px] leading-tight text-maroon sm:text-[24px]">{title}</span>
-          <span className="mt-1 block text-[12.5px] leading-snug text-ink-soft sm:text-[13px]">{body}</span>
-        </span>
-        <Arrow />
-      </div>
-      <ul className="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 border-t border-gold/25 bg-paper-2/45 px-2 py-1.5 sm:gap-x-3.5 sm:py-2">
-        {benefits.map(b => (
-          <li key={b} className="flex items-center gap-1 whitespace-nowrap text-[10.5px] text-ink sm:gap-1.5 sm:text-[11.5px]">
-            <Check />{b}
-          </li>
-        ))}
-      </ul>
-    </Link>
-  )
-}
-
-/** A Maithil couple by the river at sunset, lotus in the foreground. Decorative. */
-function WelcomeScene() {
-  return (
-    <div className="pointer-events-none relative mx-auto h-[150px] w-full max-w-[460px] overflow-hidden sm:h-[210px]" aria-hidden="true">
-      <svg viewBox="0 0 460 210" preserveAspectRatio="xMidYMax slice" className="absolute inset-0 h-full w-full">
+    <div className={`mj-entry-aripan ${open ? 'is-open' : ''}`} aria-hidden="true">
+      <svg viewBox="0 0 240 240" className="h-full w-full overflow-visible">
         <defs>
-          <linearGradient id="wsSky" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#FCF5E7" stopOpacity="0" />
-            <stop offset="0.45" stopColor="#F8E2BC" />
-            <stop offset="1" stopColor="#F2C88E" />
+          <linearGradient id="enLine" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#D9B25A" />
+            <stop offset=".55" stopColor="#B98A2E" />
+            <stop offset="1" stopColor="#9B2233" />
           </linearGradient>
-          <radialGradient id="wsSun" cx="50%" cy="50%" r="50%">
-            <stop offset="0" stopColor="#FFE7B0" />
-            <stop offset="0.5" stopColor="#F6C27A" stopOpacity="0.85" />
-            <stop offset="1" stopColor="#F6C27A" stopOpacity="0" />
+          <radialGradient id="enGlow">
+            <stop offset="0" stopColor="#FFE7A6" stopOpacity=".85" />
+            <stop offset=".6" stopColor="#F2C46A" stopOpacity=".18" />
+            <stop offset="1" stopColor="#F2C46A" stopOpacity="0" />
           </radialGradient>
-          <linearGradient id="wsRiver" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#F0D2A0" />
-            <stop offset="1" stopColor="#E7BE86" />
-          </linearGradient>
         </defs>
-        <rect width="460" height="150" fill="url(#wsSky)" />
-        <circle cx="300" cy="128" r="58" fill="url(#wsSun)" />
-        <circle cx="300" cy="128" r="17" fill="#FBDDA0" />
-        {/* distant Mithila temples and trees along the far bank */}
-        <g fill="#C9966A" fillOpacity="0.55">
-          <path d="M40 132h28v-14l6-9 6 9v14h22v-8l4-6 4 6v8h18v18H40Z" />
-          <path d="M150 134h14v-18c0-6 4-10 8-14 4 4 8 8 8 14v18h14v16h-44Z" />
-          <path d="M360 136h20v-10l5-7 5 7v10h24v14h-54Z" />
-          <ellipse cx="128" cy="134" rx="14" ry="9" />
-          <ellipse cx="226" cy="136" rx="18" ry="8" />
-          <ellipse cx="430" cy="134" rx="16" ry="10" />
+        <circle cx={AC} cy={AC} r="118" fill="url(#enGlow)" opacity={0.35 + 0.4 * Math.abs(p)} />
+        {/* the outer rings turn with the diya */}
+        <g style={{ transform: `rotate(${r2(p * 40)}deg)`, transformOrigin: '120px 120px' }} className="mj-entry-turn">
+          <path d={ring(116)} className="mj-entry-draw" pathLength={1} stroke="url(#enLine)" strokeWidth="1" fill="none" style={{ animationDelay: '0ms' }} />
+          {SMALL.map((d, i) => (
+            <path key={i} d={d} className="mj-entry-draw" pathLength={1} stroke="url(#enLine)" strokeWidth="1.1" fill={i % 2 ? '#9B2233' : '#B98A2E'} fillOpacity={0.08 + 0.5 * (i % 2 ? join : back)} style={{ animationDelay: `${300 + i * 25}ms` }} />
+          ))}
+          {DOTS.map(([x, y], i) => <circle key={i} cx={x} cy={y} r="1.3" fill="#B98A2E" className="mj-entry-fade" style={{ animationDelay: `${700 + i * 12}ms` }} />)}
         </g>
-        <rect y="148" width="460" height="62" fill="url(#wsRiver)" />
-        {/* the sun on the water */}
-        {[156, 164, 172, 181, 190].map((y, i) => (
-          <path key={y} d={`M${300 - 30 + i * 3} ${y}h${60 - i * 6}`} stroke="#FCE3AE" strokeWidth="1.6" strokeLinecap="round" opacity={0.9 - i * 0.15} />
-        ))}
-        {/* ghat steps the couple stands on */}
-        <path d="M150 210l14-16h132l14 16Z" fill="#E1B47C" />
-        <path d="M164 194l8-8h116l8 8Z" fill="#D9A86F" />
-      </svg>
-
-      <MithilaCouple className="absolute bottom-[12px] left-1/2 h-[128px] w-auto -translate-x-1/2 sm:h-[178px]" />
-
-      {/* lotus in the foreground, both sides */}
-      <svg viewBox="0 0 460 210" preserveAspectRatio="xMidYMax slice" className="absolute inset-0 h-full w-full">
-        {[[30, 196, 1], [92, 204, 0.8], [372, 202, 0.85], [430, 194, 1.05]].map(([x, y, s], i) => (
-          <g key={i} transform={`translate(${x} ${y}) scale(${s})`}>
-            <ellipse cx="0" cy="6" rx="30" ry="7" fill="#7E8F4A" fillOpacity="0.75" />
-            <path d="M0 0C-7-9-7-22 0-32 7-22 7-9 0 0Z" fill="#C2405E" />
-            <path d="M0 0C-13-4-20-14-21-25-11-22-4-13 0 0ZM0 0C13-4 20-14 21-25 11-22 4-13 0 0Z" fill="#9E1C3E" />
-            <path d="M0 0C-17 0-27-6-31-14-20-15-9-9 0 0ZM0 0C17 0 27-6 31-14 20-15 9-9 0 0Z" fill="#B8323F" />
-            <circle cx="0" cy="-4" r="2.4" fill="#E4C572" />
-          </g>
-        ))}
+        <g style={{ transform: `rotate(${r2(-p * 22)}deg)`, transformOrigin: '120px 120px' }} className="mj-entry-turn">
+          <path d={ring(88)} className="mj-entry-draw" pathLength={1} stroke="url(#enLine)" strokeWidth="1" strokeDasharray="0.004 0.012" fill="none" />
+          {BIG.map((d, i) => (
+            <path key={i} d={d} className="mj-entry-draw" pathLength={1} stroke="url(#enLine)" strokeWidth="1.4" fill={i % 2 ? '#B98A2E' : '#9B2233'} fillOpacity={0.05 + 0.32 * (i % 2 ? back : join)} style={{ animationDelay: `${150 + i * 60}ms` }} />
+          ))}
+          {SEEDS.map(([x, y], i) => <circle key={i} cx={x} cy={y} r="2.6" fill="#9B2233" className="mj-entry-fade" style={{ animationDelay: `${900 + i * 40}ms` }} />)}
+        </g>
+        {/* the centre: a lotus with a pair of fish, Mithila's marks of good fortune */}
+        <path d={ring(26)} className="mj-entry-draw" pathLength={1} stroke="#B98A2E" strokeWidth="1.2" fill="#FFFAF0" />
+        <g className="mj-entry-fade" style={{ animationDelay: '1000ms' }}>
+          <path d="M120 104c5 5 6 11 0 17-6-6-5-12 0-17Z" fill="#9B2233" />
+          <path d="M120 121c-6-1-11-5-12-11 6 0 10 4 12 11Zm0 0c6-1 11-5 12-11-6 0-10 4-12 11Z" fill="#B8323F" />
+          <path d="M106 129c4-3 9-3 12 0-3 3-8 3-12 0Zm28 0c-4-3-9-3-12 0 3 3 8 3 12 0Z" fill="none" stroke="#B98A2E" strokeWidth="1.3" strokeLinejoin="round" />
+          <path d="M106 129l-3-2.4M106 129l-3 2.4M134 129l3-2.4M134 129l3 2.4" stroke="#B98A2E" strokeWidth="1.2" strokeLinecap="round" />
+        </g>
       </svg>
     </div>
   )
 }
 
-export function AuthWelcome() {
+function Diya() {
   return (
-    <div className="w-full max-w-[460px] motion-safe:animate-fade-in">
-      <div className="text-center">
-        <h1 className="font-serif text-[26px] leading-[1.15] text-maroon sm:text-[31px]">
+    <svg viewBox="0 0 32 32" className="h-7 w-7" aria-hidden="true">
+      <path className="mj-entry-flame" d="M16 4.5c2.6 3 3.6 5.2 3.6 7a3.6 3.6 0 0 1-7.2 0c0-1.8 1-4 3.6-7Z" fill="#FFD27A" />
+      <path d="M16 8.6c1 1.3 1.4 2.3 1.4 3a1.4 1.4 0 0 1-2.8 0c0-.7.4-1.7 1.4-3Z" fill="#FFF4D6" />
+      <path d="M4.5 18.5h23c-.9 4.6-5.4 7.5-11.5 7.5S5.4 23.1 4.5 18.5Z" fill="#E9C977" />
+      <path d="M8 21.4h16" stroke="#9B2233" strokeWidth="1.2" strokeLinecap="round" opacity=".55" />
+    </svg>
+  )
+}
+
+export function AuthWelcome() {
+  const router = useRouter()
+  const track = useRef<HTMLDivElement>(null)
+  const drag = useRef<{ x0: number; max: number } | null>(null)
+  const [x, setX] = useState(0)
+  const [max, setMax] = useState(120)
+  const [dragging, setDragging] = useState(false)
+  const [leaving, setLeaving] = useState<Side | null>(null)
+
+  useEffect(() => { router.prefetch(JOIN); router.prefetch(LOGIN) }, [router])
+
+  const reduced = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
+  function go(side: Side) {
+    if (leaving) return
+    const href = side === 'join' ? JOIN : LOGIN
+    if (reduced()) { router.push(href); return }
+    setLeaving(side)
+    setX(side === 'join' ? -max : max)
+    window.setTimeout(() => router.push(href), 520)
+  }
+
+  /** The ends are real links; a plain click plays the opening first. */
+  function onEnd(e: MouseEvent, side: Side) {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return
+    e.preventDefault()
+    go(side)
+  }
+
+  function onDown(e: PointerEvent<HTMLDivElement>) {
+    if (leaving || !track.current) return
+    const w = track.current.getBoundingClientRect().width
+    const m = w / 2 - 32
+    setMax(m)
+    drag.current = { x0: e.clientX - x, max: m }
+    setDragging(true)
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+  function onMove(e: PointerEvent<HTMLDivElement>) {
+    if (!drag.current) return
+    const { x0, max: m } = drag.current
+    setX(Math.max(-m, Math.min(m, e.clientX - x0)))
+  }
+  function onUp() {
+    if (!drag.current) return
+    const m = drag.current.max
+    drag.current = null
+    setDragging(false)
+    if (x <= -m * 0.6) go('join')
+    else if (x >= m * 0.6) go('login')
+    else setX(0)
+  }
+
+  const p = max ? x / max : 0
+  const join = Math.max(0, -p), back = Math.max(0, p)
+
+  return (
+    <div className={`mj-entry w-full max-w-[440px] ${leaving ? 'is-leaving' : ''}`}>
+      <div className="relative mx-auto h-[178px] w-[178px] sm:h-[210px] sm:w-[210px]">
+        <Aripan p={p} open={!!leaving} />
+      </div>
+
+      <div className="mj-entry-copy mt-3 text-center">
+        <p className="font-deva text-[14px] text-terra" lang="mai">स्वागत अछि</p>
+        <h1 className="mt-1 font-serif text-[24px] leading-[1.15] text-maroon sm:text-[32px]">
           A beautiful beginning
           <span className="block text-[#9A6F1E]">deserves the right connection.</span>
         </h1>
-        <div className="mx-auto mt-2 flex items-center justify-center gap-2" aria-hidden="true">
-          <span className="h-px w-10 bg-gradient-to-r from-transparent to-gold" />
-          <span className="text-[10px] text-gold">✦</span>
-          <span className="h-px w-10 bg-gradient-to-l from-transparent to-gold" />
+        <p className="mt-2 font-deva text-[16px] text-maroon/90 sm:text-[18px]" lang="mai">अहाँक अपन मिथिला, अहाँक अपन जोड़ी</p>
+      </div>
+
+      {/* ── The threshold: two ends, one diya ── */}
+      <nav aria-label="Join or log in" className="mj-entry-copy mt-6">
+        <div ref={track} className="mj-entry-track relative h-[72px] select-none rounded-full">
+          {/* the trail of light behind the diya */}
+          <span className="mj-entry-trail" style={{ left: '50%', width: `${Math.abs(x)}px`, transform: x < 0 ? 'translateX(-100%)' : undefined, background: x < 0 ? 'linear-gradient(270deg, rgba(155,34,51,.0), rgba(155,34,51,.9))' : 'linear-gradient(90deg, rgba(185,138,46,0), rgba(185,138,46,.85))' }} aria-hidden="true" />
+          <Link href={JOIN} onClick={e => onEnd(e, 'join')} className="mj-entry-end left-0 pl-5 text-left sm:pl-6" data-lit={join > 0.05 || undefined} data-side="join">
+            <span className="block text-[11px] uppercase tracking-[0.16em] text-terra/90" style={{ color: join > 0.55 ? '#FFF6E2' : undefined }}>New here</span>
+            <span className="block font-serif leading-tight text-maroon" style={{ color: join > 0.55 ? '#FFFFFF' : undefined }}>Create account</span>
+          </Link>
+          <Link href={LOGIN} onClick={e => onEnd(e, 'login')} className="mj-entry-end right-0 pr-5 text-right sm:pr-6" data-lit={back > 0.05 || undefined} data-side="login">
+            <span className="block text-[11px] uppercase tracking-[0.16em] text-terra/90" style={{ color: back > 0.55 ? '#FFF6E2' : undefined }}>Welcome back</span>
+            <span className="block font-serif leading-tight text-maroon" style={{ color: back > 0.55 ? '#FFFFFF' : undefined }}>Log in</span>
+          </Link>
+          <div
+            className={`mj-entry-knob ${dragging ? 'is-dragging' : ''}`}
+            style={{ transform: `translate(calc(-50% + ${r2(x)}px), -50%)` }}
+            onPointerDown={onDown}
+            onPointerMove={onMove}
+            onPointerUp={onUp}
+            onPointerCancel={onUp}
+            aria-hidden="true"
+          >
+            <span className="mj-entry-halo" />
+            <Diya />
+          </div>
         </div>
-        <p className="mt-1.5 font-deva text-[16.5px] text-maroon sm:text-[19px]" lang="mai">अहाँक अपन मिथिला, अहाँक अपन जोड़ी</p>
-        <p className="mx-auto mt-1.5 max-w-xs text-[14px] leading-relaxed text-ink-soft sm:max-w-sm sm:text-[15px]">
-          Find a life partner who shares your values, culture and dreams.
-        </p>
-      </div>
+        <p className="mt-2.5 text-center text-[12px] text-ink-soft">Tap a side — or slide the diya</p>
+      </nav>
 
-      <div className="mt-4 grid auto-rows-fr gap-3">
-        <EntryCard
-          href="/register?start=1"
-          eyebrow="Begin your journey"
-          title="Create Account"
-          body="Join Mithila Jodi and take the first step towards finding a meaningful connection."
-          benefits={['Quick & easy', 'Your number stays private', 'Guided setup']}
-          icon={<JoinIcon />}
-          emphasis
-        />
-        <EntryCard
-          href="/login"
-          eyebrow="Continue your journey"
-          title="Welcome Back"
-          body="Log in to access your profile, matches and continue where you left off."
-          benefits={['Access your profile', 'View your matches', 'Continue your journey']}
-          icon={<LoginIcon />}
-        />
-      </div>
-
-      <ul className="mt-3.5 flex items-center justify-center gap-3 text-[12.5px] text-ink sm:gap-4" aria-label="Why it is safe">
+      <ul className="mj-entry-copy mt-6 flex items-center justify-center gap-2.5 whitespace-nowrap text-[11.5px] text-ink-soft sm:gap-4 sm:text-[12.5px]" aria-label="Why it is safe">
         <li className="flex items-center gap-1.5">
-          <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="#7A1220" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><path d="M10 2.5 16 5v4.6c0 3.7-2.5 6.6-6 7.9-3.5-1.3-6-4.2-6-7.9V5Z" /></svg>
-          Private
+          <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="none" stroke="#9B2233" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><path d="M10 2.5 16 5v4.6c0 3.7-2.5 6.6-6 7.9-3.5-1.3-6-4.2-6-7.9V5Z" /></svg>
+          Private number
         </li>
-        <li className="h-3.5 w-px bg-gold/50" aria-hidden="true" />
+        <li className="h-3 w-px bg-gold/50" aria-hidden="true" />
         <li className="flex items-center gap-1.5">
-          <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="#7A1220" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><rect x="4" y="9" width="12" height="8.5" rx="1.8" /><path d="M7 9V6.6a3 3 0 0 1 6 0V9" /></svg>
-          Secure
+          <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="none" stroke="#9B2233" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><rect x="4" y="9" width="12" height="8.5" rx="1.8" /><path d="M7 9V6.6a3 3 0 0 1 6 0V9" /></svg>
+          OTP secured
         </li>
-        <li className="h-3.5 w-px bg-gold/50" aria-hidden="true" />
-        <li className="flex items-center gap-1.5">
-          <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="#7A1220" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><path d="M10 16.5C5 13.2 2.8 10.4 2.8 7.6 2.8 5.5 4.4 4 6.3 4c1.5 0 2.9.9 3.7 2.2C10.8 4.9 12.2 4 13.7 4c1.9 0 3.5 1.5 3.5 3.6 0 2.8-2.2 5.6-7.2 8.9Z" /></svg>
-          Made for Mithila
-        </li>
+        <li className="h-3 w-px bg-gold/50" aria-hidden="true" />
+        <li>Free to join</li>
       </ul>
-
-      <div className="-mx-4 mt-3 sm:mx-0">
-        <WelcomeScene />
-      </div>
     </div>
   )
 }
