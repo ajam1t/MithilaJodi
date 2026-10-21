@@ -6,6 +6,7 @@ import { generateSessionToken, hashSessionToken } from '@/lib/session'
 import { INDIA_MOBILE_RE, SESSION_COOKIE, toE164 } from '@/lib/constants'
 import { rateLimit } from '@/lib/astrology/server/rateLimit'
 import { audit, isAdminRole } from '@/lib/adminAuth'
+import { PIN_COOKIE, hasPinPass } from '@/lib/adminPin'
 
 /*
  * Admin Console sign-in. Same accounts and password hashes as the member
@@ -15,7 +16,8 @@ import { audit, isAdminRole } from '@/lib/adminAuth'
  *     be used to probe member accounts;
  *   - it accepts the account's email or its mobile number;
  *   - admin sessions last 12 hours, not 30 days;
- *   - every success and every failed attempt on an admin account is audited.
+ *   - every success and every failed attempt on an admin account is audited;
+ *   - a password is only checked after the Command Centre PIN (lib/adminPin).
  * There is no way to create an account here.
  */
 
@@ -28,6 +30,10 @@ export async function POST(request: NextRequest) {
   const limited = rateLimit(request, 'admin-login', { limit: 10, windowMs: 15 * 60_000 })
   if (!limited.ok) {
     return NextResponse.json({ ok: false, message: 'Too many sign-in attempts. Please wait a few minutes.' }, { status: 429 })
+  }
+
+  if (!hasPinPass(request)) {
+    return NextResponse.json({ ok: false, message: 'Enter the PIN first.', needPin: true }, { status: 401 })
   }
 
   let body: Record<string, unknown>
@@ -100,5 +106,7 @@ export async function POST(request: NextRequest) {
     maxAge: ADMIN_SESSION_HOURS * 3600,
     path: '/',
   })
+  // The PIN pass is single-use: the next sign-in asks for the PIN again.
+  response.cookies.set(PIN_COOKIE, '', { maxAge: 0, path: '/api/admin/auth' })
   return response
 }

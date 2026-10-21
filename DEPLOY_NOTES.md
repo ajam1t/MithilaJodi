@@ -37,6 +37,13 @@ with the `anon` key.
   `NODE_ENV=production` in code as well, so it cannot grant access in
   production either way.
 
+**Optional — Command Centre PIN:**
+
+- `ADMIN_LOGIN_PIN` — the PIN asked before the admin password at /admin/login
+  (4–8 digits). Until it is set, the built-in PIN applies (stored in code only
+  as a hash). Set it to change the PIN; no redeploy of code is needed beyond
+  Vercel's usual env redeploy.
+
 **Remove (no longer read by any code):**
 
 - `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`
