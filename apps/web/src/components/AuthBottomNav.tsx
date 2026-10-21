@@ -6,8 +6,11 @@ import { inboxCount, usePendingCounts } from '@/lib/hooks/usePendingCounts'
 import { useOwnPhoto } from '@/lib/hooks/useOwnPhoto'
 
 /*
- * The signed-in mobile bottom nav — LOCKED by the owner (2026-10-07):
- *   Home · Digital Profile · Search · Inbox · Profile
+ * The signed-in mobile bottom nav — LOCKED by the owner (2026-10-07; Profile
+ * moved to the centre on the owner's request, 2026-10-21):
+ *   Home · Digital Profile · Profile · Search · Inbox
+ * Profile is the raised centre medallion, wearing the member's own photo,
+ * mirroring the signed-out bar's Join / Login medallion.
  * Do not bring back separate Messages / Interests tabs or Biodata here:
  * Inbox is the umbrella for messages, interests and matches, and Biodata
  * lives with the tools on the Profile page.
@@ -55,6 +58,17 @@ const tabs: Tab[] = [
     ),
   },
   {
+    href: '/profile',
+    label: 'Profile',
+    matchPaths: ['/profile', '/settings', '/biodata'],
+    icon: (active) => (
+      <svg width="22" height="22" viewBox="0 0 24 24" {...stroke(active)}>
+        <path d="M20 21v-1.5a4.5 4.5 0 0 0-4.5-4.5h-7A4.5 4.5 0 0 0 4 19.5V21" />
+        <circle cx="12" cy="7.5" r="4" fill={active ? 'currentColor' : 'none'} />
+      </svg>
+    ),
+  },
+  {
     href: '/search',
     label: 'Search',
     matchPaths: ['/search'],
@@ -72,17 +86,6 @@ const tabs: Tab[] = [
     icon: (active) => (
       <svg width="22" height="22" viewBox="0 0 24 24" {...stroke(active)} fill={active ? 'currentColor' : 'none'}>
         <path d="M21 14.5a2 2 0 0 1-2 2H8l-4.5 4V5.5a2 2 0 0 1 2-2H19a2 2 0 0 1 2 2z" />
-      </svg>
-    ),
-  },
-  {
-    href: '/profile',
-    label: 'Profile',
-    matchPaths: ['/profile', '/settings', '/biodata'],
-    icon: (active) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" {...stroke(active)}>
-        <path d="M20 21v-1.5a4.5 4.5 0 0 0-4.5-4.5h-7A4.5 4.5 0 0 0 4 19.5V21" />
-        <circle cx="12" cy="7.5" r="4" fill={active ? 'currentColor' : 'none'} />
       </svg>
     ),
   },
@@ -112,6 +115,28 @@ export function AuthBottomNav() {
           const active = isActive(tab)
           const badge = badgeFor(tab)
           return (
+            tab.href === '/profile' ? (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              aria-current={active ? 'page' : undefined}
+              className={`mj-cta-tab relative flex min-w-0 flex-[1.2] flex-col items-center justify-end pb-1.5 text-gold-lt transition-colors ${active ? 'bg-maroon-deep shadow-[inset_0_2px_0_#E4C572]' : 'bg-maroon'}`}
+            >
+              <span className="mj-cta-badge" aria-hidden="true">
+                <svg viewBox="0 0 60 60" className="mj-cta-rim">
+                  <circle cx="30" cy="30" r="28" fill="none" stroke="#E9C977" strokeWidth="1" strokeDasharray="2 3.2" />
+                  {Array.from({ length: 8 }, (_, i) => (
+                    <ellipse key={i} cx="30" cy="3.6" rx="1.1" ry="2.3" fill="#E9C977" opacity=".9" transform={`rotate(${i * 45} 30 30)`} />
+                  ))}
+                </svg>
+                {photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={photo} alt="" width={42} height={42} className="mj-cta-photo" />
+                ) : tab.icon(active)}
+              </span>
+              <span className="relative text-[10px] font-semibold leading-tight">{tab.label}</span>
+            </Link>
+            ) : (
             <Link
               key={tab.href}
               href={tab.href}
@@ -122,12 +147,7 @@ export function AuthBottomNav() {
               {/* Gold rule over the current tab — the brand's "selected" mark. */}
               {active && <span className="absolute inset-x-3 top-0 h-[2.5px] rounded-b-full bg-gold" aria-hidden="true" />}
               <span className="relative">
-                {tab.href === '/profile' && photo ? (
-                  <span className={`mj-nav-avatar ${active ? 'is-on' : ''}`}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={photo} alt="" width={26} height={26} />
-                  </span>
-                ) : tab.icon(active)}
+                {tab.icon(active)}
                 {badge > 0 && (
                   <span
                     className="absolute -right-2 -top-1.5 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-maroon px-1
@@ -142,6 +162,7 @@ export function AuthBottomNav() {
               </span>
               {badge > 0 && <span className="sr-only">, {badge} waiting for you</span>}
             </Link>
+            )
           )
         })}
       </div>
