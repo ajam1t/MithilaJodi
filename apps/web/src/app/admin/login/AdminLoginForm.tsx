@@ -220,10 +220,6 @@ export function AdminLoginForm() {
             <span>{busy ? 'Checking PIN…' : step === 'pin' ? 'Enter your PIN to continue' : 'Choose your profile to continue'}</span>
           </button>
         )}
-        {step === 'login' && (
-          /* Password reset uses the account's registered mobile number (OTP). */
-          <a href="/forgot-password" className="mcx-alt">Forgot password?</a>
-        )}
         <p className="mcx-fine">Sign-ins and failed attempts are recorded. Admins only.</p>
       </div>
     </form>
