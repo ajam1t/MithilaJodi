@@ -68,7 +68,7 @@ export function RecommendedForYou({ limit = 3 }: { limit?: number }) {
     return (
       <div className="space-y-3" aria-busy="true">
         {[1, 2].map(i => (
-          <div key={i} className="flex animate-pulse gap-3.5 rounded-mj border border-gold/20 bg-cream p-4">
+          <div key={i} className="flex animate-pulse gap-3.5 rounded-mj border border-line bg-cream p-4">
             <div className="h-[92px] w-[76px] rounded-mj-sm bg-paper-3" />
             <div className="flex-1 space-y-2 py-1"><div className="h-4 w-1/2 rounded bg-paper-3" /><div className="h-3 w-2/3 rounded bg-paper-3" /></div>
           </div>

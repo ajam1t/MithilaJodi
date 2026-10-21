@@ -148,7 +148,7 @@ export default function SettingsContent() {
       <h1 className="font-serif text-2xl text-ink mb-8">Account Settings</h1>
 
       {/* Consents */}
-      <section className="card p-6 mb-6">
+      <section className="card border-line shadow-mj-xs p-6 mb-6">
         <h2 className="font-serif text-lg text-ink mb-1">My Consents</h2>
         <p className="text-xs text-ink-soft mb-5">
           Required consents cannot be withdrawn. You may withdraw optional consents at any time.
@@ -210,7 +210,7 @@ export default function SettingsContent() {
       </section>
 
       {/* Change Password */}
-      <section className="card p-6 mb-6">
+      <section className="card border-line shadow-mj-xs p-6 mb-6">
         <h2 className="font-serif text-lg text-ink mb-1">Change Password</h2>
         <p className="text-sm text-ink-soft mb-5">
           Don&apos;t have a password yet?{' '}
@@ -263,7 +263,7 @@ export default function SettingsContent() {
       </section>
 
       {/* Data Export */}
-      <section className="card p-6 mb-6">
+      <section className="card border-line shadow-mj-xs p-6 mb-6">
         <h2 className="font-serif text-lg text-ink mb-1">Download My Data</h2>
         <p className="text-sm text-ink-soft mb-4 leading-relaxed">
           Under the Digital Personal Data Protection Act, 2023, you have the right to access your personal data. Download a copy of your data in JSON format.
@@ -279,7 +279,7 @@ export default function SettingsContent() {
       </section>
 
       {/* Account Deactivation */}
-      <section className="card p-6 border-2 border-error/30">
+      <section className="card shadow-mj-xs p-6 border-2 border-error/30">
         <h2 className="font-serif text-lg text-error-fg mb-1">Deactivate Account</h2>
         <p className="text-sm text-ink-soft mb-4 leading-relaxed">
           Deactivating your account will hide your profile and prevent you from logging in. Your data is retained per our{' '}

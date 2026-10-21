@@ -81,7 +81,7 @@ export function ConversationList() {
           {loading ? (
             <div className="space-y-3 animate-pulse">
               {[1, 2, 3].map(i => (
-                <div key={i} className="card p-4 flex gap-4 items-center">
+                <div key={i} className="card border-line shadow-mj-xs p-4 flex gap-4 items-center">
                   <div className="w-12 h-12 rounded-full bg-paper-3 shrink-0" />
                   <div className="flex-1 space-y-2">
                     <div className="h-4 bg-paper-3 rounded w-1/3" />
@@ -91,7 +91,7 @@ export function ConversationList() {
               ))}
             </div>
           ) : conversations.length === 0 ? (
-            <div className="card p-10 text-center">
+            <div className="card border-line shadow-mj-xs p-10 text-center">
               <p className="text-ink-soft text-sm">No conversations yet.</p>
               <p className="text-xs text-ink-soft mt-1">
                 A conversation opens when an interest becomes mutual.
@@ -101,7 +101,7 @@ export function ConversationList() {
               </Link>
             </div>
           ) : (
-            <div className="divide-y divide-paper-3 card overflow-hidden">
+            <div className="divide-y divide-paper-3 card border-line shadow-mj-xs overflow-hidden">
               {conversations.map(conv => (
                 <Link
                   key={conv.id}

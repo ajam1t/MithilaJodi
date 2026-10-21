@@ -43,7 +43,7 @@ async function api(url: string, method: 'POST' | 'PATCH', body: object) {
 
 function Card({ title, children, id, aside }: { title?: string; children: ReactNode; id?: string; aside?: ReactNode }) {
   return (
-    <section id={id} className="rounded-mj border border-gold/30 bg-cream p-4 shadow-mj-xs sm:p-5" aria-label={title}>
+    <section id={id} className="rounded-mj border border-line bg-cream p-4 shadow-mj-xs sm:p-5" aria-label={title}>
       {title && (
         <div className="mb-3 flex items-center justify-between gap-3">
           <h2 className="text-[11.5px] font-semibold uppercase tracking-[0.16em] text-maroon">{title}</h2>
@@ -259,7 +259,7 @@ export function DigitalProfileDashboard({ firstName, shares, primary, activity, 
               ...(activity.uniqueVisitors != null ? [{ label: 'Unique visitors', value: String(activity.uniqueVisitors), hint: 'per browser' }] : []),
               { label: 'Last opened', value: activity.lastOpenedAt ? formatDay(activity.lastOpenedAt) : '—', hint: activity.lastOpenedAt ? '' : 'not yet', small: true },
             ].map(t => (
-              <div key={t.label} className="rounded-mj-sm border border-gold/25 bg-white px-3 py-2.5">
+              <div key={t.label} className="rounded-mj-sm border border-line bg-white px-3 py-2.5">
                 <dd className={`font-serif leading-none text-maroon ${'small' in t && t.small ? 'text-[17px]' : 'text-[26px]'}`}>{t.value}</dd>
                 <dt className="mt-1.5 text-[12px] font-medium text-ink">{t.label}</dt>
                 {t.hint && <p className="text-[11px] text-ink-soft">{t.hint}</p>}
@@ -318,7 +318,7 @@ export function DigitalProfileDashboard({ firstName, shares, primary, activity, 
                   )}
                 </div>
                 {editExpiry && (
-                  <div className="mt-3 rounded-mj-sm border border-gold/30 bg-paper-2/60 p-3">
+                  <div className="mt-3 rounded-mj-sm border border-line bg-paper-2/60 p-3">
                     <fieldset className="space-y-2">
                       <legend className="sr-only">When should this link stop working?</legend>
                       <label className="flex flex-wrap items-center gap-2.5 text-[14px] text-ink">
@@ -331,7 +331,7 @@ export function DigitalProfileDashboard({ firstName, shares, primary, activity, 
                       <div className="flex flex-wrap gap-1.5 pl-7">
                         {[[30, '30 days'], [90, '3 months'], [365, '1 year']].map(([d, l]) => (
                           <button key={d} type="button" onClick={() => { setExpiryDate(plusDays(d as number)); setExpiryMode('date') }}
-                            className="rounded-full border border-gold/40 bg-cream px-2.5 py-1 text-[12px] text-maroon">{l}</button>
+                            className="rounded-full border border-line bg-cream px-2.5 py-1 text-[12px] text-maroon">{l}</button>
                         ))}
                       </div>
                       <label className="flex items-center gap-2.5 text-[14px] text-ink">
@@ -391,7 +391,7 @@ export function DigitalProfileDashboard({ firstName, shares, primary, activity, 
                 </div>
               )}
               {dirty && (
-                <div className="sticky bottom-[calc(76px+env(safe-area-inset-bottom))] z-10 mt-4 flex items-center justify-between gap-3 rounded-mj-sm border border-maroon/30 bg-cream px-3 py-2.5 shadow-mj lg:bottom-4">
+                <div className="sticky bottom-[calc(76px+env(safe-area-inset-bottom))] z-10 mt-4 flex items-center justify-between gap-3 rounded-mj-sm border border-maroon/30 bg-cream px-3 py-2.5 shadow-mj-xs lg:bottom-4">
                   <span className="text-[13px] text-ink">Unsaved changes</span>
                   <span className="flex gap-2">
                     <button type="button" onClick={() => setFields(primary.fields)} className="btn-ghost px-3 py-1.5 text-[13px]">Discard</button>
@@ -458,7 +458,7 @@ export function DigitalProfileDashboard({ firstName, shares, primary, activity, 
             <a href={url(primary)} target="_blank" rel="noopener noreferrer" className="btn-primary shrink-0 px-4 py-2 text-[13.5px]">Preview as visitor ↗</a>
           )}
         </div>
-        <div className="overflow-hidden rounded-[26px] border-[6px] border-[#2B211C] bg-paper shadow-mj">
+        <div className="overflow-hidden rounded-[26px] border-[6px] border-[#2B211C] bg-paper shadow-mj-xs">
           {preview}
         </div>
       </section>

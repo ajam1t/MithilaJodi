@@ -159,11 +159,11 @@ function Group({ title, rows, children, roots = false }: {
   const filled = (rows ?? []).filter(([, v]) => !!v)
   if (filled.length === 0 && !children) return null
   return (
-    <section className={`rounded-[18px] border p-4 sm:p-5 ${roots ? 'border-gold/40 bg-[#FFFBF3]' : 'border-gold/25 bg-cream'}`} aria-label={title}>
+    <section className={`rounded-[18px] border p-4 sm:p-5 ${roots ? 'border-line bg-[#FFFBF3]' : 'border-line bg-cream'}`} aria-label={title}>
       <Eyebrow>{title}</Eyebrow>
       {roots && <div className="mt-2 h-px w-12 bg-gradient-to-r from-gold to-transparent" aria-hidden="true" />}
       {filled.length > 0 && (
-        <dl className="mt-1.5 divide-y divide-gold/15">
+        <dl className="mt-1.5 divide-y divide-line">
           {filled.map(([l, v]) => <Row key={l} label={l} value={v} />)}
         </dl>
       )}
@@ -172,11 +172,11 @@ function Group({ title, rows, children, roots = false }: {
   )
 }
 
-/** Completion as a gold ring drawn around the photo arch. */
+/** Completion as a thin ring drawn once around the photo arch. */
 function CompletionRing({ pct }: { pct: number }) {
   return (
     <svg viewBox="0 0 120 140" className="mj-me-ring" aria-hidden="true">
-      <path d="M60 4C30 4 8 26 8 56v58a22 22 0 0 0 22 22h60a22 22 0 0 0 22-22V56C112 26 90 4 60 4Z" fill="none" stroke="rgba(185,138,46,.25)" strokeWidth="3" />
+      <path d="M60 4C30 4 8 26 8 56v58a22 22 0 0 0 22 22h60a22 22 0 0 0 22-22V56C112 26 90 4 60 4Z" fill="none" stroke="#EADFCB" strokeWidth="3" />
       <path d="M60 4C30 4 8 26 8 56v58a22 22 0 0 0 22 22h60a22 22 0 0 0 22-22V56C112 26 90 4 60 4Z" fill="none" stroke={pct >= 100 ? '#B98A2E' : '#7A1220'} strokeWidth="3.4" strokeLinecap="round"
         pathLength={100} strokeDasharray={`${pct} 100`} className="mj-me-ring-fill" />
     </svg>
@@ -355,10 +355,9 @@ export default function ProfilePage() {
     <main id="main-content" className="min-h-screen bg-paper">
       <div className="mx-auto max-w-2xl px-4 pb-4 pt-5">
 
-        {/* ── Identity: photo in a Mithila arch, completion drawn as a gold ring
-               around it, name rising in, a sheen across the card. ── */}
+        {/* ── Identity: photo in a simple arch, completion drawn once as a ring
+               around it, then the name. ── */}
         <section className="mj-me" aria-label="Your profile">
-          <div className="mj-me-mesh" aria-hidden="true"><i /><i /></div>
           <div className="relative flex items-center gap-4">
             <div className="mj-me-photo">
               {profile && <CompletionRing pct={pct} />}
@@ -412,7 +411,7 @@ export default function ProfilePage() {
               {visible ? 'Your profile is visible to the Mithila Jodi community.' : 'Your profile is complete.'}
             </p>
           ) : (
-            <div className="mt-3 rounded-mj-sm border border-gold/35 bg-[#FFF8EC] p-3.5">
+            <div className="mt-3 rounded-mj-sm border border-line bg-[#FFF8EC] p-3.5">
               <p className="text-[14px] font-semibold text-ink">Your profile is {pct}% complete.</p>
               <p className="mt-0.5 text-[13px] text-ink-soft">Add a few more details to help families discover you.</p>
               {missing.length > 0 && (
@@ -435,7 +434,7 @@ export default function ProfilePage() {
           {/* ── Tabs ── scroll sideways rather than shrinking the text. */}
           <div className="mx-auto max-w-2xl px-4">
             <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <div className="flex min-w-max gap-1 border-b border-gold/25" role="tablist" aria-label="Profile sections">
+              <div className="flex min-w-max gap-1 border-b border-line" role="tablist" aria-label="Profile sections">
                 {TABS.map(t => (
                   <button
                     key={t.id}
@@ -498,7 +497,7 @@ export default function ProfilePage() {
                       </div>
                     )}
                     {career && career.length > 0 && (
-                      <div className="mt-3 border-t border-gold/15 pt-3">
+                      <div className="mt-3 border-t border-line pt-3">
                         <p className="text-[12px] text-ink-soft">Career</p>
                         <p className="mt-0.5 text-[14.5px] font-medium text-ink">{career[0]}</p>
                         {career.slice(1).map(l => <p key={l} className="text-[13px] text-ink-soft">{l}</p>)}
@@ -538,7 +537,7 @@ export default function ProfilePage() {
                   ['Native place', locationNames.native_place_name],
                 ]} />
               ) : (
-                <div className="rounded-[18px] border border-gold/40 bg-[#FFFBF3] p-5 text-center">
+                <div className="rounded-[18px] border border-line bg-[#FFFBF3] p-5 text-center">
                   <p className="font-serif text-[17px] text-maroon">Add your Mithila roots</p>
                   <p className="mt-1 text-[13px] text-ink-soft">Gotra, mool and native village help families find gotra-safe matches.</p>
                   <Link href="/profile/edit#community" className="btn-primary mt-3 inline-flex px-5 py-2 text-[14px]">Add community details</Link>
@@ -568,12 +567,12 @@ export default function ProfilePage() {
                   ['Gotra', prefs?.pref_gotra_safe ? 'Gotra-safe matches only' : null],
                 ]}>
                   {(prefsDisplay?.notes ?? prefs?.pref_notes) && (
-                    <p className="mt-2.5 border-t border-gold/15 pt-2.5 text-[13.5px] leading-relaxed text-ink">{prefsDisplay?.notes ?? prefs?.pref_notes}</p>
+                    <p className="mt-2.5 border-t border-line pt-2.5 text-[13.5px] leading-relaxed text-ink">{prefsDisplay?.notes ?? prefs?.pref_notes}</p>
                   )}
                   <Link href="/profile/preferences" className="mt-3 inline-flex text-[13.5px] font-semibold text-maroon">Edit preferences →</Link>
                 </Group>
               ) : (
-                <div className="rounded-[18px] border border-gold/25 bg-cream p-5 text-center">
+                <div className="rounded-[18px] border border-line bg-cream p-5 text-center">
                   <p className="font-serif text-[17px] text-maroon">Who are you hoping to meet?</p>
                   <p className="mt-1 text-[13px] text-ink-soft">Your preferences shape the matches we suggest.</p>
                   <Link href="/profile/preferences" className="btn-primary mt-3 inline-flex px-5 py-2 text-[14px]">Set preferences</Link>
@@ -582,7 +581,7 @@ export default function ProfilePage() {
             )}
 
             {tab === 'photos' && (
-              <section className="rounded-[18px] border border-gold/25 bg-cream p-4 sm:p-5" aria-label="Your photos">
+              <section className="rounded-[18px] border border-line bg-cream p-4 sm:p-5" aria-label="Your photos">
                 <div className="flex items-center justify-between gap-3">
                   <Eyebrow>Your Photos</Eyebrow>
                   <span className="text-[12px] text-ink-soft">{photos.length} of 5</span>
@@ -592,7 +591,7 @@ export default function ProfilePage() {
                 ) : (
                   <ul className="mt-3 grid grid-cols-3 gap-2">
                     {photos.map(photo => (
-                      <li key={photo.id} className="relative aspect-[4/5] overflow-hidden rounded-mj-sm border border-gold/20 bg-paper-2">
+                      <li key={photo.id} className="relative aspect-[4/5] overflow-hidden rounded-mj-sm border border-line bg-paper-2">
                         {photo.signed_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={photo.signed_url} alt="" className="h-full w-full object-cover object-[center_30%]" loading="lazy" decoding="async" />
@@ -644,7 +643,7 @@ export default function ProfilePage() {
       {/* ── Account ── */}
       <section className="mx-auto max-w-2xl px-4 pb-8 pt-5" aria-labelledby="account-heading">
         <h2 id="account-heading" className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8A6516]">Account</h2>
-        <div className="divide-y divide-gold/15 overflow-hidden rounded-[18px] border border-gold/25 bg-cream">
+        <div className="divide-y divide-line overflow-hidden rounded-[18px] border border-line bg-cream">
           {[
             // Shortlist and Biodata sit in the desktop nav; on mobile this list
             // is where they live (the bottom nav has no room for them).

@@ -16,8 +16,8 @@ import type { PartnerPreferencesDisplay } from '@/types/profile'
  * yes/no answers; the map receives positions inside its own frame, never
  * coordinates. A chapter appears only when its field is filled in.
  *
- * Motion is a reveal per chapter and small looping details (a bowing namaste,
- * a pulsing pin). prefers-reduced-motion shows everything at once, still.
+ * Motion is a one-time reveal per chapter as it arrives; nothing loops.
+ * prefers-reduced-motion shows everything at once, still.
  */
 
 export type StoryData = {
@@ -112,14 +112,9 @@ function Chapter({ n, label, children, art }: { n: number; label: string; childr
   )
 }
 
-/** Folded hands that bow, with a few gold sparks. */
+/** Folded hands in a small round frame. */
 function Namaste() {
-  return (
-    <span className="mj-st-namaste" aria-hidden="true">
-      <span className="mj-st-bow">🙏</span>
-      <i /><i /><i />
-    </span>
-  )
+  return <span className="mj-st-namaste" aria-hidden="true">🙏</span>
 }
 
 function CountUp({ to, on }: { to: number; on: boolean }) {
@@ -157,9 +152,6 @@ function RadarMap({ story, names, on }: { story: StoryData; names: Record<string
       <rect width={W} height={H} rx="18" fill="#FFFDF8" />
       <rect width={W} height={H} rx="18" fill="url(#stGrid)" />
       {[34, 70, 110].map(r => <circle key={r} cx={cx} cy={cy} r={r} fill="none" stroke="#B98A2E" strokeOpacity=".3" strokeDasharray="2 5" />)}
-      <g className="mj-st-sweep" style={{ transformOrigin: `${cx}px ${cy}px` }}>
-        <path d={`M${cx} ${cy}L${cx + 120} ${cy}A120 120 0 0 0 ${cx + 104} ${cy - 60}Z`} fill="#E9C977" opacity=".16" />
-      </g>
       {/* lines from home to the other places */}
       {home && [native, work, you].map((q, i) => q && (() => {
         const [x, y] = P(q)
@@ -171,7 +163,7 @@ function RadarMap({ story, names, on }: { story: StoryData; names: Record<string
         const right = x < W - 100
         return (
           <g key={q.kind} className="mj-st-pin">
-            <circle cx={x} cy={y} r="12" fill={m.color} opacity=".14" className="mj-st-pulse" style={{ transformOrigin: `${x}px ${y}px` }} />
+            <circle cx={x} cy={y} r="11" fill={m.color} opacity=".12" />
             <circle cx={x} cy={y} r="5.5" fill={m.color} stroke="#FFFDF8" strokeWidth="2" />
             <text x={right ? x + 11 : x - 11} y={y - 3} textAnchor={right ? 'start' : 'end'} fontSize="10.5" fontWeight="600" fill="#2A1A16">{name}</text>
             <text x={right ? x + 11 : x - 11} y={y + 9} textAnchor={right ? 'start' : 'end'} fontSize="9" fill="#6B5A50">{q.kind === 'you' ? 'where you live' : m.label}</text>
@@ -331,8 +323,8 @@ export function ProfileStory({ p, story, prefs = null }: { p: StoryProfile; stor
 
       {/* ── Gotra ── */}
       {p.self_gotra && (
-        <Chapter n={next()} label="Gotra" art={on => (
-          <div className={`mj-st-gotra ${on ? 'is-on' : ''}`}><span>{p.self_gotra}</span></div>
+        <Chapter n={next()} label="Gotra" art={() => (
+          <div className="mj-st-gotra"><span>{p.self_gotra}</span></div>
         )}>
           {on => (
             <>
