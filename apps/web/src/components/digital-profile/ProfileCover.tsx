@@ -81,7 +81,7 @@ export function ProfileCover({
 
       <p className="dpc-eyebrow">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-mark.png" alt="" width={22} height={20} />
+        <img src="/logo-mark-128.webp" alt="" width={22} height={20} />
         Mithila Jodi <span aria-hidden="true">·</span> Digital Profile
       </p>
 

@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount, refuseWhileImpersonating } from '@/lib/auth'
 import { isSystemProfile } from '@/lib/systemProfile'
 import { markConversationNotificationsRead } from '@/lib/notifications'
+import { signPhoto } from '@/lib/photoWeb'
 
 export async function GET(
   request: NextRequest,
@@ -85,7 +86,7 @@ export async function GET(
   const pp = partnerPhoto as any
   if (pp?.storage_path) {
     try {
-      const { data: signed } = await admin.storage.from('profile-photos').createSignedUrl(pp.storage_path as string, 3600)
+      const { data: signed } = await signPhoto(admin, pp.storage_path as string)
       partnerPhotoUrl = signed?.signedUrl ?? null
     } catch {
       partnerPhotoUrl = null

@@ -63,7 +63,7 @@ export function HeroConnection() {
       </div>
       <div className="absolute left-1/2 top-[16%] -translate-x-1/2 -translate-y-1/2">
         <span className="ab-hero-node flex items-center gap-1.5 whitespace-nowrap rounded-full border border-gold/50 bg-cream px-3 py-1.5 shadow-mj-xs">
-          <Image src="/logo-mark.png" alt="" width={22} height={20} className="h-5 w-auto" />
+          <Image src="/logo-mark-128.webp" alt="" width={22} height={20} className="h-5 w-auto" />
           <span className="font-serif text-[13px] font-bold text-maroon">Mithila Jodi</span>
         </span>
       </div>
@@ -109,7 +109,7 @@ export function StoryLine() {
               }
             >
               {n.brand ? (
-                <Image src="/logo-mark.png" alt="" width={30} height={28} className="h-7 w-auto rounded-sm bg-cream p-0.5" />
+                <Image src="/logo-mark-128.webp" alt="" width={30} height={28} className="h-7 w-auto rounded-sm bg-cream p-0.5" />
               ) : (
                 <span className={`h-2 w-2 rotate-45 ${n.end ? 'bg-maroon' : 'bg-gold'}`} />
               )}

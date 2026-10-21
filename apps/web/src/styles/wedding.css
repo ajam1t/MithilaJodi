@@ -494,8 +494,8 @@
   position: absolute;
   inset: 0;
   background: linear-gradient(135deg, #F6E2A4 0%, #C8993F 38%, #E9C977 55%, #A87A28 100%);
-  -webkit-mask: url('/logo-mark.png') center / contain no-repeat;
-  mask: url('/logo-mark.png') center / contain no-repeat;
+  -webkit-mask: url('/logo-mark-128.webp') center / contain no-repeat;
+  mask: url('/logo-mark-128.webp') center / contain no-repeat;
 }
 .wd-mje[data-phase='opening'] .wd-mje-seal { animation: wdMjeSealOff 900ms cubic-bezier(.5, 0, .6, 1) forwards; pointer-events: none; }
 .wd-mje[data-phase='opening'] .wd-mje-seal::after { animation: none; box-shadow: 0 0 34px 10px rgba(245, 205, 110, 0.75); transition: box-shadow 300ms; }

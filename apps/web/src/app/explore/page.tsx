@@ -8,9 +8,11 @@ import { getPublicShowcaseProfiles } from '@/lib/publicProfiles'
 import type { SearchCard } from '@/types/profile'
 import { pageMetadata, breadcrumbJsonLd, canonicalUrl, jsonLdScript } from '@/lib/seo'
 
-// Server-render the curated showcase on each request so the first meaningful
-// profile content is present in the initial HTML (crawlable, no JS required).
-export const dynamic = 'force-dynamic'
+// Server-render the curated showcase so the first meaningful profile content is
+// in the initial HTML (crawlable, no JS required) — cached for 15 minutes like
+// the homepage, whose same showcase it shows: photo URLs are signed for an
+// hour, and a showcase edit refreshes both pages at once (lib/showcaseCache).
+export const revalidate = 900
 
 export const metadata = pageMetadata({
   path: '/explore',

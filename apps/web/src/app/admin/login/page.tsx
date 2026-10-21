@@ -27,7 +27,7 @@ export default async function AdminLoginPage({ searchParams }: { searchParams: P
         <div className="mcx-dust" aria-hidden="true" />
         <div className="mcx-aurora" aria-hidden="true"><i /><i /><i /></div>
         <Link href="/" className="mcx-logo">
-          <span className="mcx-logo-chip"><Image src="/logo-mark.png" alt="" width={40} height={37} priority className="h-8 w-auto" /></span>
+          <span className="mcx-logo-chip"><Image src="/logo-mark-128.webp" alt="" width={40} height={37} priority className="h-8 w-auto" /></span>
           <span><b>Mithila Jodi</b><small>Admin command centre</small></span>
         </Link>
 
@@ -39,7 +39,7 @@ export default async function AdminLoginPage({ searchParams }: { searchParams: P
           </svg>
           <div className="mcx-rings"><i /><i /><i /></div>
           <div className="mcx-medal">
-            <Image src="/logo-mark.png" alt="" width={176} height={162} priority />
+            <Image src="/logo-mark-288.webp" alt="" width={176} height={162} priority />
           </div>
         </div>
 

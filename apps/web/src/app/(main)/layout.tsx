@@ -38,7 +38,7 @@ export const metadata: Metadata = {
 function MemberBrand() {
   return (
     <Link href="/home" className="flex items-center gap-2 shrink-0" aria-label="Mithila Jodi — your home">
-      <Image src="/logo-mark.png" alt="" width={40} height={37} priority className="h-8 w-auto object-contain" />
+      <Image src="/logo-mark-128.webp" alt="" width={40} height={37} priority className="h-8 w-auto object-contain" />
       <span className="font-serif font-bold text-[19px] text-maroon leading-none tracking-tight">Mithila Jodi</span>
     </Link>
   )

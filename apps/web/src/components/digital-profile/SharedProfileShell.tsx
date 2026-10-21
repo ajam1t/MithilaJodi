@@ -24,7 +24,7 @@ export function SharedProfileShell({
         <div className="mx-auto flex max-w-2xl flex-col items-center gap-1.5 px-4 pt-5 pb-3">
           <Link href="/" className="flex items-center gap-2" aria-label="Mithila Jodi — home">
             <Image
-              src="/logo-mark.png"
+              src="/logo-mark-128.webp"
               alt=""
               width={30}
               height={28}

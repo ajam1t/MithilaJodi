@@ -22,6 +22,7 @@ import 'server-only'
  */
 
 import { normalisePhotoVisibility } from '@/lib/photoVisibility'
+import { signPhotos } from '@/lib/photoWeb'
 
 export { normalisePhotoVisibility, type PhotoVisibility } from '@/lib/photoVisibility'
 
@@ -131,7 +132,7 @@ export async function approvedPhotoUrls(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const paths = (rows ?? []).map((r: any) => r.storage_path as string).filter(Boolean)
   if (paths.length === 0) return []
-  const { data: signed } = await admin.storage.from('profile-photos').createSignedUrls(paths, 3600)
+  const { data: signed } = await signPhotos(admin, paths)
   const urls: string[] = []
   for (const s of signed ?? []) if (s?.signedUrl) urls.push(s.signedUrl)
   return urls

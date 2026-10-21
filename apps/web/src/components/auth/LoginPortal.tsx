@@ -78,7 +78,7 @@ export function LoginPortal({ phase, origin }: { phase: PortalPhase; origin: { x
           {/* The mark is maroon, so it sits on ivory — never recoloured. */}
           <span className="mj-portal-mark">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-mark.png" alt="" width={44} height={40} />
+            <img src="/logo-mark-128.webp" alt="" width={44} height={40} />
           </span>
         </div>
         <div className="mj-portal-words">

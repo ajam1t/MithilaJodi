@@ -135,7 +135,7 @@ export function EcosystemWheel() {
             {/* Centre: the brand mark and the active part's name in Devanagari. */}
             <div className="pointer-events-none absolute left-1/2 top-1/2 flex w-[27%] -translate-x-1/2 -translate-y-1/2 flex-col items-center text-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-mark.png" alt="" width={44} height={40} className="h-auto w-[34%] min-w-[28px] max-w-[46px]" />
+              <img src="/logo-mark-128.webp" alt="" width={44} height={40} className="h-auto w-[34%] min-w-[28px] max-w-[46px]" />
               <span key={item.id} className="mj-eco-swap mt-1 font-deva text-[13px] leading-tight text-maroon sm:text-[16px]" lang="hi">{item.deva}</span>
             </div>
 

@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { audit, requireAdminApi } from '@/lib/adminAuth'
+import { removeWebCopies } from '@/lib/photoWeb'
 
 /**
  * Delete ONE orphaned profile-photo file, after an admin confirmed it. The
@@ -23,6 +24,7 @@ export async function DELETE(request: NextRequest) {
 
   const { error } = await admin.storage.from('profile-photos').remove([name])
   if (error) return NextResponse.json({ ok: false, message: 'Storage refused the deletion. Nothing was removed.' }, { status: 500 })
+  await removeWebCopies(admin, [name])
   await audit(guard.session.id, 'storage_orphan_deleted', { type: 'storage_object', id: null }, { bucket: 'profile-photos', name }, request)
   return NextResponse.json({ ok: true })
 }

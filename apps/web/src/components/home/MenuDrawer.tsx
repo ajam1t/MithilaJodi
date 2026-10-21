@@ -218,7 +218,7 @@ export function MenuDrawer({
         >
           <span className="mj-orb-handle" aria-hidden="true" />
           <Link href="/" onClick={onClose} className="relative mt-2 inline-flex items-center gap-2 rounded-mj-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40" aria-label="Mithila Jodi — home">
-            <Image src="/logo-mark.png" alt="" width={40} height={37} className="h-8 w-auto" />
+            <Image src="/logo-mark-128.webp" alt="" width={40} height={37} className="h-8 w-auto" />
             <span className="flex flex-col leading-none">
               <span className="font-serif text-[16px] font-bold text-maroon">Mithila Jodi</span>
               <span className="font-deva mt-0.5 text-[10px] text-maroon/80" lang="hi">जहाँ परंपरा मिले, प्रेम से</span>

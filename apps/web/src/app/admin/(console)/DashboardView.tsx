@@ -65,7 +65,7 @@ function Pulse({ rings }: { rings: Array<{ label: string; value: number | null; 
             </g>
           ))}
         </g>
-        <image href="/logo-mark.png" x="77" y="78" width="36" height="33" />
+        <image href="/logo-mark-128.webp" x="77" y="78" width="36" height="33" />
       </svg>
       <div className="acx-pulse-leg">
         {rings.map(r => (

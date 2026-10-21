@@ -1,9 +1,10 @@
 import 'server-only'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { nanoid } from 'nanoid'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
 import { sniffImage } from '@/lib/imageSniff'
+import { makeWebCopy } from '@/lib/photoWeb'
 
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
 const MAX_BYTES = 5 * 1024 * 1024
@@ -68,6 +69,8 @@ export async function POST(
     console.error('[admin/profiles photo] insert error:', insertError?.message)
     return NextResponse.json({ ok: false, message: 'Could not save the photo.' }, { status: 500 })
   }
+
+  after(() => makeWebCopy(admin, storagePath, bytes))
 
   await admin.from('admin_audit_logs').insert({
     actor_id: session.id,

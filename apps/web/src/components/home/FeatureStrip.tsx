@@ -185,15 +185,10 @@ function KohbarBand({ id, flip = false }: { id: string; flip?: boolean }) {
 }
 
 /** Aripan petal ring around each icon; it turns a little when its card is hovered. */
+/** The aripan petal ring round each icon — one static file, not 14 nodes per card. */
 function PetalRing() {
-  return (
-    <svg viewBox="-40 -40 80 80" className="mj-why-ring absolute inset-0 h-full w-full" aria-hidden="true" focusable="false">
-      <circle r="36.5" fill="none" stroke="#C9A24B" strokeOpacity="0.45" strokeWidth="0.8" strokeDasharray="1 3" />
-      {Array.from({ length: 12 }, (_, k) => (
-        <ellipse key={k} cx="0" cy="-33" rx="2.1" ry="4.4" fill="#C9A24B" fillOpacity={k % 2 ? 0.45 : 0.85} transform={`rotate(${k * 30})`} />
-      ))}
-    </svg>
-  )
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src="/ornaments/petal-ring.svg" alt="" aria-hidden="true" width={80} height={80} decoding="async" className="mj-why-ring absolute inset-0 h-full w-full" />
 }
 
 /**

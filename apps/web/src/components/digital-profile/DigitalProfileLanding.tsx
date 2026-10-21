@@ -87,7 +87,7 @@ function PhonePreview() {
           <div className="flex items-center justify-between px-3.5 pb-2 pt-3">
             <Icon d="M15 6l-6 6 6 6" className="h-4 w-4 text-maroon" />
             <span className="flex items-center gap-1.5">
-              <Image src="/logo-mark.png" alt="" width={24} height={22} className="h-[22px] w-auto" />
+              <Image src="/logo-mark-128.webp" alt="" width={24} height={22} className="h-[22px] w-auto" />
               <span className="font-serif text-[14px] leading-none text-maroon">Mithila Jodi</span>
             </span>
             <Icon d="M4 7h16M4 12h16M4 17h16" className="h-4 w-4 text-maroon" />

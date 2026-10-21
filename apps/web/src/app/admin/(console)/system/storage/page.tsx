@@ -1,4 +1,5 @@
 import { OrphanList } from '@/components/admin/OrphanList'
+import { WebCopies } from '@/components/admin/WebCopies'
 import { DataNote, PageHeader, Section, Unavailable, bytes, ist } from '@/components/admin/ui'
 import { can, requireAdminPage } from '@/lib/adminAuth'
 import { getDbUsage } from '@/lib/adminData'
@@ -15,6 +16,10 @@ export default async function StoragePage() {
     <>
       <PageHeader eyebrow="System" title="Storage review"
         description="Find files worth cleaning up. Nothing is deleted automatically; each deletion needs your confirmation and is audited." />
+      <Section title="Web copies of photos" description="Pages load a resized copy of each photo (at most 720 × 960, WebP) instead of the original phone photo" className="mb-4">
+        <WebCopies canRun={can(session, 'manage_settings')} />
+        <DataNote>New uploads get their copy automatically. Run this once for photos uploaded before; originals are only read, never changed. Copies live in the private {'profile-photos-web'} bucket.</DataNote>
+      </Section>
       <div className="grid gap-4 xl:grid-cols-2">
         <Section title="Largest files">
           {!usage ? <Unavailable /> : usage.largest.length === 0 ? <Unavailable title="No files stored." /> : (

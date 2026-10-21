@@ -7,6 +7,7 @@ import { refreshPublicShowcase } from '@/lib/showcaseCache'
 import { syncDiscoverability } from '@/lib/discoverability'
 import { computeCompletion } from '@/lib/profileCompletion'
 import { minAgeError } from '@/lib/ageRules'
+import { signPhotos } from '@/lib/photoWeb'
 
 const ProfileSchema = z.object({
   profile_for: z.enum(['self', 'son', 'daughter', 'sibling', 'other']).default('self'),
@@ -203,9 +204,7 @@ export async function GET() {
     const rows = (photoRows ?? []) as any[]
     let signedUrls: Array<string | null> = rows.map(() => null)
     if (rows.length > 0) {
-      const { data: signedList, error: signErr } = await admin.storage
-        .from('profile-photos')
-        .createSignedUrls(rows.map((r) => r.storage_path as string), 3600)
+      const { data: signedList, error: signErr } = await signPhotos(admin, rows.map((r) => r.storage_path as string))
       if (signErr) {
         console.error('[profile GET] batch signed URL error:', signErr.message)
       } else {

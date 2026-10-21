@@ -12,6 +12,7 @@ import {
 } from '@/lib/matchScore'
 import { toScoreProfile, toScorePrefs } from '@/lib/matchInputs'
 import { recordMemberActivity } from '@/lib/serverEvents'
+import { signPhotos } from '@/lib/photoWeb'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -742,9 +743,7 @@ export async function GET(request: NextRequest) {
   const signEntries = [...photoByProfile.entries()]
   if (signEntries.length > 0) {
     try {
-      const { data: signedList, error: signErr } = await admin.storage
-        .from('profile-photos')
-        .createSignedUrls(signEntries.map(([, photo]) => photo.storage_path), 3600)
+      const { data: signedList, error: signErr } = await signPhotos(admin, signEntries.map(([, photo]) => photo.storage_path))
 
       if (signErr) {
         console.error('[search GET] batch signed URL error:', signErr.message)

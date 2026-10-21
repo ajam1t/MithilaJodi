@@ -20,7 +20,7 @@ export default function GlobalError({
     <main id="main-content" className="min-h-screen bg-paper flex items-center justify-center px-6">
       <div className="text-center max-w-md">
         <Link href="/" className="mb-5 inline-block" aria-label="Mithila Jodi — home">
-          <Image src="/logo.png" alt="Mithila Jodi" width={160} height={139} className="mx-auto h-28 w-auto object-contain" />
+          <Image src="/logo-320.webp" alt="Mithila Jodi" width={160} height={139} className="mx-auto h-28 w-auto object-contain" />
         </Link>
         <div className="ornament-line w-16 mx-auto mb-6" />
         <p className="eyebrow mb-2">Something went wrong</p>

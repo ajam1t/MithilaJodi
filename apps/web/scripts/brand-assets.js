@@ -9,6 +9,8 @@
  *
  *   logo.png              the full lockup (symbol, wordmark, tagline, ornament)
  *   logo-mark.png         the central M-J couple symbol alone, for small sizes
+ *   logo-320.webp, logo-mark-128.webp, logo-mark-288.webp
+ *                         the same, resized for the pages that draw them
  *                         where the wordmark would be unreadable
  *   favicon.ico / favicon*.png / apple-touch-icon / icon-maskable-512
  *                         the mark, sized for each slot
@@ -80,11 +82,17 @@ function ico(pngs) {
   // Full lockup.
   const full = await trimmed(sharp(clear), 12)
   fs.writeFileSync(path.join(OUT, 'logo.png'), await sharp(full).png({ compressionLevel: 9 }).toBuffer())
+  // What pages load: the same pixels, sized for how big they are drawn (PNG
+  // stays for the PDF biodata, JSON-LD and anything outside the site).
+  const webp = { quality: 86, alphaQuality: 92, effort: 6 }
+  await sharp(full).resize({ width: 320 }).webp(webp).toFile(path.join(OUT, 'logo-320.webp'))
 
   // The symbol alone: everything above the wordmark.
   const top = await sharp(clear).extract({ left: 0, top: 0, width: meta.width, height: MARK_BOTTOM }).png().toBuffer()
   const mark = await trimmed(sharp(top), 6)
   fs.writeFileSync(path.join(OUT, 'logo-mark.png'), await sharp(mark).png({ compressionLevel: 9 }).toBuffer())
+  await sharp(mark).resize({ width: 128 }).webp(webp).toFile(path.join(OUT, 'logo-mark-128.webp')) // drawn up to ~64px
+  await sharp(mark).resize({ width: 288 }).webp(webp).toFile(path.join(OUT, 'logo-mark-288.webp')) // medallions
 
   // Browser favicons: the mark on a rounded ivory tile — maroon on a bare
   // transparent square all but disappears in a dark-mode tab strip.

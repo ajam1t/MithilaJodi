@@ -111,7 +111,7 @@ export function MithilaHeader() {
       {/* The symbol from the official logo; the full lockup's wordmark is
           unreadable at header height, so the name is typeset beside it. */}
       <Image
-        src="/logo-mark.png"
+        src="/logo-mark-128.webp"
         alt=""
         width={52}
         height={48}
@@ -168,7 +168,7 @@ export function MithilaHeader() {
 
         <Link href="/" className="flex flex-col items-center text-center" aria-label="Mithila Jodi — home">
           <span className="flex items-center gap-2">
-            <Image src="/logo-mark.png" alt="" width={40} height={37} priority className="h-[34px] w-auto object-contain shrink-0 sm:h-10" />
+            <Image src="/logo-mark-128.webp" alt="" width={40} height={37} priority className="h-[34px] w-auto object-contain shrink-0 sm:h-10" />
             <span className="font-serif font-bold text-[24px] sm:text-[28px] text-maroon leading-none tracking-tight">
               Mithila Jodi
             </span>

@@ -6,8 +6,9 @@ const nextConfig: NextConfig = {
     // signed URLs that change every hour, so each one counted as a new source
     // image; the plan's optimisation quota ran out and the optimiser answered
     // 402 (OPTIMIZED_IMAGE_REQUEST_PAYMENT_REQUIRED), leaving broken photos
-    // across the site. Photos are already sized when uploaded, and the static
-    // images are small, so nothing here needs resizing on the fly.
+    // across the site. Photos are resized when uploaded (lib/photoWeb — pages
+    // load a 720px WebP copy), and the static images are pre-sized WebP files,
+    // so nothing here needs resizing on the fly.
     unoptimized: true,
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
@@ -25,6 +26,15 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      {
+        // Images, icons and video in /public. Their names are not
+        // content-hashed, so a day fresh then a week of serve-while-checking:
+        // repeat visits load them from the browser cache instead of asking
+        // again for every logo on every page (the default is max-age=0), and a
+        // replaced file still shows within a day.
+        source: '/:path((?!_next/|api/).*\\.(?:webp|png|jpg|jpeg|svg|ico|mp4|webm))',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }],
+      },
       {
         source: '/(.*)',
         headers: [

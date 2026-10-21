@@ -3,6 +3,7 @@ import { filterPhotoViewable } from '@/lib/photoAccess'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getCommunityLabels, labelFor } from '@/lib/communityLabels'
 import type { SearchCard } from '@/types/profile'
+import { signPhotos } from '@/lib/photoWeb'
 
 // Maximum number of curated profiles shown to logged-out visitors.
 export const PUBLIC_SHOWCASE_MAX = 20
@@ -287,9 +288,7 @@ export async function getPublicShowcaseProfiles(): Promise<SearchCard[]> {
   const signEntries = [...photoByProfile.entries()]
   if (signEntries.length > 0) {
     try {
-      const { data: signedList, error: signErr } = await admin.storage
-        .from('profile-photos')
-        .createSignedUrls(signEntries.map(([, photo]) => photo.storage_path), 3600)
+      const { data: signedList, error: signErr } = await signPhotos(admin, signEntries.map(([, photo]) => photo.storage_path))
       if (signErr) {
         console.error('[publicProfiles] batch signed URL error:', signErr.message)
         for (const [profileId] of signEntries) signedUrlByProfile.set(profileId, null)

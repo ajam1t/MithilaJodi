@@ -241,7 +241,7 @@ export function WeddingSite({ invite, shareUrl, mode, lang: langOverride, openin
           <div className="relative max-w-[560px]">
             {t.motif === 'mj' && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src="/logo-mark.png" alt="" width={64} height={59} className="wd-rise wd-d1 mx-auto mb-5 h-[52px] w-auto sm:h-[60px]" />
+              <img src="/logo-mark-128.webp" alt="" width={64} height={59} className="wd-rise wd-d1 mx-auto mb-5 h-[52px] w-auto sm:h-[60px]" />
             )}
             <p className={`${face(tr('shubhVivah'))} wd-rise wd-d1 text-[34px] sm:text-[44px] leading-none`} style={{ color: t.gold }}>{tr('shubhVivah')}</p>
             <Border ink={t.heroInk} gold={t.gold} className="wd-rise wd-d2 mx-auto mt-5 !w-40 opacity-70" />

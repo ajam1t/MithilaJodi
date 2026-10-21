@@ -20,6 +20,8 @@ import { FeaturedCarousel } from './FeaturedCarousel'
  * revalidate well inside that window — see `revalidate` in app/page.tsx.
  * Renders nothing if no profiles are curated.
  */
+const HOME_MAX = 8
+
 export async function FeaturedProfiles() {
   let profiles: Awaited<ReturnType<typeof getPublicShowcaseProfiles>> = []
   try {
@@ -32,6 +34,10 @@ export async function FeaturedProfiles() {
 
   // Nothing curated yet — don't render an empty section.
   if (profiles.length === 0) return null
+
+  // The homepage shows the first eight (each card is ~30 elements to hydrate
+  // and a photo to fetch); "Explore all profiles" opens the full showcase.
+  const shown = profiles.slice(0, HOME_MAX)
 
   return (
     <section className="pt-9 pb-8 sm:pt-12 sm:pb-10 bg-paper-2/40" aria-label="Featured profiles">
@@ -53,7 +59,7 @@ export async function FeaturedProfiles() {
             <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">→</span>
           </Link>
         </div>
-        <FeaturedCarousel profiles={profiles} />
+        <FeaturedCarousel profiles={shown} />
       </div>
     </section>
   )

@@ -103,8 +103,8 @@ export function MithilaFooter({ className = '' }: { className?: string }) {
             {/* Maroon on maroon would vanish, so the logo sits on ivory — the
                 paper it was drawn on — never recoloured. */}
             <Link href="/" className="inline-block shrink-0 rounded-mj-sm bg-cream p-1.5 sm:mb-2.5 sm:p-2.5" aria-label="Mithila Jodi — home">
-              <Image src="/logo-mark.png" alt="Mithila Jodi" width={48} height={44} loading="lazy" className="h-11 w-auto object-contain sm:hidden" />
-              <Image src="/logo.png" alt="Mithila Jodi" width={160} height={139} loading="lazy" className="hidden h-[120px] w-auto object-contain sm:block" />
+              <Image src="/logo-mark-128.webp" alt="Mithila Jodi" width={48} height={44} loading="lazy" className="h-11 w-auto object-contain sm:hidden" />
+              <Image src="/logo-320.webp" alt="Mithila Jodi" width={160} height={139} loading="lazy" className="hidden h-[120px] w-auto object-contain sm:block" />
             </Link>
             {/* On desktop the full logo already carries the tagline. */}
             <div className="sm:hidden">
@@ -139,15 +139,16 @@ export function MithilaFooter({ className = '' }: { className?: string }) {
         </div>
       </div>
 
-      {/* Bottom Madhubani strip */}
-      <div aria-hidden="true">
-        <svg viewBox="0 0 1200 8" xmlns="http://www.w3.org/2000/svg" className="w-full h-2" preserveAspectRatio="none">
-          {Array.from({ length: 120 }, (_, i) => (
-            <rect key={i} x={i * 10} y={0} width={10} height={8} fill={i % 2 === 0 ? '#6B0A0A' : '#8A1414'} />
-          ))}
-          <line x1="0" y1="5" x2="1200" y2="5" stroke="#B98A2E" strokeWidth="1" opacity="0.6" />
-        </svg>
-      </div>
+      {/* Bottom Madhubani strip — 120 alternating maroon blocks under a gold
+          thread, drawn by CSS (it was 122 SVG nodes on every page). */}
+      <div
+        aria-hidden="true"
+        className="h-2 w-full"
+        style={{
+          background:
+            'linear-gradient(to bottom, transparent 62.5%, rgba(185,138,46,0.6) 62.5%, rgba(185,138,46,0.6) calc(62.5% + 1px), transparent calc(62.5% + 1px)), repeating-linear-gradient(90deg, #6B0A0A 0 0.8333%, #8A1414 0.8333% 1.6667%)',
+        }}
+      />
     </footer>
   )
 }

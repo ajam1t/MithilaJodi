@@ -117,7 +117,7 @@ export function ContactCard({ first, contact, prefs, partner, profileHref, audie
         <Link href={profileHref} className="dpk-link">
           <span className="dpk-link-icon" aria-hidden="true">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-mark.png" alt="" width={24} height={22} />
+            <img src="/logo-mark-128.webp" alt="" width={24} height={22} />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-[14px] font-semibold text-maroon">

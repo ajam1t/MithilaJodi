@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
 import { refreshPublicShowcase } from '@/lib/showcaseCache'
 import { syncDiscoverability } from '@/lib/discoverability'
+import { removeWebCopies } from '@/lib/photoWeb'
 
 export async function DELETE(
   _request: NextRequest,
@@ -70,6 +71,7 @@ export async function DELETE(
 
   // Remove from Storage (best-effort)
   await admin.storage.from('profile-photos').remove([p.storage_path])
+  await removeWebCopies(admin, [p.storage_path])
 
   await syncDiscoverability(admin, account.id)
   refreshPublicShowcase()

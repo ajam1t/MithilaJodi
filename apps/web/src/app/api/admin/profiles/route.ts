@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
 import { getSystemProfileId } from '@/lib/systemProfile'
+import { signPhotos } from '@/lib/photoWeb'
 
 const PROFILE_FIELDS = [
   'profile_for', 'first_name', 'last_name', 'gender', 'dob', 'religion', 'caste', 'sub_caste',
@@ -74,9 +75,7 @@ export async function GET(request: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const photoRowsForSigning = (photos ?? []) as any[]
   if (photoRowsForSigning.length > 0) {
-    const { data: signedList, error: signErr } = await admin.storage
-      .from('profile-photos')
-      .createSignedUrls(photoRowsForSigning.map((p) => p.storage_path as string), 3600)
+    const { data: signedList, error: signErr } = await signPhotos(admin, photoRowsForSigning.map((p) => p.storage_path as string))
     if (signErr) {
       console.error('[admin/profiles GET] batch signed URL error:', signErr.message)
       for (const p of photoRowsForSigning) photoMap.set(p.profile_id, null)

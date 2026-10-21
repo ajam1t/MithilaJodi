@@ -93,7 +93,7 @@ export function AdminShell({ perms, roleLabel, identity, attention, children }: 
         <aside className="acx-side" aria-label="Admin navigation">
           <Link href="/admin" className="acx-brand">
             {/* The official mark, never redrawn or recoloured (see scripts/brand-assets.js). */}
-            <Image src="/logo-mark.png" alt="" width={44} height={40} priority className="h-10 w-auto shrink-0 object-contain" />
+            <Image src="/logo-mark-128.webp" alt="" width={44} height={40} priority className="h-10 w-auto shrink-0 object-contain" />
             <span>
               <span className="acx-brand-t block">Mithila Jodi</span>
               <span className="acx-brand-s block">Command Centre</span>
@@ -140,7 +140,7 @@ export function AdminShell({ perms, roleLabel, identity, attention, children }: 
           <header className="acx-top">
             <div className="mx-auto flex h-[62px] max-w-[1480px] items-center gap-2 px-3 sm:gap-3 sm:px-6">
               <Link href="/admin" className="shrink-0 xl:hidden" aria-label="Dashboard">
-                <Image src="/logo-mark.png" alt="" width={40} height={37} priority className="h-9 w-auto object-contain" />
+                <Image src="/logo-mark-128.webp" alt="" width={40} height={37} priority className="h-9 w-auto object-contain" />
               </Link>
               <div className="min-w-0 leading-tight">
                 <p className="acx-crumb truncate">{current?.label ?? 'Admin'}{currentItem && current?.label !== currentItem.label ? ` › ${currentItem.label}` : ''}</p>

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount, refuseWhileImpersonating } from '@/lib/auth'
 import { getSystemProfileId } from '@/lib/systemProfile'
+import { signPhotos } from '@/lib/photoWeb'
 
 function toDisplayName(firstName: string, lastName: string | null): string {
   if (lastName) return `${firstName} ${lastName}`
@@ -93,9 +94,7 @@ export async function GET() {
   if (photos.length > 0) {
     // One batched sign call instead of one round trip per partner photo.
     const paths = photos.map((photo) => (photo as { storage_path: string }).storage_path)
-    const { data: signedList } = await admin.storage
-      .from('profile-photos')
-      .createSignedUrls(paths, 3600)
+    const { data: signedList } = await signPhotos(admin, paths)
     signedList?.forEach((signed, i) => {
       if (!signed.signedUrl) return
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

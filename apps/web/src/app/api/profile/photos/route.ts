@@ -1,10 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { nanoid } from 'nanoid'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
 import { sniffImage } from '@/lib/imageSniff'
 import { refreshPublicShowcase } from '@/lib/showcaseCache'
 import { syncDiscoverability } from '@/lib/discoverability'
+import { signPhoto } from '@/lib/photoWeb'
+import { makeWebCopy } from '@/lib/photoWeb'
 
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
 const MAX_BYTES = 5 * 1024 * 1024  // 5 MB
@@ -46,9 +48,7 @@ export async function GET() {
     (photoRows ?? []).map(async (p) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const photo = p as any
-      const { data: signed } = await admin.storage
-        .from('profile-photos')
-        .createSignedUrl(photo.storage_path, 3600)
+      const { data: signed } = await signPhoto(admin, photo.storage_path)
       return {
         id: photo.id,
         is_primary: photo.is_primary,
@@ -171,6 +171,9 @@ export async function POST(request: NextRequest) {
     console.error('[photos POST] insert error:', insertError?.message)
     return NextResponse.json({ ok: false, message: 'Failed to save photo record.' }, { status: 500 })
   }
+
+  // The web-sized copy pages load, made after the response is sent.
+  after(() => makeWebCopy(admin, storagePath, bytes))
 
   // The first photo can be what completes onboarding and makes the profile visible.
   await syncDiscoverability(admin, account.id)

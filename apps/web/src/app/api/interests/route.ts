@@ -10,6 +10,7 @@ import { getCommunityLabels, labelFor } from '@/lib/communityLabels'
 import { getLocationIndex } from '@/lib/locationIndex'
 import { scoreMatch, type MatchResult } from '@/lib/matchScore'
 import { SCORE_COLUMNS, SCORE_PREF_COLUMNS, toScoreProfile, toScorePrefs } from '@/lib/matchInputs'
+import { signPhotos } from '@/lib/photoWeb'
 
 const DAILY_INTEREST_LIMIT = 30
 const DECLINE_COOLDOWN_MS = 90 * 86_400_000
@@ -204,9 +205,7 @@ export async function GET() {
     const signEntries = [...pathByProfile.entries()]
     if (signEntries.length > 0) {
       try {
-        const { data: signedList, error: signErr } = await admin.storage
-          .from('profile-photos')
-          .createSignedUrls(signEntries.map(([, path]) => path), 3600)
+        const { data: signedList, error: signErr } = await signPhotos(admin, signEntries.map(([, path]) => path))
         if (signErr) {
           console.error('[interests GET] batch signed URL error:', signErr.message)
           for (const [pid] of signEntries) signedByProfile.set(pid, null)
