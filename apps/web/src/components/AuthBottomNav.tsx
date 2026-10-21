@@ -9,8 +9,8 @@ import { useOwnPhoto } from '@/lib/hooks/useOwnPhoto'
  * The signed-in mobile bottom nav — LOCKED by the owner (2026-10-07; Profile
  * moved to the centre on the owner's request, 2026-10-21):
  *   Home · Digital Profile · Profile · Search · Inbox
- * Profile is the raised centre medallion, wearing the member's own photo,
- * mirroring the signed-out bar's Join / Login medallion.
+ * Profile is the maroon centre tab, wearing the member's own photo in a thin
+ * turning gold ring, mirroring the signed-out bar's Join / Login tab.
  * Do not bring back separate Messages / Interests tabs or Biodata here:
  * Inbox is the umbrella for messages, interests and matches, and Biodata
  * lives with the tools on the Profile page.
@@ -120,19 +120,14 @@ export function AuthBottomNav() {
               key={tab.href}
               href={tab.href}
               aria-current={active ? 'page' : undefined}
-              className={`mj-cta-tab relative flex min-w-0 flex-[1.2] flex-col items-center justify-end pb-1.5 text-gold-lt transition-colors ${active ? 'bg-maroon-deep shadow-[inset_0_2px_0_#E4C572]' : 'bg-maroon'}`}
+              className={`mj-cta-tab relative flex min-w-0 flex-[1.2] flex-col items-center justify-center gap-0.5 text-gold-lt transition-colors ${active ? 'bg-maroon-deep shadow-[inset_0_2px_0_#E4C572]' : 'bg-maroon'}`}
             >
-              <span className="mj-cta-badge" aria-hidden="true">
-                <svg viewBox="0 0 60 60" className="mj-cta-rim">
-                  <circle cx="30" cy="30" r="28" fill="none" stroke="#E9C977" strokeWidth="1" strokeDasharray="2 3.2" />
-                  {Array.from({ length: 8 }, (_, i) => (
-                    <ellipse key={i} cx="30" cy="3.6" rx="1.1" ry="2.3" fill="#E9C977" opacity=".9" transform={`rotate(${i * 45} 30 30)`} />
-                  ))}
-                </svg>
+              <span className="mj-nav-ring" aria-hidden="true">
+                <svg viewBox="0 0 36 36" className="mj-nav-rim"><circle cx="18" cy="18" r="16.5" fill="none" stroke="#E9C977" strokeWidth="1.2" strokeDasharray="3 2.4" /></svg>
                 {photo ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={photo} alt="" width={42} height={42} className="mj-cta-photo" />
-                ) : tab.icon(active)}
+                  <img src={photo} alt="" width={26} height={26} className="mj-nav-photo" />
+                ) : <span className="relative">{tab.icon(active)}</span>}
               </span>
               <span className="relative text-[10px] font-semibold leading-tight">{tab.label}</span>
             </Link>

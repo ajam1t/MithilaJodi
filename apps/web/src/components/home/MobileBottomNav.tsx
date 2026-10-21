@@ -6,6 +6,17 @@ import { usePathname } from 'next/navigation'
 import { useAuthState } from '@/lib/hooks/useAuthState'
 import { AuthBottomNav } from '@/components/AuthBottomNav'
 
+/** Two figures who meet, and a heart between them. Static under reduced motion. */
+function JodiIcon() {
+  return (
+    <svg width="26" height="22" viewBox="0 0 30 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mj-jodi relative">
+      <g className="mj-jodi-l"><circle cx="6.4" cy="8.6" r="3.1" /><path d="M1.2 21.4c.4-3.8 2.5-6.2 5.2-6.2s4.8 2.4 5.2 6.2" /></g>
+      <g className="mj-jodi-r"><circle cx="23.6" cy="8.6" r="3.1" /><path d="M18.4 21.4c.4-3.8 2.5-6.2 5.2-6.2s4.8 2.4 5.2 6.2" /></g>
+      <path className="mj-jodi-h" d="M15 9.4c-2.4-1.7-3.9-3.1-3.9-4.8a2 2 0 0 1 3.9-1 2 2 0 0 1 3.9 1c0 1.7-1.5 3.1-3.9 4.8Z" fill="#E9C977" stroke="none" />
+    </svg>
+  )
+}
+
 export function MobileBottomNav() {
   const { auth, authLoaded } = useAuthState()
   const loggedIn = auth.loggedIn
@@ -79,23 +90,11 @@ export function MobileBottomNav() {
             <span className={`text-[10px] font-medium tracking-wide leading-tight text-center ${isActive('/digital-profile') ? 'font-semibold' : ''}`}>Digital Profile</span>
           </Link>
 
-          {/* Join / Login — primary CTA centre: a raised medallion with a slowly
-              turning aripan rim, and a gold sheen that crosses the tab now and then. */}
+          {/* Join / Login — primary CTA centre, the same size as every tab. Its
+              icon tells the site's story: two people draw together and a gold
+              heart appears between them — a jodi — then they rest and repeat. */}
           <Link href="/register" className={`${navCls('/register', true)} mj-cta-tab`} aria-current={isActive('/register') ? 'page' : undefined}>
-            <span className="mj-cta-badge" aria-hidden="true">
-              <svg viewBox="0 0 60 60" className="mj-cta-rim">
-                <circle cx="30" cy="30" r="28" fill="none" stroke="#E9C977" strokeWidth="1" strokeDasharray="2 3.2" />
-                {Array.from({ length: 8 }, (_, i) => (
-                  <ellipse key={i} cx="30" cy="3.6" rx="1.1" ry="2.3" fill="#E9C977" opacity=".9" transform={`rotate(${i * 45} 30 30)`} />
-                ))}
-              </svg>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="relative">
-                <circle cx="9" cy="8" r="4" />
-                <path d="M3 20c0-3.6 2.7-6 6-6" />
-                <line x1="18" y1="11" x2="18" y2="17" />
-                <line x1="15" y1="14" x2="21" y2="14" />
-              </svg>
-            </span>
+            <JodiIcon />
             <span className="relative text-[10px] font-semibold tracking-wide leading-tight text-center">Join / Login</span>
           </Link>
 
