@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { OFFICIAL_LINKS } from '@/lib/constants'
 import { BrandIcon } from '@/components/social/BrandIcons'
@@ -104,19 +104,6 @@ function sections(loggedIn: boolean): Section[] {
   ]
 }
 
-/** A large, faint aripan behind the top of the drawer; it turns a little as the menu opens. */
-function MenuAripan() {
-  const petals = Array.from({ length: 12 }, (_, i) => i * 30)
-  return (
-    <svg aria-hidden="true" viewBox="0 0 200 200" className="mj-menu-aripan">
-      <circle cx="100" cy="100" r="96" fill="none" stroke="#B98A2E" strokeWidth=".7" />
-      <circle cx="100" cy="100" r="88" fill="none" stroke="#B98A2E" strokeWidth=".6" strokeDasharray="1.5 4" />
-      {petals.map(a => <ellipse key={a} cx="100" cy="52" rx="9" ry="30" fill="none" stroke="#B98A2E" strokeWidth=".8" transform={`rotate(${a} 100 100)`} />)}
-      <circle cx="100" cy="100" r="16" fill="none" stroke="#9B2233" strokeWidth=".8" />
-    </svg>
-  )
-}
-
 export function MenuDrawer({
   open,
   onClose,
@@ -136,6 +123,15 @@ export function MenuDrawer({
 }) {
   const panelRef = useRef<HTMLDivElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
+  const all = sections(loggedIn)
+  // Open on the section holding the current page, else Explore.
+  const home = Math.max(0, all.findIndex(sec => sec.items.some(it => isActive(it.href))))
+  const [tab, setTab] = useState(home)
+  const [burst, setBurst] = useState(0)
+  const swipe = useRef<{ x: number; y: number } | null>(null)
+  const drag = useRef<number | null>(null)
+  const [pull, setPull] = useState(0)
+  useEffect(() => { if (open) { setTab(home); setPull(0) } }, [open, home])
 
   useEffect(() => {
     if (!open) return
@@ -175,178 +171,215 @@ export function MenuDrawer({
 
   if (!open) return null
 
+  const N = all.length
+  const pick = (i: number) => { const k = (i + N) % N; if (k !== tab) { setTab(k); setBurst(b => b + 1) } }
+  const sec = all[tab]
   const on = (href: string) => isActive(href) || undefined
-  const [explore, wedding, astrology, culture, support] = sections(loggedIn)
-  const head = (sec: Section, i: number) => (
-    <h2 id={`menu-${sec.id}`} className="mj-menu-head" style={{ '--i': i } as React.CSSProperties}>
-      <span>{sec.title}</span>
-      <span className="mj-menu-rule" aria-hidden="true" />
-    </h2>
-  )
+
+  // Drag the handle down to close.
+  const onHandleDown = (e: React.PointerEvent) => { drag.current = e.clientY; (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId) }
+  const onHandleMove = (e: React.PointerEvent) => { if (drag.current !== null) setPull(Math.max(0, e.clientY - drag.current)) }
+  const onHandleUp = () => { if (drag.current === null) return; drag.current = null; if (pull > 90) onClose(); else setPull(0) }
+  // Swipe sideways across the sheet to move between sections.
+  const onTouchStart = (e: React.TouchEvent) => { const t = e.touches[0]; swipe.current = { x: t.clientX, y: t.clientY } }
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const s0 = swipe.current; swipe.current = null; if (!s0) return
+    const t = e.changedTouches[0], dx = t.clientX - s0.x, dy = t.clientY - s0.y
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) pick(tab + (dx < 0 ? 1 : -1))
+  }
+  const onTabKey = (e: React.KeyboardEvent, i: number) => {
+    const k: Record<string, number> = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: N - 1 }
+    if (e.key in k) { e.preventDefault(); pick(k[e.key]); document.getElementById(`menu-tab-${all[(k[e.key] + N) % N].id}`)?.focus() }
+  }
 
   // Portalled to <body>: inside the sticky header it would share the header's
   // stacking layer and the fixed bottom nav would paint over it.
   return createPortal(
-    <div className="fixed inset-0 z-[70] flex justify-end lg:hidden" id="site-menu">
-      <div className="absolute inset-0 bg-ink/40 animate-[fadeIn_.2s_ease] motion-reduce:animate-none" onClick={onClose} aria-hidden="true" />
+    <div className="fixed inset-0 z-[70] flex items-end justify-center lg:hidden" id="site-menu">
+      <div className="mj-orb-scrim absolute inset-0" onClick={onClose} aria-hidden="true" />
 
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label="Site menu"
-        className="mj-menu relative flex h-full w-full flex-col overflow-y-auto overscroll-contain shadow-mj-sm animate-[menuIn_.22s_cubic-bezier(0.2,0.8,0.3,1)] motion-reduce:animate-none sm:max-w-[400px]"
+        className="mj-orb relative flex max-h-[88vh] w-full max-w-[480px] flex-col"
+        style={{ transform: pull ? `translateY(${pull}px)` : undefined }}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
       >
-        <MenuAripan />
-        {/* ── Header ── */}
-        <div className="relative shrink-0 px-4 pb-2 pt-[max(12px,env(safe-area-inset-top))]">
-          <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-gold to-transparent" aria-hidden="true" />
-          <Link href="/" onClick={onClose} className="relative inline-flex items-center gap-2.5 rounded-mj-sm pr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40" aria-label="Mithila Jodi — home">
-            <Image src="/logo-mark.png" alt="" width={52} height={48} className="h-10 w-auto shrink-0 object-contain" />
+        {/* gradient-mesh glow and a faint blueprint grid behind everything */}
+        <div className="mj-orb-mesh" aria-hidden="true"><i /><i /><i /></div>
+
+        {/* ── Handle + top row ── */}
+        <div
+          className="relative flex shrink-0 touch-none cursor-grab items-center justify-between px-4 pb-1 pt-2.5"
+          onPointerDown={onHandleDown} onPointerMove={onHandleMove} onPointerUp={onHandleUp} onPointerCancel={onHandleUp}
+        >
+          <span className="mj-orb-handle" aria-hidden="true" />
+          <Link href="/" onClick={onClose} className="relative mt-2 inline-flex items-center gap-2 rounded-mj-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40" aria-label="Mithila Jodi — home">
+            <Image src="/logo-mark.png" alt="" width={40} height={37} className="h-8 w-auto" />
             <span className="flex flex-col leading-none">
-              <span className="font-serif text-[20px] font-bold leading-tight text-maroon">Mithila Jodi</span>
-              <span className="font-deva mt-0.5 text-[11px] leading-tight text-maroon opacity-85" lang="hi">जहाँ परंपरा मिले, प्रेम से</span>
+              <span className="font-serif text-[16px] font-bold text-maroon">Mithila Jodi</span>
+              <span className="font-deva mt-0.5 text-[10px] text-maroon/80" lang="hi">जहाँ परंपरा मिले, प्रेम से</span>
             </span>
           </Link>
-          <button
-            ref={closeRef}
-            type="button"
-            onClick={onClose}
-            aria-label="Close menu"
-            className="mj-menu-close absolute right-3 top-[max(10px,env(safe-area-inset-top))] grid h-11 w-11 place-items-center rounded-full text-maroon focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40"
-          >
-            <svg width="18" height="18" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-              <line x1="4" y1="4" x2="18" y2="18" /><line x1="18" y1="4" x2="4" y2="18" />
-            </svg>
+          <button ref={closeRef} type="button" onClick={onClose} aria-label="Close menu" className="mj-menu-close relative mt-2 grid h-10 w-10 place-items-center rounded-full text-maroon focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40">
+            <svg width="16" height="16" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><line x1="4" y1="4" x2="18" y2="18" /><line x1="18" y1="4" x2="4" y2="18" /></svg>
           </button>
         </div>
 
-        <div className="relative flex-1 px-4 pb-[max(20px,env(safe-area-inset-bottom))]">
-          {/* ── Account ── visitors: Join / Login; members: their profile + log out */}
+        {/* ── The dial: the five sections on an arc ── */}
+        <div className="relative shrink-0 px-3">
+          <OrbitDial sections={all} active={tab} onPick={pick} onKey={onTabKey} burst={burst} />
+          <div className="pointer-events-none relative -mt-1 flex justify-center" aria-hidden="true">
+            <FlapWord text={sec.title.toUpperCase()} />
+          </div>
+        </div>
+
+        {/* ── The chosen section's links ── */}
+        <div
+          id="menu-panel"
+          role="tabpanel"
+          aria-labelledby={`menu-tab-${sec.id}`}
+          className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-3 pt-3"
+        >
+          <ul key={sec.id} className={`grid gap-2 ${sec.items.length > 3 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            {sec.items.map((it, k) => (
+              <li key={it.label} className="mj-orb-item" style={{ '--k': k } as React.CSSProperties}>
+                <Link href={it.href} onClick={onClose} className="mj-orb-card" data-on={on(it.href)} aria-current={isActive(it.href) ? 'page' : undefined}>
+                  <span className="mj-orb-icon"><Icon name={it.icon} size={19} /></span>
+                  <span className="min-w-0 flex-1 text-[14px] font-medium leading-tight">{it.label}</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" {...P} strokeWidth={2.2} aria-hidden="true" className="shrink-0 opacity-50"><path d="m9 6 6 6-6 6" /></svg>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* ── Account + channels, always within thumb reach ── */}
+        <div className="relative shrink-0 border-t border-gold/25 px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3">
           {authLoaded && (loggedIn ? (
-            <div className="mj-menu-in flex gap-2" style={{ '--i': 0 } as React.CSSProperties}>
-              <Link href="/profile" onClick={onClose} className="mj-menu-cta flex-1">
-                <span className="mj-menu-cta-icon"><svg width="20" height="20" viewBox="0 0 24 24" {...P} strokeWidth={1.8} aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg></span>
-                <span className="text-[16px]">My Profile</span>
-                <svg width="18" height="18" viewBox="0 0 24 24" {...P} strokeWidth={2} aria-hidden="true" className="ml-auto"><path d="m9 6 6 6-6 6" /></svg>
+            <div className="flex gap-2">
+              <Link href="/profile" onClick={onClose} className="mj-orb-cta flex-1">
+                <svg width="18" height="18" viewBox="0 0 24 24" {...P} strokeWidth={1.8} aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                My Profile
               </Link>
-              <button type="button" onClick={() => { onClose(); onLogout() }} className="min-h-[54px] rounded-[16px] border border-maroon/30 bg-cream px-4 text-[14px] font-medium text-maroon transition-colors hover:bg-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40">
+              <button type="button" onClick={() => { onClose(); onLogout() }} className="min-h-[46px] rounded-full border border-maroon/30 bg-cream/80 px-4 text-[13.5px] font-medium text-maroon focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40">
                 Log out
               </button>
             </div>
           ) : (
-            <Link href="/register" onClick={onClose} className="mj-menu-cta mj-menu-in" style={{ '--i': 0 } as React.CSSProperties}>
-              {/* Same person-plus glyph as the bottom nav's Join / Login. */}
-              <span className="mj-menu-cta-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" {...P} strokeWidth={1.8} aria-hidden="true">
-                  <circle cx="9" cy="8" r="4" /><path d="M3 20c0-3.6 2.7-6 6-6" /><line x1="18" y1="11" x2="18" y2="17" /><line x1="15" y1="14" x2="21" y2="14" />
-                </svg>
-              </span>
-              <span className="flex flex-col leading-tight">
-                <span className="text-[16px]">Join / Login</span>
-                <span className="text-[11.5px] font-normal text-cream/75">Free for every member</span>
-              </span>
-              <svg width="18" height="18" viewBox="0 0 24 24" {...P} strokeWidth={2} aria-hidden="true" className="ml-auto"><path d="m9 6 6 6-6 6" /></svg>
+            <Link href="/register" onClick={onClose} className="mj-orb-cta">
+              <svg width="18" height="18" viewBox="0 0 24 24" {...P} strokeWidth={1.8} aria-hidden="true"><circle cx="9" cy="8" r="4" /><path d="M3 20c0-3.6 2.7-6 6-6" /><line x1="18" y1="11" x2="18" y2="17" /><line x1="15" y1="14" x2="21" y2="14" /></svg>
+              Join / Login <span className="font-normal opacity-75">· free</span>
             </Link>
           ))}
-
-          {/* ── The five locked sections, each in the form that suits it ── */}
-          <nav aria-label="Site navigation">
-            <section aria-labelledby="menu-explore" className="mj-menu-sec">
-              {head(explore, 1)}
-              <ul className="mj-menu-in grid grid-cols-3 gap-2" style={{ '--i': 1 } as React.CSSProperties}>
-                {explore.items.map(it => (
-                  <li key={it.label}>
-                    <Link href={it.href} onClick={onClose} className="mj-menu-tile" data-on={on(it.href)} aria-current={isActive(it.href) ? 'page' : undefined}>
-                      <span className="mj-menu-disc"><Icon name={it.icon} /></span>
-                      <span className="mj-menu-label">{it.label}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            <section aria-labelledby="menu-wedding" className="mj-menu-sec">
-              {head(wedding, 2)}
-              <ul className="mj-menu-in grid grid-cols-2 gap-2" style={{ '--i': 2 } as React.CSSProperties}>
-                {wedding.items.map(it => (
-                  <li key={it.label}>
-                    <Link href={it.href} onClick={onClose} className="mj-menu-wide" data-on={on(it.href)} aria-current={isActive(it.href) ? 'page' : undefined}>
-                      <span className="mj-menu-disc"><Icon name={it.icon} /></span>
-                      <span className="mj-menu-label text-left">{it.label}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            <section aria-labelledby="menu-astrology" className="mj-menu-sec">
-              {head(astrology, 3)}
-              <ul className="mj-menu-in grid grid-cols-4 gap-x-1.5 gap-y-3" style={{ '--i': 3 } as React.CSSProperties}>
-                {astrology.items.map((it, k) => (
-                  <li key={it.label}>
-                    <Link href={it.href} onClick={onClose} className="mj-menu-orbit" data-on={on(it.href)} aria-current={isActive(it.href) ? 'page' : undefined}>
-                      <span className="mj-menu-planet" style={{ '--k': k } as React.CSSProperties}>
-                        <span className="mj-menu-moon" aria-hidden="true" />
-                        <Icon name={it.icon} />
-                      </span>
-                      <span className="mj-menu-label">{it.label}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            <section aria-labelledby="menu-culture" className="mj-menu-sec">
-              {head(culture, 4)}
-              <ul className="mj-menu-in grid grid-cols-3 gap-2" style={{ '--i': 4 } as React.CSSProperties}>
-                {culture.items.map(it => (
-                  <li key={it.label}>
-                    <Link href={it.href} onClick={onClose} className="mj-menu-tile" data-on={on(it.href)} aria-current={isActive(it.href) ? 'page' : undefined}>
-                      <span className="mj-menu-disc"><Icon name={it.icon} /></span>
-                      <span className="mj-menu-label">{it.label}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            <section aria-labelledby="menu-support" className="mj-menu-sec">
-              {head(support, 5)}
-              <ul className="mj-menu-in flex flex-wrap gap-2" style={{ '--i': 5 } as React.CSSProperties}>
-                {support.items.map(it => (
-                  <li key={it.label}>
-                    <Link href={it.href} onClick={onClose} className="mj-menu-chip" data-on={on(it.href)} aria-current={isActive(it.href) ? 'page' : undefined}>
-                      <Icon name={it.icon} size={16} />
-                      {it.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          </nav>
-
-          {/* ── Footer ── */}
-          <div className="mj-menu-in mt-6 border-t border-gold/25 pt-4 text-center" style={{ '--i': 6 } as React.CSSProperties}>
-            <p className="font-deva text-[12.5px] text-maroon" lang="hi">
-              गाँव से जुड़ाव <span className="text-gold" aria-hidden="true">•</span> संस्कार से रिश्ता <span className="text-gold" aria-hidden="true">•</span> प्रेम से जीवन
-            </p>
-            <div className="mt-3 flex justify-center gap-3">
-              {([
-                ['instagram', OFFICIAL_LINKS.instagram, 'Mithila Jodi on Instagram', 'noopener noreferrer'],
-                ['facebook', OFFICIAL_LINKS.facebook, 'Mithila Jodi on Facebook', 'noopener noreferrer'],
-                ['whatsapp', OFFICIAL_LINKS.whatsapp, 'Join the Mithila Jodi WhatsApp Community', 'noopener noreferrer nofollow'],
-                ['youtube', OFFICIAL_LINKS.youtube, 'Mithila Jodi on YouTube', 'noopener noreferrer'],
-              ] as const).map(([brand, href, label, rel]) => (
-                <a key={brand} href={href} target="_blank" rel={rel} className="mj-menu-social" aria-label={label}>
-                  <BrandIcon brand={brand} size={40} />
-                </a>
-              ))}
-            </div>
+          <div className="mt-2.5 flex items-center justify-center gap-2.5">
+            {([
+              ['instagram', OFFICIAL_LINKS.instagram, 'Mithila Jodi on Instagram', 'noopener noreferrer'],
+              ['facebook', OFFICIAL_LINKS.facebook, 'Mithila Jodi on Facebook', 'noopener noreferrer'],
+              ['whatsapp', OFFICIAL_LINKS.whatsapp, 'Join the Mithila Jodi WhatsApp Community', 'noopener noreferrer nofollow'],
+              ['youtube', OFFICIAL_LINKS.youtube, 'Mithila Jodi on YouTube', 'noopener noreferrer'],
+            ] as const).map(([brand, href, label, rel]) => (
+              <a key={brand} href={href} target="_blank" rel={rel} className="mj-menu-social" aria-label={label}>
+                <BrandIcon brand={brand} size={32} />
+              </a>
+            ))}
           </div>
         </div>
       </div>
     </div>,
     document.body
+  )
+}
+
+// ── The dial ───────────────────────────────────────────────────────────────
+const DW = 360, DCX = 180, DCY = 205, RO = 192, RI = 128
+const r1 = (n: number) => Math.round(n * 10) / 10
+const pt = (r: number, deg: number) => { const a = ((deg - 90) * Math.PI) / 180; return [r1(DCX + r * Math.cos(a)), r1(DCY + r * Math.sin(a))] as const }
+const SPAN = 116 // degrees the arc covers, centred on the top
+
+function OrbitDial({ sections: secs, active, onPick, onKey, burst }: {
+  sections: Section[]; active: number; onPick: (i: number) => void; onKey: (e: React.KeyboardEvent, i: number) => void; burst: number
+}) {
+  const n = secs.length, step = SPAN / n
+  const mid = (i: number) => -SPAN / 2 + step * (i + 0.5)
+  const seg = (i: number) => {
+    const a0 = -SPAN / 2 + step * i + 0.8, a1 = a0 + step - 1.6
+    const [x0, y0] = pt(RO, a0), [x1, y1] = pt(RO, a1), [x2, y2] = pt(RI, a1), [x3, y3] = pt(RI, a0)
+    return `M${x0} ${y0}A${RO} ${RO} 0 0 1 ${x1} ${y1}L${x2} ${y2}A${RI} ${RI} 0 0 0 ${x3} ${y3}Z`
+  }
+  const [mx, my] = pt(RO + 8, mid(active))
+  return (
+    <div className="relative mx-auto w-full max-w-[380px]" style={{ aspectRatio: `${DW} / 136` }}>
+      <svg viewBox={`0 6 ${DW} 136`} className="absolute inset-0 h-full w-full overflow-visible" aria-hidden="true">
+        {/* wireframe orbits */}
+        <path d={`M${pt(RO + 8, -SPAN / 2 - 4).join(' ')}A${RO + 8} ${RO + 8} 0 0 1 ${pt(RO + 8, SPAN / 2 + 4).join(' ')}`} fill="none" stroke="#B98A2E" strokeOpacity=".35" strokeDasharray="2 5" />
+        <path d={`M${pt(RI - 10, -SPAN / 2).join(' ')}A${RI - 10} ${RI - 10} 0 0 1 ${pt(RI - 10, SPAN / 2).join(' ')}`} fill="none" stroke="#B98A2E" strokeOpacity=".3" />
+        {secs.map((_, i) => <path key={i} d={seg(i)} className="mj-orb-seg" data-on={i === active || undefined} onClick={() => onPick(i)} />)}
+        {/* the gold marker that travels to the chosen section */}
+        <circle cx={mx} cy={my} r="4" fill="#E9C977" className="mj-orb-marker" />
+        <circle cx={mx} cy={my} r="9" fill="none" stroke="#E9C977" strokeOpacity=".6" className="mj-orb-marker" />
+        {/* particles thrown from the chosen segment */}
+        <g key={burst} className="mj-orb-burst">
+          {Array.from({ length: 10 }, (_, k) => {
+            const [px, py] = pt((RO + RI) / 2, mid(active) + (k - 4.5) * 2.2)
+            return <circle key={k} cx={px} cy={py} r={1.6 + (k % 3) * 0.6} fill="#E9C977" style={{ '--dx': `${(k - 4.5) * 5}px`, '--dy': `${-12 - (k % 4) * 6}px` } as React.CSSProperties} />
+          })}
+        </g>
+      </svg>
+      <div role="tablist" aria-label="Menu sections" className="absolute inset-0">
+        {secs.map((s2, i) => {
+          const [x, y] = pt((RO + RI) / 2, mid(i))
+          return (
+            <button
+              key={s2.id}
+              id={`menu-tab-${s2.id}`}
+              type="button"
+              role="tab"
+              aria-selected={i === active}
+              aria-controls="menu-panel"
+              tabIndex={i === active ? 0 : -1}
+              onClick={() => onPick(i)}
+              onKeyDown={e => onKey(e, i)}
+              className="mj-orb-tab absolute grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full"
+              data-on={i === active || undefined}
+              style={{ left: `${(x / DW) * 100}%`, top: `${((y - 6) / 136) * 100}%` }}
+            >
+              <Icon name={SECTION_ICON[s2.id]} size={20} />
+              <span className="sr-only">{s2.title}</span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+const SECTION_ICON: Record<string, string> = { explore: 'search', wedding: 'invitation', astrology: 'rashi', culture: 'festivals', support: 'safety' }
+
+/** The section's name on split-flap tiles; the tiles that change flip through letters and settle. */
+const FLAP = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ&'
+function FlapWord({ text }: { text: string }) {
+  const L = 15
+  const centred = (' '.repeat(Math.floor((L - text.length) / 2)) + text).padEnd(L, ' ').slice(0, L)
+  const [shown, setShown] = useState(centred)
+  const last = useRef(centred)
+  useEffect(() => {
+    const from = last.current; last.current = centred
+    if (from === centred) return
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { setShown(centred); return }
+    let step = 0
+    const id = window.setInterval(() => {
+      step++
+      setShown(Array.from(centred, (ch, i) => (ch === from[i] || step >= 2 + i * 0.9 ? ch : FLAP[(step * 7 + i * 5) % FLAP.length])).join(''))
+      if (step >= 2 + L * 0.9) window.clearInterval(id)
+    }, 45)
+    return () => window.clearInterval(id)
+  }, [centred])
+  return (
+    <span className="mj-flaps mj-flaps-sm">
+      {Array.from(shown, (ch, i) => <span key={i} className="mj-flap"><span key={ch}>{ch === ' ' ? '\u00a0' : ch}</span></span>)}
+    </span>
   )
 }
