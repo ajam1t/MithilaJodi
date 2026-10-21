@@ -6,11 +6,10 @@ import { inboxCount, usePendingCounts } from '@/lib/hooks/usePendingCounts'
 import { useOwnPhoto } from '@/lib/hooks/useOwnPhoto'
 
 /*
- * The signed-in mobile bottom nav — LOCKED by the owner (2026-10-07; Profile
- * moved to the centre on the owner's request, 2026-10-21):
- *   Home · Digital Profile · Profile · Search · Inbox
- * Profile is the maroon centre tab, wearing the member's own photo in a thin
- * turning gold ring, mirroring the signed-out bar's Join / Login tab.
+ * The signed-in mobile bottom nav — LOCKED by the owner (2026-10-07):
+ *   Home · Digital Profile · Search · Inbox · Profile
+ * The Digital Profile tab shows the member's own photo filling the whole tab
+ * (owner's request, 2026-10-21) — no ring, no motion — once one is approved.
  * Do not bring back separate Messages / Interests tabs or Biodata here:
  * Inbox is the umbrella for messages, interests and matches, and Biodata
  * lives with the tools on the Profile page.
@@ -58,17 +57,6 @@ const tabs: Tab[] = [
     ),
   },
   {
-    href: '/profile',
-    label: 'Profile',
-    matchPaths: ['/profile', '/settings', '/biodata'],
-    icon: (active) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" {...stroke(active)}>
-        <path d="M20 21v-1.5a4.5 4.5 0 0 0-4.5-4.5h-7A4.5 4.5 0 0 0 4 19.5V21" />
-        <circle cx="12" cy="7.5" r="4" fill={active ? 'currentColor' : 'none'} />
-      </svg>
-    ),
-  },
-  {
     href: '/search',
     label: 'Search',
     matchPaths: ['/search'],
@@ -89,12 +77,23 @@ const tabs: Tab[] = [
       </svg>
     ),
   },
+  {
+    href: '/profile',
+    label: 'Profile',
+    matchPaths: ['/profile', '/settings', '/biodata'],
+    icon: (active) => (
+      <svg width="22" height="22" viewBox="0 0 24 24" {...stroke(active)}>
+        <path d="M20 21v-1.5a4.5 4.5 0 0 0-4.5-4.5h-7A4.5 4.5 0 0 0 4 19.5V21" />
+        <circle cx="12" cy="7.5" r="4" fill={active ? 'currentColor' : 'none'} />
+      </svg>
+    ),
+  },
 ]
 
 export function AuthBottomNav() {
   const pathname = usePathname()
   const pending = usePendingCounts()
-  // The Profile tab wears the member's own photo once it is approved.
+  // The Digital Profile tab wears the member's own photo once it is approved.
   const photo = useOwnPhoto()
 
   const isActive = (tab: Tab) => tab.matchPaths.some(p => pathname === p || pathname.startsWith(p + '/'))
@@ -115,23 +114,6 @@ export function AuthBottomNav() {
           const active = isActive(tab)
           const badge = badgeFor(tab)
           return (
-            tab.href === '/profile' ? (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              aria-current={active ? 'page' : undefined}
-              className={`mj-cta-tab relative flex min-w-0 flex-[1.2] flex-col items-center justify-center gap-0.5 text-gold-lt transition-colors ${active ? 'bg-maroon-deep shadow-[inset_0_2px_0_#E4C572]' : 'bg-maroon'}`}
-            >
-              <span className="mj-nav-ring" aria-hidden="true">
-                <svg viewBox="0 0 36 36" className="mj-nav-rim"><circle cx="18" cy="18" r="16.5" fill="none" stroke="#E9C977" strokeWidth="1.2" strokeDasharray="3 2.4" /></svg>
-                {photo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={photo} alt="" width={26} height={26} className="mj-nav-photo" />
-                ) : <span className="relative">{tab.icon(active)}</span>}
-              </span>
-              <span className="relative text-[10px] font-semibold leading-tight">{tab.label}</span>
-            </Link>
-            ) : (
             <Link
               key={tab.href}
               href={tab.href}
@@ -139,9 +121,14 @@ export function AuthBottomNav() {
               className={`relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 transition-colors
                 ${active ? 'text-maroon' : 'text-ink-soft hover:text-ink'}`}
             >
+              {/* Digital Profile: the member's own photo fills the whole tab. */}
+              {tab.href === '/digital-profile' && photo && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={photo} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              )}
               {/* Gold rule over the current tab — the brand's "selected" mark. */}
               {active && <span className="absolute inset-x-3 top-0 h-[2.5px] rounded-b-full bg-gold" aria-hidden="true" />}
-              <span className="relative">
+              <span className={`relative ${tab.href === '/digital-profile' && photo ? 'sr-only' : ''}`}>
                 {tab.icon(active)}
                 {badge > 0 && (
                   <span
@@ -152,12 +139,11 @@ export function AuthBottomNav() {
                   </span>
                 )}
               </span>
-              <span className={`max-w-full truncate px-0.5 text-[10px] leading-tight ${active ? 'font-semibold' : 'font-medium'}`}>
+              <span className={`max-w-full truncate px-0.5 text-[10px] leading-tight ${active ? 'font-semibold' : 'font-medium'} ${tab.href === '/digital-profile' && photo ? 'sr-only' : ''}`}>
                 {tab.label}
               </span>
               {badge > 0 && <span className="sr-only">, {badge} waiting for you</span>}
             </Link>
-            )
           )
         })}
       </div>
