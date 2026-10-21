@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import type { PartnerPreferencesDisplay } from '@/types/profile'
 
 /**
  * A member's profile, told as their own story — one chapter per part of their
@@ -180,7 +181,7 @@ function RadarMap({ story, names, on }: { story: StoryData; names: Record<string
   )
 }
 
-export function ProfileStory({ p, story }: { p: StoryProfile; story: StoryData | null }) {
+export function ProfileStory({ p, story, prefs = null }: { p: StoryProfile; story: StoryData | null; prefs?: PartnerPreferencesDisplay | null }) {
   const first = p.display_name.split(' ')[0]
   const [speaking, setSpeaking] = useState(false)
   const [canSpeak, setCanSpeak] = useState(false)
@@ -192,6 +193,12 @@ export function ProfileStory({ p, story }: { p: StoryProfile; story: StoryData |
   const works = p.job_title || p.profession_detail || p.employer
   const lifestyle = [p.diet, p.mother_tongue ? `Speaks ${p.mother_tongue}` : null, nice(p.marital_status)].filter(Boolean) as string[]
   const family = [nice(p.family_type) ? `${nice(p.family_type)} family` : null, nice(p.family_values) ? `${nice(p.family_values)} values` : null].filter(Boolean) as string[]
+
+  const lookingFor = (prefs ? ([
+    ['Age', prefs.ageRange], ['Looking for', prefs.lookingFor], ['Community', prefs.community], ['Marital status', prefs.maritalStatus],
+    ['Education', prefs.education], ['Work', prefs.profession], ['Career', prefs.career], ['Location', prefs.location], ['Diet', prefs.diet],
+    ['Marriage', prefs.marriageTimeline], ['Manglik', prefs.manglik], ['Children', prefs.children], ['Living', prefs.livingArrangement],
+  ] as Array<[string, string | null]>) : []).filter((x): x is [string, string] => !!x[1])
 
   // The intro, read aloud on request — built only from what the chapters show.
   const intro = [
@@ -352,6 +359,28 @@ export function ProfileStory({ p, story }: { p: StoryProfile; story: StoryData |
               )}
               {p.parents_info && <p className="mj-st-line">{p.parents_info}</p>}
               {p.siblings_info && <p className="mj-st-line">{p.siblings_info}</p>}
+            </>
+          )}
+        </Chapter>
+      )}
+
+      {/* ── Looking for: their partner preferences, as they stated them.
+             (gotraSafe is left out — it is true for everyone by default.) */}
+      {lookingFor.length > 0 && (
+        <Chapter n={next()} label="Looking for" art={on => (
+          <svg viewBox="0 0 120 80" className={`mj-st-jodi ${on ? 'is-on' : ''}`}>
+            <circle className="mj-st-jodi-a" cx="48" cy="40" r="24" fill="none" stroke="#7A1220" strokeWidth="2" />
+            <circle className="mj-st-jodi-b" cx="72" cy="40" r="24" fill="none" stroke="#B98A2E" strokeWidth="2" />
+            <path className="mj-st-jodi-h" d="M60 50c-5-3.6-8-6.4-8-9.6a4 4 0 0 1 8-1.6 4 4 0 0 1 8 1.6c0 3.2-3 6-8 9.6Z" fill="#A3202A" />
+          </svg>
+        )}>
+          {on => (
+            <>
+              <h2 className="mj-st-big"><Kinetic on={on}>{"I'm hoping to meet someone"}</Kinetic></h2>
+              <dl className="mj-st-prefs">
+                {lookingFor.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
+              </dl>
+              {prefs?.notes && <p className="mj-st-line italic">&ldquo;{prefs.notes}&rdquo;</p>}
             </>
           )}
         </Chapter>

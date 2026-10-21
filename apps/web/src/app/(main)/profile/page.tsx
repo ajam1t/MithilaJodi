@@ -7,6 +7,7 @@ import ProfileCardGallery3D, { galleryFaceCount } from '@/components/ProfileCard
 import { Spinner } from '@/components/ui'
 import type { SearchCard, PartnerPreferencesDisplay } from '@/types/profile'
 import { normalisePhotoVisibility } from '@/lib/photoVisibility'
+import { ProfileStory } from '@/components/profile/ProfileStory'
 
 type AccountInfo = { id: string; mobile: string; role: string }
 
@@ -76,7 +77,7 @@ type Preferences = {
   pref_notes: string | null
 }
 
-type Tab = 'about' | 'community' | 'preferences' | 'photos'
+type Tab = 'story' | 'details' | 'roots' | 'photos'
 
 function age(dob: string) {
   return Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
@@ -171,21 +172,14 @@ function Group({ title, rows, children, roots = false }: {
   )
 }
 
-/** A small ring: present, not the hero. */
-function CompletionBadge({ pct }: { pct: number }) {
-  const r = 15, circ = 2 * Math.PI * r
+/** Completion as a gold ring drawn around the photo arch. */
+function CompletionRing({ pct }: { pct: number }) {
   return (
-    <div className="flex shrink-0 flex-col items-center">
-      <div className="relative h-10 w-10">
-        <svg className="h-full w-full -rotate-90" viewBox="0 0 36 36" aria-hidden="true">
-          <circle cx="18" cy="18" r={r} fill="none" stroke="currentColor" strokeWidth="2.5" className="text-gold/25" />
-          <circle cx="18" cy="18" r={r} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-            className={pct >= 100 ? 'text-green' : 'text-maroon'} strokeDasharray={circ} strokeDashoffset={circ - (circ * pct) / 100} />
-        </svg>
-        <span className="absolute inset-0 grid place-items-center text-[10.5px] font-bold text-ink">{pct}%</span>
-      </div>
-      <span className="mt-1 text-[10px] leading-none text-ink-soft">Complete</span>
-    </div>
+    <svg viewBox="0 0 120 140" className="mj-me-ring" aria-hidden="true">
+      <path d="M60 4C30 4 8 26 8 56v58a22 22 0 0 0 22 22h60a22 22 0 0 0 22-22V56C112 26 90 4 60 4Z" fill="none" stroke="rgba(185,138,46,.25)" strokeWidth="3" />
+      <path d="M60 4C30 4 8 26 8 56v58a22 22 0 0 0 22 22h60a22 22 0 0 0 22-22V56C112 26 90 4 60 4Z" fill="none" stroke={pct >= 100 ? '#B98A2E' : '#7A1220'} strokeWidth="3.4" strokeLinecap="round"
+        pathLength={100} strokeDasharray={`${pct} 100`} className="mj-me-ring-fill" />
+    </svg>
   )
 }
 
@@ -204,10 +198,12 @@ function Glyph({ d, className = 'h-[18px] w-[18px]' }: { d: string; className?: 
   )
 }
 
+// About me tells the profile as a story; Details holds the facts; Roots &
+// Preferences puts lineage beside who they hope to meet; Photos manages them.
 const TABS: Array<{ id: Tab; label: string }> = [
-  { id: 'about', label: 'About' },
-  { id: 'community', label: 'Community' },
-  { id: 'preferences', label: 'Preferences' },
+  { id: 'story', label: 'About me' },
+  { id: 'details', label: 'Details' },
+  { id: 'roots', label: 'Roots & Preferences' },
   { id: 'photos', label: 'Photos' },
 ]
 
@@ -231,7 +227,7 @@ export default function ProfilePage() {
   const [photoVisibility, setPhotoVisibility] = useState<string | null>(null)
   // Option keys → labels ("maithil_brahmin" → "Maithil Brahmin"), from master data.
   const [labels, setLabels] = useState<Record<string, Record<string, string>>>({})
-  const [tab, setTab] = useState<Tab>('about')
+  const [tab, setTab] = useState<Tab>('story')
   const [loading, setLoading] = useState(true)
   const [logoutLoading, setLogoutLoading] = useState(false)
   const [locationNames, setLocationNames] = useState<{
@@ -357,52 +353,55 @@ export default function ProfilePage() {
     <main id="main-content" className="min-h-screen bg-paper">
       <div className="mx-auto max-w-2xl px-4 pb-4 pt-5">
 
-        {/* ── Identity ── */}
-        <section className="rounded-[22px] border border-gold/30 bg-cream p-4 shadow-mj-xs sm:p-5" aria-label="Your profile">
-          <div className="flex items-center gap-4">
-            <div className="relative h-[84px] w-[84px] shrink-0 overflow-hidden rounded-full bg-paper-2 ring-2 ring-gold/50 ring-offset-2 ring-offset-cream">
-              {ownPhotoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={ownPhotoUrl} alt={displayName ?? 'Your photo'} className="h-full w-full object-cover object-[center_30%]" />
-              ) : (
-                <span className="grid h-full w-full place-items-center font-serif text-[32px] text-maroon/70">
-                  {profile?.first_name?.[0]?.toUpperCase() ?? '?'}
-                </span>
-              )}
+        {/* ── Identity: photo in a Mithila arch, completion drawn as a gold ring
+               around it, name rising in, a sheen across the card. ── */}
+        <section className="mj-me" aria-label="Your profile">
+          <div className="mj-me-mesh" aria-hidden="true"><i /><i /></div>
+          <div className="relative flex items-center gap-4">
+            <div className="mj-me-photo">
+              {profile && <CompletionRing pct={pct} />}
+              <div className="mj-me-arch">
+                {ownPhotoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={ownPhotoUrl} alt={displayName ?? 'Your photo'} />
+                ) : (
+                  <span className="grid h-full w-full place-items-center font-serif text-[34px] text-maroon/70">
+                    {profile?.first_name?.[0]?.toUpperCase() ?? '?'}
+                  </span>
+                )}
+              </div>
+              {profile && <span className={`mj-me-pct ${pct >= 100 ? 'is-full' : ''}`}>{pct}%</span>}
             </div>
             <div className="min-w-0 flex-1">
-              <h1 className="truncate font-serif text-[23px] leading-tight text-maroon">{displayName ?? 'Complete your profile'}</h1>
+              <p className="text-[10.5px] font-semibold uppercase tracking-[0.24em] text-[#8A6516]">My profile</p>
+              <h1 className="mj-me-name">{displayName ?? 'Complete your profile'}</h1>
               {profile?.dob && (
                 <p className="mt-0.5 text-[13.5px] text-ink-soft">
-                  {age(profile.dob)} yrs{profile.gender ? ` · ${profile.gender === 'male' ? 'Male' : 'Female'}` : ''}
+                  {[`${age(profile.dob)} yrs`, profile.gender ? (profile.gender === 'male' ? 'Male' : 'Female') : null, locationNames.current_loc_name].filter(Boolean).join(' · ')}
                 </p>
               )}
               {profile && (
-                <Link href="/profile/edit#visibility" className="mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-ink/10 bg-paper px-2.5 py-1 text-[12px] font-medium text-ink hover:border-gold/60">
-                  <span aria-hidden="true">{visible ? '🟢' : '⚪'}</span>
-                  {visible ? 'Profile visible' : profile.profile_status && profile.profile_status !== 'active' ? `Profile ${profile.profile_status.replace(/_/g, ' ')}` : 'Profile hidden'}
+                <Link href="/profile/edit#visibility" className="mj-me-vis">
+                  <span className={`mj-me-dot ${visible ? 'is-on' : ''}`} aria-hidden="true" />
+                  {visible ? 'Visible to members' : profile.profile_status && profile.profile_status !== 'active' ? `Profile ${profile.profile_status.replace(/_/g, ' ')}` : 'Hidden from members'}
                   <span aria-hidden="true" className="text-ink-soft">›</span>
                   <span className="sr-only">— change who can see your profile</span>
                 </Link>
               )}
             </div>
-            {profile && <CompletionBadge pct={pct} />}
           </div>
+          {profile && (L('gotra', profile.self_gotra) || L('mool', profile.mool) || locationNames.native_place_name) && (
+            <ul className="mj-me-roots" aria-label="Your roots">
+              {L('gotra', profile.self_gotra) && <li><span>Gotra</span>{L('gotra', profile.self_gotra)}</li>}
+              {L('mool', profile.mool) && <li><span>Mool</span>{L('mool', profile.mool)}</li>}
+              {locationNames.native_place_name && <li><span>Native</span>{locationNames.native_place_name}</li>}
+            </ul>
+          )}
 
-          <Link href="/profile/edit" className="mt-4 flex min-h-[48px] w-full items-center justify-center rounded-full bg-maroon-gradient text-[15px] font-semibold text-cream shadow-mj-xs transition active:scale-[0.99]">
+          <Link href="/profile/edit" className="relative mt-4 flex min-h-[48px] w-full items-center justify-center rounded-full bg-maroon-gradient text-[15px] font-semibold text-cream shadow-mj-xs transition active:scale-[0.99]">
             {profile ? 'Edit Profile' : 'Create Profile'}
           </Link>
 
-          {profile && (
-            <Link href={`/profile/${profile.id}?preview=1`} className="mj-story-teaser mt-3">
-              <span className="mj-story-teaser-icon"><Glyph d={ICON.eye} className="h-[18px] w-[18px]" /></span>
-              <span className="min-w-0 flex-1 text-left">
-                <span className="block text-[14.5px] font-semibold text-maroon">See your profile story</span>
-                <span className="block text-[12px] leading-snug text-ink-soft">How members experience your profile, chapter by chapter</span>
-              </span>
-              <span aria-hidden="true" className="text-maroon">→</span>
-            </Link>
-          )}
 
           {/* Completion: a quiet line when done, a clear next step when not. */}
           {profile && (pct >= 100 ? (
@@ -454,13 +453,29 @@ export default function ProfilePage() {
           </div>
 
           <div key={tab} className="mx-auto max-w-2xl space-y-3 px-4 py-4 animate-[fadeIn_.25s_ease] motion-reduce:animate-none" role="tabpanel">
-            {tab === 'about' && (
+            {tab === 'story' && (
               <>
-                {profile.about_me && (
-                  <Group title="About Me">
-                    <p className="mt-2 whitespace-pre-wrap text-[14.5px] leading-relaxed text-ink">{profile.about_me}</p>
-                  </Group>
-                )}
+                <ProfileStory
+                  story={null}
+                  prefs={prefsDisplay}
+                  p={{
+                    display_name: displayName || 'You', age: profile.dob ? age(profile.dob) : null, gender: profile.gender ?? '', height_cm: profile.height_cm, photo: ownPhotoUrl,
+                    degree: profile.degree, specialization: profile.specialization, institution: profile.institution, passing_year: profile.passing_year, education_detail: profile.education_detail,
+                    job_title: profile.job_title, profession_detail: profile.profession_detail, employer: profile.employer, industry: humanize(profile.industry), experience_years: profile.experience_years,
+                    current_loc_name: locationNames.current_loc_name, native_place_name: locationNames.native_place_name, job_loc_name: locationNames.job_loc_name, gram: profile.gram,
+                    self_gotra: L('gotra', profile.self_gotra), maternal_gotra: L('gotra', profile.maternal_gotra), mool: L('mool', profile.mool), caste: L('caste', profile.caste),
+                    family_type: profile.family_type, family_values: profile.family_values, parents_info: profile.parents_info, siblings_info: profile.siblings_info,
+                    diet: humanize(profile.diet), mother_tongue: humanize(profile.mother_tongue), marital_status: profile.marital_status, about_me: profile.about_me,
+                  }}
+                />
+                <Link href={`/profile/${profile.id}?preview=1`} className="flex items-center justify-center gap-2 py-2 text-[13.5px] font-medium text-maroon hover:underline hover:underline-offset-4">
+                  <Glyph d={ICON.eye} className="h-4 w-4" /> See it exactly as members do →
+                </Link>
+              </>
+            )}
+
+            {tab === 'details' && (
+              <>
                 <Group title="Personal Details" rows={[
                   ['Height', profile.height_cm ? formatHeight(profile.height_cm) : null],
                   ['Marital status', humanize(profile.marital_status)],
@@ -509,7 +524,7 @@ export default function ProfilePage() {
               </>
             )}
 
-            {tab === 'community' && (
+            {tab === 'roots' && (
               (profile.caste || profile.self_gotra || profile.maternal_gotra || profile.mool || profile.gram || locationNames.native_place_name) ? (
                 <Group title="Mithila Roots" roots rows={[
                   ['Community', L('caste', profile.caste)],
@@ -529,7 +544,7 @@ export default function ProfilePage() {
               )
             )}
 
-            {tab === 'preferences' && (
+            {tab === 'roots' && (
               prefsDisplay || prefs ? (
                 <Group title="Partner Preferences" rows={prefsDisplay ? [
                   ['Preferred age', prefsDisplay.ageRange],

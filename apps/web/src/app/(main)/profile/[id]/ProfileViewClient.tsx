@@ -404,6 +404,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
           <ProfileStory
             key={`story-${data.id}`}
             story={data.preview ? null : data.story}
+            prefs={data.cardData.preferences ?? null}
             p={{
               display_name: data.display_name, age: data.age, gender: data.gender, height_cm: data.height_cm, photo: data.photo_url,
               degree: data.degree, specialization: data.specialization, institution: data.institution, passing_year: data.passing_year, education_detail: data.education_detail,
