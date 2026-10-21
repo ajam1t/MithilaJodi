@@ -5,9 +5,10 @@ import { WhatsAppIcon } from '@/components/whatsapp/JoinCommunity'
 import { RecommendedForYou } from './RecommendedForYou'
 
 /*
- * The signed-in member's Home: what has happened, who might fit, and the one
- * thing worth doing today (sharing their Digital Profile). Not the marketing
- * homepage — that stays at / for everyone. Every number is a live count.
+ * The signed-in member's Feed: their Inbox first, then what has happened,
+ * who might fit, and the one thing worth doing today (sharing their Digital
+ * Profile). Home (/) is the same homepage for everyone; Search is its own
+ * tab. Every number is a live count.
  */
 function greeting(): string {
   const h = new Date(Date.now() + 5.5 * 3600e3).getUTCHours() // India time
@@ -34,11 +35,28 @@ export function MemberHome({ summary, siteUrl }: { summary: HomeSummary; siteUrl
 
   return (
     <main id="main-content" className="min-h-screen bg-paper">
-      <div className="mx-auto max-w-2xl px-4 py-6 sm:py-8">
+      <div className="mx-auto max-w-2xl px-4 py-5 sm:py-8">
         <h1 className="font-serif text-[28px] leading-tight text-maroon sm:text-[32px]">
           {greeting()}{summary.firstName ? `, ${summary.firstName}` : ''} <span aria-hidden="true">❤️</span>
         </h1>
         <p className="mt-1 text-[13.5px] text-ink-soft">Here&rsquo;s what&rsquo;s happening on Mithila Jodi.</p>
+
+        {/* Inbox — it lives in the Feed now: messages, interests and matches. */}
+        <Link href="/inbox" className="mj-feed-inbox mt-5" aria-label={`Open your Inbox: ${summary.unreadMessages} unread messages, ${summary.newInterests} interests waiting`}>
+          <span className="mj-feed-inbox-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d={ICONS.chat} /></svg>
+            {summary.unreadMessages + summary.newInterests > 0 && <i>{Math.min(99, summary.unreadMessages + summary.newInterests)}</i>}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-serif text-[18px] leading-tight text-maroon">Inbox</span>
+            <span className="block text-[12.5px] text-ink-soft">
+              {summary.unreadMessages + summary.newInterests > 0
+                ? [summary.unreadMessages ? `${summary.unreadMessages} unread message${summary.unreadMessages === 1 ? '' : 's'}` : null, summary.newInterests ? `${summary.newInterests} interest${summary.newInterests === 1 ? '' : 's'} waiting` : null].filter(Boolean).join(' · ')
+                : 'Messages, interests and matches'}
+            </span>
+          </span>
+          <span aria-hidden="true" className="text-[18px] text-maroon">→</span>
+        </Link>
 
         {/* Activity */}
         <section aria-label="Your activity" className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-4">

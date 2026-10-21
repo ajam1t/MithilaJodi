@@ -40,9 +40,10 @@ const MEMBER_CONTENT_LINKS: NavLink[] = [
   { href: '/blogs', label: 'Blogs' },
 ]
 
-// Signed in: the same five destinations as the member bottom nav.
+// Signed in: the member bottom nav's destinations, plus Search (on Feed on mobile).
 const AUTH_NAV_LINKS = [
-  { href: '/home', label: 'Home' },
+  { href: '/', label: 'Home' },
+  { href: '/home', label: 'Feed' },
   { href: '/digital-profile', label: 'Digital Profile' },
   { href: '/search', label: 'Search' },
   { href: '/inbox', label: 'Inbox' },

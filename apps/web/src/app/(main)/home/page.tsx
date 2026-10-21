@@ -7,7 +7,7 @@ import { MemberHome } from './MemberHome'
 
 export const dynamic = 'force-dynamic'
 // The (main) layout supplies robots: noindex.
-export const metadata = { title: 'Home' }
+export const metadata = { title: 'Feed' }
 
 export default async function MemberHomePage() {
   const session = await getSessionAccount()

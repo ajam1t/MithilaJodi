@@ -6,8 +6,12 @@ import { inboxCount, usePendingCounts } from '@/lib/hooks/usePendingCounts'
 import { useOwnPhoto } from '@/lib/hooks/useOwnPhoto'
 
 /*
- * The signed-in mobile bottom nav — LOCKED by the owner (2026-10-07):
- *   Home · Digital Profile · Search · Inbox · Profile
+ * The signed-in mobile bottom nav — LOCKED by the owner (2026-10-07; revised
+ * by the owner 2026-10-21):
+ *   Home · Feed · Digital Profile · Search · Profile
+ * Home is the public homepage, the same for everyone. Feed is the member's
+ * own page (/home), and the Inbox now lives inside it — so the Feed tab
+ * carries the Inbox badge and lights up on every Inbox page.
  * The Digital Profile tab is drawn as a small ID card carrying the member's own
  * photo over about three quarters of it (owner's request, 2026-10-21).
  * Do not bring back separate Messages / Interests tabs or Biodata here:
@@ -32,12 +36,25 @@ const stroke = (active: boolean) => ({
 
 const tabs: Tab[] = [
   {
-    href: '/home',
+    href: '/',
     label: 'Home',
-    matchPaths: ['/home', '/notifications'],
+    matchPaths: ['/'],
     icon: (active) => (
       <svg width="22" height="22" viewBox="0 0 24 24" {...stroke(active)} fill={active ? 'currentColor' : 'none'}>
         <path d="M3.5 10.5 12 3.5l8.5 7V20a1 1 0 0 1-1 1H15v-6H9v6H4.5a1 1 0 0 1-1-1z" />
+      </svg>
+    ),
+  },
+  {
+    // The member's own page: the Inbox, activity and recommendations.
+    href: '/home',
+    label: 'Feed',
+    matchPaths: ['/home', '/notifications', '/inbox', '/messages', '/interests', '/shortlists'],
+    icon: (active) => (
+      <svg width="22" height="22" viewBox="0 0 24 24" {...stroke(active)}>
+        <rect x="4" y="3.5" width="16" height="7" rx="2" fill={active ? 'currentColor' : 'none'} />
+        <rect x="4" y="13.5" width="16" height="7" rx="2" />
+        <path d="M7.5 17h6" />
       </svg>
     ),
   },
@@ -64,16 +81,6 @@ const tabs: Tab[] = [
       <svg width="22" height="22" viewBox="0 0 24 24" {...stroke(active)}>
         <circle cx="11" cy="11" r="7.5" />
         <path d="m20.5 20.5-4.2-4.2" />
-      </svg>
-    ),
-  },
-  {
-    href: '/inbox',
-    label: 'Inbox',
-    matchPaths: ['/inbox', '/messages', '/interests', '/shortlists'],
-    icon: (active) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" {...stroke(active)} fill={active ? 'currentColor' : 'none'}>
-        <path d="M21 14.5a2 2 0 0 1-2 2H8l-4.5 4V5.5a2 2 0 0 1 2-2H19a2 2 0 0 1 2 2z" />
       </svg>
     ),
   },
@@ -112,11 +119,11 @@ export function AuthBottomNav() {
   // The Digital Profile tab wears the member's own photo once it is approved.
   const photo = useOwnPhoto()
 
-  const isActive = (tab: Tab) => tab.matchPaths.some(p => pathname === p || pathname.startsWith(p + '/'))
+  const isActive = (tab: Tab) => tab.matchPaths.some(p => pathname === p || (p !== '/' && pathname.startsWith(p + '/')))
 
-  // Inbox carries everything waiting on the member: interests and WhatsApp
-  // requests to answer, and messages not yet read.
-  const badgeFor = (tab: Tab) => (tab.href === '/inbox' ? inboxCount(pending) : 0)
+  // Feed (which holds the Inbox) carries everything waiting on the member:
+  // interests to answer and messages not yet read.
+  const badgeFor = (tab: Tab) => (tab.href === '/home' ? inboxCount(pending) : 0)
 
   return (
     <nav

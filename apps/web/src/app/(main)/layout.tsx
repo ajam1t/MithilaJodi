@@ -68,13 +68,14 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   return (
     <>
       {/* Top nav — desktop. Same five destinations as the mobile bottom nav
-          (Home · Digital Profile · Search · Inbox · Profile), then the extras. */}
+          (Home · Feed · Digital Profile · Search · Profile, plus Inbox), then the extras. */}
       <nav className="sticky top-0 z-40 bg-cream border-b border-paper-3 shadow-mj-xs hidden lg:block" aria-label="Member navigation">
         <div className="wrap flex items-center justify-between h-14">
           <MemberBrand />
           <div className="flex items-center gap-1">
             {[
-              { href: '/home', label: 'Home' },
+              { href: '/', label: 'Home' },
+              { href: '/home', label: 'Feed' },
               { href: '/digital-profile', label: 'Digital Profile' },
               { href: '/search', label: 'Search' },
             ].map(({ href, label }) => (
