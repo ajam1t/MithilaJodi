@@ -1488,3 +1488,43 @@ footer :focus-visible {
 @property --mj-bub { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
 @keyframes mjBub { to { --mj-bub: 360deg; } }
 @media (prefers-reduced-motion: no-preference) { .mj-bubble-ring { animation: mjBub 6s linear infinite; } }
+
+/* ── Match score page (/match-score) ── */
+.mjs-hero { background: radial-gradient(ellipse 90% 85% at 70% 0%, #FFFAF0 0%, #F5EBDD 100%); }
+.mjs-sample { position: relative; padding: 22px 20px 18px; border-radius: 26px; border: 1px solid rgba(185, 138, 46, 0.5); background: linear-gradient(160deg, #FFFDF8, #FBF1DD); box-shadow: 0 26px 50px -34px rgba(107, 10, 10, 0.6); }
+.mjs-sample-tag { position: absolute; right: 16px; top: 14px; font-size: 10px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: #8A6516; }
+.mjs-ring { position: relative; width: 150px; height: 150px; margin: 0 auto; }
+.mjs-ring svg { width: 100%; height: 100%; }
+.mjs-ring span { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.mjs-ring b { font: 400 46px/1 'Marcellus', serif; color: #7A1220; }
+.mjs-ring small { margin-top: 2px; font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #8A6516; }
+.mjs-reasons { margin-top: 14px; display: grid; gap: 7px; }
+.mjs-reasons li { display: flex; gap: 8px; font-size: 14px; line-height: 1.35; color: #2A1A16; }
+.mjs-reasons li span { color: #2F8F4E; font-weight: 700; }
+.mjs-factors { display: grid; gap: 12px; }
+@media (min-width: 640px) { .mjs-factors { grid-template-columns: 1fr 1fr; } }
+.mjs-factors li { padding: 14px 16px; border-radius: 18px; border: 1px solid rgba(185, 138, 46, 0.35); background: #FFFDF8; }
+.mjs-bar { display: block; margin-top: 8px; height: 6px; border-radius: 9999px; background: rgba(185, 138, 46, 0.15); overflow: hidden; }
+.mjs-bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #B98A2E, #7A1220); transform-origin: left; }
+.mjs-rules { display: grid; gap: 12px; }
+@media (min-width: 768px) { .mjs-rules { grid-template-columns: repeat(3, 1fr); } }
+.mjs-rules article { padding: 18px; border-radius: 20px; border: 1.5px solid #2A1A16; background: #FFFDF8; box-shadow: 5px 5px 0 #E9C977; }
+.mjs-rules h3 { margin-top: 4px; font: 400 20px/1.2 'Marcellus', serif; color: #7A1220; }
+.mjs-rules p { margin-top: 6px; font-size: 14px; line-height: 1.55; color: #3B2A24; }
+.mjs-rule-n { font: 400 14px 'Marcellus', serif; color: #B98A2E; }
+.mjs-bands { display: grid; gap: 8px; }
+.mjs-bands > div { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; padding: 12px 16px; border-radius: 16px; border: 1px solid rgba(185, 138, 46, 0.35); background: #FFFDF8; }
+.mjs-bands dt { display: flex; align-items: baseline; gap: 10px; }
+.mjs-bands dt b { font: 400 18px 'Marcellus', serif; color: #7A1220; }
+.mjs-bands dt span { font-size: 13px; font-weight: 600; color: #8A6516; }
+.mjs-bands dd { font-size: 13.5px; color: #5A4A42; }
+.mjs-bands [data-band='excellent'] { border-left: 4px solid #2F8F4E; }
+.mjs-bands [data-band='strong'] { border-left: 4px solid #B98A2E; }
+.mjs-bands [data-band='good'] { border-left: 4px solid #D9B25A; }
+.mjs-bands [data-band='fair'] { border-left: 4px solid #C9B9A6; }
+@keyframes mjsRing { from { stroke-dasharray: 0 100; } }
+@keyframes mjsBar { from { transform: scaleX(0); } }
+@media (prefers-reduced-motion: no-preference) {
+  .mjs-ring-fill { animation: mjsRing 1.6s cubic-bezier(0.45, 0, 0.2, 1) 0.3s backwards; }
+  .mjs-bar i { animation: mjsBar 1s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i, 0) * 80ms + 300ms); }
+}

@@ -28,6 +28,7 @@ export const MJ_FEATURES: Array<{ title: string; body: string }> = [
   { title: 'Gotra, maternal gotra, mool and gram on every profile', body: 'Chosen from the Mithila Panji lists, not typed into a notes box — so they can be searched and checked.' },
   // lib/matchScore: same self-gotra is a blocker; maternal clash is flagged.
   { title: 'Every match checks gotra', body: 'A shared gotra shows as a blocker in the match score, and a match with your maternal gotra is flagged — the checks Maithil families make anyway.' },
+  { title: 'A match score that explains itself', body: 'Every profile shows a match percentage across nine factors — location, gotra, age, community, roots, timeline, lifestyle, education and family — with the reasons. Blank fields are never scored, and a same-gotra pair can never read as a good match.' },
   // /marriage-biodata — four languages, prefilled from the profile.
   { title: 'Biodata in Maithili, Hindi, English or Sanskrit', body: 'A printable PDF with gotra, mool and gram at the top, filled in from your profile and ready for WhatsApp.' },
   // /digital-profile — share links with chosen sections, revocable.

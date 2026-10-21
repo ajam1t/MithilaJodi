@@ -21,6 +21,7 @@ const GROUPS = [
       { href: '/marriage-biodata', label: 'Marriage Biodata' },
       { href: '/gotra', label: 'Gotra List & Checker' },
       { href: '/mool', label: 'Mool List' },
+      { href: '/match-score', label: 'Match Score' },
       { href: '/astrology', label: 'Astrology Tools' },
       { href: '/festivals', label: 'Mithila Festivals' },
       { href: '/festival-songs', label: 'Festival Songs' },

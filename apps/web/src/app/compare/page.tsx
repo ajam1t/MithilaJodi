@@ -28,6 +28,9 @@ export default function CompareHubPage() {
             The big matrimony sites serve every community in India. Mithila Jodi serves one — Maithil families — so it can
             put gotra, mool and gram first and check gotra in every match. It is free for every member.
           </p>
+          <p className="mt-3 text-[14px]">
+            <Link href="/match-score" className="font-semibold text-maroon underline underline-offset-2">See how the match score works →</Link>
+          </p>
           <ul className="mt-8 grid sm:grid-cols-3 gap-3 text-left">
             {COMPETITORS.map(c => (
               <li key={c.slug}>

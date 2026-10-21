@@ -67,7 +67,7 @@ const CONTENT_UPDATED = {
   // Everything else last had a substantive content change with the content
   // build on this date. Bump a path here when you actually edit that page.
   // New: the gotra and mool guides and the comparison pages.
-  '/gotra': '2026-10-20', '/mool': '2026-10-20', '/compare': '2026-10-20',
+  '/gotra': '2026-10-20', '/mool': '2026-10-20', '/compare': '2026-10-20', '/match-score': '2026-10-21',
   ...Object.fromEntries([
     ...GOTRAS.map(g => [`/gotra/${g.slug}`, '2026-10-20']),
     ...COMPETITORS.map(c => [`/compare/${c.slug}`, '2026-10-20']),
@@ -130,6 +130,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...GOTRAS.map(g => ({ path: `/gotra/${g.slug}`, priority: 0.7, changeFrequency: 'monthly' as const })),
     { path: '/mool', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/compare', priority: 0.6, changeFrequency: 'monthly' },
+    { path: '/match-score', priority: 0.8, changeFrequency: 'monthly' },
     ...COMPETITORS.map(c => ({ path: `/compare/${c.slug}`, priority: 0.6, changeFrequency: 'monthly' as const })),
   ]
 
