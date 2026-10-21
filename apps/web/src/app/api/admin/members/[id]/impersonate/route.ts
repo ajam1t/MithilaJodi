@@ -41,7 +41,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const adminToken = request.cookies.get(SESSION_COOKIE)?.value
-  if (!adminToken) return NextResponse.json({ ok: false, message: 'Please sign in to the Admin Console again.' }, { status: 401 })
+  if (!adminToken) return NextResponse.json({ ok: false, message: 'Please sign in to the Command Centre again.' }, { status: 401 })
 
   const token = generateSessionToken()
   const expiresAt = new Date(Date.now() + IMPERSONATION_MINUTES * 60_000)

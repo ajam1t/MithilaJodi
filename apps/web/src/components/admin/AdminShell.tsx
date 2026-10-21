@@ -96,7 +96,7 @@ export function AdminShell({ perms, roleLabel, identity, attention, children }: 
             <Image src="/logo-mark.png" alt="" width={44} height={40} priority className="h-10 w-auto shrink-0 object-contain" />
             <span>
               <span className="acx-brand-t block">Mithila Jodi</span>
-              <span className="acx-brand-s block">Admin Console</span>
+              <span className="acx-brand-s block">Command Centre</span>
             </span>
           </Link>
           <nav aria-label="Admin" className="acx-nav">
@@ -144,7 +144,7 @@ export function AdminShell({ perms, roleLabel, identity, attention, children }: 
               </Link>
               <div className="min-w-0 leading-tight">
                 <p className="acx-crumb truncate">{current?.label ?? 'Admin'}{currentItem && current?.label !== currentItem.label ? ` › ${currentItem.label}` : ''}</p>
-                <p className="truncate font-serif text-[15px] text-[#6B0A0A] xl:hidden">Admin Console</p>
+                <p className="truncate font-serif text-[15px] text-[#6B0A0A] xl:hidden">Command Centre</p>
               </div>
 
               <button type="button" className="acx-cmd ml-auto hidden w-[min(380px,34vw)] md:flex" onClick={() => setPalette(true)}>

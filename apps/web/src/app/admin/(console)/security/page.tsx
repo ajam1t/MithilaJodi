@@ -39,7 +39,7 @@ export default async function SecurityPage() {
   const signals: string[] = []
   if (failed24 >= 3) signals.push(`${failed24} failed admin sign-ins in the last 24 hours.`)
   if (locked.length) signals.push(`${locked.length} admin account(s) currently locked after repeated failures.`)
-  if (memberSessions) signals.push(`${memberSessions} admin session(s) were opened through the member login (30-day sessions). Prefer the Admin Console sign-in (12-hour sessions).`)
+  if (memberSessions) signals.push(`${memberSessions} admin session(s) were opened through the member login (30-day sessions). Prefer the Command Centre sign-in (12-hour sessions).`)
   if ((admins ?? []).some((a: any) => !a.email)) signals.push('An admin account has no email set — set one in Settings to use email sign-in.')
 
   return (

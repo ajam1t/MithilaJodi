@@ -2,14 +2,20 @@
 
 import { useEffect, useState } from 'react'
 
-/** A live India-time clock for the sign-in screen's HUD. Decorative. */
+/** India time for the sign-in deck: a ticking clock and today's date. Decorative. */
 export function AdminClock() {
-  const [t, setT] = useState('')
+  const [now, setNow] = useState<Date | null>(null)
   useEffect(() => {
-    const tick = () => setT(new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) + ' IST')
-    tick()
-    const id = window.setInterval(tick, 1000)
+    setNow(new Date())
+    const id = window.setInterval(() => setNow(new Date()), 1000)
     return () => window.clearInterval(id)
   }, [])
-  return <span className="tabular-nums">{t}</span>
+  const time = now?.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) ?? '--:--:--'
+  const date = now?.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'short', day: 'numeric', month: 'short' })
+  return (
+    <div className="mcx-time" aria-hidden="true">
+      <span>{time}</span>
+      <small>{date ? `${date} · IST` : 'India Standard Time'}</small>
+    </div>
+  )
 }

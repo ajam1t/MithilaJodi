@@ -21,7 +21,7 @@ export default async function SettingsPage() {
     <>
       <PageHeader eyebrow="Settings" title="Platform settings" />
       <div className="grid gap-4 xl:grid-cols-2">
-        <Section title="Your admin sign-in" description="The Admin Console accepts your email or your mobile number, with your password.">
+        <Section title="Your admin sign-in" description="The Command Centre accepts your email or your mobile number, with your password.">
           <AdminEmailForm current={me.data?.email ?? null} />
           <DataNote>Password resets use your registered mobile number (one-time code). Two-factor sign-in is not available yet.</DataNote>
         </Section>

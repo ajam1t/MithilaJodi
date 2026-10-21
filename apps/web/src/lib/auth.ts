@@ -32,7 +32,7 @@ export const IMPERSONATION_MINUTES = 30
 export function refuseWhileImpersonating(session: Pick<SessionAccount, 'impersonatedBy'> | null): Response | null {
   if (!session?.impersonatedBy) return null
   return Response.json(
-    { ok: false, message: 'Not available while signed in as this member from the Admin Console.' },
+    { ok: false, message: 'Not available while signed in as this member from the Command Centre.' },
     { status: 403 },
   )
 }
