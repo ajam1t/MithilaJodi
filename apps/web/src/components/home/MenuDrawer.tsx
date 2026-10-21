@@ -4,9 +4,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { cn } from '@/lib/utils/cn'
 import { OFFICIAL_LINKS } from '@/lib/constants'
-import { WhatsAppIcon } from '@/components/whatsapp/JoinCommunity'
+import { BrandIcon } from '@/components/social/BrandIcons'
 
 /*
  * The hamburger menu — complete site navigation. The five sections, their
@@ -42,14 +41,6 @@ function Icon({ name, size = 20 }: { name: string; size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" {...P} aria-hidden="true" className="shrink-0">
       {ICONS[name]}
-    </svg>
-  )
-}
-
-function Chevron() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" {...P} strokeWidth={2} aria-hidden="true" className="ml-auto shrink-0 text-ink-soft">
-      <path d="m9 6 6 6-6 6" />
     </svg>
   )
 }
@@ -113,23 +104,18 @@ function sections(loggedIn: boolean): Section[] {
   ]
 }
 
-/** Faint lotus line-art for the drawer's top corner — decoration only. */
-function LotusCorner() {
+/** A large, faint aripan behind the top of the drawer; it turns a little as the menu opens. */
+function MenuAripan() {
+  const petals = Array.from({ length: 12 }, (_, i) => i * 30)
   return (
-    <svg aria-hidden="true" width="96" height="64" viewBox="0 0 96 64" fill="none" stroke="#B98A2E" strokeWidth="1" strokeLinecap="round" className="pointer-events-none absolute right-12 top-3 opacity-30">
-      <path d="M48 56c-7-6-10-13-10-21s3-14 10-20c7 6 10 12 10 20s-3 15-10 21z" />
-      <path d="M48 56c-11 0-20-5-26-14 7-3 14-2 20 2" />
-      <path d="M48 56c11 0 20-5 26-14-7-3-14-2-20 2" />
-      <path d="M48 56c-16 2-28-2-36-10M48 56c16 2 28-2 36-10" />
-      <path d="M30 60h36" />
+    <svg aria-hidden="true" viewBox="0 0 200 200" className="mj-menu-aripan">
+      <circle cx="100" cy="100" r="96" fill="none" stroke="#B98A2E" strokeWidth=".7" />
+      <circle cx="100" cy="100" r="88" fill="none" stroke="#B98A2E" strokeWidth=".6" strokeDasharray="1.5 4" />
+      {petals.map(a => <ellipse key={a} cx="100" cy="52" rx="9" ry="30" fill="none" stroke="#B98A2E" strokeWidth=".8" transform={`rotate(${a} 100 100)`} />)}
+      <circle cx="100" cy="100" r="16" fill="none" stroke="#9B2233" strokeWidth=".8" />
     </svg>
   )
 }
-
-const SOCIAL =
-  'inline-flex min-h-[40px] flex-auto items-center justify-center gap-1.5 whitespace-nowrap rounded-pill border border-gold/40 bg-cream px-2.5 ' +
-  'text-[12px] font-medium text-ink transition-colors hover:border-gold hover:text-maroon ' +
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40'
 
 export function MenuDrawer({
   open,
@@ -189,12 +175,14 @@ export function MenuDrawer({
 
   if (!open) return null
 
-  const row = (href: string) =>
-    cn(
-      'flex min-h-[48px] items-center gap-3.5 rounded-mj-sm px-2 text-[15px] transition-colors',
-      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-maroon/40',
-      isActive(href) ? 'bg-paper-2 font-semibold text-maroon' : 'text-ink hover:bg-paper'
-    )
+  const on = (href: string) => isActive(href) || undefined
+  const [explore, wedding, astrology, culture, support] = sections(loggedIn)
+  const head = (sec: Section, i: number) => (
+    <h2 id={`menu-${sec.id}`} className="mj-menu-head" style={{ '--i': i } as React.CSSProperties}>
+      <span>{sec.title}</span>
+      <span className="mj-menu-rule" aria-hidden="true" />
+    </h2>
+  )
 
   // Portalled to <body>: inside the sticky header it would share the header's
   // stacking layer and the fixed bottom nav would paint over it.
@@ -207,18 +195,17 @@ export function MenuDrawer({
         role="dialog"
         aria-modal="true"
         aria-label="Site menu"
-        className="relative flex h-full w-full flex-col overflow-y-auto overscroll-contain bg-cream shadow-mj-sm animate-[menuIn_.22s_cubic-bezier(0.2,0.8,0.3,1)] motion-reduce:animate-none sm:max-w-[400px]"
+        className="mj-menu relative flex h-full w-full flex-col overflow-y-auto overscroll-contain shadow-mj-sm animate-[menuIn_.22s_cubic-bezier(0.2,0.8,0.3,1)] motion-reduce:animate-none sm:max-w-[400px]"
       >
+        <MenuAripan />
         {/* ── Header ── */}
-        <div className="relative shrink-0 px-4 pb-3 pt-[max(12px,env(safe-area-inset-top))]">
-          <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-cream via-gold to-cream" aria-hidden="true" />
-          <LotusCorner />
+        <div className="relative shrink-0 px-4 pb-2 pt-[max(12px,env(safe-area-inset-top))]">
+          <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-gold to-transparent" aria-hidden="true" />
           <Link href="/" onClick={onClose} className="relative inline-flex items-center gap-2.5 rounded-mj-sm pr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40" aria-label="Mithila Jodi — home">
-            <Image src="/logo-mark.png" alt="" width={52} height={48} className="h-11 w-auto shrink-0 object-contain" />
+            <Image src="/logo-mark.png" alt="" width={52} height={48} className="h-10 w-auto shrink-0 object-contain" />
             <span className="flex flex-col leading-none">
-              <span className="font-serif text-[22px] font-bold leading-tight text-maroon">Mithila Jodi</span>
-              <span className="font-deva mt-0.5 text-[11.5px] leading-tight text-maroon opacity-85" lang="hi">जहाँ परंपरा मिले, प्रेम से</span>
-              <span className="font-serif mt-0.5 text-[10.5px] italic leading-tight text-ink-soft">Where tradition meets love.</span>
+              <span className="font-serif text-[20px] font-bold leading-tight text-maroon">Mithila Jodi</span>
+              <span className="font-deva mt-0.5 text-[11px] leading-tight text-maroon opacity-85" lang="hi">जहाँ परंपरा मिले, प्रेम से</span>
             </span>
           </Link>
           <button
@@ -226,84 +213,135 @@ export function MenuDrawer({
             type="button"
             onClick={onClose}
             aria-label="Close menu"
-            className="absolute right-2 top-[max(8px,env(safe-area-inset-top))] grid h-11 w-11 place-items-center rounded-full text-maroon transition-colors hover:bg-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40"
+            className="mj-menu-close absolute right-3 top-[max(10px,env(safe-area-inset-top))] grid h-11 w-11 place-items-center rounded-full text-maroon focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40"
           >
-            <svg width="20" height="20" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
               <line x1="4" y1="4" x2="18" y2="18" /><line x1="18" y1="4" x2="4" y2="18" />
             </svg>
           </button>
         </div>
 
-        <div className="flex-1 px-4 pb-[max(20px,env(safe-area-inset-bottom))]">
+        <div className="relative flex-1 px-4 pb-[max(20px,env(safe-area-inset-bottom))]">
           {/* ── Account ── visitors: Join / Login; members: their profile + log out */}
           {authLoaded && (loggedIn ? (
-            <div className="flex gap-2">
-              <Link href="/profile" onClick={onClose} className="flex min-h-[52px] flex-1 items-center gap-3 rounded-mj-sm bg-maroon px-4 font-semibold text-cream transition-colors hover:bg-maroon-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-lt focus-visible:ring-offset-2 focus-visible:ring-offset-cream">
-                <svg width="22" height="22" viewBox="0 0 24 24" {...P} strokeWidth={1.8} aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+            <div className="mj-menu-in flex gap-2" style={{ '--i': 0 } as React.CSSProperties}>
+              <Link href="/profile" onClick={onClose} className="mj-menu-cta flex-1">
+                <span className="mj-menu-cta-icon"><svg width="20" height="20" viewBox="0 0 24 24" {...P} strokeWidth={1.8} aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg></span>
                 <span className="text-[16px]">My Profile</span>
                 <svg width="18" height="18" viewBox="0 0 24 24" {...P} strokeWidth={2} aria-hidden="true" className="ml-auto"><path d="m9 6 6 6-6 6" /></svg>
               </Link>
-              <button type="button" onClick={() => { onClose(); onLogout() }} className="min-h-[52px] rounded-mj-sm border border-maroon/30 px-4 text-[14px] font-medium text-maroon transition-colors hover:bg-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40">
+              <button type="button" onClick={() => { onClose(); onLogout() }} className="min-h-[54px] rounded-[16px] border border-maroon/30 bg-cream px-4 text-[14px] font-medium text-maroon transition-colors hover:bg-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40">
                 Log out
               </button>
             </div>
           ) : (
-            <Link href="/register" onClick={onClose} className="flex min-h-[52px] items-center gap-3 rounded-mj-sm bg-maroon px-4 font-semibold text-cream transition-colors hover:bg-maroon-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-lt focus-visible:ring-offset-2 focus-visible:ring-offset-cream">
+            <Link href="/register" onClick={onClose} className="mj-menu-cta mj-menu-in" style={{ '--i': 0 } as React.CSSProperties}>
               {/* Same person-plus glyph as the bottom nav's Join / Login. */}
-              <svg width="22" height="22" viewBox="0 0 24 24" {...P} strokeWidth={1.8} aria-hidden="true">
-                <circle cx="9" cy="8" r="4" /><path d="M3 20c0-3.6 2.7-6 6-6" /><line x1="18" y1="11" x2="18" y2="17" /><line x1="15" y1="14" x2="21" y2="14" />
-              </svg>
-              <span className="text-[16px]">Join / Login</span>
+              <span className="mj-menu-cta-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" {...P} strokeWidth={1.8} aria-hidden="true">
+                  <circle cx="9" cy="8" r="4" /><path d="M3 20c0-3.6 2.7-6 6-6" /><line x1="18" y1="11" x2="18" y2="17" /><line x1="15" y1="14" x2="21" y2="14" />
+                </svg>
+              </span>
+              <span className="flex flex-col leading-tight">
+                <span className="text-[16px]">Join / Login</span>
+                <span className="text-[11.5px] font-normal text-cream/75">Free for every member</span>
+              </span>
               <svg width="18" height="18" viewBox="0 0 24 24" {...P} strokeWidth={2} aria-hidden="true" className="ml-auto"><path d="m9 6 6 6-6 6" /></svg>
             </Link>
           ))}
 
-          {/* ── The five locked sections ── */}
-          <nav aria-label="Site navigation" className="mt-1">
-            {sections(loggedIn).map(s => (
-              <section key={s.id} aria-labelledby={`menu-${s.id}`} className="mt-5">
-                <h2 id={`menu-${s.id}`} className="mb-1 flex items-center gap-3 px-2 text-[11.5px] font-semibold uppercase tracking-[0.16em] text-[#8A6516]">
-                  {/* A darker gold than the brand gold, which is too light for small text on cream. */}
-                  {s.title}
-                  <span className="h-px flex-1 bg-gradient-to-r from-gold/50 to-transparent" aria-hidden="true" />
-                </h2>
-                <ul>
-                  {s.items.map(it => (
-                    <li key={it.label}>
-                      <Link href={it.href} onClick={onClose} className={row(it.href)} aria-current={isActive(it.href) ? 'page' : undefined}>
-                        <span className="grid w-6 shrink-0 place-items-center text-maroon"><Icon name={it.icon} /></span>
-                        <span className="min-w-0 truncate">{it.label}</span>
-                        <Chevron />
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ))}
+          {/* ── The five locked sections, each in the form that suits it ── */}
+          <nav aria-label="Site navigation">
+            <section aria-labelledby="menu-explore" className="mj-menu-sec">
+              {head(explore, 1)}
+              <ul className="mj-menu-in grid grid-cols-3 gap-2" style={{ '--i': 1 } as React.CSSProperties}>
+                {explore.items.map(it => (
+                  <li key={it.label}>
+                    <Link href={it.href} onClick={onClose} className="mj-menu-tile" data-on={on(it.href)} aria-current={isActive(it.href) ? 'page' : undefined}>
+                      <span className="mj-menu-disc"><Icon name={it.icon} /></span>
+                      <span className="mj-menu-label">{it.label}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            <section aria-labelledby="menu-wedding" className="mj-menu-sec">
+              {head(wedding, 2)}
+              <ul className="mj-menu-in grid grid-cols-2 gap-2" style={{ '--i': 2 } as React.CSSProperties}>
+                {wedding.items.map(it => (
+                  <li key={it.label}>
+                    <Link href={it.href} onClick={onClose} className="mj-menu-wide" data-on={on(it.href)} aria-current={isActive(it.href) ? 'page' : undefined}>
+                      <span className="mj-menu-disc"><Icon name={it.icon} /></span>
+                      <span className="mj-menu-label text-left">{it.label}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            <section aria-labelledby="menu-astrology" className="mj-menu-sec">
+              {head(astrology, 3)}
+              <ul className="mj-menu-in grid grid-cols-4 gap-x-1.5 gap-y-3" style={{ '--i': 3 } as React.CSSProperties}>
+                {astrology.items.map((it, k) => (
+                  <li key={it.label}>
+                    <Link href={it.href} onClick={onClose} className="mj-menu-orbit" data-on={on(it.href)} aria-current={isActive(it.href) ? 'page' : undefined}>
+                      <span className="mj-menu-planet" style={{ '--k': k } as React.CSSProperties}>
+                        <span className="mj-menu-moon" aria-hidden="true" />
+                        <Icon name={it.icon} />
+                      </span>
+                      <span className="mj-menu-label">{it.label}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            <section aria-labelledby="menu-culture" className="mj-menu-sec">
+              {head(culture, 4)}
+              <ul className="mj-menu-in grid grid-cols-3 gap-2" style={{ '--i': 4 } as React.CSSProperties}>
+                {culture.items.map(it => (
+                  <li key={it.label}>
+                    <Link href={it.href} onClick={onClose} className="mj-menu-tile" data-on={on(it.href)} aria-current={isActive(it.href) ? 'page' : undefined}>
+                      <span className="mj-menu-disc"><Icon name={it.icon} /></span>
+                      <span className="mj-menu-label">{it.label}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            <section aria-labelledby="menu-support" className="mj-menu-sec">
+              {head(support, 5)}
+              <ul className="mj-menu-in flex flex-wrap gap-2" style={{ '--i': 5 } as React.CSSProperties}>
+                {support.items.map(it => (
+                  <li key={it.label}>
+                    <Link href={it.href} onClick={onClose} className="mj-menu-chip" data-on={on(it.href)} aria-current={isActive(it.href) ? 'page' : undefined}>
+                      <Icon name={it.icon} size={16} />
+                      {it.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
           </nav>
 
           {/* ── Footer ── */}
-          <div className="mt-6 border-t border-gold/25 pt-4 text-center">
+          <div className="mj-menu-in mt-6 border-t border-gold/25 pt-4 text-center" style={{ '--i': 6 } as React.CSSProperties}>
             <p className="font-deva text-[12.5px] text-maroon" lang="hi">
               गाँव से जुड़ाव <span className="text-gold" aria-hidden="true">•</span> संस्कार से रिश्ता <span className="text-gold" aria-hidden="true">•</span> प्रेम से जीवन
             </p>
-            <div className="mt-3 flex gap-1.5">
-              <a href={OFFICIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" className={SOCIAL} aria-label="Mithila Jodi on Instagram">
-                <svg width="14" height="14" viewBox="0 0 24 24" {...P} strokeWidth={2} aria-hidden="true" className="shrink-0 text-maroon"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" /></svg>
-                Instagram
-              </a>
-              <a href={OFFICIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className={SOCIAL} aria-label="Mithila Jodi on YouTube">
-                <svg width="16" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="shrink-0 text-maroon">
-                  <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.3 3.6Z" />
-                </svg>
-                YouTube
-              </a>
-              <a href={OFFICIAL_LINKS.whatsapp} target="_blank" rel="noopener noreferrer nofollow" className={SOCIAL} aria-label="Join the Mithila Jodi WhatsApp Community">
-                <span className="shrink-0 text-[#1F8A4C]"><WhatsAppIcon size={14} /></span>
-                {/* The full name fits from ~380px; the narrowest phones get the short form. */}
-                <span className="min-[380px]:hidden">WhatsApp</span>
-                <span className="hidden min-[380px]:inline">WhatsApp Community</span>
-              </a>
+            <div className="mt-3 flex justify-center gap-3">
+              {([
+                ['instagram', OFFICIAL_LINKS.instagram, 'Mithila Jodi on Instagram', 'noopener noreferrer'],
+                ['facebook', OFFICIAL_LINKS.facebook, 'Mithila Jodi on Facebook', 'noopener noreferrer'],
+                ['whatsapp', OFFICIAL_LINKS.whatsapp, 'Join the Mithila Jodi WhatsApp Community', 'noopener noreferrer nofollow'],
+                ['youtube', OFFICIAL_LINKS.youtube, 'Mithila Jodi on YouTube', 'noopener noreferrer'],
+              ] as const).map(([brand, href, label, rel]) => (
+                <a key={brand} href={href} target="_blank" rel={rel} className="mj-menu-social" aria-label={label}>
+                  <BrandIcon brand={brand} size={40} />
+                </a>
+              ))}
             </div>
           </div>
         </div>

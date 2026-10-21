@@ -1034,16 +1034,12 @@ footer :focus-visible {
 .mj-soc:focus-visible { outline: 2px solid #E9C977; outline-offset: 2px; }
 .mj-soc-disc {
   position: relative; display: grid; place-items: center; width: 52px; height: 52px; margin-bottom: 6px;
-  border-radius: 9999px; background: radial-gradient(circle at 35% 30%, #FFFFFF, #FBF1DD 70%);
-  color: #6B0A0A; overflow: visible;
-  box-shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.6);
+  border-radius: 14px; overflow: visible;
 }
-.mj-soc-icon { display: grid; place-items: center; width: 24px; height: 24px; transition: transform 0.35s cubic-bezier(0.22, 1.3, 0.36, 1); }
-.mj-soc-icon svg { width: 100%; height: 100%; }
-.mj-soc:hover .mj-soc-icon { transform: scale(1.12); }
-.mj-soc-ring { position: absolute; inset: -6px; width: calc(100% + 12px); height: calc(100% + 12px); overflow: visible; transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1); }
-.mj-soc-ring circle { fill: none; stroke: #E9C977; stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 0.82 0.18; transform: rotate(-90deg); transform-origin: 32px 32px; }
-.mj-soc:hover .mj-soc-ring { transform: rotate(180deg); }
+.mj-soc-icon { width: 100%; height: 100%; border-radius: 12px; box-shadow: 0 8px 18px -8px rgba(0, 0, 0, 0.6); transition: transform 0.35s cubic-bezier(0.22, 1.3, 0.36, 1); }
+.mj-soc:hover .mj-soc-icon { transform: scale(1.07); }
+.mj-soc-ring { position: absolute; inset: -6px; width: calc(100% + 12px); height: calc(100% + 12px); overflow: visible; }
+.mj-soc-ring rect { fill: none; stroke: #E9C977; stroke-width: 1.4; opacity: 0.8; }
 .mj-soc-name { font-size: 11.5px; font-weight: 600; letter-spacing: 0.01em; color: #FBF1DD; line-height: 1.2; }
 .mj-soc-verb { font-size: 10px; color: #E9C977; opacity: 0.85; line-height: 1.2; }
 @media (min-width: 640px) {
@@ -1052,7 +1048,7 @@ footer :focus-visible {
 }
 @keyframes mjSocRing { from { stroke-dashoffset: 1; stroke-dasharray: 1 1; } to { stroke-dashoffset: 0; stroke-dasharray: 1 1; } }
 @media (prefers-reduced-motion: no-preference) {
-  [data-mj-armed].mj-in .mj-soc-ring circle { animation: mjSocRing 1.1s cubic-bezier(0.45, 0, 0.2, 1) 0.25s backwards; }
+  [data-mj-armed].mj-in .mj-soc-ring rect { animation: mjSocRing 1.1s cubic-bezier(0.45, 0, 0.2, 1) 0.25s backwards; }
 }
 
 /* ── Login portal (components/auth/LoginPortal) ────────────────────────────
@@ -1143,3 +1139,67 @@ footer :focus-visible {
 .mj-howto-modal { position: fixed; inset: 0; z-index: 210; display: grid; place-items: center; padding: 16px; background: rgba(26, 4, 7, 0.82); backdrop-filter: blur(4px); }
 .mj-howto-full { display: block; max-height: 86vh; width: auto; max-width: 92vw; aspect-ratio: 9 / 16; border-radius: 18px; border: 2px solid #E9C977; background: #FCF5E7; }
 .mj-howto-close { position: absolute; right: -6px; top: -14px; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 9999px; background: #FFFAF0; color: #7A1220; border: 1px solid #E9C977; font-size: 15px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+
+/* ── Site menu (components/home/MenuDrawer) ───────────────────────────────
+   Ivory, with a large faint aripan that turns as the drawer opens; each
+   section in the form that suits it, rising in one after another. */
+.mj-menu { background: radial-gradient(120% 60% at 100% 0%, #FBF1DD 0%, #FFFAF0 45%, #FFFBF3 100%); }
+.mj-menu-aripan { position: absolute; right: -90px; top: -90px; width: 300px; height: 300px; opacity: 0.22; pointer-events: none; }
+.mj-menu-close { background: rgba(255, 250, 240, 0.9); border: 1px solid rgba(185, 138, 46, 0.45); transition: transform 0.35s cubic-bezier(0.22, 1.3, 0.36, 1), background-color 0.2s; }
+.mj-menu-close:hover { transform: rotate(90deg); background: #FBF1DD; }
+.mj-menu-cta {
+  position: relative; display: flex; min-height: 58px; align-items: center; gap: 12px; overflow: hidden;
+  border-radius: 16px; padding: 0 16px 0 10px; color: #FFF6E2; font-weight: 600;
+  background: linear-gradient(120deg, #8A1414, #6B0A0A 60%, #5A0708);
+  box-shadow: inset 0 0 0 1px rgba(233, 201, 119, 0.5), 0 12px 26px -16px rgba(107, 10, 10, 0.9);
+}
+.mj-menu-cta::after { content: ''; position: absolute; top: 0; bottom: 0; left: -40%; width: 30%; transform: skewX(-18deg); background: linear-gradient(100deg, transparent, rgba(255, 231, 166, 0.35), transparent); }
+.mj-menu-cta:focus-visible { outline: 2px solid #E9C977; outline-offset: 2px; }
+.mj-menu-cta-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 9999px; background: rgba(255, 250, 240, 0.12); border: 1px solid rgba(233, 201, 119, 0.6); color: #E9C977; }
+.mj-menu-sec { margin-top: 18px; }
+.mj-menu-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding: 0 2px; font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #8A6516; }
+.mj-menu-rule { height: 1px; flex: 1; background: linear-gradient(90deg, rgba(185, 138, 46, 0.6), transparent); transform-origin: left; }
+.mj-menu-tile, .mj-menu-wide, .mj-menu-chip, .mj-menu-orbit { -webkit-tap-highlight-color: transparent; transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s, border-color 0.2s, color 0.2s; }
+.mj-menu-tile:active, .mj-menu-wide:active, .mj-menu-chip:active, .mj-menu-orbit:active { transform: scale(0.96); }
+.mj-menu-tile:focus-visible, .mj-menu-wide:focus-visible, .mj-menu-chip:focus-visible, .mj-menu-orbit:focus-visible { outline: 2px solid #B98A2E; outline-offset: 2px; }
+.mj-menu-tile {
+  display: flex; height: 100%; min-height: 92px; flex-direction: column; align-items: center; justify-content: center; gap: 7px;
+  padding: 10px 4px; border-radius: 16px; text-align: center; color: #2A1A16;
+  border: 1px solid rgba(185, 138, 46, 0.3); background: rgba(255, 253, 248, 0.9);
+}
+.mj-menu-wide { display: flex; height: 100%; min-height: 62px; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 16px; color: #2A1A16; border: 1px solid rgba(185, 138, 46, 0.3); background: rgba(255, 253, 248, 0.9); }
+.mj-menu-tile:hover, .mj-menu-wide:hover { border-color: #B98A2E; background: #FFFDF8; }
+.mj-menu-disc { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 9999px; color: #7A1220; background: radial-gradient(circle at 35% 30%, #FFFFFF, #FBF1DD 75%); border: 1px solid rgba(185, 138, 46, 0.5); }
+.mj-menu-label { font-size: 12.5px; font-weight: 500; line-height: 1.2; }
+.mj-menu-tile[data-on], .mj-menu-wide[data-on] { background: linear-gradient(160deg, #8A1414, #6B0A0A); border-color: #6B0A0A; color: #FFF6E2; }
+.mj-menu-tile[data-on] .mj-menu-disc, .mj-menu-wide[data-on] .mj-menu-disc { background: rgba(255, 250, 240, 0.14); color: #E9C977; border-color: rgba(233, 201, 119, 0.6); }
+/* astrology: each tool a small planet with a moon on its orbit */
+.mj-menu-orbit { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; color: #2A1A16; }
+.mj-menu-planet {
+  position: relative; display: grid; place-items: center; width: 50px; height: 50px; border-radius: 9999px; color: #7A1220;
+  background: radial-gradient(circle at 35% 30%, #FFFFFF, #FBF1DD 70%);
+  box-shadow: 0 0 0 1px rgba(185, 138, 46, 0.45), 0 0 0 5px rgba(255, 250, 240, 0.9), 0 0 0 6px rgba(185, 138, 46, 0.25);
+}
+.mj-menu-moon { position: absolute; inset: -6px; border-radius: 9999px; transform: rotate(calc(var(--k, 0) * 45deg)); }
+.mj-menu-moon::before { content: ''; position: absolute; left: 50%; top: -2px; width: 6px; height: 6px; margin-left: -3px; border-radius: 9999px; background: #B98A2E; box-shadow: 0 0 6px rgba(233, 201, 119, 0.9); }
+.mj-menu-orbit .mj-menu-label { font-size: 11px; }
+.mj-menu-orbit:hover .mj-menu-planet { color: #9B2233; }
+.mj-menu-orbit[data-on] .mj-menu-planet { background: linear-gradient(160deg, #8A1414, #6B0A0A); color: #E9C977; }
+.mj-menu-chip { display: inline-flex; min-height: 40px; align-items: center; gap: 7px; padding: 0 14px; border-radius: 9999px; font-size: 13px; font-weight: 500; color: #7A1220; border: 1px solid rgba(185, 138, 46, 0.45); background: rgba(255, 253, 248, 0.9); }
+.mj-menu-chip:hover { border-color: #B98A2E; }
+.mj-menu-chip[data-on] { background: #6B0A0A; color: #FFF6E2; border-color: #6B0A0A; }
+.mj-menu-social { display: grid; place-items: center; border-radius: 11px; transition: transform 0.3s cubic-bezier(0.22, 1.3, 0.36, 1); box-shadow: 0 6px 14px -8px rgba(0, 0, 0, 0.45); }
+.mj-menu-social:hover { transform: translateY(-2px) scale(1.05); }
+.mj-menu-social:focus-visible { outline: 2px solid #B98A2E; outline-offset: 2px; }
+@keyframes mjMenuIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes mjMenuRule { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes mjMenuTurn { from { transform: rotate(-40deg) scale(0.9); opacity: 0; } to { transform: none; opacity: 0.22; } }
+@keyframes mjMenuSheen { to { left: 130%; } }
+@keyframes mjMenuMoon { from { transform: rotate(calc(var(--k, 0) * 45deg - 120deg)); } to { transform: rotate(calc(var(--k, 0) * 45deg)); } }
+@media (prefers-reduced-motion: no-preference) {
+  .mj-menu-in, .mj-menu-head { animation: mjMenuIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i, 0) * 55ms + 80ms); }
+  .mj-menu-rule { animation: mjMenuRule 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: 0.3s; }
+  .mj-menu-aripan { animation: mjMenuTurn 1.2s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .mj-menu-cta::after { animation: mjMenuSheen 1.1s ease 0.6s both; }
+  .mj-menu-moon { animation: mjMenuMoon 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both; }
+}
