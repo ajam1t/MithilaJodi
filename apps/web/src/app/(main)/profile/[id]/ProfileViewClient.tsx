@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ProfileGallery } from '@/components/digital-profile/ProfileGallery'
 import { ProfilePhotos } from '@/components/digital-profile/ProfilePhotos'
 import type { SearchCard } from '@/types/profile'
+import { ProfileStory, type StoryData } from '@/components/profile/ProfileStory'
 
 type ProfileData = {
   id: string
@@ -51,6 +52,8 @@ type ProfileData = {
   photo_url: string | null
   /** Every photograph this viewer may see, primary first (empty if withheld). */
   photos: string[]
+  /** Comparisons for the profile story (rounded distances, same-gotra), pre-computed. */
+  story: StoryData | null
   /** An accepted interest in either direction. */
   matched: boolean
   conversationId: string | null
@@ -396,6 +399,21 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
               </p>
             )}
           </header>
+
+          {/* ── Their story, chapter by chapter as you scroll. */}
+          <ProfileStory
+            key={`story-${data.id}`}
+            story={data.preview ? null : data.story}
+            p={{
+              display_name: data.display_name, age: data.age, gender: data.gender, height_cm: data.height_cm, photo: data.photo_url,
+              degree: data.degree, specialization: data.specialization, institution: data.institution, passing_year: data.passing_year, education_detail: data.education_detail,
+              job_title: data.job_title, profession_detail: data.profession_detail, employer: data.employer, industry: data.industry, experience_years: data.experience_years,
+              current_loc_name: data.current_loc_name, native_place_name: data.native_place_name, job_loc_name: data.job_loc_name, gram: data.gram,
+              self_gotra: data.self_gotra, maternal_gotra: data.maternal_gotra, mool: data.mool, caste: data.caste,
+              family_type: data.family_type, family_values: data.family_values, parents_info: data.parents_info, siblings_info: data.siblings_info,
+              diet: data.diet, mother_tongue: data.mother_tongue, marital_status: data.marital_status, about_me: data.about_me,
+            }}
+          />
 
           {/* ── 2. Profile Gallery — the same photo deck and six-card deck as the
                  Digital Profile, fed this member's data. Keyed by member so

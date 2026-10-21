@@ -394,8 +394,13 @@ export default function ProfilePage() {
           </Link>
 
           {profile && (
-            <Link href={`/profile/${profile.id}?preview=1`} className="mt-2.5 flex items-center justify-center gap-2 py-1.5 text-[13.5px] font-medium text-maroon hover:underline hover:underline-offset-4">
-              <Glyph d={ICON.eye} className="h-4 w-4" /> Preview how others see you →
+            <Link href={`/profile/${profile.id}?preview=1`} className="mj-story-teaser mt-3">
+              <span className="mj-story-teaser-icon"><Glyph d={ICON.eye} className="h-[18px] w-[18px]" /></span>
+              <span className="min-w-0 flex-1 text-left">
+                <span className="block text-[14.5px] font-semibold text-maroon">See your profile story</span>
+                <span className="block text-[12px] leading-snug text-ink-soft">How members experience your profile, chapter by chapter</span>
+              </span>
+              <span aria-hidden="true" className="text-maroon">→</span>
             </Link>
           )}
 

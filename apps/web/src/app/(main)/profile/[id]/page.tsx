@@ -6,7 +6,7 @@ import { approvedPhotoUrls, canViewPhotos } from '@/lib/photoAccess'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getCommunityLabels, labelFor } from '@/lib/communityLabels'
 import { getLocationIndex } from '@/lib/locationIndex'
-import { scoreMatch, topReasons, type ScoreProfile, type ScorePreferences } from '@/lib/matchScore'
+import { haversineKm, scoreMatch, topReasons, type ScoreProfile, type ScorePreferences } from '@/lib/matchScore'
 import { formatPartnerPreferences } from '@/lib/partnerPreferences'
 import type { PartnerPreferencesDisplay } from '@/types/profile'
 import { notifyProfileViewed } from '@/lib/notifications'
@@ -86,17 +86,23 @@ async function fetchProfileView(profileId: string, viewerAccountId: string, prev
     if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--
   }
 
-  // Location names
-  const locIds = [p.native_place_id, p.current_loc_id, p.job_loc_id].filter(Boolean)
+  // Location names — and, for the profile story's map and distances, the
+  // viewer's own two places too (never shown by name; only used to measure).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mine = (!isSelf ? myProfile : null) as any
+  const locIds = [p.native_place_id, p.current_loc_id, p.job_loc_id, mine?.current_loc_id, mine?.native_place_id].filter(Boolean)
   const locMap: Record<number, string> = {}
+  const geo: Record<number, { lat: number; lng: number }> = {}
   if (locIds.length > 0) {
     const { data: locs } = await admin
       .from('india_locations')
-      .select('id, name_en')
+      .select('id, name_en, latitude, longitude')
       .in('id', locIds)
     for (const l of locs ?? []) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      locMap[(l as any).id] = (l as any).name_en
+      const r = l as any
+      locMap[r.id] = r.name_en
+      if (r.latitude != null && r.longitude != null) geo[r.id] = { lat: Number(r.latitude), lng: Number(r.longitude) }
     }
   }
 
@@ -236,6 +242,39 @@ async function fetchProfileView(profileId: string, viewerAccountId: string, prev
     )
   }
 
+  // ── The profile story's comparisons ─────────────────────────────────────
+  // Distances are rounded, and the map gets only positions inside its own
+  // frame (0–1), never coordinates. Nothing here names the viewer's places.
+  const km = (a?: number | null, b?: number | null) =>
+    a && b && geo[a] && geo[b] ? haversineKm(geo[a].lat, geo[a].lng, geo[b].lat, geo[b].lng) : null
+  const roundKm = (d: number | null) => (d == null ? null : d < 15 ? Math.round(d) : Math.round(d / 10) * 10)
+  const pinsRaw = ([
+    ['home', p.current_loc_id], ['native', p.native_place_id], ['work', p.job_loc_id], ['you', mine?.current_loc_id],
+  ] as const).filter(([, id]) => id && geo[id as number]) as Array<[string, number]>
+  // One pin per place: work in the home city is the home pin.
+  const seen = new Set<number>()
+  const uniq = pinsRaw.filter(([, id]) => (seen.has(id) ? false : (seen.add(id), true)))
+  let pins: Array<{ kind: string; x: number; y: number }> = []
+  if (uniq.length > 0) {
+    const pts = uniq.map(([k, id]) => ({ k, x: geo[id].lng * Math.cos((geo[id].lat * Math.PI) / 180), y: -geo[id].lat }))
+    const xs = pts.map(q => q.x), ys = pts.map(q => q.y)
+    const span = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), 0.6)
+    const cx = (Math.max(...xs) + Math.min(...xs)) / 2, cy = (Math.max(...ys) + Math.min(...ys)) / 2
+    pins = pts.map(q => ({ kind: q.k, x: Math.round((0.5 + ((q.x - cx) / span) * 0.72) * 1000) / 1000, y: Math.round((0.5 + ((q.y - cy) / span) * 0.72) * 1000) / 1000 }))
+  }
+  const story = {
+    hasViewer: !!mine,
+    viewerGender: (mine?.gender as string | null) ?? null,
+    distanceKm: roundKm(km(mine?.current_loc_id, p.current_loc_id)),
+    sameCity: !!mine?.current_loc_id && mine.current_loc_id === p.current_loc_id,
+    nativeDistanceKm: roundKm(km(mine?.native_place_id, p.native_place_id)),
+    sameNative: !!mine?.native_place_id && mine.native_place_id === p.native_place_id,
+    nativeToHomeKm: roundKm(km(p.native_place_id, p.current_loc_id)),
+    // Raw option keys compared, as the match score does (labels can differ in case).
+    sameGotra: !!mine?.self_gotra && !!p.self_gotra && String(mine.self_gotra).toLowerCase() === String(p.self_gotra).toLowerCase(),
+    pins,
+  }
+
   const lastName = p.last_name as string | null
   const displayName = lastName ? `${p.first_name} ${lastName}` : p.first_name
 
@@ -298,6 +337,7 @@ async function fetchProfileView(profileId: string, viewerAccountId: string, prev
     family_introduction: p.family_introduction ?? null,
     photo_url: photoUrl,
     photos,
+    story,
     matched,
     conversationId,
     myProfileId,
