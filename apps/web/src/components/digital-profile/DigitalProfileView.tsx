@@ -36,7 +36,7 @@ export type ProfileMode = 'public' | 'preview' | 'demo'
 function Fact({ label, value }: { label: string; value: string | number | null | undefined }) {
   if (value == null || value === '') return null
   return (
-    <div className="flex items-start gap-3 py-2 border-b border-gold/15 last:border-0">
+    <div className="flex items-start gap-3 py-2 border-b border-line last:border-0">
       <span className="w-[40%] sm:w-[34%] shrink-0 text-[11.5px] uppercase tracking-wide text-ink-soft leading-snug pt-0.5">{label}</span>
       <span className="min-w-0 text-[14.5px] text-ink leading-snug break-words">{value}</span>
     </div>
@@ -173,14 +173,14 @@ export function DigitalProfileView({
   const hasRoots = roots.some(([, v]) => v)
   const hasCommunity = !!(c?.religion || c?.caste || c?.subCaste || p.motherTongue)
   const photos = p.photos
-  // The cover's split-flap line: one fact at a time, only what was shared.
+  // The cover's fact line: a few short facts, only what was shared.
   const coverFacts = ([
     c?.selfGotra ? { lead: 'Gotra', word: c.selfGotra } : null,
     c?.mool ? { lead: 'Mool', word: c.mool } : null,
     p.education?.degree ? { lead: 'Studied', word: p.education.degree } : null,
     profession ? { lead: 'Works as', word: profession } : null,
     p.location?.native ? { lead: 'Roots in', word: p.location.native } : null,
-  ].filter(Boolean) as CoverFact[]).filter(f => f.word.length <= 12)
+  ].filter(Boolean) as CoverFact[]).filter(f => f.word.length <= 28).slice(0, 4)
   let n = 3
   const Name: Level = nested ? 'h3' : 'h1'
   const h: Level = nested ? 'h4' : 'h2'
@@ -200,7 +200,7 @@ export function DigitalProfileView({
         place={place}
         photo={photos[0] ?? null}
         facts={coverFacts}
-        // The gotra turns on the flap line, so the chips carry the community only.
+        // The gotra is on the fact line, so the chips carry the community only.
         chips={coverFacts.some(f => f.lead === 'Gotra') ? chips.filter(x => !x.endsWith(' Gotra')) : chips}
         demo={mode === 'demo'}
         headingLevel={Name === 'h1' ? 'h1' : 'h3'}
@@ -278,7 +278,7 @@ export function DigitalProfileView({
             </div>
           )}
           {hasAny(p.career) && p.career && (
-            <div className={hasAny(p.education) ? 'mt-2 border-t border-gold/20 pt-2' : ''}>
+            <div className={hasAny(p.education) ? 'mt-2 border-t border-line pt-2' : ''}>
               <p className="pt-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8A6516]">Career</p>
               <Fact label="Role" value={p.career.jobTitle} />
               <Fact label="Employer" value={p.career.employer} />

@@ -39,7 +39,7 @@ export function ProfileConnect({
   const btn = 'inline-flex min-h-[46px] flex-1 items-center justify-center gap-2 rounded-full px-5 text-[15px] font-semibold transition-colors'
 
   return (
-    <section className="rounded-mj border border-maroon/25 bg-cream px-4 py-4 text-center shadow-mj-xs" aria-label="Connect">
+    <section className="rounded-mj border border-line bg-cream px-4 py-4 text-center shadow-mj-xs" aria-label="Connect">
       <p className="text-[13px] text-ink-soft">You&rsquo;re signed in to Mithila Jodi.</p>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row">
         {state === 'match' ? (

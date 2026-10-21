@@ -193,7 +193,7 @@ export default function InboxContent() {
         <h1 className="font-serif text-[28px] leading-tight text-maroon sm:text-[32px]">Inbox</h1>
         <p className="mt-1 text-[13.5px] text-ink-soft">Your messages, interests and matches.</p>
 
-        <div className={`mt-4 grid ${requestsOn ? 'grid-cols-4' : 'grid-cols-3'} rounded-full border border-gold/30 bg-cream p-1`} role="tablist" aria-label="Inbox">
+        <div className={`mt-4 grid ${requestsOn ? 'grid-cols-4' : 'grid-cols-3'} rounded-full border border-line bg-cream p-1`} role="tablist" aria-label="Inbox">
           {tabs.map(t => (
             <button
               key={t.id}
@@ -226,17 +226,17 @@ export default function InboxContent() {
             requests ? (
               <RequestsList data={requests} onChanged={reloadRequests} />
             ) : requestsFailed ? (
-              <div role="alert" className="rounded-mj border border-gold/25 bg-cream px-6 py-9 text-center">
+              <div role="alert" className="rounded-mj border border-line bg-cream px-6 py-9 text-center">
                 <p className="text-[14px] text-ink-soft">We could not load your requests just now.</p>
                 <button type="button" onClick={() => { setRequestsFailed(false); void reloadRequests() }} className="btn-primary mt-4 inline-flex px-5 py-2.5 text-[14px]">Retry</button>
               </div>
             ) : (
-              <div className="h-[124px] animate-pulse rounded-mj border border-gold/20 bg-cream" />
+              <div className="h-[124px] animate-pulse rounded-mj border border-line bg-cream" />
             )
           )}
 
           {tab !== 'messages' && tab !== 'requests' && !data && loadFailed && (
-            <div role="alert" className="rounded-mj border border-gold/25 bg-cream px-6 py-9 text-center">
+            <div role="alert" className="rounded-mj border border-line bg-cream px-6 py-9 text-center">
               <p className="text-[14px] text-ink-soft">We could not load your interests just now.</p>
               <button type="button" onClick={retry} className="btn-primary mt-4 inline-flex px-5 py-2.5 text-[14px]">Retry</button>
             </div>
@@ -245,7 +245,7 @@ export default function InboxContent() {
           {tab !== 'messages' && tab !== 'requests' && !data && !loadFailed && (
             <div className="space-y-3">
               {[1, 2].map(i => (
-                <div key={i} className="flex animate-pulse gap-3.5 rounded-mj border border-gold/20 bg-cream p-4">
+                <div key={i} className="flex animate-pulse gap-3.5 rounded-mj border border-line bg-cream p-4">
                   <div className="h-[92px] w-[76px] rounded-mj-sm bg-paper-3" />
                   <div className="flex-1 space-y-2 py-1"><div className="h-4 w-1/2 rounded bg-paper-3" /><div className="h-3 w-2/3 rounded bg-paper-3" /></div>
                 </div>

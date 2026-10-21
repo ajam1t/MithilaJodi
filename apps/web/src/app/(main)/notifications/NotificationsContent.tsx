@@ -198,7 +198,7 @@ export default function NotificationsContent() {
         )}
 
         {items && items.length === 0 && (
-          <div className="mt-8 rounded-mj border border-gold/30 bg-cream px-6 py-10 text-center">
+          <div className="mt-8 rounded-mj border border-line bg-cream px-6 py-10 text-center">
             <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-paper-2 text-maroon"><Glyph name="bell" /></span>
             <p className="mt-3 font-serif text-[18px] text-maroon">You&rsquo;re all caught up</p>
             <p className="mt-1 text-[13.5px] text-ink-soft">New interests, matches and messages will appear here.</p>
@@ -209,7 +209,7 @@ export default function NotificationsContent() {
         {[{ label: 'Today', list: today }, { label: 'Earlier', list: earlier }].map(g => g.list.length > 0 && (
           <section key={g.label} className="mt-6" aria-label={g.label}>
             <h2 className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8A6516]">{g.label}</h2>
-            <ul className="divide-y divide-gold/15 overflow-hidden rounded-mj border border-gold/25 shadow-mj-xs">
+            <ul className="divide-y divide-line overflow-hidden rounded-mj border border-line shadow-mj-xs">
               {g.list.map(n => <Row key={n.id} n={n} onOpen={open} />)}
             </ul>
           </section>

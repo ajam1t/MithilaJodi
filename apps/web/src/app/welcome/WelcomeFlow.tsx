@@ -492,7 +492,7 @@ export function WelcomeFlow({ initial, options, returnTo: returnToProp }: { init
       )}
 
       {returning && screen !== 'ready' && idx === SCREENS.indexOf(firstMissing() ?? 'more') && (
-        <p className="mb-5 rounded-mj-sm border border-gold/40 bg-cream px-3.5 py-2.5 text-[13.5px] text-ink" role="status">
+        <p className="mb-5 rounded-mj-sm border border-line bg-cream px-3.5 py-2.5 text-[13.5px] text-ink" role="status">
           <span className="font-semibold text-maroon">Welcome back.</span> Let&apos;s finish your profile — what you saved before is kept.
         </p>
       )}
@@ -558,8 +558,8 @@ export function WelcomeFlow({ initial, options, returnTo: returnToProp }: { init
             {screen === 'photo' && (
               <>
                 {photoCount > 0 ? (
-                  <div className="flex items-center gap-4 rounded-mj border-2 border-gold/50 bg-cream px-4 py-4">
-                    <div className="h-20 w-16 shrink-0 overflow-hidden rounded-mj-sm border-2 border-gold/60 bg-paper-2">
+                  <div className="flex items-center gap-4 rounded-mj border border-line bg-cream px-4 py-4">
+                    <div className="h-20 w-16 shrink-0 overflow-hidden rounded-mj-sm border border-line bg-paper-2">
                       {uploadedUrl
                         // eslint-disable-next-line @next/next/no-img-element
                         ? <img src={uploadedUrl} alt="" className="h-full w-full object-cover" />
@@ -570,7 +570,7 @@ export function WelcomeFlow({ initial, options, returnTo: returnToProp }: { init
                 ) : pendingPhoto ? (
                   <div className="flex flex-col items-center text-center">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={pendingPhoto.url} alt="The chosen photo" className="h-56 w-44 rounded-mj border-[3px] border-gold/70 object-cover shadow-mj" />
+                    <img src={pendingPhoto.url} alt="The chosen photo" className="h-56 w-44 rounded-mj border border-line object-cover shadow-mj-xs" />
                     <p className="mt-3 text-[13.5px] text-ink-soft">Looks good. It is saved with the profile in a moment.</p>
                     <button type="button" onClick={() => setPendingPhoto(null)} className="mt-2 text-[13.5px] font-medium text-maroon hover:underline">
                       Choose a different photo
@@ -677,9 +677,9 @@ export function WelcomeFlow({ initial, options, returnTo: returnToProp }: { init
       )}
 
       {screen === 'ready' && (
-        <div className="card p-5">
+        <div className="card border-line shadow-mj-xs p-5">
           <div className="flex items-center gap-4">
-            <div className="h-20 w-16 shrink-0 overflow-hidden rounded-mj-sm border-2 border-gold/60 bg-paper-2">
+            <div className="h-20 w-16 shrink-0 overflow-hidden rounded-mj-sm border border-line bg-paper-2">
               {uploadedUrl ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img src={uploadedUrl} alt="Your new profile photo" className="h-full w-full object-cover" />

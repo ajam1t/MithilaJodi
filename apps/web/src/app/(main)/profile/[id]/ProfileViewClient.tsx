@@ -111,7 +111,7 @@ function MatchPanel({ match }: { match: MatchDetail }) {
   // rated badly, when in fact it was never on the scale.
   if (match.confidence === 0 && match.breakdown.length === 0) {
     return (
-      <section className="card p-5" aria-label="Match breakdown">
+      <section className="card border-line shadow-mj-xs p-5" aria-label="Match breakdown">
         {match.blockers.map(b => (
           <p key={b} className="text-[13.5px] leading-snug text-ink-soft">{b}</p>
         ))}
@@ -124,7 +124,7 @@ function MatchPanel({ match }: { match: MatchDetail }) {
     : match.score >= 80 ? 'text-green' : match.score >= 65 ? 'text-gold' : 'text-maroon'
 
   return (
-    <section className="card p-5" aria-label="Match breakdown">
+    <section className="card border-line shadow-mj-xs p-5" aria-label="Match breakdown">
       <div className="flex items-baseline gap-3 mb-1">
         <span className={`font-serif text-3xl leading-none ${colour}`}>{match.score}</span>
         <div className="min-w-0">
@@ -143,7 +143,7 @@ function MatchPanel({ match }: { match: MatchDetail }) {
         </p>
       ))}
       {match.cautions.map(c => (
-        <p key={c} className="mt-2 text-[13px] leading-snug text-ink-soft bg-gold/[0.07] border border-gold/30 rounded-mj-sm px-3 py-2">
+        <p key={c} className="mt-2 text-[13px] leading-snug text-ink-soft bg-gold/[0.07] border border-line rounded-mj-sm px-3 py-2">
           {c}
         </p>
       ))}
@@ -438,7 +438,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
                 aria-label={data.shortlisted ? 'Shortlisted' : 'Shortlist'}
                 title={data.shortlisted ? 'Shortlisted' : 'Shortlist'}
                 className={`grid h-8 w-8 place-items-center rounded-full border text-[15px] leading-none transition-colors disabled:opacity-60 ${
-                  data.shortlisted ? 'border-gold bg-gold/15 text-maroon' : 'border-gold/40 text-ink-soft hover:border-gold hover:text-maroon'
+                  data.shortlisted ? 'border-gold bg-gold/15 text-maroon' : 'border-line text-ink-soft hover:border-gold hover:text-maroon'
                 }`}
               >
                 <span aria-hidden="true">{data.shortlisted ? '★' : '☆'}</span>
@@ -455,7 +455,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
 
           {/* Owner preview: what another member sees, nothing they could do. */}
           {data.preview && (
-            <div className="rounded-mj border border-gold/40 bg-[#FFF8EC] px-4 py-3">
+            <div className="rounded-mj border border-line bg-[#FFF8EC] px-4 py-3">
               <p className="text-[13.5px] font-semibold text-maroon">Preview — this is how other members see your profile.</p>
               {data.previewHidden && (
                 <p className="mt-1 text-[12.5px] text-ink-soft">Your profile is hidden right now, so members cannot open it until you make it visible.</p>
@@ -542,7 +542,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
 
           {/* ── 3. Actions */}
           {!data.preview && data.myProfileId && !data.blocked && (
-            <div className="card p-5 space-y-3">
+            <div className="card border-line shadow-mj-xs p-5 space-y-3">
               <h2 className="font-semibold text-ink text-sm">Connect with {firstName}</h2>
               <div className="flex flex-wrap gap-3">
 
@@ -695,7 +695,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
           )}
 
           {!data.preview && data.blocked && (
-            <div className="card p-4 text-sm text-ink-soft">
+            <div className="card border-line shadow-mj-xs p-4 text-sm text-ink-soft">
               You have blocked this profile.{' '}
               <button
                 type="button"
@@ -715,7 +715,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
           )}
 
           {!data.preview && !data.myProfileId && (
-            <div className="card p-4 text-sm text-center text-ink-soft">
+            <div className="card border-line shadow-mj-xs p-4 text-sm text-center text-ink-soft">
               <Link href="/profile/edit" className="text-maroon underline">Complete your profile</Link>
               {' '}to send interests and shortlist profiles.
             </div>
@@ -726,14 +726,14 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
 
           {/* ── 6. Full profile */}
           {data.about_me && (
-            <div className="card p-5">
+            <div className="card border-line shadow-mj-xs p-5">
               <h2 className="font-semibold text-ink text-sm mb-2">About</h2>
               <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap">{data.about_me}</p>
             </div>
           )}
 
           {/* Community & Personal */}
-          <div className="card p-5 space-y-2.5">
+          <div className="card border-line shadow-mj-xs p-5 space-y-2.5">
             <h2 className="font-semibold text-ink text-sm mb-3">Details</h2>
             <Row label="Religion" value={data.religion} />
             <Row label="Caste" value={data.caste} />
@@ -754,7 +754,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
 
           {/* Education */}
           {(data.education_detail || data.degree || data.specialization || data.institution || data.passing_year) && (
-            <div className="card p-5 space-y-2.5">
+            <div className="card border-line shadow-mj-xs p-5 space-y-2.5">
               <h2 className="font-semibold text-ink text-sm mb-3">Education</h2>
               <Row label="Education" value={data.education_detail} />
               <Row label="Degree" value={data.degree} />
@@ -766,7 +766,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
 
           {/* Career */}
           {(data.job_title || data.profession_detail || data.employer || data.employment_type || data.industry || data.work_type || data.experience_years != null) && (
-            <div className="card p-5 space-y-2.5">
+            <div className="card border-line shadow-mj-xs p-5 space-y-2.5">
               <h2 className="font-semibold text-ink text-sm mb-3">Career</h2>
               <Row label="Job Title" value={data.job_title} />
               <Row label="Profession" value={data.profession_detail} />
@@ -780,7 +780,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
 
           {/* Family */}
           {(data.managed_by || data.family_type || data.family_values || data.parents_info || data.siblings_info || data.family_expectations || data.family_introduction || data.family_about) && (
-            <div className="card p-5 space-y-2.5">
+            <div className="card border-line shadow-mj-xs p-5 space-y-2.5">
               <h2 className="font-semibold text-ink text-sm mb-3">Family</h2>
               <Row label="Managed By" value={humanize(data.managed_by)} />
               <Row label="Family Type" value={humanize(data.family_type)} />
