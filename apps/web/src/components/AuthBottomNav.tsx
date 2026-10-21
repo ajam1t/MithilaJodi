@@ -8,8 +8,8 @@ import { useOwnPhoto } from '@/lib/hooks/useOwnPhoto'
 /*
  * The signed-in mobile bottom nav — LOCKED by the owner (2026-10-07):
  *   Home · Digital Profile · Search · Inbox · Profile
- * The Digital Profile tab shows the member's own photo filling the whole tab
- * (owner's request, 2026-10-21) — no ring, no motion — once one is approved.
+ * The Digital Profile tab is drawn as a small ID card carrying the member's own
+ * photo over about three quarters of it (owner's request, 2026-10-21).
  * Do not bring back separate Messages / Interests tabs or Biodata here:
  * Inbox is the umbrella for messages, interests and matches, and Biodata
  * lives with the tools on the Profile page.
@@ -90,6 +90,22 @@ const tabs: Tab[] = [
   },
 ]
 
+/** A small ID card: lanyard slot, the member's photo over the top three quarters, two detail lines. */
+function IdCard({ photo, active }: { photo: string | null; active: boolean }) {
+  return (
+    <span className={`mj-idcard ${active ? 'is-on' : ''}`} aria-hidden="true">
+      <span className="mj-idcard-slot" />
+      <span className="mj-idcard-photo">
+        {photo
+          // eslint-disable-next-line @next/next/no-img-element
+          ? <img src={photo} alt="" />
+          : <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="9" r="4.2" /><path d="M3.5 24c.8-5 4.2-8 8.5-8s7.7 3 8.5 8Z" /></svg>}
+      </span>
+      <span className="mj-idcard-lines"><i /><i /></span>
+    </span>
+  )
+}
+
 export function AuthBottomNav() {
   const pathname = usePathname()
   const pending = usePendingCounts()
@@ -121,15 +137,10 @@ export function AuthBottomNav() {
               className={`relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 transition-colors
                 ${active ? 'text-maroon' : 'text-ink-soft hover:text-ink'}`}
             >
-              {/* Digital Profile: the member's own photo fills the whole tab. */}
-              {tab.href === '/digital-profile' && photo && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={photo} alt="" className="absolute inset-0 h-full w-full object-cover" />
-              )}
               {/* Gold rule over the current tab — the brand's "selected" mark. */}
               {active && <span className="absolute inset-x-3 top-0 h-[2.5px] rounded-b-full bg-gold" aria-hidden="true" />}
-              <span className={`relative ${tab.href === '/digital-profile' && photo ? 'sr-only' : ''}`}>
-                {tab.icon(active)}
+              <span className="relative">
+                {tab.href === '/digital-profile' ? <IdCard photo={photo} active={active} /> : tab.icon(active)}
                 {badge > 0 && (
                   <span
                     className="absolute -right-2 -top-1.5 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-maroon px-1
@@ -139,7 +150,7 @@ export function AuthBottomNav() {
                   </span>
                 )}
               </span>
-              <span className={`max-w-full truncate px-0.5 text-[10px] leading-tight ${active ? 'font-semibold' : 'font-medium'} ${tab.href === '/digital-profile' && photo ? 'sr-only' : ''}`}>
+              <span className={`max-w-full truncate px-0.5 text-[10px] leading-tight ${active ? 'font-semibold' : 'font-medium'}`}>
                 {tab.label}
               </span>
               {badge > 0 && <span className="sr-only">, {badge} waiting for you</span>}
