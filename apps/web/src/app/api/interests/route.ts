@@ -105,7 +105,7 @@ export async function GET() {
   // a pending interest from a removed member cannot be acted on.
   if (otherIds.size > 0) {
     const all = [...otherIds]
-    const [{ data: blk }, { data: st }] = await Promise.all([
+    const [{ data: blk, error: blkError }, { data: st }] = await Promise.all([
       admin
         .from('blocks')
         .select('blocker_id, blocked_id')
@@ -115,6 +115,12 @@ export async function GET() {
         .select('id, deleted_at, profile_status, accounts!inner(account_status, deleted_at)')
         .in('id', all),
     ])
+    // Fail closed: an unreadable block list must not be read as "nobody blocked".
+    // (An unreadable status list already drops everyone, as unseen ids below.)
+    if (blkError) {
+      console.error('[interests GET] blocks query error:', blkError.message)
+      return NextResponse.json({ ok: false, message: 'Something went wrong — please try again.' }, { status: 503 })
+    }
     const gone = new Set<string>()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     for (const b of (blk ?? []) as any[]) gone.add(b.blocker_id === myId ? b.blocked_id : b.blocker_id)
@@ -396,7 +402,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { data: blockRow } = await admin
+  const { data: blockRow, error: blockError } = await admin
     .from('blocks')
     .select('blocker_id')
     .or(
@@ -405,6 +411,11 @@ export async function POST(request: NextRequest) {
     .limit(1)
     .maybeSingle()
 
+  // Fail closed: if the block check cannot run, the interest is not sent.
+  if (blockError) {
+    console.error('[interests POST] blocks query error:', blockError.message)
+    return NextResponse.json({ ok: false, message: 'Something went wrong — please try again.' }, { status: 503 })
+  }
   if (blockRow) {
     return NextResponse.json({ ok: false, message: 'Unable to send interest' }, { status: 422 })
   }

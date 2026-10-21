@@ -402,7 +402,7 @@ export async function GET(request: NextRequest) {
   // this cost, and on a round trip to Supabase the saving is a whole latency.
   // Community labels resolve the gotra/mool/caste filters to master keys; they
   // are cached per process, so this costs nothing after the first request.
-  const [locationIndex, { data: myProfileRows }, labels] = await Promise.all([
+  const [locationIndex, { data: myProfileRows, error: myProfileError }, labels] = await Promise.all([
     getLocationIndex(admin),
     admin
       .from('profiles')
@@ -412,6 +412,13 @@ export async function GET(request: NextRequest) {
       .order('updated_at', { ascending: false }),
     getCommunityLabels(admin),
   ])
+
+  // Fail closed: without the viewer's own profiles the block list below cannot
+  // be read, and results would include people who blocked them.
+  if (myProfileError) {
+    console.error('[search GET] viewer profile query error:', myProfileError.message)
+    return NextResponse.json({ ok: false, message: 'Something went wrong — please try again.' }, { status: 503 })
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const myProfiles: any[] = myProfileRows ?? []
@@ -474,8 +481,14 @@ export async function GET(request: NextRequest) {
           .from('blocks')
           .select('blocker_id, blocked_id')
           .or(`blocker_id.in.(${myProfileIds.join(',')}),blocked_id.in.(${myProfileIds.join(',')})`)
-      : Promise.resolve({ data: [] }),
+      : Promise.resolve({ data: [], error: null }),
   ])
+
+  // Fail closed: an unreadable block list must not be read as "nobody blocked".
+  if (blockResult.error) {
+    console.error('[search GET] blocks query error:', blockResult.error.message)
+    return NextResponse.json({ ok: false, message: 'Something went wrong — please try again.' }, { status: 503 })
+  }
 
   const viewerPrefs: ScorePreferences = toScorePrefs(prefResult.data)
   const viewer: ScoreProfile | null = viewerRow ? toScoreProfile(viewerRow) : null

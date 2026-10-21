@@ -20,13 +20,21 @@ async function fetchProfileView(profileId: string, viewerAccountId: string, prev
 
   // Viewer's own profile. The full row, not just the id: it is what the match
   // score is computed against.
-  const { data: myProfile } = await admin
+  const { data: myProfile, error: myProfileError } = await admin
     .from('profiles')
     .select('id, account_id, first_name, last_name, profile_status, discoverable, gender, dob, religion, caste, sub_caste, self_gotra, maternal_gotra, mool, gram, native_place_id, current_loc_id, job_loc_id, diet, smoking, drinking, marriage_timeline, education_detail, degree, family_type, family_values')
     .eq('account_id', viewerAccountId)
     .neq('profile_status', 'deleted')
     .is('deleted_at', null)
+    .order('updated_at', { ascending: false })
+    .limit(1)
     .maybeSingle()
+
+  // Fail closed: without the viewer's profile the block checks below cannot run.
+  if (myProfileError) {
+    console.error('[profile/[id]] viewer profile query error:', myProfileError.message)
+    return 'error' as const
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const myProfileId: string | null = (myProfile as any)?.id ?? null
@@ -57,12 +65,17 @@ async function fetchProfileView(profileId: string, viewerAccountId: string, prev
   if (!isSelf) {
     // A member who has blocked the viewer, or whose account is not usable
     // (suspended, banned, deactivated, deleted), is simply "not found".
-    const [{ data: blockedMe }, { data: owner }] = await Promise.all([
+    const [{ data: blockedMe, error: blockError }, { data: owner }] = await Promise.all([
       myProfileId
         ? admin.from('blocks').select('blocker_id').eq('blocker_id', profileId).eq('blocked_id', myProfileId).maybeSingle()
-        : Promise.resolve({ data: null }),
+        : Promise.resolve({ data: null, error: null }),
       admin.from('accounts').select('account_status, deleted_at').eq('id', p.account_id).maybeSingle(),
     ])
+    // Fail closed: an unreadable block check is never read as "not blocked".
+    if (blockError) {
+      console.error('[profile/[id]] blocks query error:', blockError.message)
+      return 'error' as const
+    }
     if (blockedMe) return null
     if (!owner || owner.deleted_at || owner.account_status !== 'active') return null
   }
@@ -156,6 +169,12 @@ async function fetchProfileView(profileId: string, viewerAccountId: string, prev
     interestSent = sentRes.data ? { id: (sentRes.data as any).id, status: (sentRes.data as any).status } : null
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     interestReceived = receivedRes.data ? { id: (receivedRes.data as any).id, status: (receivedRes.data as any).status } : null
+    // Fail closed here too: not knowing whether you blocked them must not show
+    // a blocked member with the ordinary actions.
+    if (blockRes.error) {
+      console.error('[profile/[id]] own block query error:', blockRes.error.message)
+      return 'error' as const
+    }
     shortlisted = !!shortRes.data
     blocked = !!blockRes.data
   }
@@ -403,6 +422,17 @@ export default async function ProfileViewPage({
   const { id } = await params
   const { preview } = await searchParams
   const data = await fetchProfileView(id, session.id, preview === '1')
+
+  if (data === 'error') {
+    return (
+      <main id="main-content" className="min-h-screen bg-paper">
+        <div className="wrap py-16 text-center">
+          <p className="font-serif text-2xl text-ink mb-2">Profile unavailable</p>
+          <p className="text-ink-soft text-sm">Something went wrong — please try again.</p>
+        </div>
+      </main>
+    )
+  }
 
   if (!data) {
     return (

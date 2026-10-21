@@ -6,14 +6,15 @@ import { useEffect, useState } from 'react'
  * "Make web copies": runs the backfill in batches until every photo that can
  * be read has its web-sized copy, showing progress. Stops when a batch makes
  * nothing (the rest are photos the server cannot read; they stay originals).
+ * HEIC originals are not attempted and never served (no copy → placeholder).
  */
 export function WebCopies({ canRun }: { canRun: boolean }) {
-  const [state, setState] = useState<{ total: number; remaining: number } | null>(null)
+  const [state, setState] = useState<{ total: number; remaining: number; heic: number } | null>(null)
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState('')
 
   useEffect(() => {
-    fetch('/api/admin/storage/web-copies').then(r => r.json()).then(j => { if (j.ok) setState({ total: j.total, remaining: j.remaining }) }).catch(() => {})
+    fetch('/api/admin/storage/web-copies').then(r => r.json()).then(j => { if (j.ok) setState({ total: j.total, remaining: j.remaining, heic: j.heic ?? 0 }) }).catch(() => {})
   }, [])
 
   async function run() {
@@ -22,20 +23,21 @@ export function WebCopies({ canRun }: { canRun: boolean }) {
       for (;;) {
         const j = await fetch('/api/admin/storage/web-copies', { method: 'POST' }).then(r => r.json())
         if (!j.ok) { setNote(j.message ?? 'Could not make copies.'); break }
-        setState({ total: j.total, remaining: j.remaining })
-        if (j.remaining === 0) { setNote('Every photo now has a web copy.'); break }
+        setState({ total: j.total, remaining: j.remaining, heic: j.heic ?? 0 })
+        if (j.remaining === 0) { setNote(j.heic ? 'Every photo that can be converted now has a web copy.' : 'Every photo now has a web copy.'); break }
         if (j.made === 0) { setNote(`${j.remaining} photo(s) could not be converted and are served as originals.`); break }
       }
     } catch { setNote('Network problem — run it again to continue where it stopped.') }
     setBusy(false)
   }
 
-  const done = state ? state.total - state.remaining : 0
+  const done = state ? state.total - state.remaining - state.heic : 0
   return (
     <div className="space-y-3 text-[13.5px]">
       {state ? (
         <>
           <p><b className="tabular-nums">{done}</b> of <b className="tabular-nums">{state.total}</b> photos have a web copy.</p>
+          {state.heic > 0 && <p className="text-ink-soft"><b className="tabular-nums">{state.heic}</b> HEIC photo(s) cannot be converted; they show as a placeholder until replaced.</p>}
           <div className="h-2 overflow-hidden rounded-full bg-[#F1ECE3]" aria-hidden="true">
             <div className="h-full rounded-full bg-gradient-to-r from-[#B98A2E] to-[#E9C977] transition-all" style={{ width: `${state.total ? (done / state.total) * 100 : 100}%` }} />
           </div>

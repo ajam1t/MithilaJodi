@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { HEIC_UNSUPPORTED_MESSAGE } from '@/lib/imageSniff'
 
 /**
  * Choose → adjust → confirm, for a profile photo.
@@ -13,8 +14,11 @@ import { useEffect, useRef, useState } from 'react'
  * Validation happens here first, in plain words (type, size, dimensions); the
  * server checks the type again from the file's bytes and the size limit.
  *
- * HEIC/HEIF photos cannot be drawn by most browsers, so those skip the editor
- * and are uploaded as they are (the server accepts them).
+ * HEIC/HEIF goes through the editor like any other photo where the browser
+ * can draw it (Safari can), and so is sent as JPEG. Where it cannot, the photo
+ * is refused here — a raw HEIC is never uploaded (it carries the camera's EXIF,
+ * GPS included, and the server cannot decode it either). The canvas re-encode
+ * drops all metadata.
  */
 
 const MAX_INPUT_BYTES = 20 * 1024 * 1024
@@ -59,12 +63,6 @@ export function PhotoPicker({
     const heic = /image\/hei[cf]/.test(file.type) || /\.(heic|heif)$/i.test(file.name)
     if (!file.type.startsWith('image/') && !heic) { setError('That file is not a photo. Please choose a JPEG, PNG, WebP or HEIC image.'); reset(); return }
     if (file.size > MAX_INPUT_BYTES) { setError('That photo is over 20 MB. Please choose a smaller one.'); reset(); return }
-    if (heic) {
-      if (file.size > 5 * 1024 * 1024) { setError('HEIC photos must be under 5 MB. Please choose a JPEG or a smaller photo.'); reset(); return }
-      onConfirm(file)
-      reset()
-      return
-    }
     const url = URL.createObjectURL(file)
     const img = new Image()
     img.onload = () => {
@@ -77,7 +75,7 @@ export function PhotoPicker({
       reset()
       setLoaded({ img, url, name: file.name })
     }
-    img.onerror = () => { URL.revokeObjectURL(url); setError('We could not open that photo. Please try another one.'); reset() }
+    img.onerror = () => { URL.revokeObjectURL(url); setError(heic ? HEIC_UNSUPPORTED_MESSAGE : 'We could not open that photo. Please try another one.'); reset() }
     img.src = url
   }
 

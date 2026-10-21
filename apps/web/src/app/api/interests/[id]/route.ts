@@ -77,12 +77,17 @@ export async function PATCH(
   // Accepting opens a conversation, so the sender must still be a live member
   // and neither side may have blocked the other.
   if (typedAction === 'accept') {
-    const [{ data: sender }, { data: blk }] = await Promise.all([
+    const [{ data: sender }, { data: blk, error: blkError }] = await Promise.all([
       admin.from('profiles').select('deleted_at, profile_status, accounts!inner(account_status, deleted_at)').eq('id', iv.from_profile).maybeSingle(),
       admin.from('blocks').select('blocker_id')
         .or(`and(blocker_id.eq.${myId},blocked_id.eq.${iv.from_profile}),and(blocker_id.eq.${iv.from_profile},blocked_id.eq.${myId})`)
         .limit(1),
     ])
+    // Fail closed: if the block check cannot run, the interest is not accepted.
+    if (blkError) {
+      console.error('[interests PATCH] blocks query error:', blkError.message)
+      return NextResponse.json({ ok: false, message: 'Something went wrong — please try again.' }, { status: 503 })
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sp = sender as any
     const acct = Array.isArray(sp?.accounts) ? sp.accounts[0] : sp?.accounts

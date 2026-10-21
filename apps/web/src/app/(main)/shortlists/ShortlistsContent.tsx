@@ -7,9 +7,11 @@ type ShortlistedProfile = {
   saved_at: string
   profile: {
     id: string
+    /** False for a member who has since blocked you, gone private or left: no name or photo. */
+    available: boolean
     display_name: string
     age: number | null
-    gender: string
+    gender: string | null
     caste: string | null
     current_loc_name: string | null
     photo_url: string | null
@@ -97,6 +99,12 @@ export default function ShortlistsContent() {
                       ✕
                     </button>
 
+                    {!p.available ? (
+                      <>
+                        <div className="w-full aspect-[3/4] rounded-mj-sm bg-paper-2 border border-paper-3" aria-hidden="true" />
+                        <p className="text-sm text-ink-soft">Member no longer available</p>
+                      </>
+                    ) : (<>
                     <Link href={`/profile/${p.id}`} className="block">
                       <div className="w-full aspect-[3/4] rounded-mj-sm overflow-hidden bg-cream border border-paper-3 flex items-center justify-center">
                         {p.photo_url ? (
@@ -117,6 +125,7 @@ export default function ShortlistsContent() {
                           .join(' · ')}
                       </p>
                     </div>
+                    </>)}
                   </div>
                 )
               })}
