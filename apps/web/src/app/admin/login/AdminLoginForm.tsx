@@ -11,7 +11,6 @@ import { useRouter } from 'next/navigation'
  */
 const PEOPLE = [
   { id: 'amit', name: 'Amit Jha', first: 'Amit', role: 'Admin', org: 'Mithila Jodi', photo: '/admin-amit.webp' },
-  { id: 'other', name: 'Another admin', first: '', role: 'Admin team', org: 'Mithila Jodi', photo: null },
 ] as const
 type Who = (typeof PEOPLE)[number]['id']
 const KEY = 'mj-admin-who'
