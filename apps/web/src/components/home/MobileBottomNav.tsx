@@ -79,15 +79,24 @@ export function MobileBottomNav() {
             <span className={`text-[10px] font-medium tracking-wide leading-tight text-center ${isActive('/digital-profile') ? 'font-semibold' : ''}`}>Digital Profile</span>
           </Link>
 
-          {/* Join / Login — primary CTA centre */}
-          <Link href="/register" className={navCls('/register', true)} aria-current={isActive('/register') ? 'page' : undefined}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="9" cy="8" r="4" />
-              <path d="M3 20c0-3.6 2.7-6 6-6" />
-              <line x1="18" y1="11" x2="18" y2="17" />
-              <line x1="15" y1="14" x2="21" y2="14" />
-            </svg>
-            <span className="text-[10px] font-semibold tracking-wide leading-tight text-center">Join / Login</span>
+          {/* Join / Login — primary CTA centre: a raised medallion with a slowly
+              turning aripan rim, and a gold sheen that crosses the tab now and then. */}
+          <Link href="/register" className={`${navCls('/register', true)} mj-cta-tab`} aria-current={isActive('/register') ? 'page' : undefined}>
+            <span className="mj-cta-badge" aria-hidden="true">
+              <svg viewBox="0 0 60 60" className="mj-cta-rim">
+                <circle cx="30" cy="30" r="28" fill="none" stroke="#E9C977" strokeWidth="1" strokeDasharray="2 3.2" />
+                {Array.from({ length: 8 }, (_, i) => (
+                  <ellipse key={i} cx="30" cy="3.6" rx="1.1" ry="2.3" fill="#E9C977" opacity=".9" transform={`rotate(${i * 45} 30 30)`} />
+                ))}
+              </svg>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="relative">
+                <circle cx="9" cy="8" r="4" />
+                <path d="M3 20c0-3.6 2.7-6 6-6" />
+                <line x1="18" y1="11" x2="18" y2="17" />
+                <line x1="15" y1="14" x2="21" y2="14" />
+              </svg>
+            </span>
+            <span className="relative text-[10px] font-semibold tracking-wide leading-tight text-center">Join / Login</span>
           </Link>
 
           {/* Search Profiles (public, non-member browsing) */}

@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { inboxCount, usePendingCounts } from '@/lib/hooks/usePendingCounts'
+import { useOwnPhoto } from '@/lib/hooks/useOwnPhoto'
 
 /*
  * The signed-in mobile bottom nav — LOCKED by the owner (2026-10-07):
@@ -90,6 +91,8 @@ const tabs: Tab[] = [
 export function AuthBottomNav() {
   const pathname = usePathname()
   const pending = usePendingCounts()
+  // The Profile tab wears the member's own photo once it is approved.
+  const photo = useOwnPhoto()
 
   const isActive = (tab: Tab) => tab.matchPaths.some(p => pathname === p || pathname.startsWith(p + '/'))
 
@@ -119,7 +122,12 @@ export function AuthBottomNav() {
               {/* Gold rule over the current tab — the brand's "selected" mark. */}
               {active && <span className="absolute inset-x-3 top-0 h-[2.5px] rounded-b-full bg-gold" aria-hidden="true" />}
               <span className="relative">
-                {tab.icon(active)}
+                {tab.href === '/profile' && photo ? (
+                  <span className={`mj-nav-avatar ${active ? 'is-on' : ''}`}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={photo} alt="" width={26} height={26} />
+                  </span>
+                ) : tab.icon(active)}
                 {badge > 0 && (
                   <span
                     className="absolute -right-2 -top-1.5 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-maroon px-1

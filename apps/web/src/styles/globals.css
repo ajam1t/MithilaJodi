@@ -1203,3 +1203,31 @@ footer :focus-visible {
   .mj-menu-cta::after { animation: mjMenuSheen 1.1s ease 0.6s both; }
   .mj-menu-moon { animation: mjMenuMoon 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both; }
 }
+
+/* ── Bottom nav: the Join / Login medallion and the member's avatar ─────── */
+.mj-cta-tab { overflow: visible; padding-top: 0; justify-content: flex-end; padding-bottom: 7px; }
+.mj-cta-tab::after { /* a gold sheen that crosses the tab now and then */
+  content: ''; position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+  background: linear-gradient(100deg, transparent 35%, rgba(255, 231, 166, 0.28) 50%, transparent 65%) no-repeat;
+  background-size: 250% 100%; background-position: 160% 0;
+}
+.mj-cta-badge {
+  position: relative; display: grid; place-items: center; width: 46px; height: 46px; margin-top: -20px; margin-bottom: 2px;
+  border-radius: 9999px; color: #E9C977;
+  background: radial-gradient(circle at 35% 30%, #A11B2A, #6B0A0A 72%);
+  border: 2px solid #E9C977;
+  box-shadow: 0 0 0 4px #FFFAF0, 0 8px 18px -6px rgba(107, 10, 10, 0.7);
+}
+.mj-cta-rim { position: absolute; inset: -8px; width: calc(100% + 16px); height: calc(100% + 16px); }
+.mj-cta-badge::after { content: ''; position: absolute; inset: -4px; border-radius: inherit; border: 2px solid rgba(233, 201, 119, 0.8); opacity: 0; }
+@keyframes mjCtaTurn { to { transform: rotate(360deg); } }
+@keyframes mjCtaRipple { 0% { transform: scale(1); opacity: 0.9; } 100% { transform: scale(1.7); opacity: 0; } }
+@keyframes mjCtaSheen { 0%, 78% { background-position: 160% 0; } 100% { background-position: -60% 0; } }
+@media (prefers-reduced-motion: no-preference) {
+  .mj-cta-rim { animation: mjCtaTurn 26s linear infinite; }
+  .mj-cta-badge::after { animation: mjCtaRipple 1.8s ease-out 1s 3; }
+  .mj-cta-tab::after { animation: mjCtaSheen 7s ease-in-out 2s infinite; }
+}
+.mj-nav-avatar { display: block; width: 26px; height: 26px; border-radius: 9999px; padding: 1.5px; background: linear-gradient(135deg, #E9C977, #B98A2E); box-shadow: 0 2px 6px -2px rgba(107, 10, 10, 0.5); }
+.mj-nav-avatar img { display: block; width: 100%; height: 100%; border-radius: inherit; object-fit: cover; border: 1.5px solid #FFFAF0; }
+.mj-nav-avatar.is-on { background: linear-gradient(135deg, #8A1414, #6B0A0A); box-shadow: 0 0 0 2px rgba(233, 201, 119, 0.8); }
