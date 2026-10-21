@@ -6,6 +6,7 @@ import { OtpBoxInput } from '@/components/OtpBoxInput'
 import { OtpSentAnimation } from '@/components/OtpSentAnimation'
 import { AuthWelcome } from '@/components/auth/AuthWelcome'
 import { AuthMark } from '@/components/auth/AuthMark'
+import { HowToJoinVideo } from '@/components/auth/HowToJoinVideo'
 import { JoinProgress } from '@/components/auth/JoinProgress'
 import { OTP_LENGTH } from '@/lib/constants'
 import { track } from '@/lib/track'
@@ -203,35 +204,35 @@ export default function RegisterPage({ searchParams }: { searchParams: Promise<{
     <div className="mj-auth w-full max-w-[400px] motion-safe:animate-fade-in">
       <div className="mj-auth-card">
         <AuthMark />
-        <JoinProgress current={1} className="mb-5" />
+        <JoinProgress current={1} className="mb-3.5" />
 
         {step === 'sent' && <OtpSentAnimation mobile={maskedMobile} />}
 
         {step === 'mobile' && (
           <>
-            <h1 className="font-display text-[22px] leading-tight text-ink">Begin your Mithila Jodi profile</h1>
-            <p className="mt-1.5 mb-5 text-sm leading-relaxed text-ink-soft">
-              About three minutes. Your number stays private — it secures your account and is never shown on your profile.
+            <h1 className="font-display text-[22px] leading-tight text-ink">Join Mithila Jodi</h1>
+            <p className="mt-1 mb-3.5 text-[13px] leading-snug text-ink-soft">
+              About three minutes. Your number stays private — never shown on your profile.
             </p>
             <form onSubmit={handleMobileSubmit} noValidate>
-              <label htmlFor="reg-mobile" className="block text-sm font-medium text-ink">Mobile number</label>
-              <div className={`mt-1.5 flex items-center overflow-hidden rounded-mj border bg-white focus-within:ring-2 focus-within:ring-maroon/30 ${error && mobile.length !== 10 ? 'border-terra' : 'border-ink/20'}`}>
-                <span className="select-none border-r border-ink/20 bg-paper px-3 py-3 font-mono text-sm text-ink-soft">+91</span>
+              <label htmlFor="reg-mobile" className="sr-only">Mobile number</label>
+              <div className={`flex items-center overflow-hidden rounded-mj border bg-white focus-within:ring-2 focus-within:ring-maroon/30 ${error && mobile.length !== 10 ? 'border-terra' : 'border-ink/20'}`}>
+                <span className="select-none border-r border-ink/20 bg-paper px-3 py-2.5 font-mono text-sm text-ink-soft">+91</span>
                 <input
                   id="reg-mobile" type="tel" inputMode="numeric" maxLength={16} autoComplete="tel-national"
-                  placeholder="10-digit number" value={mobile} autoFocus enterKeyHint="send"
+                  placeholder="10-digit mobile number" value={mobile} autoFocus enterKeyHint="send"
                   // A pasted +91 / 0 prefix is dropped by keeping the last ten digits.
                   onChange={e => { setError(''); setMobile(e.target.value.replace(/\D/g, '').slice(-10)) }}
                   aria-describedby="reg-mobile-hint"
-                  className="flex-1 bg-transparent px-4 py-3 font-mono text-base text-ink focus:outline-none"
+                  className="flex-1 bg-transparent px-3.5 py-2.5 font-mono text-base text-ink focus:outline-none"
                 />
               </div>
-              <p id="reg-mobile-hint" className="mt-1.5 text-xs text-ink-soft">We&apos;ll send a {OTP_LENGTH}-digit code by SMS.</p>
+              <p id="reg-mobile-hint" className="sr-only">We&apos;ll send a {OTP_LENGTH}-digit code by SMS.</p>
 
-              <label className="mt-4 flex cursor-pointer items-start gap-3">
+              <label className="mt-3 flex cursor-pointer items-start gap-2.5">
                 <input type="checkbox" checked={consent} onChange={e => { setError(''); setConsent(e.target.checked) }}
-                  className="mt-0.5 h-5 w-5 flex-shrink-0 rounded accent-maroon" />
-                <span className="text-[13px] leading-relaxed text-ink-soft">
+                  className="mt-0.5 h-[18px] w-[18px] flex-shrink-0 rounded accent-maroon" />
+                <span className="text-[11.5px] leading-snug text-ink-soft">
                   I agree to the{' '}
                   <Link href="/legal/terms" target="_blank" className="text-maroon underline-offset-2 hover:underline">Terms of Service</Link>
                   {' '}and{' '}
@@ -241,11 +242,11 @@ export default function RegisterPage({ searchParams }: { searchParams: Promise<{
               </label>
 
               {error && <p role="alert" className="mt-3 text-sm text-terra">{error}</p>}
-              <button type="submit" disabled={loading || mobile.length !== 10 || !consent} className="btn btn-primary mt-5 w-full">
-                {loading ? 'Sending code…' : 'Send code'}
+              <button type="submit" disabled={loading || mobile.length !== 10 || !consent} className="btn btn-primary mt-3.5 w-full">
+                {loading ? 'Sending code…' : `Send ${OTP_LENGTH}-digit code by SMS`}
               </button>
             </form>
-            <p className="mt-5 text-center text-sm text-ink-soft">
+            <p className="mt-3 text-center text-[13px] text-ink-soft">
               Already a member?{' '}
               <Link href="/login" className="font-medium text-maroon hover:underline">Log in</Link>
             </p>
@@ -335,6 +336,7 @@ export default function RegisterPage({ searchParams }: { searchParams: Promise<{
           </>
         )}
       </div>
+      {step === 'mobile' && <div className="mt-3"><HowToJoinVideo /></div>}
     </div>
   )
 }
