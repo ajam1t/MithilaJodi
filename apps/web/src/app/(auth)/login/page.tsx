@@ -1,7 +1,8 @@
 'use client'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { AuthMark } from '@/components/auth/AuthMark'
+import { LoginPortal, type PortalPhase } from '@/components/auth/LoginPortal'
 
 
 function getSafeNextPath(): string | null {
@@ -24,6 +25,9 @@ export default function LoginPage() {
   const [showPassword, setShowPassword]     = useState(false)
   const [loading, setLoading]               = useState(false)
   const [error, setError]                   = useState('')
+  const [portal, setPortal]                 = useState<PortalPhase>('idle')
+  const [origin, setOrigin]                 = useState<{ x: number; y: number } | null>(null)
+  const submitRef                           = useRef<HTMLButtonElement>(null)
 
   /* ── Password login ── */
   async function handlePasswordLogin(e: React.FormEvent) {
@@ -32,6 +36,13 @@ export default function LoginPage() {
     if (!password)            { setError('Enter your password'); return }
     setError('')
     setLoading(true)
+    // The portal opens from the button and travels while the request runs.
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    const r = submitRef.current?.getBoundingClientRect()
+    if (r) setOrigin({ x: ((r.left + r.width / 2) / window.innerWidth) * 100, y: ((r.top + r.height / 2) / window.innerHeight) * 100 })
+    setPortal('travel')
+    const started = performance.now()
+    let arrived = false
     try {
       const res  = await fetch('/api/auth/password/login', {
         method: 'POST',
@@ -40,16 +51,23 @@ export default function LoginPage() {
       })
       const data: { ok: boolean; role?: string; message?: string } = await res.json()
       if (!data.ok) { setError(data.message ?? 'Login failed. Please try again.'); return }
-      window.location.href = getPostLoginPath(data.role)
+      // Signed in. Let the journey be seen (a short minimum), flare to ivory, then go.
+      arrived = true
+      const wait = reduce ? 0 : Math.max(0, 1100 - (performance.now() - started))
+      window.setTimeout(() => {
+        setPortal('arrive')
+        window.setTimeout(() => { window.location.href = getPostLoginPath(data.role) }, reduce ? 0 : 650)
+      }, wait)
     } catch {
       setError('Network error. Please check your connection and try again.')
     } finally {
-      setLoading(false)
+      if (!arrived) { setLoading(false); setPortal('idle') }
     }
   }
 
   return (
     <div className="mj-auth w-full max-w-[400px] motion-safe:animate-fade-in">
+      <LoginPortal phase={portal} origin={origin} />
 
       <div className="mj-auth-card">
         <AuthMark />
@@ -100,7 +118,7 @@ export default function LoginPage() {
                 <Link href="/forgot-password" className="text-xs text-maroon hover:underline">Forgot password?</Link>
               </div>
               {error && <p role="alert" className="mt-3 text-sm text-terra">{error}</p>}
-              <button type="submit" disabled={loading || mobile.length !== 10 || !password} className="btn btn-primary w-full mt-5">
+              <button ref={submitRef} type="submit" disabled={loading || mobile.length !== 10 || !password} className="btn btn-primary w-full mt-5">
                 {loading ? 'Logging in…' : 'Log In'}
               </button>
             </form>
