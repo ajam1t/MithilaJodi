@@ -1475,3 +1475,17 @@ footer :focus-visible {
 .mj-modes-btn { position: relative; min-height: 42px; border-radius: 9999px; font-size: 14px; font-weight: 600; color: #7A1220; transition: color 0.3s ease; }
 .mj-modes-btn[aria-selected='true'] { color: #FFF6E2; }
 .mj-modes-btn:focus-visible { outline: 2px solid #B98A2E; outline-offset: 2px; }
+
+/* ── Video bubble (components/ui/VideoBubble) ─────────────────────────────
+   A round, silently looping preview inside a turning gold ring. */
+.mj-bubble { display: inline-flex; align-items: center; gap: 12px; padding: 6px 16px 6px 6px; border-radius: 9999px; border: 1px solid rgba(185, 138, 46, 0.45); background: rgba(255, 253, 248, 0.92); box-shadow: 0 12px 26px -18px rgba(107, 10, 10, 0.55); transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
+.mj-bubble:hover { transform: translateY(-2px); }
+.mj-bubble:focus-visible { outline: 2px solid #B98A2E; outline-offset: 3px; }
+.mj-bubble-ring { position: relative; display: block; flex: none; width: 76px; height: 76px; padding: 3px; border-radius: 9999px;
+  background: conic-gradient(from var(--mj-bub, 0deg), #E9C977, #8A1414, #F2C6C6, #B98A2E, #E9C977); }
+.mj-bubble-in { display: block; width: 100%; height: 100%; overflow: hidden; border-radius: 9999px; border: 2px solid #FFFAF0; background: #FCF5E7; }
+.mj-bubble-in video { width: 100%; height: 100%; object-fit: cover; }
+.mj-bubble-play { position: absolute; right: -2px; bottom: -2px; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 9999px; color: #FFF6E2; background: #7A1220; box-shadow: 0 0 0 2px #FFFDF8; }
+@property --mj-bub { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+@keyframes mjBub { to { --mj-bub: 360deg; } }
+@media (prefers-reduced-motion: no-preference) { .mj-bubble-ring { animation: mjBub 6s linear infinite; } }

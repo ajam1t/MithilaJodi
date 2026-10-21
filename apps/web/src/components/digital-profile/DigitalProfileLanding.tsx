@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { VideoBubble } from '@/components/ui/VideoBubble'
 import { DEMO_PROFILE, SAMPLE_PROFILE_PATH } from '@/lib/digitalProfileDemo'
 
 /**
@@ -197,6 +198,16 @@ export function DigitalProfileLanding({ ctaHref, member }: { ctaHref: string; me
         <FloralSpray className="pointer-events-none absolute -right-6 bottom-0 hidden h-56 w-56 opacity-80 lg:block" />
         <div className="wrap grid items-center gap-9 lg:grid-cols-[1.08fr_0.92fr]">
           <div>
+            {/* For visitors: a 29-second explainer, playing in a small circle. */}
+            {!member && (
+              <div className="mb-5">
+                <VideoBubble
+                  circleSrc="/videos/digital-profile-explainer-circle.mp4" circlePoster="/videos/digital-profile-explainer-circle.jpg"
+                  src="/videos/digital-profile-explainer.mp4" poster="/videos/digital-profile-explainer.jpg"
+                  kicker="Watch · 29 sec" title="What is a Digital Profile?" sub="Features, sharing on WhatsApp and your stats"
+                />
+              </div>
+            )}
             <Eyebrow>Mithila Jodi Digital Profile</Eyebrow>
             <h1 id="dp-h1" className="mt-3 font-display text-[36px] leading-[1.06] text-maroon sm:text-[48px] lg:text-[56px]">
               Your Biodata, Now <span className="block text-[#9A6F1E]">Beautifully Shareable.</span>
