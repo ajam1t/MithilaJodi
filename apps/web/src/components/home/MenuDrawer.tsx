@@ -11,6 +11,8 @@ import { BrandIcon } from '@/components/social/BrandIcons'
  * The hamburger menu — complete site navigation. The five sections, their
  * order and every label are the owner's locked structure (2026-10-07); the
  * bottom nav keeps the frequent destinations. Change wording only on request.
+ * Signed-in members also get a sixth, "My Tools" (Shortlist, Gotra Checker,
+ * Help), second on the dial.
  */
 
 /* ── Line icons: one 24px grid, one stroke weight, so the column reads evenly ── */
@@ -34,6 +36,9 @@ const ICONS: Record<string, ReactNode> = {
   blogs: <><path d="M12 6.5C10 5 7 4.5 3 4.5v14c4 0 7 .5 9 2 2-1.5 5-2 9-2v-14c-4 0-7 .5-9 2z" /><path d="M12 6.5v14" /></>,
   safety: <><path d="M12 2.5 4.5 5.5v6c0 4.6 3.2 8.4 7.5 10 4.3-1.6 7.5-5.4 7.5-10v-6z" /><path d="m8.8 12 2.2 2.2 4.2-4.4" /></>,
   about: <><circle cx="12" cy="12" r="9" /><path d="M12 11v5.5M12 7.6h.01" /></>,
+  shortlist: <path d="M6.5 3.5h11a1 1 0 0 1 1 1v16l-6.5-4.2-6.5 4.2v-16a1 1 0 0 1 1-1z" />,
+  gotra: <><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="3.2" /><path d="M12 3.5v5.3M12 15.2v5.3M3.5 12h5.3M15.2 12h5.3" /></>,
+  help: <><circle cx="12" cy="12" r="9" /><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.8M12 17h.01" /></>,
   contact: <path d="M21 16.4v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 1.6 3.7 2 2 0 0 1 3.6 1.5h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L7.6 9.4a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z" />,
 }
 
@@ -60,6 +65,17 @@ function sections(loggedIn: boolean): Section[] {
         { href: '/digital-profile', label: 'Digital Profile', icon: 'profile' },
       ],
     },
+    // Members only: the tools the desktop nav carries that the bottom nav has
+    // no room for (added on request, 2026-10-21).
+    ...(loggedIn ? [{
+      id: 'member',
+      title: 'My Tools',
+      items: [
+        { href: '/shortlists', label: 'Shortlist', icon: 'shortlist' },
+        { href: '/gotra', label: 'Gotra Checker', icon: 'gotra' },
+        { href: '/help', label: 'Help', icon: 'help' },
+      ],
+    }] : []),
     {
       id: 'wedding',
       title: 'Wedding Tools',
@@ -229,7 +245,7 @@ export function MenuDrawer({
           </button>
         </div>
 
-        {/* ── The dial: the five sections on an arc ── */}
+        {/* ── The dial: the sections on an arc ── */}
         <div className="relative shrink-0 px-3">
           <OrbitDial sections={all} active={tab} onPick={pick} onKey={onTabKey} burst={burst} />
           <div className="pointer-events-none relative -mt-1 flex justify-center" aria-hidden="true">
@@ -356,7 +372,7 @@ function OrbitDial({ sections: secs, active, onPick, onKey, burst }: {
     </div>
   )
 }
-const SECTION_ICON: Record<string, string> = { explore: 'search', wedding: 'invitation', astrology: 'rashi', culture: 'festivals', support: 'safety' }
+const SECTION_ICON: Record<string, string> = { explore: 'search', member: 'shortlist', wedding: 'invitation', astrology: 'rashi', culture: 'festivals', support: 'safety' }
 
 /** The section's name on split-flap tiles; the tiles that change flip through letters and settle. */
 const FLAP = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ&'

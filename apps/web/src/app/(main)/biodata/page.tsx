@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import { MemberPageSkeleton } from '@/components/ui/MemberPageSkeleton'
 import BiodataContent from './BiodataContent'
 
 // The (main) layout supplies robots: noindex. This exists only so the browser
@@ -8,7 +9,7 @@ export const metadata = { title: 'Create Your Marriage Biodata' }
 
 export default function BiodataPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<MemberPageSkeleton />}>
       <BiodataContent />
     </Suspense>
   )

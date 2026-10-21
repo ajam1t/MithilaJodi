@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import { MemberPageSkeleton } from '@/components/ui/MemberPageSkeleton'
 import ShortlistsContent from './ShortlistsContent'
 
 // The (main) layout supplies robots: noindex. This exists only so the browser
@@ -8,7 +9,7 @@ export const metadata = { title: 'Your Shortlist' }
 
 export default function ShortlistsPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<MemberPageSkeleton />}>
       <ShortlistsContent />
     </Suspense>
   )

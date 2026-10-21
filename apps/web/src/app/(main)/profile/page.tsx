@@ -188,6 +188,8 @@ const ICON = {
   bell: 'M18 8.5a6 6 0 1 0-12 0c0 6.5-2.5 8.5-2.5 8.5h17S18 15 18 8.5M10.3 20.5a1.9 1.9 0 0 0 3.4 0',
   gear: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7.4-1.5 1.6 1.2-2 3.4-1.9-.7a7 7 0 0 1-1.7 1l-.3 2h-4l-.3-2a7 7 0 0 1-1.7-1l-1.9.7-2-3.4 1.6-1.2a7 7 0 0 1 0-2l-1.6-1.2 2-3.4 1.9.7a7 7 0 0 1 1.7-1l.3-2h4l.3 2a7 7 0 0 1 1.7 1l1.9-.7 2 3.4-1.6 1.2a7 7 0 0 1 0 2Z',
   eye: 'M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Zm10 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z',
+  bookmark: 'M6.5 3.5h11a1 1 0 0 1 1 1v16l-6.5-4.2-6.5 4.2v-16a1 1 0 0 1 1-1Z',
+  doc: 'M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8L14 2.5Zm0 0V8h5.5M8.5 13h7M8.5 16.5h5',
 }
 
 function Glyph({ d, className = 'h-[18px] w-[18px]' }: { d: string; className?: string }) {
@@ -643,6 +645,10 @@ export default function ProfilePage() {
         <h2 id="account-heading" className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8A6516]">Account</h2>
         <div className="divide-y divide-gold/15 overflow-hidden rounded-[18px] border border-gold/25 bg-cream">
           {[
+            // Shortlist and Biodata sit in the desktop nav; on mobile this list
+            // is where they live (the bottom nav has no room for them).
+            { href: '/shortlists', label: 'Shortlist', icon: ICON.bookmark },
+            { href: '/biodata', label: 'Biodata', icon: ICON.doc },
             { href: '/profile/edit#visibility', label: 'Privacy & Visibility', icon: ICON.lock },
             { href: '/notifications', label: 'Notifications', icon: ICON.bell },
             { href: '/settings', label: 'Account Settings', icon: ICON.gear },

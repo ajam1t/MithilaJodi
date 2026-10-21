@@ -84,7 +84,9 @@ const ASTRO_ICON: Record<string, ReactNode> = {
 function AstroLinks({ first, gotra, h: H }: { first: string; gotra: string | null; h: Level }) {
   const slug = gotraSlug(gotra)
   const tiles = [
-    { k: 'kundli', href: '/astrology/kundli-match', title: `Match your kundli with ${first}`, body: 'Ashtakoot guna milan from both birth details.', wide: true },
+    // Only the first name travels, for labels on the form. Their birth details
+    // are private and are never pre-filled; the family shares them.
+    { k: 'kundli', href: `/astrology/kundli-match?partner=${encodeURIComponent(first)}`, title: `Kundli match with ${first}`, body: `Add your birth details and ${first}’s (from the family) for Ashtakoot guna milan.`, wide: true },
     { k: 'gotra', href: slug ? `/gotra/${slug}` : '/gotra', title: gotra ? `${first} is ${gotra} gotra` : 'Gotra check', body: gotra ? 'Check it against yours in a tap.' : 'Is it a gotra-safe match?' },
     { k: 'manglik', href: '/astrology/manglik', title: 'Manglik check', body: 'Mangal dosha, explained.' },
     { k: 'muhurat', href: '/astrology/vivah-muhurat', title: 'Vivah muhurat', body: 'Auspicious wedding dates.', wide: true },

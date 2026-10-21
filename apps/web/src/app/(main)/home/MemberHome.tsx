@@ -27,7 +27,10 @@ export function MemberHome({ summary, siteUrl }: { summary: HomeSummary; siteUrl
   const waText = link ? DEFAULT_SHARE_MESSAGE.replace('{link}', link) : null
 
   const tiles = [
-    { label: 'New Matches', value: summary.newMatches, href: '/search', icon: 'spark', hint: 'this week' },
+    // The count is good matches who joined this week; the link opens search
+    // newest-first (most recently updated), which puts those people at the
+    // top rather than wherever best-match ranking happens to leave them.
+    { label: 'New Matches', value: summary.newMatches, href: '/search?sort=newest', icon: 'spark', hint: 'this week' },
     { label: 'New Interests', value: summary.newInterests, href: '/inbox?tab=interests', icon: 'heart', hint: 'waiting for you' },
     { label: 'Profile Views', value: summary.profileViews, href: '/notifications', icon: 'eye', hint: 'last 30 days' },
     { label: 'Unread Messages', value: summary.unreadMessages, href: '/inbox', icon: 'chat', hint: 'in your inbox' },
