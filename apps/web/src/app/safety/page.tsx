@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
+import { jsonLdScript } from '@/lib/seo'
 import { SITE_URL } from '@/lib/constants'
 
 const SITE = SITE_URL
@@ -161,7 +162,7 @@ const FAQS = [
 export default function SafetyPage() {
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(jsonLd)} />
       <MithilaHeader />
 
       <main id="main-content" className="flex-1">

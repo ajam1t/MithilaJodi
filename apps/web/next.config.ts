@@ -22,7 +22,12 @@ const nextConfig: NextConfig = {
   async redirects() {
     // Short sign-up link for WhatsApp posts and ads. Temporary (307), so it
     // can be pointed elsewhere later without browsers having cached it.
-    return [{ source: '/join', destination: '/register?start=1', permanent: false }]
+    return [
+      { source: '/join', destination: '/register?start=1', permanent: false },
+      // The Tandilya gotra page was first published at its profile value,
+      // 'tandi'; the slug now matches the name the page shows.
+      { source: '/gotra/tandi', destination: '/gotra/tandilya', permanent: true },
+    ]
   },
   async headers() {
     return [

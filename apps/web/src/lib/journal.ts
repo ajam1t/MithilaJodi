@@ -126,9 +126,28 @@ export const ASTROLOGY_TOOLS: JournalTool[] = [
   { slug: 'baby-names', href: '/astrology/baby-names', title: 'Baby Names', subtitle: 'Name syllables from Janma Nakshatra', articles: [] },
 ]
 
+// ─── Roots tools (the /gotra checker and the /mool list) ─────────────────────
+
+/** The gotra and mool guides, with the Journal articles that lead to each. */
+export const ROOTS_TOOLS: JournalTool[] = [
+  {
+    slug: 'gotra', href: '/gotra', title: 'Gotra checker', subtitle: 'Same-gotra and maternal-gotra rules',
+    articles: ['what-is-gotra', 'what-is-maternal-gotra', 'gotra-vs-maternal-gotra', 'same-gotra-marriage', 'why-gotra-matters-in-marriage', 'gotra-marriage-compatibility', 'mithila-family-lineage'],
+  },
+  {
+    slug: 'mool', href: '/mool', title: 'Mool list', subtitle: 'The mools of the Mithila Panji',
+    articles: ['what-is-mool-in-mithila', 'what-is-gram-in-mithila', 'mithila-family-lineage', 'what-is-gotra'],
+  },
+]
+
 /** Tools an article naturally leads to ("read what it is, then try it"). */
 export function toolsForArticle(slug: string): JournalTool[] {
-  return ASTROLOGY_TOOLS.filter(t => t.articles.includes(slug))
+  return [...ASTROLOGY_TOOLS, ...ROOTS_TOOLS].filter(t => t.articles.includes(slug))
+}
+
+/** True when a tool list holds only the roots guides (no astrology tool). */
+export function isRootsOnly(tools: JournalTool[]): boolean {
+  return tools.length > 0 && tools.every(t => ROOTS_TOOLS.includes(t))
 }
 
 // ─── Contextual CTA ──────────────────────────────────────────────────────────
@@ -142,6 +161,12 @@ export function ctaFor(categorySlug: string | null | undefined, postSlug: string
   }
   if (categorySlug === 'horoscope-marriage') {
     return { eyebrow: 'Try it yourself', title: 'Explore Astrology Tools', text: 'Kundli matching, Manglik, Rashi, Nakshatra and more — free, with the method explained.', href: '/astrology', label: 'Explore Astrology Tools →' }
+  }
+  if (/mool|gram/.test(postSlug)) {
+    return { eyebrow: 'Find yours', title: 'Maithil Mool List', text: 'The mools of the Mithila Panji, as Maithil families write them.', href: '/mool', label: 'See the mool list →' }
+  }
+  if (categorySlug === 'gotra-family-lineage') {
+    return { eyebrow: 'Try it yourself', title: 'Gotra match checker', text: 'All 20 Maithil gotras, with a free check for the same-gotra and maternal-gotra rules.', href: '/gotra', label: 'Check gotra →' }
   }
   // Culture pieces get no sales pitch — only the natural next read.
   if (categorySlug === 'mithila-culture-heritage') {

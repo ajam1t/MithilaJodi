@@ -9,7 +9,7 @@ import {
   SUPPORT_PHONE_DISPLAY,
   SUPPORT_PHONE_E164,
 } from '@/lib/constants'
-import { organizationJsonLd } from '@/lib/seo'
+import { organizationJsonLd, jsonLdScript } from '@/lib/seo'
 
 const SITE = SITE_URL
 
@@ -138,7 +138,7 @@ const CONTACT_CARDS = [
 export default function ContactPage() {
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(jsonLd)} />
       <MithilaHeader />
 
       <main id="main-content" className="flex-1">

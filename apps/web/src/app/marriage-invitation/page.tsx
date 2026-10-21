@@ -6,7 +6,7 @@ import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { MithilaBorder } from '@/components/home/MithilaBorder'
 import { InvitationChooser } from '@/components/wedding/InvitationChooser'
 import { SITE_URL } from '@/lib/constants'
-import { organizationJsonLd, organizationRef } from '@/lib/seo'
+import { organizationJsonLd, organizationRef, jsonLdScript } from '@/lib/seo'
 import { RelatedGuides } from '@/components/journal/RelatedGuides'
 
 /**
@@ -108,7 +108,7 @@ export default function WeddingInvitationsPage() {
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
       <MithilaHeader />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(jsonLd)} />
 
       <main id="main-content" className="flex-1">
         {/* ── Hero: short, so the choice is on screen early ── */}

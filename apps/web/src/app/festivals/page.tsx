@@ -6,6 +6,7 @@ import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { MithilaBorder } from '@/components/home/MithilaBorder'
 import { FestivalCard } from '@/components/festivals/FestivalCard'
 import { FESTIVALS } from '@/lib/festivals'
+import { jsonLdScript } from '@/lib/seo'
 import { SITE_URL } from '@/lib/constants'
 
 const CANONICAL = `${SITE_URL}/festivals`
@@ -76,7 +77,7 @@ export default function FestivalsIndexPage() {
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
       <MithilaHeader />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(jsonLd)} />
 
       <main id="main-content" className="flex-1">
         {/* ── Hero ─────────────────────────────────────────── */}

@@ -9,6 +9,7 @@ import { JournalCTA } from '@/components/journal/ArticleParts'
 import { Breadcrumbs, CategoryNav, Pagination, breadcrumbJsonLd, type Crumb } from '@/components/journal/Navigation'
 import { AstrologyToolsSection, ContentPillars, EmptyState, SectionHeading } from '@/components/journal/Sections'
 import { createAdminClient } from '@/lib/supabase/server'
+import { jsonLdScript } from '@/lib/seo'
 import { SITE_URL, stripBrandSuffix } from '@/lib/constants'
 import { CATEGORY_INTRO, START_HERE, ctaFor } from '@/lib/journal'
 import { card, getJournalCategories, getJournalPosts, pick, type JournalPost } from '@/lib/journalData'
@@ -152,8 +153,8 @@ export default async function CategoryPage({ params, searchParams }: {
   return (
     <div className="flex min-h-screen flex-col overflow-x-clip bg-paper">
       <MithilaHeader />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd(crumbs)) }} />
-      {listed.length > 0 && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }} />}
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(breadcrumbJsonLd(crumbs))} />
+      {listed.length > 0 && <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(collectionJsonLd)} />}
 
       <main id="main-content" className="flex-1">
         <Breadcrumbs items={crumbs} />

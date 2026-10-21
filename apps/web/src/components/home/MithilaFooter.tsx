@@ -12,6 +12,7 @@ const GROUPS = [
       { href: '/login', label: 'Login' },
       { href: '/about', label: 'About' },
       { href: '/compare', label: 'Why Mithila Jodi' },
+      { href: '/pricing', label: 'Pricing' },
       { href: '/#stories', label: 'Family & Values' },
     ],
   },

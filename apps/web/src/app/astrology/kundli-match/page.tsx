@@ -266,6 +266,27 @@ export default function KundliMatchPage() {
             </div>
           </div>
         </section>
+        {/* Kundli is one of the checks; gotra comes first in a Maithil match.
+            Wording follows lib/mithilaRoots (checkGotras) and /match-score. */}
+        <section className="bg-paper-2 py-12 sm:py-14" aria-labelledby="maithil-match">
+          <div className="wrap max-w-3xl">
+            <h2 id="maithil-match" className="font-serif text-maroon text-[24px] sm:text-[28px]">Kundli milan in a Maithil match</h2>
+            <p className="mt-3 text-[16px] text-ink leading-relaxed">
+              Maithil families read the kundli alongside gotra, mool and family background. The gotra checks come
+              first: the paternal gotras must differ — a sagotra match is traditionally avoided — and, in stricter
+              practice, neither side’s paternal gotra should be the other side’s maternal gotra.
+            </p>
+            <p className="mt-3 text-[16px] text-ink leading-relaxed">
+              The Mithila Jodi match score is separate from Guna Milan: it compares two profiles and both families’
+              preferences, and holds a same-gotra pair at 40 or below so it can never appear as a good match.
+            </p>
+            <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[15px]">
+              <li><Link href="/gotra" className="text-maroon underline underline-offset-4 decoration-gold/50 hover:text-terra">Check gotra</Link></li>
+              <li><Link href="/mool" className="text-maroon underline underline-offset-4 decoration-gold/50 hover:text-terra">Mool list</Link></li>
+              <li><Link href="/match-score" className="text-maroon underline underline-offset-4 decoration-gold/50 hover:text-terra">How the match score works</Link></li>
+            </ul>
+          </div>
+        </section>
         <MoreTools current="kundli-match" />
       </main>
 

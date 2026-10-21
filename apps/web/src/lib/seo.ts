@@ -159,9 +159,33 @@ export function faqJsonLd(items: Array<{ q: string; a: string }>) {
   }
 }
 
-/** Renders one or more JSON-LD blocks as a single script tag. */
+type JsonLdNode = Record<string, unknown>
+
+/** Flattens arrays and existing `@graph` wrappers into bare nodes, minus their own `@context`. */
+function graphNodes(block: object): JsonLdNode[] {
+  if (Array.isArray(block)) return block.flatMap(graphNodes)
+  const { '@context': _context, ...node } = block as JsonLdNode
+  void _context
+  if (Array.isArray(node['@graph'])) return (node['@graph'] as object[]).flatMap(graphNodes)
+  return [node]
+}
+
+/**
+ * Renders one or more JSON-LD blocks as a single script tag.
+ *
+ * Always one `{ '@context', '@graph' }` document. A bare top-level array is
+ * not schema.org to a parser unless every item carries its own `@context`, and
+ * organizationJsonLd() deliberately carries none — so on every page that
+ * passed several blocks, the first node was read as untyped JSON. Blocks may
+ * be single nodes, arrays, or already-wrapped `@graph` documents; per-node
+ * `@context` is stripped so there is exactly one.
+ *
+ * `<` is written as \u003c: the payload is inlined into a <script> element,
+ * and any string containing `</script>` would otherwise end it early.
+ */
 export function jsonLdScript(...blocks: object[]): { __html: string } {
-  return { __html: JSON.stringify(blocks.length === 1 ? blocks[0] : blocks) }
+  const doc = { '@context': 'https://schema.org', '@graph': blocks.flatMap(graphNodes) }
+  return { __html: JSON.stringify(doc).replace(/</g, '\\u003c') }
 }
 
 /**

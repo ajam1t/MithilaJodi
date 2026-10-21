@@ -14,7 +14,7 @@ import {
 } from '@/lib/biodataTemplates'
 import { track } from '@/lib/track'
 import {
-  BIODATA_LANGUAGES, biodataFileName, computeAge,
+  BIODATA_LANGUAGES, biodataFileName, computeAge, isBiodataLanguage,
   type BiodataData, type BiodataLanguage,
 } from '@/lib/biodata'
 
@@ -615,6 +615,14 @@ export function BiodataBuilder() {
     const onBeforePrint = () => flushSync(() => setPrintMounted(true))
     window.addEventListener('beforeprint', onBeforePrint)
     return () => window.removeEventListener('beforeprint', onBeforePrint)
+  }, [])
+
+  // ?lang=mai|hi|sa|en preselects the document language — the per-language
+  // pages (/marriage-biodata/maithili etc.) link here with it. Read after
+  // mount so the server render stays the English default.
+  useEffect(() => {
+    const lang = new URLSearchParams(window.location.search).get('lang')
+    if (lang && isBiodataLanguage(lang)) setLanguage(lang)
   }, [])
 
   // Object URLs are per-file and must be revoked, or every re-pick leaks one.

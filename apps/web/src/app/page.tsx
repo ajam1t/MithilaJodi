@@ -11,7 +11,7 @@ import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { InstallBanner } from '@/components/pwa/InstallBanner'
 import { SITE_URL } from '@/lib/constants'
-import { ENTITY_SUMMARY, organizationJsonLd } from '@/lib/seo'
+import { ENTITY_SUMMARY, organizationJsonLd, jsonLdScript } from '@/lib/seo'
 
 const SITE = SITE_URL
 
@@ -73,7 +73,7 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={jsonLdScript(jsonLd)}
       />
       {/* Above the ticker and the sticky header, in normal flow: it is the
           first thing seen on arrival and then scrolls away, so it costs no
