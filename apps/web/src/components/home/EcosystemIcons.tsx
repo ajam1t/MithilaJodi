@@ -1,12 +1,22 @@
 /**
- * One line-icon family for the six parts of Mithila Jodi, shared by the hero's
+ * One line-icon family for the parts of Mithila Jodi, shared by the hero's
  * quick links and the ecosystem wheel so the same feature always wears the
  * same mark. 24×24, 1.6 stroke, currentColor — they take their colour from
  * the surrounding text.
  */
-export type EcosystemId = 'matrimony' | 'biodata' | 'invitations' | 'astrology' | 'festivals' | 'culture'
+export type EcosystemId =
+  | 'matrimony' | 'profile' | 'biodata' | 'invitations' | 'astrology'
+  | 'names' | 'culture' | 'festivals' | 'songs' | 'journal'
 
 const PATHS: Record<EcosystemId, React.ReactNode> = {
+  // A profile card with a portrait and two lines.
+  profile: <><rect x="4" y="3.5" width="16" height="17" rx="2" /><circle cx="12" cy="9.5" r="2.6" /><path d="M7.8 16c.8-1.9 2.4-2.9 4.2-2.9s3.4 1 4.2 2.9" /></>,
+  // A sprouting seed: two leaves on a stem, for a newborn's name.
+  names: <><path d="M12 20.5V11" /><path d="M12 13c0-3.4-2.4-5.6-6-5.6 0 3.4 2.4 5.6 6 5.6z" /><path d="M12 11c0-3.4 2.4-5.6 6-5.6 0 3.4-2.4 5.6-6 5.6z" /><path d="M8 20.5h8" /></>,
+  // Two beamed notes.
+  songs: <><path d="M9 17.5V6l10-2v11.5" /><circle cx="6.7" cy="17.5" r="2.3" /><circle cx="16.7" cy="15.5" r="2.3" /><path d="M9 9.5l10-2" /></>,
+  // An open book.
+  journal: <><path d="M12 6.5C10 5 7 4.6 3.5 5v13c3.5-.4 6.5 0 8.5 1.5 2-1.5 5-1.9 8.5-1.5V5C17 4.6 14 5 12 6.5z" /><path d="M12 6.5v13" /></>,
   // Two linked rings.
   matrimony: <><circle cx="9" cy="13" r="5.2" /><circle cx="15" cy="13" r="5.2" /><path d="M10.4 5.2 12 3.5l1.6 1.7L12 7z" /></>,
   // A folded page with lines and a seal.
