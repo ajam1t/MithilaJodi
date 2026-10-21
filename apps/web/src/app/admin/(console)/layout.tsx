@@ -1,3 +1,4 @@
+import '@/styles/admin-console.css'
 import { AdminShell } from '@/components/admin/AdminShell'
 import { can, requireAdminPage, ROLE_LABEL, type AdminPerm } from '@/lib/adminAuth'
 import { createAdminClient } from '@/lib/supabase/server'
