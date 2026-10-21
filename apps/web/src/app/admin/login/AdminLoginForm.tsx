@@ -36,18 +36,20 @@ export function AdminLoginForm() {
     }
   }
 
-  const input = 'mt-1 block w-full rounded-lg border border-[#DDD3C2] bg-white px-3 py-2.5 text-[15px] text-ink outline-none focus:border-maroon focus:ring-2 focus:ring-maroon/15'
+  const input = 'adl-input'
 
   return (
     <form onSubmit={submit} noValidate className="space-y-4">
       <div>
-        <label htmlFor="admin-id" className="text-[13px] font-medium text-ink">Email or mobile number</label>
+        <label htmlFor="admin-id" className="adl-label">Email or mobile number</label>
+        <span className="adl-field">
         <input id="admin-id" type="text" inputMode="email" autoComplete="username" autoCapitalize="none" spellCheck={false}
           value={identifier} onChange={e => setIdentifier(e.target.value)} className={input} />
+        </span>
       </div>
       <div>
-        <label htmlFor="admin-pw" className="text-[13px] font-medium text-ink">Password</label>
-        <div className="relative">
+        <label htmlFor="admin-pw" className="adl-label">Password</label>
+        <div className="adl-field relative">
           <input id="admin-pw" type={show ? 'text' : 'password'} autoComplete="current-password"
             value={password} onChange={e => setPassword(e.target.value)} className={`${input} pr-16`} />
           <button type="button" onClick={() => setShow(s => !s)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded px-2 py-1 text-[12px] font-medium text-ink-soft hover:text-ink">
@@ -56,8 +58,8 @@ export function AdminLoginForm() {
         </div>
       </div>
       {error && <p role="alert" className="rounded-lg border border-[#EDC4C4] bg-[#FBEFEF] px-3 py-2 text-[13px] text-[#8A1C1C]">{error}</p>}
-      <button type="submit" disabled={busy} className="w-full rounded-lg bg-maroon py-2.5 text-[15px] font-semibold text-white transition-colors hover:bg-maroon-2 disabled:opacity-60">
-        {busy ? 'Signing in…' : 'Sign In'}
+      <button type="submit" disabled={busy} className={`adl-btn ${busy ? 'is-busy' : ''}`}>
+        <span className="relative">{busy ? 'Verifying…' : 'Sign In'}</span>
       </button>
       <p className="text-center">
         {/* Password reset uses the account's registered mobile number (OTP). */}
