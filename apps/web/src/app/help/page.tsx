@@ -49,7 +49,7 @@ const FAQS: Array<{ q: string; a: string; more?: Array<{ href: string; label: st
   },
   {
     q: 'How does Mithila matrimonial matching work?',
-    a: 'Search covers the fields Maithil families actually ask about — gotra, mool, gram, native district and current city — alongside age, education, diet and how soon each family is looking to marry. Every result carries a match score that lists the reasons behind it, and a sagotra match is flagged as something to check rather than quietly scored down. If nothing matches your filters exactly, the search widens one filter at a time and tells you which.',
+    a: 'Search covers the fields Maithil families actually ask about — gotra, mool, gram, caste and sub-caste, native district and how near they live — alongside age, height, marital status, education, profession, diet and how soon each family is looking to marry. Gotra, mool and caste are picked from the same lists as your profile, so they match exactly. If your profile has a gotra, same-gotra (sagotra) profiles are left out by default, since same-gotra matches are traditionally avoided; you can switch this off in the filters. Every result carries a match score that lists the reasons behind it. If nothing matches your filters exactly, the search widens one filter at a time and tells you which — it never quietly brings back same-gotra profiles.',
   },
   {
     q: 'Can I share my matrimonial profile with another family?',

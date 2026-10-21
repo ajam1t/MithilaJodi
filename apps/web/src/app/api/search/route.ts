@@ -13,6 +13,8 @@ import {
 import { toScoreProfile, toScorePrefs } from '@/lib/matchInputs'
 import { recordMemberActivity } from '@/lib/serverEvents'
 import { signPhotos } from '@/lib/photoWeb'
+import { GOTRAS } from '@/lib/mithilaRoots'
+import type { LocationInfo } from '@/lib/matchScore'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -21,6 +23,8 @@ const PAGE_SIZE = 20
 const VALID_GENDERS = ['male', 'female', 'any'] as const
 const VALID_DIETS = ['vegetarian', 'non_vegetarian', 'eggetarian', 'vegan'] as const
 const VALID_SORTS = ['match', 'newest', 'completeness', 'age_asc', 'age_desc'] as const
+/** profiles.marital_status keys, as community_masters lists them. */
+const VALID_MARITAL = ['never_married', 'divorced', 'widowed', 'awaiting_divorce'] as const
 
 /**
  * How far "near" reaches by default. 120 km is roughly Darbhanga to Muzaffarpur,
@@ -151,6 +155,89 @@ function sanitizeSearchQuery(raw: string): string {
   return raw.replace(/[,()\r\n]+/g, ' ').trim()
 }
 
+/**
+ * Marital status used to be a free-text box, so bookmarks carry "Never married"
+ * where the column holds `never_married`. Folding case and separators turns
+ * those back into the key instead of rejecting a link that used to load.
+ */
+function toMaritalKey(raw: string): string {
+  return raw.trim().toLowerCase().replace(/[\s-]+/g, '_')
+}
+
+/** Same folding as matchScore's gotra comparison, so search and score agree. */
+function normGotra(v: string | null | undefined): string {
+  return (v ?? '').trim().toLowerCase().replace(/[\s._-]+/g, '')
+}
+
+type LabelMap = Awaited<ReturnType<typeof getCommunityLabels>>
+
+/**
+ * A community filter is either a master key (matched exactly) or legacy free
+ * text from an old bookmark or a custom mool (matched as a contains search).
+ */
+type MasterFilter = { value: string; exact: boolean }
+
+/**
+ * Resolve a community filter value against the master list.
+ *
+ * The pickers send option keys, which match exactly. Anything else — "Kashyap"
+ * from a link made when this was a text box, or a mool typed by hand — is
+ * mapped to its key when it is a label or a known spelling, and otherwise kept
+ * as a contains match rather than rejected, so old links still find people.
+ */
+function resolveMaster(labels: LabelMap, type: string, raw: string | null): MasterFilter | undefined {
+  const t = (raw ?? '').trim()
+  if (!t) return undefined
+  const opts = labels[type] ?? {}
+  if (Object.hasOwn(opts, t)) return { value: t, exact: true }
+  const lower = t.toLowerCase()
+  for (const [key, label] of Object.entries(opts)) {
+    if (key.toLowerCase() === lower || label.toLowerCase() === lower) return { value: key, exact: true }
+  }
+  if (type === 'gotra') {
+    const g = GOTRAS.find(x => x.aliases.some(a => a.toLowerCase() === lower))
+    if (g) return { value: g.slug, exact: true }
+  }
+  const text = sanitizeSearchQuery(t)
+  return text ? { value: text, exact: false } : undefined
+}
+
+/**
+ * Every spelling of a gotra that a profile might hold: its key, its label and
+ * the variants families write. Used to exclude sagotra profiles even where an
+ * older row still stores display text instead of the key.
+ */
+function gotraSpellings(labels: LabelMap, key: string): string[] {
+  const out = new Set<string>([key])
+  const label = labels.gotra?.[key]
+  if (label) out.add(label)
+  const g = GOTRAS.find(x => x.slug === key)
+  if (g) { out.add(g.name); g.aliases.forEach(a => out.add(a)) }
+  // Quoted into an `or()` filter below, so strip anything that could break out
+  // of the quotes or act as a wildcard.
+  return [...out].map(v => sanitizeSearchQuery(v).replace(/["\\%*]/g, '')).filter(Boolean)
+}
+
+/**
+ * A native-district filter covers the district and everything under it, so a
+ * member whose native place is a village in Madhubani matches "Madhubani".
+ * Picking a town widens to its district for the same reason.
+ */
+function nativeIdsFor(index: Map<number, LocationInfo>, pickedId: number): number[] {
+  // A place and its ancestors, nearest first. Bounded so a bad parent_id cycle
+  // in the reference data cannot hang the request.
+  const lineage = (id: number): LocationInfo[] => {
+    const out: LocationInfo[] = []
+    for (let cur = index.get(id); cur && out.length < 6; cur = cur.parent_id != null ? index.get(cur.parent_id) : undefined) {
+      out.push(cur)
+    }
+    return out
+  }
+  const rootId = lineage(pickedId).find(l => l.level === 'district')?.id ?? pickedId
+  const out = [...index.keys()].filter(id => lineage(id).some(l => l.id === rootId))
+  return out.length > 0 ? out : [pickedId]
+}
+
 /** The columns match scoring needs, over and above what the card renders. */
 const PROFILE_COLUMNS = [
   'id',
@@ -201,22 +288,35 @@ type Filters = {
   gender: string
   ageMin?: number
   ageMax?: number
-  gotra?: string
-  mool?: string
+  gotra?: MasterFilter
+  mool?: MasterFilter
   gram?: string
-  caste?: string
+  caste?: MasterFilter
+  subCaste?: MasterFilter
   religion?: string
   diet?: string
   heightMin?: number
   heightMax?: number
-  maritalStatus?: string
+  maritalStatus?: typeof VALID_MARITAL[number]
   timeline?: string
+  /** education_levels.id */
+  education?: number
+  /** Contains match on the profession text fields. */
+  profession?: string
+  /** native_place_id must be one of these (a district and its places). */
+  nativeIds?: number[]
   q?: string
   /** Resolved to a concrete id set before the query runs. */
   locId?: number
   radiusKm: number
   /** Set when a pass has widened the location filter to the whole state. */
   locWholeState?: boolean
+  /**
+   * Spellings of the viewer's own gotra to exclude (sagotra). Never relaxed:
+   * it is a traditional rule, not a preference, and the member turns it off
+   * with the toggle if their family does not follow it.
+   */
+  excludeGotra?: string[]
 }
 
 // ─── Route handler ────────────────────────────────────────────────────────────
@@ -274,6 +374,49 @@ export async function GET(request: NextRequest) {
   ) {
     return NextResponse.json({ ok: false, message: 'age_min cannot exceed age_max' }, { status: 400 })
   }
+  const maritalRaw = sp.get('marital_status')
+  const maritalParam = maritalRaw ? toMaritalKey(maritalRaw) : undefined
+  if (maritalParam && !VALID_MARITAL.includes(maritalParam as typeof VALID_MARITAL[number])) {
+    return NextResponse.json(
+      { ok: false, message: `Invalid marital_status. Accepted: ${VALID_MARITAL.join(', ')}` },
+      { status: 400 }
+    )
+  }
+  const educationParam = parseIntParam(sp.get('education'))
+  if (educationParam !== undefined && (educationParam < 1 || educationParam > 9999)) {
+    return NextResponse.json({ ok: false, message: 'Invalid education level' }, { status: 400 })
+  }
+  const nativeParam = parseIntParam(sp.get('native_id'))
+  // Embedded in an `or()` filter, so sanitised like `q`; quotes and
+  // backslashes go too, since PostgREST reads them as value delimiters.
+  const professionParam = sanitizeSearchQuery((sp.get('profession') ?? '').replace(/["\\]/g, ' ')).slice(0, 100)
+
+  const admin = await createAdminClient()
+
+  // ─── Step 0: Resolve caller's own profile, preferences and block list ─────
+  //
+  // Security/UX: profiles the caller has blocked, or that have blocked the
+  // caller, must not appear in search results (in either direction).
+  // The location index and the viewer's own profile are independent, so they
+  // are fetched together rather than one after the other. Every request pays
+  // this cost, and on a round trip to Supabase the saving is a whole latency.
+  // Community labels resolve the gotra/mool/caste filters to master keys; they
+  // are cached per process, so this costs nothing after the first request.
+  const [locationIndex, { data: myProfileRows }, labels] = await Promise.all([
+    getLocationIndex(admin),
+    admin
+      .from('profiles')
+      .select(PROFILE_COLUMNS)
+      .eq('account_id', session.id)
+      .is('deleted_at', null)
+      .order('updated_at', { ascending: false }),
+    getCommunityLabels(admin),
+  ])
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const myProfiles: any[] = myProfileRows ?? []
+  const myProfileIds: string[] = myProfiles.map((r) => r.id as string)
+  const viewerRow = myProfiles[0] ?? null
 
   // Gender is not a filter the member chooses — it is derived from their own.
   // A groom's feed is brides and a bride's feed is grooms, so an explicit
@@ -285,48 +428,40 @@ export async function GET(request: NextRequest) {
     gender: genderParam,
     ageMin: ageMinParam,
     ageMax: ageMaxParam,
-    gotra: sp.get('gotra') ?? undefined,
-    mool: sp.get('mool') ?? undefined,
+    gotra: resolveMaster(labels, 'gotra', sp.get('gotra')),
+    mool: resolveMaster(labels, 'mool', sp.get('mool')),
     gram: sp.get('gram') ?? undefined,
-    caste: sp.get('caste') ?? undefined,
+    caste: resolveMaster(labels, 'caste', sp.get('caste')),
+    subCaste: resolveMaster(labels, 'sub_caste', sp.get('sub_caste')),
     religion: sp.get('religion') ?? undefined,
     diet: dietParam ?? undefined,
     heightMin: parseIntParam(sp.get('height_min')),
     heightMax: parseIntParam(sp.get('height_max')),
-    maritalStatus: sp.get('marital_status') ?? undefined,
+    maritalStatus: maritalParam as typeof VALID_MARITAL[number] | undefined,
     timeline: sp.get('marriage_timeline') ?? undefined,
+    education: educationParam,
+    profession: professionParam || undefined,
+    nativeIds: nativeParam !== undefined ? nativeIdsFor(locationIndex, nativeParam) : undefined,
     q: sp.get('q') ?? undefined,
     locId: parseIntParam(sp.get('loc_id')),
     radiusKm: Math.min(MAX_RADIUS_KM, Math.max(0, radiusParam ?? DEFAULT_RADIUS_KM)),
   }
 
-  const admin = await createAdminClient()
+  // Sagotra: on by default whenever the viewer has a real gotra of their own;
+  // `sagotra=include` is the member switching it off. "Not listed / Other" is
+  // not a gotra anyone shares, so it excludes nothing.
+  const viewerGotraKey = ((viewerRow?.self_gotra as string | null) ?? '').trim()
+  const viewerHasGotra = viewerGotraKey.length > 0 && normGotra(viewerGotraKey) !== 'other'
+  if (viewerHasGotra && sp.get('sagotra') !== 'include') {
+    filters.excludeGotra = gotraSpellings(labels, viewerGotraKey)
+  }
+  const excludeGotraNorm = new Set((filters.excludeGotra ?? []).map(normGotra))
+  /** Told to the UI so it can offer the toggle and name the gotra. */
+  const viewerGotra = viewerHasGotra ? labelFor(labels, 'gotra', viewerGotraKey) : null
 
-  // Declared before the viewer lookup so the gender override below can narrow
-  // it, and before runQuery so every pass uses the same object.
+  // Declared before the gender override below so it can narrow it, and before
+  // runQuery so every pass uses the same object.
   let activeFilters: Filters = filters
-
-  // ─── Step 0: Resolve caller's own profile, preferences and block list ─────
-  //
-  // Security/UX: profiles the caller has blocked, or that have blocked the
-  // caller, must not appear in search results (in either direction).
-  // The location index and the viewer's own profile are independent, so they
-  // are fetched together rather than one after the other. Every request pays
-  // this cost, and on a round trip to Supabase the saving is a whole latency.
-  const [locationIndex, { data: myProfileRows }] = await Promise.all([
-    getLocationIndex(admin),
-    admin
-      .from('profiles')
-      .select(PROFILE_COLUMNS)
-      .eq('account_id', session.id)
-      .is('deleted_at', null)
-      .order('updated_at', { ascending: false }),
-  ])
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const myProfiles: any[] = myProfileRows ?? []
-  const myProfileIds: string[] = myProfiles.map((r) => r.id as string)
-  const viewerRow = myProfiles[0] ?? null
 
   // Preferences and the block list are independent of each other; both are
   // needed before scoring, so they are fetched together.
@@ -397,14 +532,35 @@ export async function GET(request: NextRequest) {
     if (f.ageMax !== undefined) query = query.gte('dob', earliestDobForAge(f.ageMax))
 
     if (f.gender !== 'any')      query = query.eq('gender', f.gender)
-    if (f.gotra)                 query = query.ilike('self_gotra', `%${f.gotra}%`)
-    if (f.mool)                  query = query.ilike('mool', `%${f.mool}%`)
+    // Community fields: a key picked from the list matches exactly; legacy
+    // free text keeps the old contains match (see resolveMaster).
+    const master = (col: string, m: MasterFilter | undefined) => {
+      if (!m) return
+      query = m.exact ? query.eq(col, m.value) : query.ilike(col, `%${m.value}%`)
+    }
+    master('self_gotra', f.gotra)
+    master('mool', f.mool)
+    master('caste', f.caste)
+    master('sub_caste', f.subCaste)
     if (f.gram)                  query = query.ilike('gram', `%${f.gram}%`)
-    if (f.caste)                 query = query.ilike('caste', `%${f.caste}%`)
     if (f.religion)              query = query.ilike('religion', `%${f.religion}%`)
     if (f.diet)                  query = query.eq('diet', f.diet)
-    if (f.maritalStatus)         query = query.ilike('marital_status', `%${f.maritalStatus}%`)
+    if (f.maritalStatus)         query = query.eq('marital_status', f.maritalStatus)
     if (f.timeline)              query = query.eq('marriage_timeline', f.timeline)
+    if (f.education !== undefined) query = query.eq('education_level_id', f.education)
+    if (f.nativeIds)             query = query.in('native_place_id', f.nativeIds)
+    if (f.profession) {
+      // Already sanitised for PostgREST filter syntax at parse time.
+      query = query.or(`profession_detail.ilike.%${f.profession}%,job_title.ilike.%${f.profession}%`)
+    }
+    // Sagotra exclusion. A profile with no gotra stated is kept — there is
+    // nothing to clash with, and the match score asks the family to check.
+    // ilike without wildcards is a case-insensitive equality; stray whitespace
+    // around a stored value is caught by the JS pass after the account check.
+    if (f.excludeGotra && f.excludeGotra.length > 0) {
+      const not = f.excludeGotra.map(g => `self_gotra.not.ilike."${g}"`).join(',')
+      query = query.or(`self_gotra.is.null,and(${not})`)
+    }
     if (f.heightMin !== undefined) query = query.gte('height_cm', f.heightMin)
     if (f.heightMax !== undefined) query = query.lte('height_cm', f.heightMax)
 
@@ -448,6 +604,8 @@ export async function GET(request: NextRequest) {
   // pretending these were the results that were asked for.
   const relaxations: Relaxation[] = []
 
+  const shown = (type: string, m: MasterFilter) => (m.exact ? labelFor(labels, type, m.value) : null) ?? m.value
+
   function nextRelaxation(f: Filters): { filters: Filters; step: Relaxation } | null {
     // Ordered least-costly to most-costly to give up.
     if (f.heightMin !== undefined || f.heightMax !== undefined) {
@@ -472,13 +630,22 @@ export async function GET(request: NextRequest) {
       return { filters: { ...f, gram: undefined }, step: { filter: 'gram', label: 'Ancestral village', from: f.gram, to: 'any village' } }
     }
     if (f.mool) {
-      return { filters: { ...f, mool: undefined }, step: { filter: 'mool', label: 'Mool', from: f.mool, to: 'any mool' } }
+      return { filters: { ...f, mool: undefined }, step: { filter: 'mool', label: 'Mool', from: shown('mool', f.mool), to: 'any mool' } }
     }
     if (f.gotra) {
-      return { filters: { ...f, gotra: undefined }, step: { filter: 'gotra', label: 'Gotra', from: f.gotra, to: 'any gotra' } }
+      return { filters: { ...f, gotra: undefined }, step: { filter: 'gotra', label: 'Gotra', from: shown('gotra', f.gotra), to: 'any gotra' } }
+    }
+    if (f.profession) {
+      return { filters: { ...f, profession: undefined }, step: { filter: 'profession', label: 'Profession', from: f.profession, to: 'any profession' } }
+    }
+    if (f.education !== undefined) {
+      return { filters: { ...f, education: undefined }, step: { filter: 'education', label: 'Education', from: 'the level you chose', to: 'any education' } }
     }
     if (f.maritalStatus) {
-      return { filters: { ...f, maritalStatus: undefined }, step: { filter: 'marital_status', label: 'Marital status', from: f.maritalStatus, to: 'any' } }
+      return { filters: { ...f, maritalStatus: undefined }, step: { filter: 'marital_status', label: 'Marital status', from: labelFor(labels, 'marital_status', f.maritalStatus) ?? f.maritalStatus, to: 'any' } }
+    }
+    if (f.nativeIds) {
+      return { filters: { ...f, nativeIds: undefined }, step: { filter: 'native_id', label: 'Native district', from: 'the district you chose', to: 'any native place' } }
     }
     // Location widens in two steps before it is dropped, because "somewhere
     // else in Maharashtra" is a genuinely useful answer and "anywhere in India"
@@ -512,9 +679,13 @@ export async function GET(request: NextRequest) {
     if (f.locId !== undefined) {
       return { filters: { ...f, locId: undefined }, step: { filter: 'loc_id', label: 'Location', from: 'the location you chose', to: 'anywhere in India' } }
     }
-    if (f.caste) {
-      return { filters: { ...f, caste: undefined }, step: { filter: 'caste', label: 'Community', from: f.caste, to: 'any community' } }
+    if (f.subCaste) {
+      return { filters: { ...f, subCaste: undefined }, step: { filter: 'sub_caste', label: 'Sub-caste', from: shown('sub_caste', f.subCaste), to: 'any sub-caste' } }
     }
+    if (f.caste) {
+      return { filters: { ...f, caste: undefined }, step: { filter: 'caste', label: 'Community', from: shown('caste', f.caste), to: 'any community' } }
+    }
+    // Sagotra exclusion is deliberately never relaxed — see Filters.excludeGotra.
     return null
   }
 
@@ -553,6 +724,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       ok: true, results: [], page, has_more: false,
       relaxed: relaxations, scored_pool_truncated: false,
+      viewer_gotra: viewerGotra, sagotra_excluded: excludeGotraNorm.size > 0,
     })
   }
 
@@ -592,11 +764,15 @@ export async function GET(request: NextRequest) {
   if (blockedProfileIds.size > 0) {
     candidates = candidates.filter((p) => !blockedProfileIds.has(p.id as string))
   }
+  if (excludeGotraNorm.size > 0) {
+    candidates = candidates.filter((p) => !excludeGotraNorm.has(normGotra(p.self_gotra as string | null)))
+  }
 
   if (candidates.length === 0) {
     return NextResponse.json({
       ok: true, results: [], page, has_more: false,
       relaxed: relaxations, scored_pool_truncated: poolTruncated,
+      viewer_gotra: viewerGotra, sagotra_excluded: excludeGotraNorm.size > 0,
     })
   }
 
@@ -664,6 +840,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       ok: true, results: [], page, has_more: false,
       relaxed: relaxations, scored_pool_truncated: poolTruncated,
+      viewer_gotra: viewerGotra, sagotra_excluded: excludeGotraNorm.size > 0,
     })
   }
 
@@ -774,9 +951,8 @@ export async function GET(request: NextRequest) {
   //   - family_values, sub_caste, degree (used for scoring only — the score's
   //     `reasons` already say whatever needs saying about them)
 
-  // Community values are stored as option keys; resolved to labels for the card
-  // only. Cached per server process, so this is not a per-request query.
-  const labels = await getCommunityLabels(admin)
+  // Community values are stored as option keys; `labels` (loaded in Step 0)
+  // resolves them to display text for the card only.
 
   // Interest state for each card, in both directions, in one query.
   const interestById = new Map<string, 'sent' | 'received' | 'match'>()
@@ -889,5 +1065,9 @@ export async function GET(request: NextRequest) {
     /** Gender actually applied, derived from the viewer. The UI states this
      *  instead of offering a control that cannot change it. */
     showing: activeFilters.gender === 'any' ? null : activeFilters.gender,
+    /** The viewer's own gotra label, so the UI can offer the sagotra toggle. */
+    viewer_gotra: viewerGotra,
+    /** True when same-gotra profiles were left out. */
+    sagotra_excluded: excludeGotraNorm.size > 0,
   })
 }

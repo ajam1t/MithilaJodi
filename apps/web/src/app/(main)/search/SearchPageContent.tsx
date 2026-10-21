@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { type SearchCard } from '@/types/profile'
 import { ProfileCard3D } from '@/components/ProfileCard3D'
 import { LocationPicker } from '@/components/LocationPicker'
+import { MasterCombo, type Option } from '@/components/profile/MasterCombo'
 import { Button, EmptyState, Skeleton, useToast } from '@/components/ui'
 
 type Filters = {
@@ -16,12 +17,20 @@ type Filters = {
   mool: string
   gram: string
   caste: string
+  sub_caste: string
   religion: string
   diet: string
   height_min: string
   height_max: string
   marital_status: string
   marriage_timeline: string
+  /** education_levels.id, as a string. */
+  education: string
+  profession: string
+  /** Native district — an india_locations.id, as for loc_id. */
+  native_id: string
+  /** '' excludes the viewer's own gotra (the default); 'include' turns that off. */
+  sagotra: string
   /** india_locations.id, as a string so it round-trips through the URL. */
   loc_id: string
   radius_km: string
@@ -37,12 +46,17 @@ const EMPTY_FILTERS: Filters = {
   mool: '',
   gram: '',
   caste: '',
+  sub_caste: '',
   religion: '',
   diet: '',
   height_min: '',
   height_max: '',
   marital_status: '',
   marriage_timeline: '',
+  education: '',
+  profession: '',
+  native_id: '',
+  sagotra: '',
   loc_id: '',
   radius_km: '120',
   q: '',
@@ -57,12 +71,16 @@ const FILTER_LABELS: Partial<Record<keyof Filters, string>> = {
   mool: 'Mool',
   gram: 'Gram',
   caste: 'Caste',
+  sub_caste: 'Sub-caste',
   religion: 'Religion',
   diet: 'Diet',
   height_min: 'Ht ≥',
   height_max: 'Ht ≤',
   marital_status: 'Marital status',
   marriage_timeline: 'Timeline',
+  education: 'Education',
+  profession: 'Profession',
+  native_id: 'Native',
   loc_id: 'Near',
   q: 'Search',
 }
@@ -79,6 +97,26 @@ const TIMELINE_OPTIONS = [
   { value: 'no_rush', label: 'No fixed timeline' },
 ]
 
+/** The stored profiles.marital_status keys; the API accepts only these. */
+const MARITAL_OPTIONS = [
+  { value: '', label: 'Any marital status' },
+  { value: 'never_married', label: 'Never married' },
+  { value: 'divorced', label: 'Divorced' },
+  { value: 'widowed', label: 'Widowed' },
+  { value: 'awaiting_divorce', label: 'Awaiting divorce' },
+]
+
+/**
+ * Old links carry the free text the box used to take ("Never married"); fold
+ * it to the key so the select shows it rather than an empty choice.
+ */
+function maritalKey(v: string): string {
+  return v.trim().toLowerCase().replace(/[\s-]+/g, '_')
+}
+
+/** Master lists for the community and education pickers, from /api/options. */
+type FilterOptions = Partial<Record<'gotra' | 'mool' | 'caste' | 'sub_caste' | 'education_level', Option[]>>
+
 function prettyValue(v: string): string {
   return v.replace(/_/g, '-')
 }
@@ -92,12 +130,17 @@ function buildParams(filters: Filters, page: number): URLSearchParams {
   if (filters.mool.trim()) p.set('mool', filters.mool.trim())
   if (filters.gram.trim()) p.set('gram', filters.gram.trim())
   if (filters.caste.trim()) p.set('caste', filters.caste.trim())
+  if (filters.sub_caste.trim()) p.set('sub_caste', filters.sub_caste.trim())
   if (filters.religion.trim()) p.set('religion', filters.religion.trim())
   if (filters.diet) p.set('diet', filters.diet)
   if (filters.height_min) p.set('height_min', filters.height_min)
   if (filters.height_max) p.set('height_max', filters.height_max)
   if (filters.marital_status.trim()) p.set('marital_status', filters.marital_status.trim())
   if (filters.marriage_timeline) p.set('marriage_timeline', filters.marriage_timeline)
+  if (filters.education) p.set('education', filters.education)
+  if (filters.profession.trim()) p.set('profession', filters.profession.trim())
+  if (filters.native_id) p.set('native_id', filters.native_id)
+  if (filters.sagotra === 'include') p.set('sagotra', 'include')
   if (filters.loc_id) {
     p.set('loc_id', filters.loc_id)
     // Only meaningful alongside a location, so it is never sent on its own.
@@ -116,6 +159,10 @@ function FiltersPanel({
   onReset,
   locName,
   onLocChange,
+  nativeName,
+  onNativeChange,
+  options,
+  viewerGotra,
   showing,
 }: {
   filters: Filters
@@ -124,6 +171,11 @@ function FiltersPanel({
   onReset: () => void
   locName: string
   onLocChange: (id: number | null, name: string) => void
+  nativeName: string
+  onNativeChange: (id: number | null, name: string) => void
+  options: FilterOptions
+  /** The viewer's own gotra (label), or null when they have none to exclude. */
+  viewerGotra: string | null
   /** Gender the API actually applied, so the panel can say what is shown. */
   showing: string | null
 }) {
@@ -151,6 +203,22 @@ function FiltersPanel({
         {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     </div>
+  )
+
+  // The same pickers the profile editor uses, so a filter holds the same key
+  // the profile does. A value not in the list (an old link's free text) still
+  // displays as typed and the API matches it loosely.
+  const combo = (label: string, key: keyof Filters, opts: Option[] | undefined, extra?: { allowCustom?: boolean }) => (
+    <MasterCombo
+      label={label}
+      value={filters[key]}
+      opts={opts ?? []}
+      onChange={v => onChange(key, v)}
+      allowOther={false}
+      allowCustom={extra?.allowCustom}
+      placeholder="Any — type to search"
+      labelClassName="field-label"
+    />
   )
 
   return (
@@ -203,11 +271,46 @@ function FiltersPanel({
         )}
       </div>
 
-      {field('Gotra', 'gotra', 'text', 'e.g. Kashyap')}
-      {field('Mool', 'mool', 'text', 'e.g. Saurath')}
-      {field('Gram', 'gram', 'text', 'e.g. Madhubani')}
-      {field('Caste', 'caste', 'text', 'e.g. Brahmin')}
-      {field('Marital status', 'marital_status', 'text', 'e.g. Never married')}
+      {/* Sagotra is on by default: same-gotra marriage is avoided in Maithil
+          tradition, and the match score already treats it as a blocker. */}
+      {viewerGotra && (
+        <div>
+          <label className="flex items-start gap-2 text-sm text-ink cursor-pointer">
+            <input
+              type="checkbox"
+              checked={filters.sagotra !== 'include'}
+              onChange={e => onChange('sagotra', e.target.checked ? '' : 'include')}
+              className="mt-0.5 accent-maroon"
+            />
+            <span>Exclude my gotra (sagotra) — {viewerGotra}</span>
+          </label>
+          <p className="mt-1 pl-6 text-xs text-ink-soft">Same-gotra matches are traditionally avoided.</p>
+        </div>
+      )}
+
+      {combo('Gotra', 'gotra', options.gotra)}
+      {/* Custom spellings allowed, as on the profile: many mools are not in the list. */}
+      {combo('Mool', 'mool', options.mool, { allowCustom: true })}
+      {field('Gram', 'gram', 'text', 'e.g. Sarisab')}
+      {combo('Caste', 'caste', options.caste)}
+      {combo('Sub-caste', 'sub_caste', options.sub_caste)}
+
+      <LocationPicker
+        compact
+        label="Native district"
+        levels="district"
+        value={filters.native_id ? Number(filters.native_id) : null}
+        initialName={nativeName}
+        placeholder="e.g. Madhubani"
+        onChange={onNativeChange}
+      />
+
+      {select('Marital status', 'marital_status', MARITAL_OPTIONS)}
+      {select('Education', 'education', [
+        { value: '', label: 'Any education' },
+        ...(options.education_level ?? []),
+      ])}
+      {field('Profession', 'profession', 'text', 'e.g. Engineer, Doctor')}
 
       {select('Marriage timeline', 'marriage_timeline', TIMELINE_OPTIONS)}
 
@@ -253,12 +356,17 @@ export default function SearchPageContent() {
     mool: searchParams.get('mool') ?? '',
     gram: searchParams.get('gram') ?? '',
     caste: searchParams.get('caste') ?? '',
+    sub_caste: searchParams.get('sub_caste') ?? '',
     religion: searchParams.get('religion') ?? '',
     diet: searchParams.get('diet') ?? '',
     height_min: searchParams.get('height_min') ?? '',
     height_max: searchParams.get('height_max') ?? '',
-    marital_status: searchParams.get('marital_status') ?? '',
+    marital_status: maritalKey(searchParams.get('marital_status') ?? ''),
     marriage_timeline: searchParams.get('marriage_timeline') ?? '',
+    education: searchParams.get('education') ?? '',
+    profession: searchParams.get('profession') ?? '',
+    native_id: searchParams.get('native_id') ?? '',
+    sagotra: searchParams.get('sagotra') === 'include' ? 'include' : '',
     loc_id: searchParams.get('loc_id') ?? '',
     radius_km: searchParams.get('radius_km') ?? '120',
     q: searchParams.get('q') ?? '',
@@ -276,18 +384,39 @@ export default function SearchPageContent() {
   const [showFilters, setShowFilters] = useState(false)
   const [searched, setSearched] = useState(false)
   const [locName, setLocName] = useState('')
+  const [nativeName, setNativeName] = useState('')
+  const [options, setOptions] = useState<FilterOptions>({})
+  const [viewerGotra, setViewerGotra] = useState<string | null>(null)
+  const [sagotraExcluded, setSagotraExcluded] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
 
-  // Re-hydrate the location chip's display name when the page is opened from a
-  // shared or bookmarked URL, which carries the id but not the name.
+  // Re-hydrate the location and native-district display names when the page
+  // is opened from a shared or bookmarked URL, which carries ids but not names.
   useEffect(() => {
-    const id = searchParams.get('loc_id')
-    if (!id) return
-    fetch(`/api/locations?ids=${id}`)
+    const locId = searchParams.get('loc_id')
+    const nativeId = searchParams.get('native_id')
+    const ids = [locId, nativeId].filter(Boolean)
+    if (ids.length === 0) return
+    fetch(`/api/locations?ids=${ids.join(',')}`)
       .then(r => r.json())
-      .then(j => { if (j.ok && j.results?.[0]) setLocName(j.results[0].name_en) })
+      .then(j => {
+        if (!j.ok) return
+        for (const row of (j.results ?? []) as { id: number; name_en: string }[]) {
+          if (String(row.id) === locId) setLocName(row.name_en)
+          if (String(row.id) === nativeId) setNativeName(row.name_en)
+        }
+      })
       .catch(() => { /* the id still filters correctly; only the label is missing */ })
   }, [searchParams])
+
+  // Master lists for the pickers. If this fails the pickers are empty but
+  // still accept typed text, and the API matches it loosely.
+  useEffect(() => {
+    fetch('/api/options?types=gotra,mool,caste,sub_caste,education_level')
+      .then(r => r.json())
+      .then(j => { if (j.ok && j.options) setOptions(j.options) })
+      .catch(() => { /* see above */ })
+  }, [])
 
   const runSearch = useCallback(async (f: Filters, p: number) => {
     if (abortRef.current) abortRef.current.abort()
@@ -308,6 +437,8 @@ export default function SearchPageContent() {
       setRelaxed(json.relaxed ?? [])
       setNoProfile(json.scoring === 'no_profile')
       setShowing(json.showing ?? null)
+      setViewerGotra(json.viewer_gotra ?? null)
+      setSagotraExcluded(!!json.sagotra_excluded)
       setSearched(true)
     } catch (e: unknown) {
       if (e instanceof Error && e.name !== 'AbortError') {
@@ -334,6 +465,7 @@ export default function SearchPageContent() {
   function resetFilters() {
     setFilters(EMPTY_FILTERS)
     setLocName('')
+    setNativeName('')
     setPage(1)
     router.replace('/search', { scroll: false })
     runSearch(EMPTY_FILTERS, 1)
@@ -351,6 +483,7 @@ export default function SearchPageContent() {
   function removeFilter(key: keyof Filters) {
     const next = { ...filters, [key]: EMPTY_FILTERS[key] }
     if (key === 'loc_id') setLocName('')
+    if (key === 'native_id') setNativeName('')
     setFilters(next)
     setPage(1)
     const params = buildParams(next, 1)
@@ -360,14 +493,32 @@ export default function SearchPageContent() {
 
   // radius_km is deliberately not a chip: on its own it means nothing, and it
   // is already shown as a select underneath the location field.
+  // Picker values are keys; chips show the label the member picked.
+  const optionLabel = (k: keyof Filters): string | undefined => {
+    const list: Option[] | undefined =
+      k === 'gotra' ? options.gotra
+      : k === 'mool' ? options.mool
+      : k === 'caste' ? options.caste
+      : k === 'sub_caste' ? options.sub_caste
+      : k === 'education' ? options.education_level
+      : k === 'marital_status' ? MARITAL_OPTIONS
+      : undefined
+    return list?.find(o => o.value === filters[k])?.label
+  }
   const activeChips = (Object.keys(filters) as (keyof Filters)[])
     .filter(k => k !== 'sort' && k !== 'radius_km' && k !== 'gender'
       && filters[k] !== '' && filters[k] !== EMPTY_FILTERS[k])
+    // The sagotra toggle only means something when the viewer has a gotra.
+    .filter(k => k !== 'sagotra' || !!viewerGotra)
     .map(k => ({
       key: k,
       label: k === 'loc_id'
         ? `Near: ${locName || 'selected place'}${filters.radius_km ? ` (${filters.radius_km} km)` : ''}`
-        : `${FILTER_LABELS[k] ?? k}: ${prettyValue(filters[k])}`,
+        : k === 'native_id'
+          ? `Native: ${nativeName || 'selected district'}`
+          : k === 'sagotra'
+            ? 'Same gotra included'
+            : `${FILTER_LABELS[k] ?? k}: ${optionLabel(k) ?? prettyValue(filters[k])}`,
     }))
 
   // Send interest directly from a search card. Throws on failure so the card
@@ -448,6 +599,13 @@ export default function SearchPageContent() {
                   setLocName(name)
                   setFilters(f => ({ ...f, loc_id: id ? String(id) : '' }))
                 }}
+                nativeName={nativeName}
+                onNativeChange={(id, name) => {
+                  setNativeName(name)
+                  setFilters(f => ({ ...f, native_id: id ? String(id) : '' }))
+                }}
+                options={options}
+                viewerGotra={viewerGotra}
               />
             </div>
           </div>
@@ -468,6 +626,13 @@ export default function SearchPageContent() {
                     setLocName(name)
                     setFilters(f => ({ ...f, loc_id: id ? String(id) : '' }))
                   }}
+                  nativeName={nativeName}
+                  onNativeChange={(id, name) => {
+                    setNativeName(name)
+                    setFilters(f => ({ ...f, native_id: id ? String(id) : '' }))
+                  }}
+                  options={options}
+                  viewerGotra={viewerGotra}
                 />
               </div>
             )}
@@ -550,6 +715,13 @@ export default function SearchPageContent() {
                       <span className="text-ink font-medium">{r.to}</span>
                     </li>
                   ))}
+                  {/* Never widened (it is a rule, not a preference), so say so
+                      rather than let the list read as everything that changed. */}
+                  {sagotraExcluded && viewerGotra && (
+                    <li className="text-[12.5px] text-ink-soft">
+                      <span className="text-ink">Gotra</span>: your own gotra ({viewerGotra}) is still left out — switch it off in Filters to include it.
+                    </li>
+                  )}
                 </ul>
               </div>
             )}
