@@ -16,6 +16,8 @@ export type InterestProfile = {
   status: string
   created_at: string
   conversation_id?: string | null
+  /** The optional note sent with the interest. */
+  message?: string | null
   profile: {
     id: string
     display_name: string
@@ -87,7 +89,12 @@ export function MatchChip({ match }: { match: MatchInfo }) {
 
 export const BTN = 'inline-flex flex-1 items-center justify-center gap-1.5 rounded-mj-sm border px-3 py-2 text-[13px] font-semibold transition-colors disabled:opacity-60'
 
-export function MatchCard({ c, children }: { c: CardData; children: React.ReactNode }) {
+export function MatchCard({ c, note, children }: {
+  c: CardData
+  /** The note sent with the interest, under its label ("Their note", "Your note"). */
+  note?: { label: string; text: string } | null
+  children: React.ReactNode
+}) {
   return (
     <article className="rounded-mj border border-gold/25 bg-cream p-3.5 shadow-mj-xs sm:p-4">
       <div className="flex gap-3.5">
@@ -116,6 +123,12 @@ export function MatchCard({ c, children }: { c: CardData; children: React.ReactN
           {c.occupation && <p className="mt-0.5 truncate text-[12.5px] text-ink-soft">{c.occupation}</p>}
         </div>
       </div>
+      {note?.text && (
+        <blockquote className="mt-3 rounded-mj-sm border-l-2 border-gold bg-gold/[0.07] px-3 py-2">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8A6516]">{note.label}</p>
+          <p className="mt-0.5 whitespace-pre-wrap break-words text-[13.5px] leading-snug text-ink">{note.text}</p>
+        </blockquote>
+      )}
       <div className="mt-3 flex flex-wrap gap-2">{children}</div>
     </article>
   )

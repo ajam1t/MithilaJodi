@@ -2,7 +2,8 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
-import { displayName, notify } from '@/lib/notifications'
+import { notify } from '@/lib/notifications'
+import { openMatch } from '@/lib/interestMatch'
 
 type Action = 'accept' | 'decline' | 'withdraw'
 
@@ -93,84 +94,41 @@ export async function PATCH(
 
   const newStatus = typedAction === 'accept' ? 'accepted' : typedAction === 'decline' ? 'declined' : 'withdrawn'
 
-  const { error: updateError } = await admin
+  // Guarded on the status still being 'sent': two taps, two tabs, or the
+  // sender withdrawing at the same moment must not both win (which would
+  // notify twice, or open a conversation for a withdrawn interest).
+  const { data: updated, error: updateError } = await admin
     .from('interests')
     .update({ status: newStatus, responded_at: new Date().toISOString() })
     .eq('id', id)
+    .eq('status', 'sent')
+    .select('id')
 
   if (updateError) {
     console.error('[interests PATCH] update error:', updateError.message)
     return NextResponse.json({ ok: false, message: 'Failed to update interest' }, { status: 500 })
   }
-
-  // On acceptance, open a conversation between the two profiles so messaging
-  // becomes available immediately. Canonical ordering (profile_a < profile_b)
-  // matches the table CHECK; upsert with ignoreDuplicates = ON CONFLICT DO NOTHING.
-  let conversationId: string | null = null
-  if (typedAction === 'accept') {
-    const a = (iv.from_profile as string) < (iv.to_profile as string) ? iv.from_profile : iv.to_profile
-    const b = (iv.from_profile as string) < (iv.to_profile as string) ? iv.to_profile : iv.from_profile
-
-    const { error: convError } = await admin
-      .from('conversations')
-      .upsert({ profile_a: a, profile_b: b }, { onConflict: 'profile_a,profile_b', ignoreDuplicates: true })
-
-    if (convError) {
-      console.error('[interests PATCH] conversation upsert error:', convError.message)
-    }
-
-    // Fetch the conversation id (whether just created or pre-existing)
-    const { data: conv } = await admin
-      .from('conversations')
-      .select('id')
-      .eq('profile_a', a)
-      .eq('profile_b', b)
-      .maybeSingle()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    conversationId = (conv as any)?.id ?? null
+  if (!updated || updated.length === 0) {
+    return NextResponse.json({ ok: false, message: 'This interest was already updated.', code: 'ALREADY_UPDATED' }, { status: 409 })
   }
 
-  if (typedAction === 'accept' || typedAction === 'decline') {
-    const { data: pair } = await admin
-      .from('profiles')
-      .select('id, account_id, first_name, last_name')
-      .in('id', [iv.from_profile, iv.to_profile])
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const sender = (pair ?? []).find((r: any) => r.id === iv.from_profile) as any
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const accepter = (pair ?? []).find((r: any) => r.id === iv.to_profile) as any
-    const chatUrl = conversationId ? `/messages/${conversationId}` : '/inbox?tab=mutual'
+  // On acceptance, open a conversation between the two profiles so messaging
+  // becomes available immediately, and tell both members.
+  let conversationId: string | null = null
+  if (typedAction === 'accept') {
+    conversationId = await openMatch(admin, { id, from_profile: iv.from_profile, to_profile: iv.to_profile })
+  }
 
-    if (sender && typedAction === 'accept') {
+  if (typedAction === 'decline') {
+    const { data: sender } = await admin
+      .from('profiles')
+      .select('account_id')
+      .eq('id', iv.from_profile)
+      .maybeSingle()
+    if (sender) {
       await notify(admin, {
-        accountId: sender.account_id,
-        type: 'interest_accepted',
-        icon: 'heart',
-        title: 'Your interest was accepted ❤️',
-        message: `${displayName(accepter?.first_name, accepter?.last_name)} accepted your interest. You can now message each other.`,
-        ctaLabel: 'View Match',
-        ctaUrl: chatUrl,
-        payload: { interest_id: id, conversation_id: conversationId },
-        dedupeKey: `interest_accepted:${id}`,
-      })
-    }
-    // The member who accepted gets the match too, with the way into the chat.
-    if (accepter && sender && typedAction === 'accept') {
-      await notify(admin, {
-        accountId: accepter.account_id,
-        type: 'mutual_match',
-        icon: 'heart',
-        title: "It's a Match! ❤️",
-        message: `You and ${displayName(sender.first_name, sender.last_name)} have expressed mutual interest.`,
-        ctaLabel: 'View Match',
-        ctaUrl: chatUrl,
-        payload: { interest_id: id, conversation_id: conversationId },
-        dedupeKey: `mutual_match:${id}`,
-      })
-    }
-    if (sender && typedAction === 'decline') {
-      await notify(admin, {
-        accountId: sender.account_id,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        accountId: (sender as any).account_id,
         type: 'interest_declined',
         icon: 'bell',
         title: 'An update on your interest',

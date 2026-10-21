@@ -1,7 +1,10 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useToast } from '@/components/ui'
+import { InterestNoteSheet } from '@/components/interests/InterestNoteSheet'
+import { sendInterest as postInterest } from '@/lib/interestNotes'
 import { ProfileGallery } from '@/components/digital-profile/ProfileGallery'
 import { ProfilePhotos } from '@/components/digital-profile/ProfilePhotos'
 import type { SearchCard } from '@/types/profile'
@@ -200,6 +203,9 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [stickyVisible, setStickyVisible] = useState(false)
   const [showReport, setShowReport] = useState(false)
+  const [noteOpen, setNoteOpen] = useState(false)
+  const closeNote = useCallback(() => setNoteOpen(false), [])
+  const toast = useToast()
   const headerRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -221,20 +227,54 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
     data.interestSent?.status === 'accepted' ||
     data.interestReceived?.status === 'accepted'
   const firstName = data.display_name.split(' ')[0]
+  // The same rule as the Connect card: no actions in your own preview, before
+  // you have a profile, or while you have blocked them.
+  const canAct = !data.preview && !!data.myProfileId && data.myProfileId !== data.id && !data.blocked
 
-  async function sendInterest() {
-    setBusy(true); setMsg(null)
-    const res = await fetch('/api/interests', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ to_profile_id: data.id }),
-    })
-    const json = await res.json()
-    if (json.ok) {
-      setData(d => ({ ...d, interestSent: { id: json.interest_id, status: 'sent' } }))
-      setMsg({ type: 'ok', text: 'Interest sent!' })
+  // Every "Send interest" opens the note sheet; the sheet calls this.
+  async function sendInterest(note: string): Promise<boolean | string> {
+    setMsg(null)
+    const r = await postInterest(data.id, note)
+    if (!r.ok) return r.message
+    if (r.matched) {
+      // Their interest was still waiting, so sending one back made a match.
+      setData(d => ({
+        ...d,
+        matched: true,
+        conversationId: r.conversationId ?? d.conversationId,
+        interestReceived: d.interestReceived ? { ...d.interestReceived, status: 'accepted' } : d.interestReceived,
+      }))
+      toast("It's a Match! ❤️ You can now message each other.", { type: 'success' })
     } else {
-      setMsg({ type: 'err', text: json.message ?? 'Could not send interest.' })
+      setData(d => ({ ...d, interestSent: { id: r.interestId ?? '', status: 'sent' } }))
+      toast('Interest sent', { type: 'success' })
+    }
+    return true
+  }
+
+  async function acceptInterest() {
+    if (!data.interestReceived) return
+    setBusy(true); setMsg(null)
+    try {
+      const res = await fetch(`/api/interests/${data.interestReceived.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'accept' }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (json.ok) {
+        setData(d => ({
+          ...d,
+          matched: true,
+          conversationId: json.conversation_id ?? d.conversationId,
+          interestReceived: d.interestReceived ? { ...d.interestReceived, status: 'accepted' } : null,
+        }))
+        toast("It's a Match! ❤️ You can now message each other.", { type: 'success' })
+      } else {
+        toast(json.message ?? 'Could not accept. Please try again.', { type: 'error' })
+      }
+    } catch {
+      toast('Could not accept. Please try again.', { type: 'error' })
     }
     setBusy(false)
   }
@@ -323,6 +363,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
           stickyVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none',
         ].join(' ')}
         aria-hidden={!stickyVisible}
+        inert={!stickyVisible}
       >
         <div className="max-w-2xl mx-auto px-4 py-2 flex items-center gap-3">
           <div className="shrink-0 w-10 h-10 rounded-full overflow-hidden border border-ink/10 bg-paper flex items-center justify-center">
@@ -347,13 +388,54 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
               ].filter(Boolean).join(' · ')}
             </p>
           </div>
-          {isMatch && (
+          {isMatch && !canAct && (
             <span className="shrink-0 text-[10px] font-semibold text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
               Match
             </span>
           )}
+          {/* The same choices as the Connect card further down, so nobody has
+              to scroll past the story and galleries to act. */}
+          {canAct && (
+            <div className="flex shrink-0 items-center gap-1.5">
+              {isMatch ? (
+                <Link
+                  href={data.conversationId ? `/messages/${data.conversationId}` : '/inbox?tab=messages'}
+                  className="btn-primary text-[12.5px] py-1.5 px-3"
+                >
+                  Message
+                </Link>
+              ) : data.interestReceived?.status === 'sent' ? (
+                <button type="button" onClick={acceptInterest} disabled={busy} className="btn-primary text-[12.5px] py-1.5 px-3 disabled:opacity-60">
+                  Accept
+                </button>
+              ) : data.interestSent?.status === 'sent' ? (
+                <span className="inline-flex items-center gap-1 rounded-full border border-green/30 bg-green/[0.07] px-2.5 py-1 text-[12px] font-medium text-green">
+                  Sent <span aria-hidden="true">✓</span>
+                </span>
+              ) : !data.interestSent || data.interestSent.status === 'withdrawn' ? (
+                <button type="button" onClick={() => setNoteOpen(true)} disabled={busy} className="btn-primary text-[12.5px] py-1.5 px-3 disabled:opacity-60">
+                  Send interest
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={toggleShortlist}
+                disabled={busy}
+                aria-pressed={data.shortlisted}
+                aria-label={data.shortlisted ? 'Shortlisted' : 'Shortlist'}
+                title={data.shortlisted ? 'Shortlisted' : 'Shortlist'}
+                className={`grid h-8 w-8 place-items-center rounded-full border text-[15px] leading-none transition-colors disabled:opacity-60 ${
+                  data.shortlisted ? 'border-gold bg-gold/15 text-maroon' : 'border-gold/40 text-ink-soft hover:border-gold hover:text-maroon'
+                }`}
+              >
+                <span aria-hidden="true">{data.shortlisted ? '★' : '☆'}</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
+
+      <InterestNoteSheet open={noteOpen} onClose={closeNote} name={firstName} onSend={sendInterest} />
 
       <div className="wrap py-6 sm:py-8">
         <div className="max-w-2xl mx-auto space-y-5">
@@ -455,15 +537,25 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
                     </Link>
                   </>
                 ) : data.interestReceived?.status === 'sent' ? (
-                  <Link href="/inbox?tab=interests" className="btn-primary text-sm py-2 px-4">
-                    Respond to {firstName}&rsquo;s interest
-                  </Link>
+                  <>
+                    <button
+                      type="button"
+                      onClick={acceptInterest}
+                      disabled={busy}
+                      className="btn-primary text-sm py-2 px-4 disabled:opacity-60"
+                    >
+                      Accept {firstName}&rsquo;s interest
+                    </button>
+                    <Link href="/inbox?tab=interests" className="btn-ghost text-sm py-2 px-4">
+                      Respond in Inbox
+                    </Link>
+                  </>
                 ) : (
                   <>
                     {!data.interestSent && (
                       <button
                         type="button"
-                        onClick={sendInterest}
+                        onClick={() => setNoteOpen(true)}
                         disabled={busy}
                         className="btn-primary text-sm py-2 px-4 disabled:opacity-60"
                       >
@@ -493,7 +585,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
                     {data.interestSent?.status === 'withdrawn' && (
                       <button
                         type="button"
-                        onClick={sendInterest}
+                        onClick={() => setNoteOpen(true)}
                         disabled={busy}
                         className="btn-ghost text-sm py-2 px-4 disabled:opacity-60"
                       >

@@ -6,19 +6,31 @@ import Image from 'next/image'
 import type { SearchCard } from '@/types/profile'
 import { cn } from '@/lib/utils/cn'
 import { VerifiedBadge } from '@/components/ui'
+import { InterestNoteSheet } from '@/components/interests/InterestNoteSheet'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 interface ProfileCardProps {
   profile: SearchCard
   onShortlist?: (id: string) => Promise<void> | void
-  onSendInterest?: (id: string) => Promise<void> | void
+  /**
+   * Sends the interest with the member's optional note (from the note sheet
+   * this card opens). Throw to keep the card unsent; resolve `{ matched: true }`
+   * when the send turned out to be an answer to their interest.
+   */
+  onSendInterest?: (id: string, note: string) => Promise<void | { matched?: boolean }> | void
   /** Hide the shortlist / interest action bar (own-profile & preview surfaces). */
   hideActions?: boolean
   /** Accepted for backwards compatibility; the flip card does not auto-rotate. */
   autoRotate?: boolean
   /** Compact presentation for the homepage featured carousel. */
   compact?: boolean
+  /**
+   * Public pages (homepage Featured, /explore): visitors are not signed in and
+   * /profile/* is members-only, so every link goes to sign-up instead (with
+   * nofollow — crawlers should not follow it into a login wall).
+   */
+  publicLinks?: boolean
   className?: string
 }
 
@@ -179,15 +191,21 @@ export function ProfileCard3D({
   onSendInterest,
   hideActions,
   compact = false,
+  publicLinks = false,
   className,
 }: ProfileCardProps) {
   const [flipped, setFlipped] = useState(false)
   const [shortlisted, setShortlisted] = useState(false)
   // Seeded from the server's view of where the member stands with this person.
   const [interestSent, setInterestSent] = useState(profile.interest === 'sent')
-  const isMatch = profile.interest === 'match'
+  const [matchedNow, setMatchedNow] = useState(false)
+  const isMatch = profile.interest === 'match' || matchedNow
   const theyAsked = profile.interest === 'received'
   const [busy, setBusy] = useState<'shortlist' | 'interest' | null>(null)
+  const [noteOpen, setNoteOpen] = useState(false)
+  const closeNote = useCallback(() => setNoteOpen(false), [])
+  const profileHref = publicLinks ? `/register?start=1&next=/profile/${profile.id}` : `/profile/${profile.id}`
+  const linkRel = publicLinks ? 'nofollow' : undefined
 
   const reducedMotion = useRef(
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -233,15 +251,22 @@ export function ProfileCard3D({
     finally { setBusy(null) }
   }, [shortlisted, busy, onShortlist, profile.id])
 
-  const handleInterest = useCallback(async () => {
+  // The button opens the note sheet; the sheet does the sending.
+  const handleInterest = useCallback(() => {
     if (interestSent || busy) return
+    setNoteOpen(true)
+  }, [interestSent, busy])
+
+  const sendWithNote = useCallback(async (note: string) => {
     setBusy('interest')
     try {
-      await onSendInterest?.(profile.id)
-      setInterestSent(true)
-    } catch { /* handler surfaces its own error */ }
+      const r = await onSendInterest?.(profile.id, note)
+      if (r && r.matched) setMatchedNow(true)
+      else setInterestSent(true)
+      return true
+    } catch { return false /* handler surfaces its own error */ }
     finally { setBusy(null) }
-  }, [interestSent, busy, onSendInterest, profile.id])
+  }, [onSendInterest, profile.id])
 
   const showActions = !hideActions && (onShortlist || onSendInterest)
 
@@ -328,7 +353,7 @@ export function ProfileCard3D({
               tall photograph clipped the "View profile" / "Details" buttons. */}
           <div className={cn('flex-shrink-0 flex flex-col', compact ? 'px-3 pt-2 pb-2.5' : 'px-4 pt-3 pb-3.5')}>
             {/* Padding out, margin back: a ≥24px tap target with no layout change. */}
-            <Link href={`/profile/${profile.id}`} className="group -my-1 block py-1">
+            <Link href={profileHref} rel={linkRel} className="group -my-1 block py-1">
               <h3 className={cn('font-serif text-maroon leading-tight group-hover:text-terra transition-colors truncate', compact ? 'text-[17px]' : 'text-[19px]')}>
                 {profile.display_name}
               </h3>
@@ -384,7 +409,8 @@ export function ProfileCard3D({
                       interest the secondary one, in whichever state it is. */}
                   <div className="grid grid-cols-2 gap-2">
                     <Link
-                      href={`/profile/${profile.id}`}
+                      href={profileHref}
+                      rel={linkRel}
                       className={cn(cn('flex items-center justify-center gap-1.5 rounded-mj-sm font-semibold border transition-all', compact ? 'py-1.5 text-[12px]' : 'py-2 text-[13px]'), 'bg-maroon-gradient border-maroon text-cream hover:shadow-mj-sm')}
                     >
                       View Profile
@@ -446,7 +472,8 @@ export function ProfileCard3D({
               ) : (
                 <div className="flex items-center gap-2">
                   <Link
-                    href={`/profile/${profile.id}`}
+                    href={profileHref}
+                    rel={linkRel}
                     className={cn('flex-1 text-center rounded-mj-sm font-semibold border border-maroon/30 text-maroon hover:bg-maroon hover:text-cream transition-colors', compact ? 'py-1.5 text-[12px]' : 'py-2 text-[13px]')}
                   >
                     View profile
@@ -558,7 +585,8 @@ export function ProfileCard3D({
 
           <div className="p-3 flex-shrink-0 border-t border-gold/15">
             <Link
-              href={`/profile/${profile.id}`}
+              href={profileHref}
+              rel={linkRel}
               className="block text-center py-2 rounded-mj-sm text-[13px] font-semibold bg-maroon-gradient text-cream hover:shadow-mj-sm transition-shadow"
             >
               View full profile →
@@ -566,6 +594,14 @@ export function ProfileCard3D({
           </div>
         </div>
       </div>
+      {onSendInterest && (
+        <InterestNoteSheet
+          open={noteOpen}
+          onClose={closeNote}
+          name={profile.display_name.split(' ')[0]}
+          onSend={sendWithNote}
+        />
+      )}
     </div>
   )
 }
