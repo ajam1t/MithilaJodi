@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { OFFICIAL_AVATAR_SRC } from '@/lib/constants'
 
@@ -42,16 +42,33 @@ export function ConversationList() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  useEffect(() => {
+  const load = useCallback(() => {
     fetch('/api/conversations')
       .then(r => r.json())
       .then(j => {
-        if (j.ok) setConversations(j.conversations ?? [])
-        else setError(j.message ?? 'Failed to load messages')
+        if (j.ok) {
+          setConversations(j.conversations ?? [])
+          setError('')
+        } else setError(j.message ?? 'Failed to load messages')
       })
       .catch(() => setError('Could not load messages'))
       .finally(() => setLoading(false))
   }, [])
+
+  // Load once, then again whenever the member comes back to the tab — coming
+  // back from a thread (or another app) should show new messages and cleared
+  // unread badges without a manual reload. The skeleton only shows the first
+  // time; later refreshes swap the list in place.
+  useEffect(() => {
+    load()
+    const onVisible = () => { if (document.visibilityState === 'visible') load() }
+    window.addEventListener('focus', load)
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      window.removeEventListener('focus', load)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [load])
 
   return (
         <div className="space-y-3">

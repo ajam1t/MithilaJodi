@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import Link from 'next/link'
 import type { PartnerPreferencesDisplay } from '@/types/profile'
 
 /**
@@ -338,9 +339,11 @@ export function ProfileStory({ p, story, prefs = null }: { p: StoryProfile; stor
               <h2 className="mj-st-big"><Kinetic on={on}>{`I'm from ${p.self_gotra} gotra`}</Kinetic></h2>
               <p className="mj-st-sub">{[p.mool ? `Mool: ${p.mool}` : null, p.maternal_gotra ? `Maternal gotra: ${p.maternal_gotra}` : null].filter(Boolean).join(' · ')}</p>
               {s?.hasViewer && (s.sameGotra ? (
+                /* Calm and factual, in step with the match panel's sagotra
+                   blocker: this is a real reason families stop, not a joke. */
                 <p className="mj-st-callout is-warn">
-                  😅 Same gotra as you — in Mithila tradition that makes us <b>bhai-behen</b>.
-                  <span className="block text-[12.5px] font-normal opacity-80">Sagotra matches are traditionally avoided.</span>
+                  Same gotra (sagotra) — traditionally not considered for marriage.
+                  <Link href="/gotra" className="block mt-1 text-[12.5px] font-semibold underline underline-offset-2">Learn about gotra →</Link>
                 </p>
               ) : <p className="mj-st-callout">✓ A different gotra from yours</p>)}
             </>

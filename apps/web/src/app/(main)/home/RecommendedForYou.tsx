@@ -17,12 +17,20 @@ export function RecommendedForYou({ limit = 3 }: { limit?: number }) {
   const [sent, setSent] = useState<Set<string>>(new Set())
   const [busy, setBusy] = useState<string | null>(null)
 
+  // A failed load is not the same as "nobody to suggest": only a successful,
+  // empty answer may point the member at their profile. `attempt` re-runs it.
+  const [failed, setFailed] = useState(false)
+  const [attempt, setAttempt] = useState(0)
   useEffect(() => {
+    setFailed(false)
     fetch('/api/search?sort=match')
       .then(r => r.json())
-      .then(j => setItems(j?.ok ? (j.results ?? []).filter((c: SearchCard) => c.interest !== 'match').slice(0, limit) : []))
-      .catch(() => setItems([]))
-  }, [limit])
+      .then(j => {
+        if (!j?.ok) throw new Error('search failed')
+        setItems((j.results ?? []).filter((c: SearchCard) => c.interest !== 'match').slice(0, limit))
+      })
+      .catch(() => setFailed(true))
+  }, [limit, attempt])
 
   async function send(id: string) {
     setBusy(id)
@@ -39,6 +47,20 @@ export function RecommendedForYou({ limit = 3 }: { limit?: number }) {
     } finally {
       setBusy(null)
     }
+  }
+
+  if (failed) {
+    return (
+      <EmptyCard
+        cta={
+          <button type="button" onClick={() => { setItems(null); setAttempt(a => a + 1) }} className="btn-primary inline-flex px-5 py-2.5 text-[14px]">
+            Retry
+          </button>
+        }
+      >
+        Couldn&rsquo;t load recommendations. Please check your connection and try again.
+      </EmptyCard>
+    )
   }
 
   if (!items) {

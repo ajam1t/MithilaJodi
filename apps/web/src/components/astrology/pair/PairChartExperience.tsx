@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react'
 import '@/styles/kundli.css'
 import { fieldErrors, kundliMatchRequestSchema, type FieldErrors } from '@/lib/astrology/schema'
 import type { ChartData, KundliMatchRequest, MoonSegmentChoice, PersonInput, Role } from '@/lib/astrology/types'
@@ -37,6 +37,10 @@ type Props<R> = {
   announceResult: (r: R) => string
   /** The calculation ceremony, built from the (first) result. */
   ceremony?: { scene: (r: R | null) => Scene; waiting: { hi: string; en: string } }
+  /** Shown above the two cards; `fill` replaces one person's details (e.g. "Use my birth details"). */
+  beforeCards?: (fill: (role: Role, draft: PersonDraft) => void) => ReactNode
+  /** Card heading overrides, per role. */
+  titles?: Partial<Record<Role, string>>
 }
 
 function todayIso(): string {
@@ -58,7 +62,7 @@ function toInput(d: PersonDraft, moonSegment?: number | 'all'): PersonInput {
  * Two people's birth details → calculation → (which part of the day?) →
  * report. Shared by Kundli Match and Compatibility.
  */
-export function PairChartExperience<R>({ endpoint, ctaLabel, note, Report, charts, tabTitle, announceResult, ceremony }: Props<R>) {
+export function PairChartExperience<R>({ endpoint, ctaLabel, note, Report, charts, tabTitle, announceResult, ceremony, beforeCards, titles }: Props<R>) {
   const [cerOn, setCerOn] = useState(false)
   const [cerResult, setCerResult] = useState<R | null>(null)
   const [drafts, setDrafts] = useState<Record<Role, PersonDraft>>({ bride: EMPTY_DRAFT, groom: EMPTY_DRAFT })
@@ -120,6 +124,12 @@ export function PairChartExperience<R>({ endpoint, ctaLabel, note, Report, chart
       return next
     })
   }
+
+  const fill = useCallback((role: Role, draft: PersonDraft) => {
+    setDrafts(d => ({ ...d, [role]: draft }))
+    setSegments(s => ({ ...s, [role]: undefined }))
+    setErrors(e => Object.fromEntries(Object.entries(e).filter(([k]) => !k.startsWith(`${role}.`))))
+  }, [])
 
   const scrollTop = () => topRef.current?.scrollIntoView({ behavior: 'instant' as ScrollBehavior, block: 'start' })
 
@@ -266,9 +276,10 @@ export function PairChartExperience<R>({ endpoint, ctaLabel, note, Report, chart
               {!Object.keys(errors).length && <button type="submit" className="btn-ghost btn-sm">Try again</button>}
             </div>
           )}
+          {beforeCards?.(fill)}
           <div className="grid gap-5 lg:grid-cols-2">
-            <BirthDetailsCard role="bride" draft={drafts.bride} onChange={update('bride')} errors={errors} maxDate={maxDate} />
-            <BirthDetailsCard role="groom" draft={drafts.groom} onChange={update('groom')} errors={errors} maxDate={maxDate} />
+            <BirthDetailsCard role="bride" draft={drafts.bride} onChange={update('bride')} errors={errors} maxDate={maxDate} title={titles?.bride} />
+            <BirthDetailsCard role="groom" draft={drafts.groom} onChange={update('groom')} errors={errors} maxDate={maxDate} title={titles?.groom} />
           </div>
           <p className="mt-4 text-[13px] text-ink-soft text-center max-w-2xl mx-auto">{note}</p>
           <div className="mt-6 flex flex-col items-center gap-3">

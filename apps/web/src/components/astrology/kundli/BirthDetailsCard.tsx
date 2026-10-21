@@ -32,6 +32,8 @@ type Props = {
   /** Overrides for tools where the person may not have a name yet. */
   nameLabel?: string
   namePlaceholder?: string
+  /** Replaces the card's heading, e.g. "Priya’s details" on a match opened from her profile. */
+  title?: string
 }
 
 function errorFor(errors: FieldErrors, key: string): string | undefined {
@@ -40,7 +42,7 @@ function errorFor(errors: FieldErrors, key: string): string | undefined {
   return nested ? errors[nested] : undefined
 }
 
-export function BirthDetailsCard({ role, draft, onChange, errors, maxDate, nameLabel, namePlaceholder }: Props) {
+export function BirthDetailsCard({ role, draft, onChange, errors, maxDate, nameLabel, namePlaceholder, title }: Props) {
   const card = CARD[role]
   const e = {
     name: errorFor(errors, `${card.prefix}.name`),
@@ -56,7 +58,7 @@ export function BirthDetailsCard({ role, draft, onChange, errors, maxDate, nameL
       <div className="flex items-center justify-between gap-3 mb-5" aria-hidden="true">
         <div>
           <p className="text-[11px] uppercase tracking-[0.24em] text-ink-soft">{card.eyebrow}</p>
-          <p className="font-serif text-[24px] text-maroon leading-tight">{card.title}</p>
+          <p className="font-serif text-[24px] text-maroon leading-tight">{title ?? card.title}</p>
         </div>
         <span className={`font-deva text-[30px] leading-none ${card.accent}`}>{card.hi}</span>
       </div>
