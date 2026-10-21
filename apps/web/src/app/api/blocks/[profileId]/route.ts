@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
+import { revokeRequestsBetween } from '@/lib/memberRequests'
 
 type RouteContext = { params: Promise<{ profileId: string }> }
 
@@ -49,6 +50,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
 
   if (blockError) {
     if (blockError.code === '23505') {
+      // Already blocked; make sure nothing is still shared between them.
+      await revokeRequestsBetween(admin, myId, profileId)
       return NextResponse.json({ ok: true })
     }
     console.error('[blocks POST] insert error:', blockError.message)
@@ -80,6 +83,9 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       .or(
         `and(profile_a.eq.${myId},profile_b.eq.${profileId}),and(profile_a.eq.${profileId},profile_b.eq.${myId})`,
       ),
+    // Photo and contact requests either way end now: approved access is
+    // revoked (and stays revoked after an unblock), pending ones close.
+    revokeRequestsBetween(admin, myId, profileId),
   ])
 
   return NextResponse.json({ ok: true })

@@ -9,6 +9,7 @@ import { ProfileGallery } from '@/components/digital-profile/ProfileGallery'
 import { ProfilePhotos } from '@/components/digital-profile/ProfilePhotos'
 import type { SearchCard } from '@/types/profile'
 import { ProfileStory, type StoryData } from '@/components/profile/ProfileStory'
+import { ContactRequestPanel, PhotoRequestPanel, type ContactRequestInfo, type PhotoGate } from '@/components/profile/MemberRequestPanels'
 
 type ProfileData = {
   id: string
@@ -60,6 +61,10 @@ type ProfileData = {
   /** An accepted interest in either direction. */
   matched: boolean
   conversationId: string | null
+  /** Why photos are withheld (null when shown, or nothing to show). */
+  photoGate: PhotoGate | null
+  /** Contact details on request, between matches (null: not offered). */
+  contactRequest: ContactRequestInfo | null
   myProfileId: string | null
   /** The owner previewing their own profile (from /profile): no actions. */
   preview?: boolean
@@ -230,6 +235,7 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
   // The same rule as the Connect card: no actions in your own preview, before
   // you have a profile, or while you have blocked them.
   const canAct = !data.preview && !!data.myProfileId && data.myProfileId !== data.id && !data.blocked
+  const contactShared = data.contactRequest?.request?.status === 'approved'
 
   // Every "Send interest" opens the note sheet; the sheet calls this.
   async function sendInterest(note: string): Promise<boolean | string> {
@@ -398,12 +404,19 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
           {canAct && (
             <div className="flex shrink-0 items-center gap-1.5">
               {isMatch ? (
-                <Link
-                  href={data.conversationId ? `/messages/${data.conversationId}` : '/inbox?tab=messages'}
-                  className="btn-primary text-[12.5px] py-1.5 px-3"
-                >
-                  Message
-                </Link>
+                <>
+                  {contactShared && (
+                    <a href="#contact-details" className="btn-ghost text-[12.5px] py-1.5 px-3">
+                      Contact <span aria-hidden="true">✓</span>
+                    </a>
+                  )}
+                  <Link
+                    href={data.conversationId ? `/messages/${data.conversationId}` : '/inbox?tab=messages'}
+                    className="btn-primary text-[12.5px] py-1.5 px-3"
+                  >
+                    Message
+                  </Link>
+                </>
               ) : data.interestReceived?.status === 'sent' ? (
                 <button type="button" onClick={acceptInterest} disabled={busy} className="btn-primary text-[12.5px] py-1.5 px-3 disabled:opacity-60">
                   Accept
@@ -504,6 +517,15 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
                  (or photos) into the next. */}
           <section key={data.id} aria-label={`${firstName}'s profile gallery`} className="space-y-4">
             <ProfilePhotos photos={data.photos} name={data.display_name} />
+            {!data.preview && data.photos.length === 0 && data.photoGate && (
+              <PhotoRequestPanel
+                profileId={data.id}
+                firstName={firstName}
+                gate={data.photoGate}
+                canAct={canAct}
+                onChange={g => setData(d => ({ ...d, photoGate: g }))}
+              />
+            )}
             <ProfileGallery card={data.cardData} />
           </section>
 
@@ -535,6 +557,11 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
                     >
                       Message {firstName}
                     </Link>
+                    {data.contactRequest && (
+                      <a href="#contact-details" className="btn-ghost text-sm py-2 px-4">
+                        {contactShared ? <>Contact shared <span aria-hidden="true">✓</span> — View</> : 'Request contact details'}
+                      </a>
+                    )}
                   </>
                 ) : data.interestReceived?.status === 'sent' ? (
                   <>
@@ -654,6 +681,17 @@ export default function ProfileViewClient({ data: initial }: { data: ProfileData
                 </div>
               )}
             </div>
+          )}
+
+          {/* Contact details on request — matches only (lib/memberRequests). */}
+          {canAct && isMatch && data.contactRequest && (
+            <ContactRequestPanel
+              profileId={data.id}
+              firstName={firstName}
+              info={data.contactRequest}
+              partner={data.cardData.preferences ?? null}
+              onChange={i => setData(d => ({ ...d, contactRequest: i }))}
+            />
           )}
 
           {!data.preview && data.blocked && (

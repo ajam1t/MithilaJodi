@@ -9,19 +9,22 @@ import { ConversationList } from '@/components/inbox/ConversationList'
 import {
   BTN, EmptyCard, MatchCard, MatchedActions, ViewProfile, fromInterest, type ApiResponse, type InterestProfile,
 } from '@/components/inbox/MatchPieces'
+import { RequestsList, loadRequests, type RequestsData } from '@/components/inbox/RequestsList'
 
 /*
  * Inbox — every relationship in one place, in the order it happens:
- * interest → mutual interest → message. Messages | Interests | Mutual.
+ * interest → mutual interest → message. Messages | Interests | Mutual |
+ * Requests.
  *
  * Presentation only. Interests are still answered through
  * PATCH /api/interests/[id], and conversations are still the ones acceptance
- * opens. Members talk through Mithila Jodi messaging; there is no phone-number
- * exchange.
+ * opens. Members talk through Mithila Jodi messaging; a phone number is shared
+ * only through an approved contact request (Requests, lib/memberRequests.ts).
+ * The Requests tab is left out entirely until that feature is switched on.
  */
 
-export type InboxTab = 'messages' | 'interests' | 'mutual'
-const TABS: InboxTab[] = ['messages', 'interests', 'mutual']
+export type InboxTab = 'messages' | 'interests' | 'mutual' | 'requests'
+const TABS: InboxTab[] = ['messages', 'interests', 'mutual', 'requests']
 
 /** How long "Declined — Undo" waits before the decline is sent. */
 const DECLINE_UNDO_MS = 5000
@@ -45,6 +48,10 @@ export default function InboxContent() {
   // Declines waiting out their Undo window, by interest id.
   const [undoable, setUndoable] = useState<Set<string>>(new Set())
   const declineTimers = useRef(new Map<string, number>())
+  // Photo and contact requests: null while loading or after a failure, 'off'
+  // when the feature is not switched on (the tab is hidden).
+  const [requests, setRequests] = useState<RequestsData | 'off' | null>(null)
+  const [requestsFailed, setRequestsFailed] = useState(false)
 
   const load = useCallback(async () => {
     const j = await fetch('/api/interests').then(r => r.json()).catch(() => null)
@@ -52,6 +59,15 @@ export default function InboxContent() {
     else setLoadFailed(true)
   }, [])
   useEffect(() => { void load() }, [load])
+
+  const reloadRequests = useCallback(async () => {
+    const r = await loadRequests()
+    if (r) { setRequests(r); setRequestsFailed(false) }
+    else setRequestsFailed(true)
+  }, [])
+  useEffect(() => { void reloadRequests() }, [reloadRequests])
+  // ?tab=requests before the feature is on falls back to Messages.
+  useEffect(() => { if (requests === 'off' && tab === 'requests') setTab('messages') }, [requests, tab])
 
   function retry() {
     setLoadFailed(false)
@@ -162,10 +178,13 @@ export default function InboxContent() {
   const sent = (data?.sent ?? []).filter(s => s.status !== 'withdrawn')
   const mutual = data?.mutual ?? []
 
+  const requestsOn = requests !== 'off'
+  const pendingRequests = requests && requests !== 'off' ? requests.received.filter(r => r.status === 'pending').length : 0
   const tabs: Array<{ id: InboxTab; label: string; badge: number }> = [
     { id: 'messages', label: 'Messages', badge: pending.messages },
     { id: 'interests', label: 'Interests', badge: received.length },
     { id: 'mutual', label: 'Mutual', badge: 0 },
+    ...(requestsOn ? [{ id: 'requests' as const, label: 'Requests', badge: pendingRequests }] : []),
   ]
 
   return (
@@ -174,7 +193,7 @@ export default function InboxContent() {
         <h1 className="font-serif text-[28px] leading-tight text-maroon sm:text-[32px]">Inbox</h1>
         <p className="mt-1 text-[13.5px] text-ink-soft">Your messages, interests and matches.</p>
 
-        <div className="mt-4 grid grid-cols-3 rounded-full border border-gold/30 bg-cream p-1" role="tablist" aria-label="Inbox">
+        <div className={`mt-4 grid ${requestsOn ? 'grid-cols-4' : 'grid-cols-3'} rounded-full border border-gold/30 bg-cream p-1`} role="tablist" aria-label="Inbox">
           {tabs.map(t => (
             <button
               key={t.id}
@@ -182,7 +201,7 @@ export default function InboxContent() {
               role="tab"
               aria-selected={tab === t.id}
               onClick={() => go(t.id)}
-              className={`flex min-h-[40px] items-center justify-center gap-1.5 rounded-full text-[14px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40 ${
+              className={`flex min-h-[40px] items-center justify-center gap-1 rounded-full ${requestsOn ? 'text-[12.5px] sm:text-[14px]' : 'text-[14px]'} font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40 ${
                 tab === t.id ? 'bg-maroon text-cream shadow-mj-xs' : 'text-ink-soft hover:text-maroon'
               }`}
             >
@@ -203,14 +222,27 @@ export default function InboxContent() {
         <div className="mt-4" role="tabpanel">
           {tab === 'messages' && <ConversationList />}
 
-          {tab !== 'messages' && !data && loadFailed && (
+          {tab === 'requests' && requestsOn && (
+            requests ? (
+              <RequestsList data={requests} onChanged={reloadRequests} />
+            ) : requestsFailed ? (
+              <div role="alert" className="rounded-mj border border-gold/25 bg-cream px-6 py-9 text-center">
+                <p className="text-[14px] text-ink-soft">We could not load your requests just now.</p>
+                <button type="button" onClick={() => { setRequestsFailed(false); void reloadRequests() }} className="btn-primary mt-4 inline-flex px-5 py-2.5 text-[14px]">Retry</button>
+              </div>
+            ) : (
+              <div className="h-[124px] animate-pulse rounded-mj border border-gold/20 bg-cream" />
+            )
+          )}
+
+          {tab !== 'messages' && tab !== 'requests' && !data && loadFailed && (
             <div role="alert" className="rounded-mj border border-gold/25 bg-cream px-6 py-9 text-center">
               <p className="text-[14px] text-ink-soft">We could not load your interests just now.</p>
               <button type="button" onClick={retry} className="btn-primary mt-4 inline-flex px-5 py-2.5 text-[14px]">Retry</button>
             </div>
           )}
 
-          {tab !== 'messages' && !data && !loadFailed && (
+          {tab !== 'messages' && tab !== 'requests' && !data && !loadFailed && (
             <div className="space-y-3">
               {[1, 2].map(i => (
                 <div key={i} className="flex animate-pulse gap-3.5 rounded-mj border border-gold/20 bg-cream p-4">

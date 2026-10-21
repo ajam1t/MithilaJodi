@@ -617,6 +617,7 @@ export default function ProfilePage() {
                     all: 'Public — visible to members, and on public pages if your profile is featured.',
                     members: 'Members — visible to signed-in members only.',
                     connected: 'Matches — visible to your accepted matches only.',
+                    on_request: 'On request — visible to your matches, and to members whose request you approve.',
                   }[normalisePhotoVisibility(photoVisibility)]}
                 </p>
                 <Link href="/profile/edit#photos-section" className="btn-ghost mt-3 flex min-h-[44px] w-full justify-center text-[14px]">

@@ -5,6 +5,7 @@ import { formatPartnerPreferences } from '@/lib/partnerPreferences'
 import type { PartnerPreferencesDisplay } from '@/types/profile'
 import { sanitiseFields } from '@/lib/digitalProfile'
 import { approvedPhotoUrls } from '@/lib/photoAccess'
+import { CONTACT_PREF_COLUMNS, contactFromRow, contactPrefsFromRow, type ContactDetails, type ContactPrefs } from '@/lib/contactDetails'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -62,16 +63,9 @@ export type SharedProfile = {
   family: { type: string | null; values: string | null; parents: string | null; siblings: string | null; about: string | null; introduction: string | null } | null
   about: string | null
   horoscope: { rashi: string | null; nakshatra: string | null; manglik: string | null; birthTime: string | null; birthPlace: string | null } | null
-  contact: { mobile: string | null; relation: string | null; email: string | null; address: string | null } | null
+  contact: (ContactDetails & { address: string | null }) | null
   /** How the family would like to be contacted — only on a link that shares contact. */
-  contactPrefs: {
-    via: 'call' | 'whatsapp' | 'either' | null
-    days: string[]
-    timeFrom: string | null
-    timeTo: string | null
-    rules: Array<'age' | 'location' | 'community' | 'interest_first'>
-    note: string | null
-  } | null
+  contactPrefs: ContactPrefs | null
   preferences: PartnerPreferencesDisplay | null
 }
 
@@ -218,7 +212,7 @@ export async function loadSharedProfile(
   if (granted.has('contact')) {
     const { data, error } = await admin
       .from('profile_private')
-      .select('contact_via, contact_days, contact_time_from, contact_time_to, contact_rules, contact_note')
+      .select(CONTACT_PREF_COLUMNS)
       .eq('profile_id', p.id)
       .maybeSingle()
     howTo = error ? null : data ?? null
@@ -303,32 +297,13 @@ export async function loadSharedProfile(
       birthPlace: priv?.birth_place ?? null,
     }),
 
-    // The registered mobile is the fallback only when the member has not given a
-    // separate contact number — and only ever on a link that granted contact.
-    //
-    // `relation` says whose number it is. In a Maithil match the number given is
-    // very often the father's or a brother's, and a bare "Mobile" left the
-    // recipient to guess who would answer. It is only meaningful for a number the
-    // member actually entered: when we fall back to the registered mobile that is
-    // the member's own line, so the relation is dropped rather than mislabelled.
+    // Number, whose number and email follow the one contact projection
+    // (lib/contactDetails), plus the address — only on a link that granted contact.
     contact: gate(granted.has('contact'), {
-      mobile: priv?.contact_mobile ?? account.mobile ?? null,
-      relation: priv?.contact_mobile
-        ? labelFor(labels, 'contact_relation', priv.contact_relation)
-        : null,
-      email: priv?.contact_email ?? null,
+      ...contactFromRow(priv, account.mobile ?? null, labels),
       address: priv?.address ?? null,
     }),
-    contactPrefs: granted.has('contact') && howTo && (howTo.contact_via || howTo.contact_days?.length || howTo.contact_time_from || howTo.contact_rules?.length || howTo.contact_note)
-      ? {
-          via: howTo.contact_via ?? null,
-          days: howTo.contact_days ?? [],
-          timeFrom: howTo.contact_time_from ?? null,
-          timeTo: howTo.contact_time_to ?? null,
-          rules: howTo.contact_rules ?? [],
-          note: howTo.contact_note ?? null,
-        }
-      : null,
+    contactPrefs: granted.has('contact') ? contactPrefsFromRow(howTo) : null,
 
     // Already null when the family stated nothing, so an enabled-but-empty
     // section drops out of the page rather than printing an empty panel.
