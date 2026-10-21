@@ -6,6 +6,8 @@ import { ProfilePhotos } from '@/components/digital-profile/ProfilePhotos'
 import { ProfileGallery } from '@/components/digital-profile/ProfileGallery'
 import { ProfileModes } from '@/components/digital-profile/ProfileModes'
 import { ProfileStory } from '@/components/profile/ProfileStory'
+import { ProfileCover, type CoverFact } from '@/components/digital-profile/ProfileCover'
+import { GOTRAS } from '@/lib/mithilaRoots'
 
 /**
  * THE Digital Profile renderer.
@@ -60,6 +62,51 @@ function height(cm: number | null): string | null {
   if (!cm) return null
   const inches = Math.round(cm / 2.54)
   return `${Math.floor(inches / 12)}'${inches % 12}"`
+}
+
+/** The gotra guide page for a shown gotra name, matching its common spellings. */
+function gotraSlug(name: string | null | undefined): string | null {
+  if (!name) return null
+  const n = name.toLowerCase().replace(/\s*gotra\s*$/, '').trim()
+  const g = GOTRAS.find(x => x.slug === n || x.name.toLowerCase() === n || x.aliases?.some(a => a.toLowerCase() === n))
+  return g?.slug ?? null
+}
+
+const ASTRO_ICON: Record<string, ReactNode> = {
+  kundli: <><rect x="4" y="4" width="16" height="16" rx="1.5" /><path d="M4 4l16 16M20 4 4 20M12 4l8 8-8 8-8-8z" /></>,
+  gotra: <><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="3.2" /><path d="M12 3.5v5.3M12 15.2v5.3M3.5 12h5.3M15.2 12h5.3" /></>,
+  manglik: <><circle cx="10" cy="14" r="5.5" /><path d="M14 10 20 4M15 4h5v5" /></>,
+  muhurat: <><path d="M12 4c1.8 2 2.6 3.6 2.6 5a2.6 2.6 0 0 1-5.2 0c0-1.4.8-3 2.6-5Z" /><path d="M5 15h14c-.6 2.8-3.4 5-7 5s-6.4-2.2-7-5Z" /></>,
+}
+
+/** "Before you decide" — the astrology tools families reach for next, ready to open. */
+function AstroLinks({ first, gotra, h: H }: { first: string; gotra: string | null; h: Level }) {
+  const slug = gotraSlug(gotra)
+  const tiles = [
+    { k: 'kundli', href: '/astrology/kundli-match', title: `Match your kundli with ${first}`, body: 'Ashtakoot guna milan from both birth details.', wide: true },
+    { k: 'gotra', href: slug ? `/gotra/${slug}` : '/gotra', title: gotra ? `${first} is ${gotra} gotra` : 'Gotra check', body: gotra ? 'Check it against yours in a tap.' : 'Is it a gotra-safe match?' },
+    { k: 'manglik', href: '/astrology/manglik', title: 'Manglik check', body: 'Mangal dosha, explained.' },
+    { k: 'muhurat', href: '/astrology/vivah-muhurat', title: 'Vivah muhurat', body: 'Auspicious wedding dates.', wide: true },
+  ]
+  return (
+    <section className="dpa dp-rise" aria-label="Before you decide">
+      <p className="dpa-eyebrow">Before you decide</p>
+      <H className="dpa-title">Look at the stars together</H>
+      <ul className="dpa-grid">
+        {tiles.map(t => (
+          <li key={t.k} className={t.wide ? 'dpa-wide' : ''}>
+            <Link href={t.href} className="dpa-tile" data-k={t.k}>
+              <span className="dpa-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{ASTRO_ICON[t.k]}</svg></span>
+              <span className="dpa-t">{t.title}</span>
+              <span className="dpa-b">{t.body}</span>
+              <span className="dpa-go" aria-hidden="true">→</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <p className="dpa-note">Free tools on Mithila Jodi. Nothing from this profile is sent to them.</p>
+    </section>
+  )
 }
 
 // ─── The profile ────────────────────────────────────────────────────────────
@@ -119,6 +166,14 @@ export function DigitalProfileView({
   const hasRoots = roots.some(([, v]) => v)
   const hasCommunity = !!(c?.religion || c?.caste || c?.subCaste || p.motherTongue)
   const photos = p.photos
+  // The cover's split-flap line: one fact at a time, only what was shared.
+  const coverFacts = ([
+    c?.selfGotra ? { lead: 'Gotra', word: c.selfGotra } : null,
+    c?.mool ? { lead: 'Mool', word: c.mool } : null,
+    p.education?.degree ? { lead: 'Studied', word: p.education.degree } : null,
+    profession ? { lead: 'Works as', word: profession } : null,
+    p.location?.native ? { lead: 'Roots in', word: p.location.native } : null,
+  ].filter(Boolean) as CoverFact[]).filter(f => f.word.length <= 12)
   let n = 3
   const Name: Level = nested ? 'h3' : 'h1'
   const h: Level = nested ? 'h4' : 'h2'
@@ -131,23 +186,19 @@ export function DigitalProfileView({
         </p>
       )}
 
-      {/* ── Identity: who is this person? No photo here — the gallery has them. */}
-      <header className="dp-identity dp-rise" style={{ ['--i' as string]: 0 }}>
-        <p className="text-[10.5px] font-semibold uppercase tracking-[0.3em] text-[#8A6516]">Mithila Jodi · Digital Profile</p>
-        <Name className="mt-2 font-serif text-[30px] leading-[1.1] text-maroon sm:text-[36px]">{p.displayName}</Name>
-        {meta && <p className="mt-1.5 text-[14.5px] text-ink">{meta}</p>}
-        {place && <p className="mt-0.5 text-[14px] text-ink-soft">{place}</p>}
-        {chips.length > 0 && (
-          <ul className="mt-3 flex flex-wrap gap-2" aria-label="Community">
-            {chips.map(x => <li key={x} className="dp-chip">{x}</li>)}
-          </ul>
-        )}
-        {mode !== 'demo' && audience === 'visitor' && (
-          <p className="mt-3 border-t border-gold/20 pt-2.5 text-[12.5px] leading-relaxed text-ink-soft">
-            Shared with you by {first}&rsquo;s family on Mithila Jodi, a matrimonial platform for Maithil families. No account needed to read it.
-          </p>
-        )}
-      </header>
+      {/* ── Cover: who is this person, at a glance. */}
+      <ProfileCover
+        name={p.displayName}
+        meta={meta}
+        place={place}
+        photo={photos[0] ?? null}
+        facts={coverFacts}
+        // The gotra turns on the flap line, so the chips carry the community only.
+        chips={coverFacts.some(f => f.lead === 'Gotra') ? chips.filter(x => !x.endsWith(' Gotra')) : chips}
+        demo={mode === 'demo'}
+        headingLevel={Name === 'h1' ? 'h1' : 'h3'}
+        note={mode !== 'demo' && audience === 'visitor' ? `Shared with you by ${first}\u2019s family on Mithila Jodi, a matrimonial platform for Maithil families. No account needed to read it.` : null}
+      />
 
       {/* ── Story or Details: the same shared fields, told two ways. */}
       <ProfileModes
@@ -309,20 +360,27 @@ export function DigitalProfileView({
         </>}
       />
 
+      <AstroLinks first={first} gotra={c?.selfGotra ?? null} h={h} />
+
       {/* ── Actions: the only part that differs by who is looking. */}
       {mode === 'public' && audience === 'member' && connection}
 
       {mode !== 'demo' && audience === 'visitor' && (
         // The growth loop's last step: someone a member shared with joins, and
         // gets a Digital Profile of their own to share.
-        <section className="rounded-[20px] border border-gold/40 bg-cream px-5 py-5 text-center shadow-mj-xs" aria-label="Join Mithila Jodi">
-          <p className="font-serif text-[20px] leading-tight text-maroon">Interested in {first}?</p>
+        <section className="dpj" aria-label="Join Mithila Jodi">
+          <svg viewBox="0 0 120 64" className="dpj-rings" aria-hidden="true">
+            <circle className="dpj-a" cx="46" cy="32" r="22" fill="none" stroke="#7A1220" strokeWidth="2" />
+            <circle className="dpj-b" cx="74" cy="32" r="22" fill="none" stroke="#B98A2E" strokeWidth="2" />
+            <path className="dpj-h" d="M60 41c-4.6-3.3-7.4-5.9-7.4-8.9a3.7 3.7 0 0 1 7.4-1.5 3.7 3.7 0 0 1 7.4 1.5c0 3-2.8 5.6-7.4 8.9Z" fill="#A3202A" />
+          </svg>
+          <p className="font-serif text-[22px] leading-tight text-maroon">Interested in {first}?</p>
           <p className="mx-auto mt-1.5 max-w-sm text-[13.5px] leading-relaxed text-ink-soft">
             {hasAny(p.contact)
               ? 'Join Mithila Jodi free to send an interest and find your own Jodi.'
               : 'Contact details are not part of this link. Join Mithila Jodi free, send an interest, and you can request their number once they accept.'}
           </p>
-          <Link href="/register?start=1" className="btn-primary mt-4 inline-flex px-6 py-2.5 text-[14.5px]">Join Mithila Jodi →</Link>
+          <Link href="/register?start=1" className="dpj-cta">Join Mithila Jodi free →</Link>
           <p className="mt-2.5 text-[13px] text-ink-soft">
             Already a member? <Link href="/login" className="font-semibold text-maroon underline-offset-2 hover:underline">Log in</Link>
           </p>
