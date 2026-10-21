@@ -21,10 +21,6 @@ export function LetterAssembly({ stage }: { stage: HeroStage }) {
       data-settled={settled ? 'true' : 'false'}
       aria-hidden="true"
     >
-      {/* Warm energy pulse + ripple that peaks as the glyphs converge. */}
-      <span className="mj-hero-pulse" />
-      <span className="mj-hero-ripple" />
-
       <span className="mj-hero-word font-serif text-maroon">
         {HERO_GLYPHS.map((g, i) => (
           <span

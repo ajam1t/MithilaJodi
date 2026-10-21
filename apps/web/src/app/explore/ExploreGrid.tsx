@@ -50,8 +50,7 @@ export function ExploreGrid({ initialProfiles, initialError = false }: ExploreGr
       {loading ? (
         <div className="grid gap-8 sm:gap-10 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
           {[0, 1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="w-full max-w-[320px] mx-auto rounded-mj-lg overflow-hidden border border-paper-3 bg-cream shadow-mj-sm">
-              <div className="gold-strip" />
+            <div key={i} className="w-full max-w-[320px] mx-auto rounded-mj-lg overflow-hidden border border-line bg-cream shadow-mj-xs">
               <div className="aspect-[4/3] skeleton rounded-none" />
               <div className="p-4 space-y-2.5">
                 <Skeleton className="h-5 w-2/3" />

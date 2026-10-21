@@ -551,13 +551,13 @@ footer :focus-visible {
 }
 
 /* ── Ecosystem wheel (components/home/EcosystemWheel) ──────────────────────
-   On the site's paper colour; segments that fill maroon
-   when chosen; a gold marker that turns to the selection. Everything here
-   moves only in response to a choice — nothing loops. */
+   On the site's paper colour; hairline segments that fill maroon when
+   chosen; a gold marker that turns to the selection; the card's key word
+   crossfades. Everything here moves only in response to a choice. */
 .mj-eco-bg { background: #FCF5E7; } /* the site's paper colour, like every section */
 .mj-eco-seg {
   fill: #FFFDF8;
-  stroke: rgba(185, 138, 46, 0.55);
+  stroke: #EADFCB;
   stroke-width: 1;
   cursor: pointer;
   transition: fill 0.35s ease, stroke 0.35s ease;
@@ -577,15 +577,12 @@ footer :focus-visible {
   transform-origin: 200px 200px;
   transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
-@keyframes mjEcoPanelIn {
-  from { opacity: 0; translate: 0 10px; }
-  to   { opacity: 1; translate: none; }
-}
 @keyframes mjEcoSwap {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
-/* Split-flap tiles: ivory leaves with a hairline split, maroon letters. */
+/* Split-flap tiles (MenuDrawer, digital-profile ProfileCover): ivory leaves
+   with a hairline split, maroon letters. */
 .mj-flaps { display: flex; gap: 3px; flex: 1 1 100%; max-width: 100%; }
 @media (min-width: 640px) { .mj-flaps { flex: 0 1 auto; gap: 4px; } }
 .mj-flap {
@@ -619,7 +616,6 @@ footer :focus-visible {
 }
 @media (prefers-reduced-motion: no-preference) {
   .mj-flap > span { display: block; animation: mjFlap 0.11s ease-out both; }
-  .mj-eco-panel { animation: mjEcoPanelIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
   .mj-eco-swap { animation: mjEcoSwap 0.4s ease both; }
 }
 
@@ -691,50 +687,12 @@ footer :focus-visible {
 }
 
 /* ── Why Mithila Jodi (components/home/FeatureStrip) ───────────────────────
-   On the site's cream ground, like every other section. Art Deco corner
-   brackets on each card; numerals that rise in once on reveal; the aripan
-   ring turns a little on hover. Nothing loops. */
-.mj-why-card { transition: border-color 0.3s ease, background-color 0.3s ease, translate 0.3s ease; }
-.mj-why-card:hover { border-color: rgba(185, 138, 46, 0.6); box-shadow: 0 14px 30px -22px rgba(90, 14, 25, 0.4); }
-.mj-why-corner {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  border-color: rgba(185, 138, 46, 0.55);
-  pointer-events: none;
-}
-.mj-why-ring { transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1); }
-.mj-why-card:hover .mj-why-ring { transform: rotate(30deg); }
-@keyframes mjNumRise {
-  from { opacity: 0; translate: 0 14px; }
-  to   { opacity: 1; translate: none; }
-}
-@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .mj-why-card:hover { translate: 0 -3px; }
-}
-@media (prefers-reduced-motion: no-preference) {
-  .mj-why-grid.mj-in .mj-why-num { animation: mjNumRise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
-}
+   White cards on a hairline; hover only warms the border. Nothing loops. */
+.mj-why-card { transition: border-color 0.25s ease; }
+.mj-why-card:hover { border-color: rgba(185, 138, 46, 0.45); }
 
-/* ── Community stories: the letter card (components/home/CommunityStories) ──
-   Laid paper with a gold halftone fading out of the top-right corner; the
-   chosen family's words fade in when the selection changes. */
-.mj-letter {
-  background-image:
-    radial-gradient(circle at 100% 0%, rgba(185, 138, 46, 0.22) 1.1px, transparent 1.6px),
-    repeating-linear-gradient(0deg, transparent 0 31px, rgba(185, 138, 46, 0.07) 31px 32px);
-  background-size: 9px 9px, auto;
-}
-.mj-letter::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(circle at 100% 0%, transparent 0 120px, #FFFAF0 260px);
-  z-index: 0;
-}
-.mj-letter > :not(.absolute) { position: relative; z-index: 1; }
-.mj-letter > .absolute { z-index: 1; }
+/* ── Community stories (components/home/CommunityStories) ─────────────────
+   The chosen family's words fade in when the selection changes. */
 @keyframes mjLetterIn {
   from { opacity: 0; translate: 0 8px; }
   to   { opacity: 1; translate: none; }
@@ -1114,8 +1072,8 @@ footer :focus-visible {
 .mj-bubble-play { position: absolute; right: -2px; bottom: -2px; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 9999px; color: #FFF6E2; background: #7A1220; box-shadow: 0 0 0 2px #FFFDF8; }
 
 /* ── Match score page (/match-score) ── */
-.mjs-hero { background: radial-gradient(ellipse 90% 85% at 70% 0%, #FFFAF0 0%, #F5EBDD 100%); }
-.mjs-sample { position: relative; padding: 22px 20px 18px; border-radius: 26px; border: 1px solid rgba(185, 138, 46, 0.5); background: linear-gradient(160deg, #FFFDF8, #FBF1DD); box-shadow: 0 26px 50px -34px rgba(107, 10, 10, 0.6); }
+.mjs-hero { background: linear-gradient(180deg, #FFFAF0 0%, #FCF5E7 100%); }
+.mjs-sample { position: relative; padding: 22px 20px 18px; border-radius: 26px; border: 1px solid #EADFCB; background: #FFFFFF; box-shadow: 0 4px 12px -4px rgba(58, 20, 12, 0.25); }
 .mjs-sample-tag { position: absolute; right: 16px; top: 14px; font-size: 10px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: #8A6516; }
 .mjs-ring { position: relative; width: 150px; height: 150px; margin: 0 auto; }
 .mjs-ring svg { width: 100%; height: 100%; }
@@ -1127,17 +1085,17 @@ footer :focus-visible {
 .mjs-reasons li span { color: #2F8F4E; font-weight: 700; }
 .mjs-factors { display: grid; gap: 12px; }
 @media (min-width: 640px) { .mjs-factors { grid-template-columns: 1fr 1fr; } }
-.mjs-factors li { padding: 14px 16px; border-radius: 18px; border: 1px solid rgba(185, 138, 46, 0.35); background: #FFFDF8; }
-.mjs-bar { display: block; margin-top: 8px; height: 6px; border-radius: 9999px; background: rgba(185, 138, 46, 0.15); overflow: hidden; }
-.mjs-bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #B98A2E, #7A1220); transform-origin: left; }
+.mjs-factors li { padding: 14px 16px; border-radius: 18px; border: 1px solid #EADFCB; background: #FFFFFF; }
+.mjs-bar { display: block; margin-top: 8px; height: 6px; border-radius: 9999px; background: #F7EBD3; overflow: hidden; }
+.mjs-bar i { display: block; height: 100%; border-radius: inherit; background: #7A1220; }
 .mjs-rules { display: grid; gap: 12px; }
 @media (min-width: 768px) { .mjs-rules { grid-template-columns: repeat(3, 1fr); } }
-.mjs-rules article { padding: 18px; border-radius: 20px; border: 1.5px solid #2A1A16; background: #FFFDF8; box-shadow: 5px 5px 0 #E9C977; }
+.mjs-rules article { padding: 18px; border-radius: 20px; border: 1px solid #EADFCB; background: #FFFFFF; box-shadow: 0 4px 12px -4px rgba(58, 20, 12, 0.25); }
 .mjs-rules h3 { margin-top: 4px; font: 400 20px/1.2 'Marcellus', serif; color: #7A1220; }
 .mjs-rules p { margin-top: 6px; font-size: 14px; line-height: 1.55; color: #3B2A24; }
 .mjs-rule-n { font: 400 14px 'Marcellus', serif; color: #B98A2E; }
 .mjs-bands { display: grid; gap: 8px; }
-.mjs-bands > div { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; padding: 12px 16px; border-radius: 16px; border: 1px solid rgba(185, 138, 46, 0.35); background: #FFFDF8; }
+.mjs-bands > div { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; padding: 12px 16px; border-radius: 16px; border: 1px solid #EADFCB; background: #FFFFFF; }
 .mjs-bands dt { display: flex; align-items: baseline; gap: 10px; }
 .mjs-bands dt b { font: 400 18px 'Marcellus', serif; color: #7A1220; }
 .mjs-bands dt span { font-size: 13px; font-weight: 600; color: #8A6516; }
@@ -1146,9 +1104,8 @@ footer :focus-visible {
 .mjs-bands [data-band='strong'] { border-left: 4px solid #B98A2E; }
 .mjs-bands [data-band='good'] { border-left: 4px solid #D9B25A; }
 .mjs-bands [data-band='fair'] { border-left: 4px solid #C9B9A6; }
+/* The page's one motion: the sample ring fills once on load. */
 @keyframes mjsRing { from { stroke-dasharray: 0 100; } }
-@keyframes mjsBar { from { transform: scaleX(0); } }
 @media (prefers-reduced-motion: no-preference) {
   .mjs-ring-fill { animation: mjsRing 1.6s cubic-bezier(0.45, 0, 0.2, 1) 0.3s backwards; }
-  .mjs-bar i { animation: mjsBar 1s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i, 0) * 80ms + 300ms); }
 }

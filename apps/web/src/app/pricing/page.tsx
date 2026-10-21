@@ -86,7 +86,7 @@ export default function PricingPage() {
             </ul>
           </div>
 
-          <div className="mt-6 rounded-mj border border-gold/40 bg-cream p-5 sm:p-6">
+          <div className="mt-6 rounded-mj border border-line bg-cream p-5 sm:p-6">
             <h2 className="font-serif text-maroon text-[17px] sm:text-[19px] mb-2">
               Will it always be free?
             </h2>
