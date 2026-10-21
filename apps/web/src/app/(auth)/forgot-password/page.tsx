@@ -1,6 +1,7 @@
 'use client'
 import { useState, useRef } from 'react'
 import Link from 'next/link'
+import { AuthMark } from '@/components/auth/AuthMark'
 import { checkPassword, PASSWORD_RULES } from '@/lib/password'
 import { OtpBoxInput } from '@/components/OtpBoxInput'
 import { OtpSentAnimation } from '@/components/OtpSentAnimation'
@@ -209,9 +210,10 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="w-full max-w-sm">
+    <div className="mj-auth w-full max-w-[400px] motion-safe:animate-fade-in">
 
-      <div className="card p-6 sm:p-8">
+      <div className="mj-auth-card">
+        <AuthMark />
 
         {step === 'sent' && <OtpSentAnimation mobile={maskedMobile} />}
 

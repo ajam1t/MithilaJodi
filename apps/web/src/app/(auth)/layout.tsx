@@ -24,12 +24,12 @@ const TRUST_POINTS = [
   },
 ]
 
-/** Decorative Mithila brand panel shown beside the form on large screens. */
+/** Mithila brand panel beside the form on large screens, on the site's ivory like every section. */
 function BrandPanel() {
   return (
-    <aside className="relative hidden lg:flex flex-col justify-center gap-10 overflow-hidden bg-maroon-deep text-paper-2 p-12 xl:p-16">
+    <aside className="relative hidden lg:flex flex-col justify-center gap-10 overflow-hidden mj-auth-panel text-ink p-12 xl:p-16">
       {/* Faint Madhubani lotus field */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.18]" aria-hidden="true">
+      <div className="absolute inset-0 pointer-events-none opacity-[0.22]" aria-hidden="true">
         <svg viewBox="0 0 400 700" className="w-full h-full" preserveAspectRatio="xMidYMid slice" fill="none">
           {[[70, 120, 46], [320, 90, 34], [200, 320, 54], [60, 520, 40], [330, 560, 44], [220, 660, 30]].map(
             ([cx, cy, r], gi) => (
@@ -41,43 +41,43 @@ function BrandPanel() {
                     cy={cy}
                     rx={r * 0.34}
                     ry={r}
-                    stroke="#E4C572"
+                    stroke="#B98A2E"
                     strokeWidth="1"
                     transform={`rotate(${a} ${cx} ${cy})`}
                   />
                 ))}
-                <circle cx={cx} cy={cy} r={r * 0.28} fill="#E8912A" opacity="0.5" />
+                <circle cx={cx} cy={cy} r={r * 0.28} fill="#E8912A" opacity="0.35" />
               </g>
             )
           )}
         </svg>
       </div>
       {/* Gold edge */}
-      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-maroon-deep via-gold-lt to-maroon-deep" aria-hidden="true" />
+      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-gold to-transparent" aria-hidden="true" />
 
       {/* The logo lives in the global header above; the panel carries the promise. */}
       <div className="relative max-w-sm">
-        <h2 className="font-serif text-[30px] leading-tight text-cream mb-8">
+        <h2 className="font-serif text-[32px] leading-tight text-maroon mb-8">
           Where tradition meets love.
         </h2>
         <ul className="space-y-5">
           {TRUST_POINTS.map((p) => (
             <li key={p.title} className="flex gap-3.5">
-              <span className="mt-1 flex-shrink-0 w-6 h-6 rounded-full bg-gold-lt/15 border border-gold-lt/40 flex items-center justify-center">
+              <span className="mt-1 flex-shrink-0 w-6 h-6 rounded-full bg-gold/10 border border-gold/50 flex items-center justify-center">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                  <path d="M2.5 6.5l2.2 2.2L9.5 3.8" stroke="#E4C572" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M2.5 6.5l2.2 2.2L9.5 3.8" stroke="#B98A2E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </span>
               <div>
-                <p className="font-serif text-[17px] text-gold-lt leading-snug">{p.title}</p>
-                <p className="text-[13.5px] text-paper-2/70 leading-relaxed mt-0.5">{p.body}</p>
+                <p className="font-serif text-[17px] text-maroon leading-snug">{p.title}</p>
+                <p className="text-[13.5px] text-ink-soft leading-relaxed mt-0.5">{p.body}</p>
               </div>
             </li>
           ))}
         </ul>
       </div>
 
-      <p className="relative text-[12.5px] text-paper-2/50 italic">
+      <p className="relative text-[12.5px] text-ink-soft/80 italic">
         A matrimonial platform for the Mithila community of India.
       </p>
     </aside>

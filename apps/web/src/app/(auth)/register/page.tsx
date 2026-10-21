@@ -5,6 +5,7 @@ import { checkPassword, PASSWORD_RULES } from '@/lib/password'
 import { OtpBoxInput } from '@/components/OtpBoxInput'
 import { OtpSentAnimation } from '@/components/OtpSentAnimation'
 import { AuthWelcome } from '@/components/auth/AuthWelcome'
+import { AuthMark } from '@/components/auth/AuthMark'
 import { JoinProgress } from '@/components/auth/JoinProgress'
 import { OTP_LENGTH } from '@/lib/constants'
 import { track } from '@/lib/track'
@@ -199,8 +200,9 @@ export default function RegisterPage({ searchParams }: { searchParams: Promise<{
   if (step === 'welcome') return <AuthWelcome />
 
   return (
-    <div className="w-full max-w-sm motion-safe:animate-fade-in">
-      <div className="card p-5 sm:p-8">
+    <div className="mj-auth w-full max-w-[400px] motion-safe:animate-fade-in">
+      <div className="mj-auth-card">
+        <AuthMark />
         <JoinProgress current={1} className="mb-5" />
 
         {step === 'sent' && <OtpSentAnimation mobile={maskedMobile} />}

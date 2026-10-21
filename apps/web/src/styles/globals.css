@@ -960,3 +960,57 @@ footer :focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .mj-entry-aripan, .mj-entry-turn, .mj-entry-knob { transition: none; }
 }
+
+/* ── Sign-in cards (login, register steps, forgot password) ────────────────
+   One look for every screen after the entrance: an ivory card with a gold
+   rim, crowned by a small aripan; fields with a soft gold focus glow; and a
+   pill-shaped primary button. Scoped to .mj-auth-card so nothing else moves. */
+.mj-auth-panel {
+  background: radial-gradient(120% 80% at 20% 10%, #FFFDF8 0%, #FBF1DD 60%, #F6E6C8 100%);
+  border-right: 1px solid rgba(185, 138, 46, 0.35);
+}
+.mj-auth-card {
+  position: relative;
+  margin-top: 34px;
+  padding: 50px 22px 26px;
+  border-radius: 26px;
+  border: 1px solid rgba(185, 138, 46, 0.5);
+  background: linear-gradient(180deg, rgba(255, 253, 248, 0.96), rgba(251, 242, 226, 0.96));
+  box-shadow: inset 0 1px 0 #fff, 0 22px 48px -26px rgba(122, 18, 32, 0.35);
+}
+@media (min-width: 640px) { .mj-auth-card { padding: 54px 32px 30px; } }
+.mj-auth-card::before { /* the thali-rim hairline, as on the entrance track */
+  content: ''; position: absolute; inset: 7px; border-radius: 20px;
+  border: 1px dashed rgba(185, 138, 46, 0.3); pointer-events: none;
+}
+.mj-auth-mark {
+  position: absolute; left: 50%; top: 0; width: 68px; height: 68px;
+  transform: translate(-50%, -50%);
+  border-radius: 9999px; background: #FFFAF0;
+  box-shadow: 0 0 0 5px #FCF5E7, 0 8px 22px -10px rgba(122, 18, 32, 0.45);
+}
+.mj-auth-card h1 { font-family: 'Marcellus', Georgia, serif; color: #7A1220; font-size: 25px; line-height: 1.15; }
+.mj-auth-card .rounded-mj.border {
+  border-color: rgba(185, 138, 46, 0.45);
+  border-radius: 14px;
+  background-color: #FFFDF8;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.mj-auth-card .rounded-mj.border:focus-within,
+.mj-auth-card input.rounded-mj.border:focus {
+  border-color: #B98A2E;
+  box-shadow: 0 0 0 4px rgba(233, 201, 119, 0.28), 0 6px 16px -10px rgba(185, 138, 46, 0.6);
+}
+.mj-auth-card .bg-paper.border-r { background: #FBF1DD; border-color: rgba(185, 138, 46, 0.35); color: #7A1220; }
+.mj-auth-card .btn-primary {
+  position: relative; overflow: hidden; border-radius: 9999px; justify-content: center; text-align: center;
+  box-shadow: inset 0 0 0 1px rgba(233, 201, 119, 0.55), 0 10px 22px -12px rgba(122, 18, 32, 0.7);
+}
+.mj-auth-card .btn-primary::after { /* a gold light that crosses once on hover */
+  content: ''; position: absolute; top: 0; bottom: 0; left: -40%; width: 30%;
+  background: linear-gradient(100deg, transparent, rgba(255, 231, 166, 0.45), transparent);
+  transform: skewX(-18deg); pointer-events: none; opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .mj-auth-card .btn-primary:not(:disabled):hover::after { opacity: 1; left: 120%; transition: left 0.7s ease, opacity 0.1s; }
+}

@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { AuthMark } from '@/components/auth/AuthMark'
 
 
 function getSafeNextPath(): string | null {
@@ -48,17 +49,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="w-full max-w-sm motion-safe:animate-fade-in">
+    <div className="mj-auth w-full max-w-[400px] motion-safe:animate-fade-in">
 
-      <div className="card p-6 sm:p-8">
+      <div className="mj-auth-card">
+        <AuthMark />
 
         <Link href="/register" className="-mt-1 mb-3 inline-flex items-center gap-1 text-[13px] text-ink-soft hover:text-maroon">
           <span aria-hidden="true">←</span> Back
         </Link>
-        <div className="mb-5">
-          <p className="text-sm font-medium text-maroon">Member access</p>
-          <p className="mt-1 text-sm leading-relaxed text-ink-soft">Sign in securely with your mobile number.</p>
-        </div>
 
         {/* OTP sign-in was removed: password is the only way to log in.
             Members who never set one recover through Forgot password, which
@@ -69,7 +67,8 @@ export default function LoginPage() {
         {(
           <>
             <p className="eyebrow mb-2">Log In</p>
-            <h1 className="text-xl font-display text-ink mb-6">Welcome back</h1>
+            <h1 className="text-xl font-display text-ink">Welcome back</h1>
+            <p className="mb-6 mt-1 text-sm leading-relaxed text-ink-soft">Sign in securely with your mobile number.</p>
             <form onSubmit={handlePasswordLogin} noValidate>
               <label className="block mb-4">
                 <span className="text-sm font-medium text-ink">Mobile number</span>
