@@ -57,7 +57,7 @@ export function WhatsAppForm({ url, enabled, canEdit }: { url: string; enabled: 
   )
 }
 
-export function SocialLinksForm({ links, canEdit }: { links: { instagram: string; youtube: string }; canEdit: boolean }) {
+export function SocialLinksForm({ links, canEdit }: { links: { instagram: string; youtube: string; facebook: string }; canEdit: boolean }) {
   const router = useRouter()
   const [v, setV] = useState(links)
   const [busy, setBusy] = useState(false)
@@ -69,9 +69,9 @@ export function SocialLinksForm({ links, canEdit }: { links: { instagram: string
       catch (err) { setMsg({ ok: false, text: (err as Error).message }) }
       finally { setBusy(false) }
     }}>
-      {(['instagram', 'youtube'] as const).map(k => (
+      {(['instagram', 'facebook', 'youtube'] as const).map(k => (
         <div key={k} className="mb-3">
-          <label htmlFor={`s-${k}`} className="text-[13px] font-medium capitalize text-ink">{k === 'youtube' ? 'YouTube' : 'Instagram'}</label>
+          <label htmlFor={`s-${k}`} className="text-[13px] font-medium capitalize text-ink">{k === 'youtube' ? 'YouTube' : k === 'facebook' ? 'Facebook' : 'Instagram'}</label>
           <div className="flex gap-2">
             <input id={`s-${k}`} value={v[k]} onChange={e => setV({ ...v, [k]: e.target.value })} disabled={!canEdit} className={input} spellCheck={false} />
             <a href={v[k]} target="_blank" rel="noopener noreferrer" className={`${secondary} mt-1 shrink-0`}>Test ↗</a>

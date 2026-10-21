@@ -125,6 +125,7 @@ export const WHATSAPP_COMMUNITY_URL =
   'https://chat.whatsapp.com/BoiwAQZf5VMKEKtSXFfpe0?s=hd&p=i&mlu=4&ilr=4'
 export const INSTAGRAM_URL = 'https://www.instagram.com/MithilaJodiOfficial/'
 export const YOUTUBE_URL = 'https://youtube.com/@mithilajodiofficial?si=BB2-kjGVc2qqHYEF'
+export const FACEBOOK_URL = 'https://www.facebook.com/mithilajodiofficial'
 
 /**
  * What the public site links to. Each is a redirect (app/go/[name]) that reads
@@ -135,4 +136,5 @@ export const OFFICIAL_LINKS = {
   whatsapp: '/go/whatsapp',
   instagram: '/go/instagram',
   youtube: '/go/youtube',
+  facebook: '/go/facebook',
 } as const

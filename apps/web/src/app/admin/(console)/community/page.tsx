@@ -46,7 +46,7 @@ export default async function CommunityPage() {
 
         <Section title="Official social links" id="social" description={`Last updated ${social.updated_at ? ago(social.updated_at) : '—'} by ${socialBy}`}>
           <SocialLinksForm links={social.value} canEdit={editable} />
-          <DataNote>Used by the footer and the menu (<code className="rounded bg-[#F3EEE6] px-1">/go/instagram</code>, <code className="rounded bg-[#F3EEE6] px-1">/go/youtube</code>).</DataNote>
+          <DataNote>Used by the footer and the menu (<code className="rounded bg-[#F3EEE6] px-1">/go/instagram</code>, <code className="rounded bg-[#F3EEE6] px-1">/go/youtube</code>, <code className="rounded bg-[#F3EEE6] px-1">/go/facebook</code>).</DataNote>
         </Section>
       </div>
 

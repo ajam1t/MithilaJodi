@@ -4,6 +4,7 @@ import {
   SUPPORT_EMAIL,
   SUPPORT_PHONE_E164,
   INSTAGRAM_URL,
+  FACEBOOK_URL,
 } from '@/lib/constants'
 
 /**
@@ -240,7 +241,7 @@ export function organizationJsonLd() {
     // assistants have a single source. See FOUNDERS in app/about/page.tsx.
     // Official accounts. sameAs is the strongest on-site signal for tying a name
     // to a specific organisation, and it was missing entirely.
-    sameAs: [INSTAGRAM_URL, 'https://www.youtube.com/@mithilajodiofficial'],
+    sameAs: [INSTAGRAM_URL, 'https://www.youtube.com/@mithilajodiofficial', FACEBOOK_URL],
     areaServed: { '@type': 'Country', name: 'India' },
     // Topics the site actually publishes on — each has pages behind it.
     knowsAbout: [

@@ -1,6 +1,6 @@
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/server'
-import { INSTAGRAM_URL, WHATSAPP_COMMUNITY_URL, YOUTUBE_URL } from '@/lib/constants'
+import { FACEBOOK_URL, INSTAGRAM_URL, WHATSAPP_COMMUNITY_URL, YOUTUBE_URL } from '@/lib/constants'
 
 /*
  * Admin-editable site configuration (table site_settings). The public site
@@ -11,17 +11,17 @@ import { INSTAGRAM_URL, WHATSAPP_COMMUNITY_URL, YOUTUBE_URL } from '@/lib/consta
  */
 
 export type WhatsAppCommunity = { url: string; enabled: boolean }
-export type SocialLinks = { instagram: string; youtube: string }
+export type SocialLinks = { instagram: string; youtube: string; facebook: string }
 export type PlatformLimits = { db_gb: number | null; storage_gb: number | null; plan: string | null }
 
-export const SOCIAL_KEYS = ['instagram', 'youtube'] as const
+export const SOCIAL_KEYS = ['instagram', 'youtube', 'facebook'] as const
 export type SocialKey = (typeof SOCIAL_KEYS)[number]
 
 export type SettingRow<T> = { value: T; updated_at: string | null; updated_by: string | null }
 
 const DEFAULTS = {
   whatsapp_community: { url: WHATSAPP_COMMUNITY_URL, enabled: true } as WhatsAppCommunity,
-  social_links: { instagram: INSTAGRAM_URL, youtube: YOUTUBE_URL } as SocialLinks,
+  social_links: { instagram: INSTAGRAM_URL, youtube: YOUTUBE_URL, facebook: FACEBOOK_URL } as SocialLinks,
   // Entered by the admin from their Supabase plan; null until then (never guessed).
   platform_limits: { db_gb: null, storage_gb: null, plan: null } as PlatformLimits,
 }
@@ -48,6 +48,7 @@ export function validLink(kind: 'whatsapp' | SocialKey, raw: string): string | n
   const ok =
     kind === 'whatsapp' ? host === 'chat.whatsapp.com' || host === 'whatsapp.com' :
     kind === 'instagram' ? host === 'instagram.com' :
+    kind === 'facebook' ? host === 'facebook.com' || host === 'm.facebook.com' || host === 'fb.com' :
     host === 'youtube.com' || host === 'youtu.be' || host === 'm.youtube.com'
   return ok ? u.toString() : null
 }

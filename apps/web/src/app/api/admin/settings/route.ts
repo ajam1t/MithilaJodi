@@ -34,7 +34,7 @@ function validate(key: Key, v: Record<string, unknown>): { value?: Record<string
     const out: Record<string, string> = {}
     for (const k of SOCIAL_KEYS) {
       const url = validLink(k, String(v[k] ?? ''))
-      if (!url) return { error: `Enter a valid https ${k === 'instagram' ? 'instagram.com' : 'youtube.com'} link.` }
+      if (!url) return { error: `Enter a valid https ${k}.com link.` }
       out[k] = url
     }
     return { value: out }

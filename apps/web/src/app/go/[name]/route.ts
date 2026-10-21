@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { getSetting } from '@/lib/siteSettings'
 
 /*
- * /go/whatsapp, /go/instagram, /go/youtube — the public site's official links.
+ * /go/whatsapp, /go/instagram, /go/youtube, /go/facebook — the public site's official links.
  * Each click reads the current value from Admin → Community, so a full
  * WhatsApp community can be replaced without a deployment. A disabled
  * community sends people to the contact page instead of a dead invite.
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const target = value.enabled ? value.url : new URL('/contact?community=paused', request.url).toString()
     return NextResponse.redirect(target, { status: 302, headers })
   }
-  if (name === 'instagram' || name === 'youtube') {
+  if (name === 'instagram' || name === 'youtube' || name === 'facebook') {
     const { value } = await getSetting('social_links')
     return NextResponse.redirect(value[name], { status: 302, headers })
   }
