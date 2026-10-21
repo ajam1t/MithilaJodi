@@ -119,8 +119,8 @@ export default function MatchScorePage() {
           <h2 id="mjs-factors" className="font-serif text-maroon text-[26px] sm:text-[32px]">Nine things families ask, weighed</h2>
           <p className="mt-2 max-w-2xl text-[15px] text-ink-soft">Out of {TOTAL} points. A transparent calculation from both profiles and both families’ stated preferences — no hidden ranking.</p>
           <ol className="mjs-factors mt-6">
-            {FACTORS.map((f, i) => (
-              <li key={f.key} style={{ '--i': i } as React.CSSProperties}>
+            {FACTORS.map((f) => (
+              <li key={f.key}>
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="font-serif text-[18px] text-maroon">{f.label} <span className="font-deva text-[14px] text-[#9A6F1E]" lang="hi">{f.deva}</span></p>
                   <p className="text-[13px] font-semibold text-ink-soft tabular-nums">{WEIGHTS[f.key]} pts</p>
@@ -173,7 +173,7 @@ export default function MatchScorePage() {
 
         <section className="wrap max-w-3xl pb-12">
           <GuideFaq items={FAQ} />
-          <div className="mt-8 rounded-[24px] border border-gold/45 bg-cream p-6 text-center">
+          <div className="mt-8 rounded-[24px] border border-line bg-cream p-6 text-center">
             <p className="font-serif text-[22px] text-maroon">See how every profile fits you</p>
             <p className="mt-1 text-[14px] text-ink-soft">Free for every member. Your number stays private.</p>
             <Link href="/register?start=1" className="btn-primary mt-4 inline-flex px-6 py-3 text-[15px]">Join Mithila Jodi →</Link>

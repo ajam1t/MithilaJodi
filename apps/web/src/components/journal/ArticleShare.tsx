@@ -35,7 +35,7 @@ export function ArticleShare({ url, title }: { url: string; title: string }) {
   }
 
   const wa = `https://wa.me/?text=${encodeURIComponent(`${title}\n${url}`)}`
-  const btn = 'inline-flex h-9 items-center gap-1.5 rounded-pill border border-paper-3 bg-cream px-3.5 text-[13px] font-medium text-maroon transition-colors hover:border-gold'
+  const btn = 'inline-flex h-9 items-center gap-1.5 rounded-pill border border-line bg-cream px-3.5 text-[13px] font-medium text-maroon transition-colors hover:border-gold'
 
   return (
     <div className="flex flex-wrap items-center gap-2">

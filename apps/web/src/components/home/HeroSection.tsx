@@ -44,12 +44,7 @@ export function HeroSection() {
 
           {/* Headline — "Find Your Life Partner" is the dominant line */}
           <h1 className="font-serif text-maroon">
-            {/* mj-shine sweeps brand gold through the line a few times on
-                arrival, then stops. The block already slides in via
-                hero-text-enter, so a second entrance animation here (a
-                per-word stagger, say) would fight it; a sweep animates only
-                the background position and layers cleanly on top. */}
-            <span className="mj-shine block text-[26px] sm:text-[38px] md:text-[52px] leading-[1.1]">
+            <span className="block text-[26px] sm:text-[38px] md:text-[52px] leading-[1.1]">
               Find Your Life Partner,
             </span>
             <span className="block text-[16px] sm:text-[21px] md:text-[26px] text-terra mt-0.5 leading-snug">
@@ -87,7 +82,7 @@ export function HeroSection() {
           <ul className="flex flex-wrap justify-center gap-1.5 sm:gap-2" aria-label="What Mithila Jodi offers">
             {ECOSYSTEM.map(([icon, label, href]) => (
               <li key={label}>
-                <Link href={href} className="inline-flex items-center gap-1 rounded-full border border-gold/45 bg-cream px-2.5 py-1 text-[12px] font-medium text-maroon transition-colors hover:border-gold hover:bg-white sm:text-[13px]">
+                <Link href={href} className="inline-flex items-center gap-1 rounded-full border border-line bg-cream px-2.5 py-1 text-[12px] font-medium text-maroon transition-colors hover:border-gold/60 hover:bg-white sm:text-[13px]">
                   <EcosystemIcon id={icon} className="h-3.5 w-3.5 text-gold sm:h-4 sm:w-4" />{label}
                 </Link>
               </li>
