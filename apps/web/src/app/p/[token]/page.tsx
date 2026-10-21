@@ -167,6 +167,7 @@ export default async function SharedProfilePage({ params }: Props) {
         mode="public"
         audience={audience}
         connection={connection}
+        returnPath={`/p/${encodeURIComponent(token)}`}
       />
       {!viewerIsOwner && <OpenBeacon token={token} />}
     </main>

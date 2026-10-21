@@ -43,7 +43,7 @@ export default function PreferencesPage() {
     fetch('/api/auth/me')
       .then(r => r.json())
       .then(auth => {
-        if (!auth.ok) { router.replace('/login'); return }
+        if (!auth.ok) { router.replace('/login?next=/profile/preferences'); return }
         return fetch('/api/profile/preferences').then(r => r.json())
       })
       .then(j => {

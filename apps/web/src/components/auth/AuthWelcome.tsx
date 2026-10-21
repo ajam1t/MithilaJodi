@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { withNext } from '@/lib/safeNext'
 
 /**
  * The entrance to Mithila Jodi (/register before any step is chosen).
@@ -14,6 +15,9 @@ import { useRouter } from 'next/navigation'
  * diya and fills from the side it is moving to: maroon for joining, gold for
  * returning. On choosing, the aripan opens towards the viewer and the next
  * page follows.
+ *
+ * `next` (the return path, already checked) is passed on to whichever way in
+ * is chosen.
  *
  * No auth logic lives here. prefers-reduced-motion keeps the layout and the
  * links but drops the drawing, the turning and the opening.
@@ -103,8 +107,9 @@ function Diya() {
   )
 }
 
-export function AuthWelcome() {
+export function AuthWelcome({ next = null }: { next?: string | null }) {
   const router = useRouter()
+  const joinHref = withNext(JOIN, next), loginHref = withNext(LOGIN, next)
   const track = useRef<HTMLDivElement>(null)
   const drag = useRef<{ x0: number; max: number } | null>(null)
   const [x, setX] = useState(0)
@@ -112,13 +117,13 @@ export function AuthWelcome() {
   const [dragging, setDragging] = useState(false)
   const [leaving, setLeaving] = useState<Side | null>(null)
 
-  useEffect(() => { router.prefetch(JOIN); router.prefetch(LOGIN) }, [router])
+  useEffect(() => { router.prefetch(joinHref); router.prefetch(loginHref) }, [router, joinHref, loginHref])
 
   const reduced = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
   function go(side: Side) {
     if (leaving) return
-    const href = side === 'join' ? JOIN : LOGIN
+    const href = side === 'join' ? joinHref : loginHref
     if (reduced()) { router.push(href); return }
     setLeaving(side)
     setX(side === 'join' ? -max : max)
@@ -179,11 +184,11 @@ export function AuthWelcome() {
         <div ref={track} className="mj-entry-track relative h-[72px] select-none rounded-full">
           {/* the trail of light behind the diya */}
           <span className="mj-entry-trail" style={{ left: '50%', width: `${Math.abs(x)}px`, transform: x < 0 ? 'translateX(-100%)' : undefined, background: x < 0 ? 'linear-gradient(270deg, rgba(155,34,51,.0), rgba(155,34,51,.9))' : 'linear-gradient(90deg, rgba(185,138,46,0), rgba(185,138,46,.85))' }} aria-hidden="true" />
-          <Link href={JOIN} onClick={e => onEnd(e, 'join')} className="mj-entry-end left-0 pl-5 text-left sm:pl-6" data-lit={join > 0.05 || undefined} data-side="join">
+          <Link href={joinHref} onClick={e => onEnd(e, 'join')} className="mj-entry-end left-0 pl-5 text-left sm:pl-6" data-lit={join > 0.05 || undefined} data-side="join">
             <span className="block text-[11px] uppercase tracking-[0.16em] text-terra/90" style={{ color: join > 0.55 ? '#FFF6E2' : undefined }}>New here</span>
             <span className="block font-serif leading-tight text-maroon" style={{ color: join > 0.55 ? '#FFFFFF' : undefined }}>Create account</span>
           </Link>
-          <Link href={LOGIN} onClick={e => onEnd(e, 'login')} className="mj-entry-end right-0 pr-5 text-right sm:pr-6" data-lit={back > 0.05 || undefined} data-side="login">
+          <Link href={loginHref} onClick={e => onEnd(e, 'login')} className="mj-entry-end right-0 pr-5 text-right sm:pr-6" data-lit={back > 0.05 || undefined} data-side="login">
             <span className="block text-[11px] uppercase tracking-[0.16em] text-terra/90" style={{ color: back > 0.55 ? '#FFF6E2' : undefined }}>Welcome back</span>
             <span className="block font-serif leading-tight text-maroon" style={{ color: back > 0.55 ? '#FFFFFF' : undefined }}>Log in</span>
           </Link>

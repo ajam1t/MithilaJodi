@@ -3,6 +3,7 @@ import { getSessionAccount } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getOnboardingState } from '@/lib/onboarding'
 import { noindexMetadata } from '@/lib/seo'
+import { getPostLoginPath, getSafeNextPath, withNext } from '@/lib/safeNext'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { WelcomeFlow, type WelcomeOptions } from './WelcomeFlow'
 
@@ -32,12 +33,18 @@ async function loadOptions(admin: any): Promise<WelcomeOptions> {
  * every incomplete member here, so a page inside it would redirect to itself.
  *
  * Resumes at the first step with anything missing, prefilled. A complete
- * member is sent on to /home — unless they just finished (?done=1), when the
- * Ready screen is the page.
+ * member is sent on to /home (or ?next, the page they were on when they chose
+ * to join) — unless they just finished (?done=1), when the Ready screen is the
+ * page and offers the way back.
  */
-export default async function WelcomePage({ searchParams }: { searchParams: Promise<{ done?: string }> }) {
+export default async function WelcomePage({ searchParams }: { searchParams: Promise<{ done?: string; next?: string | string[] }> }) {
+  const { done, next: raw } = await searchParams
+  const safe = getSafeNextPath(typeof raw === 'string' ? raw : null)
+  // Never back to /welcome itself: a complete member would loop.
+  const next = safe && !/^\/welcome(?:[/?#]|$)/.test(safe) ? safe : null
+
   const account = await getSessionAccount()
-  if (!account) redirect('/login?next=/welcome')
+  if (!account) redirect(withNext('/login', withNext('/welcome', next)))
 
   const admin = await createAdminClient()
   const [state, options] = await Promise.all([
@@ -45,7 +52,7 @@ export default async function WelcomePage({ searchParams }: { searchParams: Prom
     loadOptions(admin),
   ])
 
-  if (state.complete && (await searchParams).done !== '1') redirect('/home')
+  if (state.complete && done !== '1') redirect(getPostLoginPath(next, account.staff))
 
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
@@ -59,7 +66,7 @@ export default async function WelcomePage({ searchParams }: { searchParams: Prom
       </header>
 
       <main id="main-content" className="flex-1">
-        <WelcomeFlow initial={state} options={options} />
+        <WelcomeFlow initial={state} options={options} returnTo={next} />
       </main>
 
       <MithilaFooter />

@@ -12,6 +12,7 @@ import { getSessionAccount } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/server'
 import { loadOwnerDashboard } from '@/lib/digitalProfileOwner'
 import { DIGITAL_PROFILE_PATH } from '@/lib/digitalProfile'
+import { withNext } from '@/lib/safeNext'
 import { SITE_URL } from '@/lib/constants'
 import {
   breadcrumbJsonLd, canonicalUrl, jsonLdScript, organizationJsonLd, organizationRef, pageMetadata,
@@ -138,7 +139,7 @@ export default async function DigitalProfilePage({ searchParams }: { searchParam
   return (
     <Shell>
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(jsonLd)} />
-      <DigitalProfileLanding ctaHref={session ? DIGITAL_PROFILE_PATH : '/register'} member={!!session} />
+      <DigitalProfileLanding ctaHref={session ? DIGITAL_PROFILE_PATH : withNext('/register', DIGITAL_PROFILE_PATH)} member={!!session} />
       <div className="mx-auto max-w-3xl px-4 pb-12">
         <RelatedGuides
           guides={['effective-matrimonial-profile', 'matrimonial-profile-information', 'how-to-create-matrimonial-biodata']}

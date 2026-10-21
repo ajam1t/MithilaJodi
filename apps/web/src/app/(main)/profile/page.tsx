@@ -244,7 +244,7 @@ export default function ProfilePage() {
       fetch('/api/profile/preferences', { cache: 'no-store' }).then(r => r.json()),
     ])
       .then(([authData, profileData, prefsData]) => {
-        if (!authData.ok) { router.replace('/login'); return }
+        if (!authData.ok) { router.replace('/login?next=/profile'); return }
         setAccount(authData.account ?? null)
         if (profileData.profile) setProfile(profileData.profile)
         setPhotos(profileData.photos ?? [])

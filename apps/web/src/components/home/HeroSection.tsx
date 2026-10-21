@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { HeroCinematic } from './hero/HeroCinematic'
 import { EcosystemIcon, type EcosystemId } from './EcosystemIcons'
+import { HeroMatchLink } from './HeroMatchLink'
 
 /**
  * Homepage hero.
@@ -95,9 +96,9 @@ export function HeroSection() {
 
           {/* CTA */}
           <div className="flex pt-0.5 w-full sm:w-auto">
-            <Link href="/register" className="btn-primary text-[15px] px-6 py-3 justify-center w-full sm:w-auto">
+            <HeroMatchLink className="btn-primary text-[15px] px-6 py-3 justify-center w-full sm:w-auto">
               Find Your Match →
-            </Link>
+            </HeroMatchLink>
           </div>
         </div>
       </div>

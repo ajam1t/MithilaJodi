@@ -24,9 +24,12 @@ export function middleware(request: NextRequest) {
 
   const isProtected = PROTECTED_PATHS.some(p => pathname.startsWith(p))
   if (isProtected && !hasSession) {
+    // The return path keeps the query (?tab=interests and the like), and the
+    // redirect carries nothing else; /login checks it with getSafeNextPath.
     const url = request.nextUrl.clone()
     url.pathname = '/login'
-    url.searchParams.set('next', pathname)
+    url.search = ''
+    url.searchParams.set('next', pathname + request.nextUrl.search)
     return NextResponse.redirect(url)
   }
 

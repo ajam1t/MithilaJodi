@@ -9,6 +9,7 @@ import { ContactCard } from '@/components/digital-profile/ContactCard'
 import { ProfileStory } from '@/components/profile/ProfileStory'
 import { ProfileCover, type CoverFact } from '@/components/digital-profile/ProfileCover'
 import { GOTRAS } from '@/lib/mithilaRoots'
+import { withNext } from '@/lib/safeNext'
 
 /**
  * THE Digital Profile renderer.
@@ -128,7 +129,7 @@ function aboutTitle(gender: string | null): string {
 }
 
 export function DigitalProfileView({
-  profile: p, profileId, mode, audience = 'visitor', connection, nested = false,
+  profile: p, profileId, mode, audience = 'visitor', connection, nested = false, returnPath = null,
 }: {
   profile: SharedProfile
   /** Keys the gallery; never shown. */
@@ -139,8 +140,11 @@ export function DigitalProfileView({
   connection?: ReactNode
   /** Inside another page (the landing): headings step down below that page's H1. */
   nested?: boolean
+  /** This page's own path (/p/…): Join and Log in bring the visitor back here. */
+  returnPath?: string | null
 }) {
   const first = p.displayName.split(' ')[0]
+  const joinHref = withNext('/register?start=1', returnPath)
   const c = p.community
   const meta = [p.age ? `${p.age}` : null, p.gender, height(p.heightCm)].filter(Boolean).join(' · ')
   const place = [p.location?.current, p.location?.native ? `Originally from ${p.location.native}` : null].filter(Boolean).join(' · ')
@@ -227,7 +231,7 @@ export function DigitalProfileView({
             prefs={p.contactPrefs}
             partner={p.preferences}
             audience={mode === 'demo' ? 'visitor' : audience}
-            profileHref={mode === 'demo' ? null : audience === 'visitor' ? '/register?start=1' : profileId ? `/profile/${profileId}` : null}
+            profileHref={mode === 'demo' ? null : audience === 'visitor' ? joinHref : profileId ? `/profile/${profileId}` : null}
           />
         )}
         details={<>
@@ -384,9 +388,9 @@ export function DigitalProfileView({
               ? 'Join Mithila Jodi free to send an interest and find your own Jodi.'
               : 'Contact details are not part of this link. Join Mithila Jodi free, send an interest, and you can request their number once they accept.'}
           </p>
-          <Link href="/register?start=1" className="dpj-cta">Join Mithila Jodi free →</Link>
+          <Link href={joinHref} className="dpj-cta">Join Mithila Jodi free →</Link>
           <p className="mt-2.5 text-[13px] text-ink-soft">
-            Already a member? <Link href="/login" className="font-semibold text-maroon underline-offset-2 hover:underline">Log in</Link>
+            Already a member? <Link href={withNext('/login', returnPath)} className="font-semibold text-maroon underline-offset-2 hover:underline">Log in</Link>
           </p>
         </section>
       )}
