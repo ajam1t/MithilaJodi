@@ -224,7 +224,7 @@ export async function loadSharedProfile(
       const c = {
         religion: granted.has('caste') ? labelFor(labels, 'religion', p.religion) : null,
         caste: granted.has('caste') ? labelFor(labels, 'caste', p.caste) : null,
-        subCaste: granted.has('caste') ? p.sub_caste ?? null : null,
+        subCaste: granted.has('caste') ? labelFor(labels, 'sub_caste', p.sub_caste) : null,
         selfGotra: granted.has('gotra') ? labelFor(labels, 'gotra', p.self_gotra) : null,
         maternalGotra: granted.has('maternal_gotra') ? p.maternal_gotra ?? null : null,
         mool: granted.has('mool') ? labelFor(labels, 'mool', p.mool) : null,

@@ -4,6 +4,8 @@ import '@/styles/digital-profile.css'
 import type { SharedProfile } from '@/lib/profileShare'
 import { ProfilePhotos } from '@/components/digital-profile/ProfilePhotos'
 import { ProfileGallery } from '@/components/digital-profile/ProfileGallery'
+import { ProfileModes } from '@/components/digital-profile/ProfileModes'
+import { ProfileStory } from '@/components/profile/ProfileStory'
 
 /**
  * THE Digital Profile renderer.
@@ -95,7 +97,8 @@ export function DigitalProfileView({
   const meta = [p.age ? `${p.age}` : null, p.gender, height(p.heightCm)].filter(Boolean).join(' · ')
   const place = [p.location?.current, p.location?.native ? `Originally from ${p.location.native}` : null].filter(Boolean).join(' · ')
   const chips = [
-    [c?.caste, c?.subCaste].filter(Boolean).join(' · ') || null,
+    // A sub-caste that only repeats the community is left out.
+    [c?.caste, c?.subCaste && c.subCaste.toLowerCase() !== c?.caste?.toLowerCase() ? c.subCaste : null].filter(Boolean).join(' · ') || null,
     c?.selfGotra ? `${c.selfGotra} Gotra` : null,
   ].filter(Boolean) as string[]
   const profession = p.career?.jobTitle || p.career?.detail || null
@@ -146,6 +149,26 @@ export function DigitalProfileView({
         )}
       </header>
 
+      {/* ── Story or Details: the same shared fields, told two ways. */}
+      <ProfileModes
+        story={
+          <ProfileStory
+            story={null}
+            prefs={p.preferences}
+            p={{
+              display_name: p.displayName, age: p.age, gender: p.gender ?? '', height_cm: p.heightCm, photo: photos[0] ?? null,
+              degree: p.education?.degree ?? null, specialization: p.education?.specialization ?? null, institution: p.education?.institution ?? null,
+              passing_year: p.education?.passingYear ?? null, education_detail: p.education?.detail ?? null,
+              job_title: p.career?.jobTitle ?? null, profession_detail: p.career?.detail ?? null, employer: p.career?.employer ?? null,
+              industry: p.career?.industry ?? null, experience_years: p.career?.experienceYears ?? null,
+              current_loc_name: p.location?.current ?? null, native_place_name: p.location?.native ?? null, job_loc_name: p.location?.work ?? null,
+              gram: c?.gram ?? null, self_gotra: c?.selfGotra ?? null, maternal_gotra: c?.maternalGotra ?? null, mool: c?.mool ?? null, caste: c?.caste ?? null,
+              family_type: p.family?.type ?? null, family_values: p.family?.values ?? null, parents_info: p.family?.parents ?? null, siblings_info: p.family?.siblings ?? null,
+              diet: p.lifestyle?.diet ?? null, mother_tongue: p.motherTongue, marital_status: p.maritalStatus, about_me: p.about,
+            }}
+          />
+        }
+        details={<>
       {/* ── Photographs: the one place they appear. */}
       <ProfilePhotos photos={photos} name={p.displayName} demo={mode === 'demo'} style={{ ['--i' as string]: 1 }} />
 
@@ -282,6 +305,9 @@ export function DigitalProfileView({
           <Fact label="Address" value={p.contact.address} />
         </Panel>
       )}
+
+        </>}
+      />
 
       {/* ── Actions: the only part that differs by who is looking. */}
       {mode === 'public' && audience === 'member' && connection}
