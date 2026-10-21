@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { PHOTO_VISIBILITY_OPTIONS, type PhotoVisibility } from '@/lib/photoVisibility'
 
-/** Admin → member: who may see the member's photographs (Public / Members / Matches). */
+/** Admin → member: who may see the member's photographs (Public / Members / Matches / On request). */
 export function PhotoVisibilityControl({ accountId, value, canEdit }: { accountId: string; value: PhotoVisibility; canEdit: boolean }) {
   const router = useRouter()
   const [current, setCurrent] = useState(value)
@@ -32,7 +32,7 @@ export function PhotoVisibilityControl({ accountId, value, canEdit }: { accountI
 
   return (
     <div>
-      <div role="radiogroup" aria-label="Who can see this member's photos" className="grid grid-cols-3 gap-1.5">
+      <div role="radiogroup" aria-label="Who can see this member's photos" className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
         {PHOTO_VISIBILITY_OPTIONS.map(o => (
           <button
             key={o.value} type="button" role="radio" aria-checked={current === o.value}

@@ -1,5 +1,6 @@
 'use client'
 
+import '@/styles/digital-profile.css'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import type { SharedProfile } from '@/lib/profileShare'

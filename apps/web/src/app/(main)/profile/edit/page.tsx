@@ -1847,6 +1847,9 @@ export default function ProfileEditPage() {
                 <p className="mt-1 text-xs text-ink-soft">
                   Members keeps your photographs off the public pages. Matches also hides them from
                   search and from members who have only sent you an interest — until you accept them.
+                  On request works like Matches, and also lets a member who can see your profile ask
+                  to see your photographs: you approve or decline each request in your Inbox, and can
+                  take access back at any time.
                 </p>
               </div>
             </div>

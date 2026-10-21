@@ -113,7 +113,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       if (!profile) return NextResponse.json({ ok: false, message: 'This member has no profile yet.' }, { status: 409 })
       const value = body.value
       if (!PHOTO_VISIBILITY_OPTIONS.some(o => o.value === value)) {
-        return NextResponse.json({ ok: false, message: 'Choose Public, Members or Matches.' }, { status: 400 })
+        return NextResponse.json({ ok: false, message: 'Choose Public, Members, Matches or On request.' }, { status: 400 })
       }
       const { data: before } = await admin.from('profile_private').select('photo_visibility').eq('profile_id', profile.id).maybeSingle()
       const { error } = await admin.from('profile_private').upsert({ profile_id: profile.id, photo_visibility: value })

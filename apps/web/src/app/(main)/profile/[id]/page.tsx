@@ -2,7 +2,8 @@ import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { after } from 'next/server'
 import { getSessionAccount } from '@/lib/auth'
-import { approvedPhotoUrls, canViewPhotos } from '@/lib/photoAccess'
+import { approvedPhotoUrls, canViewPhotos, normalisePhotoVisibility } from '@/lib/photoAccess'
+import { askAgainAt, requestBetween, type RequestRow } from '@/lib/memberRequests'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getCommunityLabels, labelFor } from '@/lib/communityLabels'
 import { getLocationIndex } from '@/lib/locationIndex'
@@ -132,6 +133,27 @@ async function fetchProfileView(profileId: string, viewerAccountId: string, prev
   const photos = photoAllowed ? await approvedPhotoUrls(admin, profileId) : []
   const photoUrl: string | null = photos[0] ?? null
 
+  // Why the photos are withheld, for the quiet panel shown in their place:
+  // 'on_request' offers "Request photos" (and this viewer's request, if any);
+  // 'connected' just says matches see them. Only when there are approved
+  // photos to see, and never in your own preview. Before the requests
+  // migration runs, 'on_request' reads as 'connected' here as everywhere.
+  let photoGate: { level: 'connected' | 'on_request'; request: RequestRow | null; askAgainAt: string | null } | null = null
+  if (!isSelf && myProfileId && !photoAllowed) {
+    const [{ data: priv }, { count: photoCount }] = await Promise.all([
+      admin.from('profile_private').select('photo_visibility').eq('profile_id', profileId).maybeSingle(),
+      admin.from('profile_photos').select('id', { count: 'exact', head: true }).eq('profile_id', profileId).eq('status', 'approved'),
+    ])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const level = normalisePhotoVisibility((priv as any)?.photo_visibility)
+    if ((photoCount ?? 0) > 0 && (level === 'connected' || level === 'on_request')) {
+      const r = level === 'on_request' ? await requestBetween(admin, 'photo', myProfileId, profileId) : 'off'
+      photoGate = r === 'off' || r === 'error'
+        ? { level: 'connected', request: null, askAgainAt: null }
+        : { level: 'on_request', request: r, askAgainAt: askAgainAt(r) }
+    }
+  }
+
   // Relationship state (requires viewer to have a profile)
   let interestSent: { id: string; status: string } | null = null
   let interestReceived: { id: string; status: string } | null = null
@@ -188,6 +210,24 @@ async function fetchProfileView(profileId: string, viewerAccountId: string, prev
     const { data: conv } = await admin.from('conversations').select('id').eq('profile_a', a).eq('profile_b', b).maybeSingle()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     conversationId = (conv as any)?.id ?? null
+  }
+
+  // Contact details on request, between matches only: this viewer's request
+  // to them, and whether they are waiting on one from this viewer. Null (no
+  // UI) before the requests migration runs or if it cannot be read.
+  let contactRequest: { request: RequestRow | null; askAgainAt: string | null; theyAsked: boolean } | null = null
+  if (matched && myProfileId && !isSelf && !blocked) {
+    const [mine, theirs] = await Promise.all([
+      requestBetween(admin, 'contact', myProfileId, profileId),
+      requestBetween(admin, 'contact', profileId, myProfileId),
+    ])
+    if (mine !== 'off' && mine !== 'error') {
+      contactRequest = {
+        request: mine,
+        askAgainAt: askAgainAt(mine),
+        theyAsked: theirs !== 'off' && theirs !== 'error' && theirs?.status === 'pending',
+      }
+    }
   }
 
   // ── Match score ───────────────────────────────────────────────────────────
@@ -359,6 +399,8 @@ async function fetchProfileView(profileId: string, viewerAccountId: string, prev
     story,
     matched,
     conversationId,
+    photoGate,
+    contactRequest,
     myProfileId,
     interestSent,
     interestReceived,

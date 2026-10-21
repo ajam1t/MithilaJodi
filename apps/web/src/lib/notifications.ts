@@ -28,6 +28,8 @@ export type NotificationType =
   | 'announcement' | 'system'
   | 'membership_expiring' | 'membership_expired' | 'photo_approved' | 'photo_rejected'
   | 'profile_approved' | 'profile_rejected'
+  | 'photo_request_received' | 'photo_request_approved'
+  | 'contact_request_received' | 'contact_request_approved'
 
 /** Small set of icon names the UI knows how to draw. */
 export type NotificationIcon = 'eye' | 'heart' | 'spark' | 'pin' | 'chat' | 'clock' | 'user' | 'megaphone' | 'check' | 'bell'
@@ -149,6 +151,8 @@ const TYPE_ICON: Partial<Record<string, NotificationIcon>> = {
   profile_viewed: 'eye', new_member_match: 'spark', new_member_city: 'pin', interest_received: 'heart',
   interest_accepted: 'heart', mutual_match: 'heart', new_message: 'chat', unread_message_reminder: 'clock',
   profile_incomplete: 'user', announcement: 'megaphone',
+  photo_request_received: 'user', photo_request_approved: 'check',
+  contact_request_received: 'user', contact_request_approved: 'check',
 }
 
 export function describeNotification(row: any): NotificationView {

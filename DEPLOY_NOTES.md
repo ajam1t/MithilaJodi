@@ -20,6 +20,7 @@ file is executed together.
 | 6 | `supabase/migrations/20261021000001_contact_preferences.sql` | **Applied 2026-10-21.** Contact preferences on Digital Profiles (best way to reach, days, hours, "connect only if", a note). Until it runs, the Contact tab still shows the number and profile link, and the new fields are simply not offered when editing. |
 
 | 7 | `supabase/migrations/20260826000001_blog_marriage_rituals.sql` | **Publishes 10 Maithil wedding-ritual articles** in the Journal (Complete Guide to Maithil Vivah, Kohbar, Tilak, Siddhant, Sindoor Daan, Chaturthi, Dwiragaman, Parichhan, Naina Jogin, wedding songs) and renames the category to "Mithila Marriage Rituals & Traditions". Read the articles first — they go live the moment it runs, dated today. Safe to run twice (existing slugs are skipped). |
+| 8 | `supabase/migrations/20261022000001_photo_and_contact_requests.sql` | **Photos on request + contact details on request.** Creates `photo_requests` and `contact_requests` (service-role only: RLS on, no policy, `anon`/`authenticated` revoked). Members can choose "On request" for their photos and approve who sees them; matched members can ask for each other's contact number, shared only on approval. Until it runs: no request buttons on profiles, no Inbox "Requests" tab, the request APIs answer 503 "This feature is not switched on yet.", and an "On request" photo setting behaves exactly like "Matches". Safe to run twice. |
 
 Migration 2 is the important one. Until it runs, those 13 tables are reachable
 with the `anon` key.
