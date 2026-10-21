@@ -120,7 +120,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
 
   // Reopen a previously-blocked shared conversation, but only if the OTHER party
   // has not also blocked us (otherwise it must stay closed).
-  const { data: reverseBlock } = await admin
+  const { data: reverseBlock, error: reverseError } = await admin
     .from('blocks')
     .select('blocker_id')
     .eq('blocker_id', profileId)
@@ -128,7 +128,9 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
     .limit(1)
     .maybeSingle()
 
-  if (!reverseBlock) {
+  // Fail closed: if the reverse check cannot run, the conversation stays closed.
+  if (reverseError) console.error('[blocks DELETE] reverse block query error:', reverseError.message)
+  if (!reverseBlock && !reverseError) {
     await admin
       .from('conversations')
       .update({ status: 'open', updated_at: new Date().toISOString() })

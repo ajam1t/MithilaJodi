@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
   }
 
   // A member who blocked the platform profile has opted out of these.
-  const { data: blocked } = await admin
+  const { data: blocked, error: blockError } = await admin
     .from('blocks')
     .select('blocker_id')
     .or(
@@ -103,6 +103,11 @@ export async function POST(request: NextRequest) {
     .limit(1)
     .maybeSingle()
 
+  // Fail closed: if the block check cannot run, nothing is sent.
+  if (blockError) {
+    console.error('[admin/messages/send] blocks query error:', blockError.message)
+    return NextResponse.json({ ok: false, message: 'Something went wrong — please try again.' }, { status: 503 })
+  }
   if (blocked) {
     return NextResponse.json(
       { ok: false, message: 'This member has blocked messages from Mithila Jodi.' },

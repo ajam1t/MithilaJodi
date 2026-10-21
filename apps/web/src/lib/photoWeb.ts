@@ -8,8 +8,12 @@ import sharp from 'sharp'
  * hundred pixels. Each original in the private `profile-photos` bucket gets a
  * copy at the same path in the private `profile-photos-web` bucket: at most
  * 720 × 960, WebP — typically 40–120 KB. Pages sign the copy and fall back to
- * the original when there is none (HEIC that sharp cannot read, a photo from
- * before this existed and not yet backfilled), so nothing ever goes missing.
+ * the original when there is none (a photo from before this existed and not
+ * yet backfilled), so nothing ever goes missing — except a stored HEIC
+ * original, which is never signed here (see signPhotos).
+ *
+ * New originals are themselves re-encoded on upload (toStoredOriginal), so
+ * what is stored carries no EXIF/GPS or camera metadata either.
  *
  * This changes only the bytes sent, never who may see a photo: callers keep
  * every access check and call these helpers exactly where they used to sign
@@ -39,6 +43,31 @@ export async function toWebCopy(bytes: ArrayBuffer | Buffer): Promise<Buffer> {
     .resize({ width: 720, height: 960, fit: 'inside', withoutEnlargement: true })
     .webp({ quality: 78, effort: 4 })
     .toBuffer()
+}
+
+/**
+ * What an upload is stored as: rotated by EXIF, long edge at most 2000 px,
+ * JPEG, and no metadata at all (sharp writes none unless asked to), so a
+ * phone photo's GPS position and camera details never reach Storage.
+ * Returns null when sharp cannot decode the bytes — typically iPhone HEIC
+ * (HEVC), which stock sharp cannot read; callers refuse such an upload.
+ */
+export async function toStoredOriginal(bytes: ArrayBuffer | Buffer): Promise<Buffer | null> {
+  try {
+    return await sharp(Buffer.isBuffer(bytes) ? bytes : Buffer.from(bytes), { failOn: 'none' })
+      .rotate()
+      .resize({ width: 2000, height: 2000, fit: 'inside', withoutEnlargement: true })
+      .flatten({ background: '#ffffff' })
+      .jpeg({ quality: 86, mozjpeg: true })
+      .toBuffer()
+  } catch {
+    return null
+  }
+}
+
+/** True for a stored HEIC/HEIF original (uploaded before toStoredOriginal existed). */
+export function isHeicPath(path: string): boolean {
+  return /\.(heic|heif)$/i.test(path)
 }
 
 /**
@@ -96,7 +125,7 @@ type Signed = { path: string; signedUrl: string | null; error: string | null }
 /**
  * Drop-in for `storage.from('profile-photos').createSignedUrls(paths, 3600)`:
  * same `{ data, error }` shape, same order — but each URL points at the web
- * copy when one exists, else at the original.
+ * copy when one exists, else at the original (never a HEIC original).
  */
 export async function signPhotos(admin: any, paths: string[]): Promise<{ data: Signed[] | null; error: { message: string } | null }> {
   const out: Signed[] = paths.map(p => ({ path: p, signedUrl: null, error: null }))
@@ -114,6 +143,9 @@ export async function signPhotos(admin: any, paths: string[]): Promise<{ data: S
   want.forEach((p, k) => {
     const url = !webErr ? (web?.[k]?.signedUrl as string | undefined) : undefined
     if (url) { remember(`w:${p}`, url); for (const i of need.get(p)!) out[i].signedUrl = url }
+    // A HEIC original is never signed: its bytes still carry the camera's EXIF
+    // (GPS included). It stays null and the page shows the placeholder.
+    else if (isHeicPath(p)) for (const i of need.get(p)!) out[i].error = 'no web copy'
     else missing.push(p)
   })
   if (missing.length === 0) return { data: out, error: null }

@@ -3,18 +3,11 @@ import { NextRequest, NextResponse, after } from 'next/server'
 import { nanoid } from 'nanoid'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
-import { sniffImage } from '@/lib/imageSniff'
-import { makeWebCopy } from '@/lib/photoWeb'
+import { HEIC_UNSUPPORTED_MESSAGE, sniffImage } from '@/lib/imageSniff'
+import { makeWebCopy, toStoredOriginal } from '@/lib/photoWeb'
 
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
 const MAX_BYTES = 5 * 1024 * 1024
-
-function extensionFor(mime: string): string {
-  if (mime === 'image/png') return 'png'
-  if (mime === 'image/webp') return 'webp'
-  if (mime === 'image/heic' || mime === 'image/heif') return 'heic'
-  return 'jpg'
-}
 
 export async function POST(
   request: NextRequest,
@@ -40,16 +33,23 @@ export async function POST(
   const { count } = await admin.from('profile_photos').select('id', { count: 'exact', head: true }).eq('profile_id', id).neq('status', 'deleted')
   if ((count ?? 0) >= 5) return NextResponse.json({ ok: false, message: 'Maximum 5 photos allowed per profile.' }, { status: 400 })
 
+  const bytes = await file.arrayBuffer()
+  const realType = sniffImage(bytes)
+  if (!realType) return NextResponse.json({ ok: false, message: 'That file is not a JPEG, PNG, WebP or HEIC photo.' }, { status: 400 })
+  // Stored re-encoded as JPEG with no metadata, so EXIF/GPS never reaches Storage.
+  const stored = await toStoredOriginal(bytes)
+  if (!stored) {
+    const heic = realType === 'image/heic' || realType === 'image/heif'
+    return NextResponse.json({ ok: false, message: heic ? HEIC_UNSUPPORTED_MESSAGE : 'We could not read that photo. Please try another one.' }, { status: 400 })
+  }
+
   const isPrimary = formData.get('is_primary') === 'true' || (count ?? 0) === 0
   if (isPrimary) {
     await admin.from('profile_photos').update({ is_primary: false }).eq('profile_id', id).eq('is_primary', true)
   }
 
-  const bytes = await file.arrayBuffer()
-  const realType = sniffImage(bytes)
-  if (!realType) return NextResponse.json({ ok: false, message: 'That file is not a JPEG, PNG, WebP or HEIC photo.' }, { status: 400 })
-  const storagePath = `admin/${profile.account_id}/${id}/${nanoid()}.${extensionFor(realType)}`
-  const { error: uploadError } = await admin.storage.from('profile-photos').upload(storagePath, bytes, { contentType: realType, upsert: false })
+  const storagePath = `admin/${profile.account_id}/${id}/${nanoid()}.jpg`
+  const { error: uploadError } = await admin.storage.from('profile-photos').upload(storagePath, stored, { contentType: 'image/jpeg', upsert: false })
   if (uploadError) {
     console.error('[admin/profiles photo] upload error:', uploadError.message)
     return NextResponse.json({ ok: false, message: 'Photo upload failed.' }, { status: 500 })
@@ -70,7 +70,7 @@ export async function POST(
     return NextResponse.json({ ok: false, message: 'Could not save the photo.' }, { status: 500 })
   }
 
-  after(() => makeWebCopy(admin, storagePath, bytes))
+  after(() => makeWebCopy(admin, storagePath, stored))
 
   await admin.from('admin_audit_logs').insert({
     actor_id: session.id,

@@ -2,24 +2,15 @@ import { NextRequest, NextResponse, after } from 'next/server'
 import { nanoid } from 'nanoid'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
-import { sniffImage } from '@/lib/imageSniff'
+import { HEIC_UNSUPPORTED_MESSAGE, sniffImage } from '@/lib/imageSniff'
 import { refreshPublicShowcase } from '@/lib/showcaseCache'
 import { syncDiscoverability } from '@/lib/discoverability'
 import { signPhoto } from '@/lib/photoWeb'
-import { makeWebCopy } from '@/lib/photoWeb'
+import { makeWebCopy, toStoredOriginal } from '@/lib/photoWeb'
 
+// HEIC is let through to here only so a photo sharp cannot decode gets a clear message.
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
 const MAX_BYTES = 5 * 1024 * 1024  // 5 MB
-
-function extFor(mime: string): string {
-  const map: Record<string, string> = {
-    'image/png': 'png',
-    'image/webp': 'webp',
-    'image/heic': 'heic',
-    'image/heif': 'heif',
-  }
-  return map[mime] ?? 'jpg'
-}
 
 export async function GET() {
   const account = await getSessionAccount()
@@ -137,13 +128,22 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const ext = extFor(realType)
+  // Stored re-encoded as JPEG with no metadata, so EXIF/GPS never reaches Storage.
+  const stored = await toStoredOriginal(bytes)
+  if (!stored) {
+    const heic = realType === 'image/heic' || realType === 'image/heif'
+    return NextResponse.json(
+      { ok: false, message: heic ? HEIC_UNSUPPORTED_MESSAGE : 'We could not read that photo. Please try another one.' },
+      { status: 400 }
+    )
+  }
+
   const photoFileId = nanoid()
-  const storagePath = `${account.id}/${profile.id}/${photoFileId}.${ext}`
+  const storagePath = `${account.id}/${profile.id}/${photoFileId}.jpg`
 
   const { error: uploadError } = await admin.storage
     .from('profile-photos')
-    .upload(storagePath, bytes, { contentType: realType, upsert: false })
+    .upload(storagePath, stored, { contentType: 'image/jpeg', upsert: false })
 
   if (uploadError) {
     console.error('[photos POST] storage upload error:', uploadError.message)
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
   }
 
   // The web-sized copy pages load, made after the response is sent.
-  after(() => makeWebCopy(admin, storagePath, bytes))
+  after(() => makeWebCopy(admin, storagePath, stored))
 
   // The first photo can be what completes onboarding and makes the profile visible.
   await syncDiscoverability(admin, account.id)

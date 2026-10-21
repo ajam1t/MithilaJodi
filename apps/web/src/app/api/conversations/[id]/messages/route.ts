@@ -75,7 +75,7 @@ export async function POST(
       ? (conv.profile_b as string)
       : (conv.profile_a as string)
 
-  const { data: blockRow } = await admin
+  const { data: blockRow, error: blockError } = await admin
     .from('blocks')
     .select('blocker_id')
     .or(
@@ -84,6 +84,11 @@ export async function POST(
     .limit(1)
     .maybeSingle()
 
+  // Fail closed: if the block check cannot run, the message is not sent.
+  if (blockError) {
+    console.error('[messages POST] blocks query error:', blockError.message)
+    return NextResponse.json({ ok: false, message: 'Something went wrong — please try again.' }, { status: 503 })
+  }
   if (blockRow) {
     return NextResponse.json({ ok: false, message: 'Conversation is closed' }, { status: 403 })
   }

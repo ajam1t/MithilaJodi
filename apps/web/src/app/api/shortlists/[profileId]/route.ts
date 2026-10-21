@@ -36,7 +36,7 @@ export async function POST(_request: NextRequest, { params }: RouteContext) {
   // Same bar as viewing or sending an interest: only a live, discoverable
   // profile, with no block either way. Otherwise the shortlist would reveal
   // the name of a hidden, private, suspended or blocking member.
-  const [{ data: targetProfile }, { data: blk }] = await Promise.all([
+  const [{ data: targetProfile }, { data: blk, error: blkError }] = await Promise.all([
     admin
       .from('profiles')
       .select('id, accounts!inner(account_status, deleted_at)')
@@ -49,6 +49,11 @@ export async function POST(_request: NextRequest, { params }: RouteContext) {
       .or(`and(blocker_id.eq.${myId},blocked_id.eq.${profileId}),and(blocker_id.eq.${profileId},blocked_id.eq.${myId})`)
       .limit(1),
   ])
+  // Fail closed: an unreadable block check is never read as "not blocked".
+  if (blkError) {
+    console.error('[shortlists POST] blocks query error:', blkError.message)
+    return NextResponse.json({ ok: false, message: 'Something went wrong — please try again.' }, { status: 503 })
+  }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const tAcct = (targetProfile as any)?.accounts
   const acct = Array.isArray(tAcct) ? tAcct[0] : tAcct

@@ -6,6 +6,10 @@
  */
 export type SniffedImage = 'image/jpeg' | 'image/png' | 'image/webp' | 'image/heic' | 'image/heif'
 
+/** Shown when a HEIC photo cannot be decoded (stock sharp and most browsers cannot). */
+export const HEIC_UNSUPPORTED_MESSAGE =
+  "This photo format (HEIC) can't be used. On iPhone choose 'Most Compatible' in Settings → Camera → Formats, or pick the photo again — it will be sent as JPEG."
+
 const HEIC_BRANDS = new Set(['heic', 'heix', 'hevc', 'hevx', 'heim', 'heis', 'hevm', 'hevs'])
 const HEIF_BRANDS = new Set(['mif1', 'msf1', 'heif'])
 

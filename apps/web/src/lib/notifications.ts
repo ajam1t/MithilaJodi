@@ -185,12 +185,14 @@ export function displayName(first: string | null | undefined, last: string | nul
  */
 export async function notifyProfileViewed(admin: any, viewer: any, target: { id: string; account_id: string }): Promise<void> {
   if (!viewer?.id || viewer.account_id === target.account_id) return
-  const { data: blocked } = await admin
+  const { data: blocked, error: blockError } = await admin
     .from('blocks')
     .select('blocker_id')
     .or(`and(blocker_id.eq.${viewer.id},blocked_id.eq.${target.id}),and(blocker_id.eq.${target.id},blocked_id.eq.${viewer.id})`)
     .limit(1)
     .maybeSingle()
+  // Fail closed: no notification when the block check cannot run.
+  if (blockError) { console.error('[notifyProfileViewed] blocks query error:', blockError.message); return }
   if (blocked) return
 
   const named = viewer.profile_status === 'active' && viewer.discoverable === true
@@ -358,10 +360,12 @@ export async function scoreNewMembers(admin: any, me: any, fromIso: string): Pro
   if (pool.length === 0) return []
 
   // Never point anyone at a profile on either side of a block.
-  const { data: blocks } = await admin
+  const { data: blocks, error: blockError } = await admin
     .from('blocks')
     .select('blocker_id, blocked_id')
     .or(`blocker_id.eq.${me.id},blocked_id.eq.${me.id}`)
+  // Fail closed: recommend no one when the block list cannot be read.
+  if (blockError) { console.error('[notifications] blocks query error:', blockError.message); return [] }
   const blocked = new Set<string>()
   for (const b of blocks ?? []) blocked.add(b.blocker_id === me.id ? b.blocked_id : b.blocker_id)
   pool = pool.filter(p => !blocked.has(p.id))

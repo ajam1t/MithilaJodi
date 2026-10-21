@@ -7,6 +7,7 @@ import { MasterCombo, type Option } from '@/components/profile/MasterCombo'
 import { GramField } from '@/components/profile/GramField'
 import { latestDob } from '@/lib/ageRules'
 import { normalisePhotoVisibility, PHOTO_VISIBILITY_OPTIONS } from '@/lib/photoVisibility'
+import { HEIC_UNSUPPORTED_MESSAGE } from '@/lib/imageSniff'
 
 
 type PhotoRow = {
@@ -523,6 +524,7 @@ export default function ProfileEditPage() {
   const [saveState, setSaveState] = useState<SaveState>('idle')
   const [error, setError] = useState('')
   const [profileComplete, setProfileComplete] = useState<number>(0)
+  const [photoNotice, setPhotoNotice] = useState('')
   const [uploadState, setUploadState] = useState<UploadState>({
     progress: 0, failed: false, message: '', file: null
   })
@@ -850,37 +852,53 @@ export default function ProfileEditPage() {
   }
 
   // ── Photo helpers ────────────────────────────────────────────────────────────
-  function compressImage(file: File): Promise<File> {
+  // Every photo, HEIC included, is redrawn on a canvas and sent as JPEG, which
+  // also drops its EXIF (GPS, camera). Safari can decode HEIC; where the browser
+  // cannot, this rejects and the photo is not uploaded (see doUpload).
+  async function decodeImage(file: File): Promise<{ source: CanvasImageSource; width: number; height: number; done: () => void }> {
+    if (typeof createImageBitmap === 'function') {
+      try {
+        const bmp = await createImageBitmap(file)
+        return { source: bmp, width: bmp.width, height: bmp.height, done: () => bmp.close() }
+      } catch { /* fall back to <img> */ }
+    }
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    try {
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve()
+        img.onerror = () => reject(new Error('Image load failed'))
+        img.src = url
+      })
+    } finally {
+      URL.revokeObjectURL(url)
+    }
+    return { source: img, width: img.naturalWidth, height: img.naturalHeight, done: () => {} }
+  }
+
+  async function compressImage(file: File): Promise<File> {
     const MAX_DIM = 1200
     const QUALITY = 0.85
-    if (file.type === 'image/heic' || file.type === 'image/heif') return Promise.resolve(file)
-    return new Promise((resolve, reject) => {
-      const url = URL.createObjectURL(file)
-      const img = new Image()
-      img.onload = () => {
-        URL.revokeObjectURL(url)
-        const { width, height } = img
-        let newW = width, newH = height
-        if (width > MAX_DIM || height > MAX_DIM) {
-          const ratio = Math.min(MAX_DIM / width, MAX_DIM / height)
-          newW = Math.round(width * ratio)
-          newH = Math.round(height * ratio)
-        }
-        const canvas = document.createElement('canvas')
-        canvas.width = newW; canvas.height = newH
-        const ctx = canvas.getContext('2d')!
-        ctx.drawImage(img, 0, 0, newW, newH)
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) { reject(new Error('Compression failed')); return }
-            resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }))
-          },
-          'image/jpeg', QUALITY
-        )
+    const { source, width, height, done } = await decodeImage(file)
+    try {
+      let newW = width, newH = height
+      if (width > MAX_DIM || height > MAX_DIM) {
+        const ratio = Math.min(MAX_DIM / width, MAX_DIM / height)
+        newW = Math.round(width * ratio)
+        newH = Math.round(height * ratio)
       }
-      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image load failed')) }
-      img.src = url
-    })
+      const canvas = document.createElement('canvas')
+      canvas.width = newW; canvas.height = newH
+      const ctx = canvas.getContext('2d')!
+      ctx.fillStyle = '#fff'
+      ctx.fillRect(0, 0, newW, newH)
+      ctx.drawImage(source, 0, 0, newW, newH)
+      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', QUALITY))
+      if (!blob) throw new Error('Compression failed')
+      return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' })
+    } finally {
+      done()
+    }
   }
 
   function uploadWithXhr(file: File, onProgress: (pct: number) => void): Promise<{ ok: boolean; photo_id?: string; message?: string }> {
@@ -903,11 +921,22 @@ export default function ProfileEditPage() {
     uploadingRef.current = true
     setUploadState({ progress: 0, failed: false, message: '', file })
     setError('')
+    setPhotoNotice('')
 
     let compressed: File
     try {
       compressed = await compressImage(file)
     } catch {
+      // A raw HEIC is never sent: it cannot be used and carries the camera's EXIF.
+      // Other formats go as they are; the server re-encodes them without metadata.
+      if (/image\/hei[cf]/.test(file.type) || /\.(heic|heif)$/i.test(file.name)) {
+        uploadingRef.current = false
+        // No retry card: retrying the same file cannot work, so leave "Add photo" showing.
+        setUploadState({ progress: 0, failed: false, message: '', file: null })
+        setPhotoNotice(HEIC_UNSUPPORTED_MESSAGE)
+        if (fileRef.current) fileRef.current.value = ''
+        return
+      }
       compressed = file
     }
 
@@ -918,7 +947,7 @@ export default function ProfileEditPage() {
 
     if (result.ok) {
       // Show local preview immediately (status = pending_moderation)
-      const preview = URL.createObjectURL(file)
+      const preview = URL.createObjectURL(compressed)
       setPhotos(prev => [...prev, {
         id: result.photo_id!,
         is_primary: prev.length === 0,
@@ -1328,6 +1357,9 @@ export default function ProfileEditPage() {
                 </label>
               )}
             </div>
+            {photoNotice && (
+              <p role="alert" className="rounded-mj-sm bg-red-50 border border-red-200 px-3 py-2 text-red-700 text-xs">{photoNotice}</p>
+            )}
           </FormSection>
 
           <FormSection
