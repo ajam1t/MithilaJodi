@@ -59,7 +59,7 @@ const shortName = (family: string) => family.replace(/^The\s+/i, '').replace(/fa
 
 /**
  * Laid out as a letter: the chosen family's words sit on a paper card, in
- * large editorial type with a faint gold halftone in one corner, and the
+ * large editorial type under a single quote mark, and the
  * four families stay a compact selector beneath it (a tab list — arrow keys
  * move between them). Changing family fades the new words in; nothing
  * changes on its own.
@@ -93,7 +93,7 @@ export function CommunityStories() {
             id="story-panel"
             role="tabpanel"
             aria-labelledby={`story-tab-${active}`}
-            className="mj-letter relative overflow-hidden rounded-[22px] border border-gold/40 bg-cream px-6 pb-7 pt-9 shadow-mj-sm sm:px-12 sm:pb-9 sm:pt-11"
+            className="relative overflow-hidden rounded-[22px] border border-gold/40 bg-cream px-6 pb-7 pt-9 shadow-mj-sm sm:px-12 sm:pb-9 sm:pt-11"
           >
             <span className="pointer-events-none absolute left-5 top-1 font-serif text-[96px] leading-none text-gold/35 sm:left-8 sm:text-[120px]" aria-hidden="true">&ldquo;</span>
             <span className="pointer-events-none absolute right-6 top-4 font-deva text-[14px] text-gold/70 sm:right-8 sm:top-5 sm:text-[15px]" lang="mai" aria-hidden="true">परिवारक बात</span>
@@ -125,7 +125,6 @@ export function CommunityStories() {
                 >
                   <span className={`relative grid h-10 w-10 place-items-center rounded-full font-serif text-[17px] leading-none transition-colors sm:h-11 sm:w-11 sm:text-[19px] ${on ? 'bg-maroon text-cream' : 'border border-gold/50 bg-cream text-maroon'}`} aria-hidden="true">
                     {st.initial}
-                    <span className={`absolute -inset-[5px] rounded-full border border-dashed border-gold/60 transition-opacity ${on ? 'opacity-100' : 'opacity-0'}`} />
                   </span>
                   <span className="mt-2 block font-serif text-[12.5px] leading-tight text-maroon sm:text-[14.5px]">{shortName(st.family)}</span>
                   <span className="mt-0.5 block text-[10.5px] leading-tight text-ink-soft sm:text-[12px]">{st.place}</span>
