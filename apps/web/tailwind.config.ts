@@ -35,6 +35,8 @@ const config: Config = {
           3: '#ECDCC0',
         },
         cream: '#FFFAF0',
+        // A warm hairline for quieter card and divider borders (About page).
+        line: '#EADFCB',
         maroon: {
           DEFAULT: '#7A1220',
           2: '#9B2233',

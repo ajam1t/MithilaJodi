@@ -665,35 +665,6 @@ footer :focus-visible {
   }
 }
 
-/* ── Gold sweep across a heading ──────────────────────────────────────────
-   Reuses the brand gold. Opt-in per heading; .section-heading is used in
-   dozens of places and is not touched.
-
-   Three passes, not infinite. `background-clip: text` cannot be promoted to
-   the compositor, so every frame of this repaints the glyphs — cheap for a few
-   seconds on one heading, wasteful forever on a 52px hero line on a phone. It
-   also simply looks better: it draws the eye on arrival and then leaves the
-   headline alone. At rest the gold band sits outside the box and the text
-   renders as plain maroon, so the end state needs no fill mode. */
-@media (prefers-reduced-motion: no-preference) {
-  .mj-shine {
-    background: linear-gradient(
-      100deg,
-      var(--maroon) 0%, var(--maroon) 42%,
-      #d8b45a 50%,
-      var(--maroon) 58%, var(--maroon) 100%
-    );
-    background-size: 220% 100%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: mjShineSweep 7s ease-in-out 1.2s 3;
-  }
-}
-@keyframes mjShineSweep {
-  0%, 70%, 100% { background-position: 120% 0; }
-  85%           { background-position: -20% 0; }
-}
 
 /* The reading-progress bar needs no CSS of its own: components/motion/
    ReadingProgress writes scaleX directly to the element. It used to have a

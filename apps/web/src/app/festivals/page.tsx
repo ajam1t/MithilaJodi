@@ -3,7 +3,6 @@ import Link from 'next/link'
 import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
-import { MithilaBorder } from '@/components/home/MithilaBorder'
 import { FestivalCard } from '@/components/festivals/FestivalCard'
 import { FESTIVALS } from '@/lib/festivals'
 import { jsonLdScript } from '@/lib/seo'
@@ -82,25 +81,6 @@ export default function FestivalsIndexPage() {
       <main id="main-content" className="flex-1">
         {/* ── Hero ─────────────────────────────────────────── */}
         <section className="relative overflow-hidden bg-maroon-deep">
-          <div className="absolute inset-0 opacity-[0.16]" aria-hidden="true">
-            <svg viewBox="0 0 400 200" className="w-full h-full" preserveAspectRatio="xMidYMid slice" fill="none">
-              {[[60, 50, 34], [200, 34, 26], [340, 58, 30], [120, 150, 28], [280, 158, 32]].map(
-                ([cx, cy, r], gi) => (
-                  <g key={gi}>
-                    {[0, 45, 90, 135].map((a) => (
-                      <ellipse
-                        key={a} cx={cx} cy={cy} rx={r * 0.32} ry={r}
-                        stroke="#E4C572" strokeWidth="1" transform={`rotate(${a} ${cx} ${cy})`}
-                      />
-                    ))}
-                    <circle cx={cx} cy={cy} r={r * 0.26} fill="#E8912A" opacity="0.55" />
-                  </g>
-                )
-              )}
-            </svg>
-          </div>
-          <div className="gold-strip absolute top-0 inset-x-0" aria-hidden="true" />
-
           <div className="wrap relative py-12 sm:py-16 text-center">
             <nav aria-label="Breadcrumb" className="mb-5">
               <ol className="flex items-center justify-center gap-2 text-[12.5px] text-paper-3/70">
@@ -133,13 +113,11 @@ export default function FestivalsIndexPage() {
 
             <div className="flex flex-wrap items-center justify-center gap-2.5 mt-7">
               <span className="badge badge-gold">{FESTIVALS.length} festivals</span>
-              <span className="badge bg-cream/10 text-paper-2 border border-gold/30">Stories &amp; rituals</span>
-              <span className="badge bg-cream/10 text-paper-2 border border-gold/30">Maithili songs</span>
+              <span className="badge bg-cream/10 text-paper-2 border border-cream/20">Stories &amp; rituals</span>
+              <span className="badge bg-cream/10 text-paper-2 border border-cream/20">Maithili songs</span>
             </div>
           </div>
         </section>
-
-        <MithilaBorder variant="bottom" className="h-6 sm:h-9 overflow-hidden" />
 
         {/* ── Grid ─────────────────────────────────────────── */}
         <section className="wrap py-10 sm:py-14" aria-label="All Mithila festivals">
@@ -157,7 +135,7 @@ export default function FestivalsIndexPage() {
             <h2 className="section-heading text-[24px] sm:text-[30px]">
               Festivals are how Mithila remembers itself
             </h2>
-            <div className="ornament-line mj-line w-16 mx-auto my-5" />
+            <div className="ornament-line w-16 mx-auto my-5" />
             <p className="text-ink-soft text-[15px] sm:text-[16px] leading-relaxed">
               Songs, rituals and floor drawings carry the Maithili language and the region’s
               memory from one generation to the next — often through the women of the household.
