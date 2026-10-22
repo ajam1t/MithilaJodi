@@ -21,7 +21,7 @@ function Avatar({ initial, photo }: { initial: string; photo: string }) {
     const el = img.current
     if (el && el.complete && el.naturalWidth === 0) setFailed(true)
   }, [])
-  const ring = 'h-[60px] w-[60px] sm:h-16 sm:w-16 shrink-0 rounded-full border border-line'
+  const ring = 'h-[60px] w-[60px] sm:h-16 sm:w-16 shrink-0 rounded-full border-[1.5px] border-gold shadow-[0_3px_10px_-4px_rgba(58,20,12,0.45)]'
   if (failed) {
     return (
       <span className={`grid place-items-center bg-paper-2 ${ring}`} aria-hidden="true">

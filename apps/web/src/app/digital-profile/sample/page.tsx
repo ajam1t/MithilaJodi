@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 export default function SampleDigitalProfilePage() {
   return (
     <main id="main-content" className="min-h-screen bg-paper">
-      <div className="sticky top-0 z-30 border-b border-line bg-cream/95 backdrop-blur">
+      <div className="sticky top-0 z-30 border-b border-gold/30 bg-cream/95 backdrop-blur">
         <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-2.5">
           <Link href={DIGITAL_PROFILE_PATH} className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-maroon hover:text-terra">
             <span aria-hidden="true">←</span> Digital Profile
@@ -41,7 +41,7 @@ export default function SampleDigitalProfilePage() {
       <DigitalProfileView profile={DEMO_PROFILE} profileId={null} mode="demo" />
 
       <section className="mx-auto max-w-2xl px-4 pb-24 lg:pb-12">
-        <div className="rounded-mj-lg bg-maroon-gradient px-5 py-6 text-center text-cream shadow-mj-xs">
+        <div className="rounded-mj-lg bg-maroon-gradient px-5 py-6 text-center text-cream shadow-mj">
           <p className="font-display text-[22px] leading-tight sm:text-[26px]">Your story deserves more than a PDF.</p>
           <p className="mx-auto mt-2 max-w-md text-[14px] text-cream/90">Create your own Digital Profile and share it privately with family and potential matches.</p>
           <Link href="/register" className="btn mt-4 bg-gold-lt px-6 py-3 text-[15px] font-semibold text-maroon-deep hover:-translate-y-px">

@@ -465,7 +465,7 @@ function FormSection({
   const panelId = `section-${id}`
   const complete = total != null && filled != null && filled >= total
   return (
-    <section id={anchorId} className="card border-line shadow-mj-xs overflow-hidden scroll-mt-4">
+    <section id={anchorId} className="card overflow-hidden scroll-mt-4">
       <h2 id={`section-heading-${id}`}>
         <button
           type="button"
@@ -1767,7 +1767,7 @@ export default function ProfileEditPage() {
               {/* How to be reached — shown on the Contact tab of a Digital
                   Profile link that shares contact details. */}
               {contactPrefsOn && (
-                <div className="col-span-2 rounded-mj-sm border border-line bg-[#FFFBF3] p-3.5">
+                <div className="col-span-2 rounded-mj-sm border border-gold/35 bg-[#FFFBF3] p-3.5">
                   <p className="text-sm font-semibold text-ink">How families should reach you</p>
                   <p className="mt-0.5 text-xs text-ink-soft">Shown only on Digital Profile links that share your contact details.</p>
                   <p className="mt-3 text-[13px] font-medium text-ink">Best way</p>
@@ -1976,7 +1976,7 @@ function SaveSuccessCard({
 
   return (
     <div
-      className="rounded-mj border border-line bg-cream p-6 text-center"
+      className="rounded-mj border border-gold/40 bg-gradient-to-br from-cream to-paper p-6 text-center"
       style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(12px)', transition: 'opacity 0.5s ease, transform 0.5s ease' }}
     >
       {/* Gold progress line */}
@@ -2004,13 +2004,19 @@ function SaveSuccessCard({
       </p>
 
       {/* Progress bar */}
-      <div className="w-full bg-ink/10 rounded-full h-2 overflow-hidden mb-5">
+      <div className="w-full bg-ink/10 rounded-full h-2 overflow-hidden mb-4">
         <div
           className="h-full bg-maroon rounded-full"
           style={{ width: `${profileComplete}%`, transition: 'width 0.9s ease 0.4s' }}
         />
       </div>
 
+      {/* Subtle petal decoration */}
+      <div className="flex justify-center gap-1 mb-5" aria-hidden="true">
+        {['#C4562F', '#E4C572', '#7A1220', '#E4C572', '#C4562F'].map((c, i) => (
+          <div key={i} className="w-2 h-2 rounded-full opacity-60" style={{ background: c }} />
+        ))}
+      </div>
 
       {/* Next actions */}
       <div className="flex flex-col sm:flex-row gap-3 justify-center">

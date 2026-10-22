@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import Link from 'next/link'
 import { EcosystemIcon, type EcosystemId } from './EcosystemIcons'
 
@@ -14,10 +14,11 @@ import { EcosystemIcon, type EcosystemId } from './EcosystemIcons'
  * (its paths are clickable for pointer users, but carry no semantics). Every
  * line in the card describes a feature that exists, and every link goes to it.
  *
- * The card is two lines: a short phrase with its key word set in maroon, and
- * the link. Motion only answers input: the gold marker turns to the chosen
- * segment and the key word crossfades to the new one. Nothing loops, and
- * prefers-reduced-motion removes both (globals.css collapses durations).
+ * The card is two lines: a short phrase whose key word is spelled out on
+ * split-flap tiles, and the link. Motion only answers input: the gold marker
+ * turns to the chosen segment and the tiles flip to the new word. Nothing
+ * loops, and prefers-reduced-motion removes both (the tiles simply show the
+ * word; globals.css collapses transition durations).
  */
 
 type Item = {
@@ -25,7 +26,7 @@ type Item = {
   label: string
   /** Shown in the wheel's centre for the active segment. */
   deva: string
-  /** The card's first line: a lead-in, then the key word. */
+  /** The card's first line: a lead-in, then the word on the tiles (≤ TILES characters). */
   lead: string
   flap: string
   cta: { href: string; label: string }
@@ -45,6 +46,8 @@ const ITEMS: Item[] = [
 ]
 const N = ITEMS.length
 const STEP = 360 / N
+/** Tiles on the board: the longest word, so every word sits on the same board. */
+const TILES = Math.max(...ITEMS.map(it => it.flap.length))
 
 // ── Geometry (viewBox 400 × 400), rounded so server and browser agree ──
 const C = 200, R_OUT = 190, R_IN = 86, GAP = 1.2
@@ -65,6 +68,10 @@ const SPOTS = ITEMS.map((_, i) => {
   const [x, y] = polar((R_OUT + R_IN) / 2, i * STEP)
   return { left: `${r2((x / 400) * 100)}%`, top: `${r2((y / 400) * 100)}%` }
 })
+const TICKS = Array.from({ length: 36 }, (_, i) => {
+  const [x0, y0] = polar(R_IN - 10, i * 10), [x1, y1] = polar(R_IN - (i % 3 === 0 ? 18 : 14), i * 10)
+  return `M${x0} ${y0}L${x1} ${y1}`
+}).join('')
 const MARKER = (() => {
   const [x0, y0] = polar(R_OUT + 7, -(STEP / 2 - 3)), [x1, y1] = polar(R_OUT + 7, STEP / 2 - 3)
   return `M${x0} ${y0}A${R_OUT + 7} ${R_OUT + 7} 0 0 1 ${x1} ${y1}`
@@ -106,6 +113,9 @@ export function EcosystemWheel() {
           {/* ── The wheel ── */}
           <div className="relative mx-auto aspect-square w-full max-w-[360px] sm:max-w-[420px] md:max-w-[460px]">
             <svg viewBox="-12 -12 424 424" className="absolute inset-0 h-full w-full overflow-visible" aria-hidden="true" focusable="false">
+              {/* Blueprint-fine guides: two orbits and a tick ring around the centre. */}
+              <circle cx={C} cy={C} r={R_OUT + 7} fill="none" stroke="#B98A2E" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="2 5" />
+              <path d={TICKS} stroke="#B98A2E" strokeOpacity="0.45" strokeWidth="1" />
               {SECTORS.map((d, i) => (
                 <path
                   key={i}
@@ -118,7 +128,8 @@ export function EcosystemWheel() {
               <g className="mj-eco-marker" style={{ transform: `rotate(${turn}deg)` }}>
                 <path d={MARKER} fill="none" stroke="#B98A2E" strokeWidth="3.5" strokeLinecap="round" />
               </g>
-              <circle cx={C} cy={C} r={R_IN - 24} fill="#FFFAF0" stroke="#EADFCB" strokeWidth="1" />
+              <circle cx={C} cy={C} r={R_IN - 24} fill="#FFFAF0" stroke="#B98A2E" strokeOpacity="0.6" strokeWidth="1" />
+              <circle cx={C} cy={C} r={R_IN - 30} fill="none" stroke="#7A1220" strokeOpacity="0.12" strokeWidth="1" />
             </svg>
 
             {/* Centre: the brand mark and the active part's name in Devanagari. */}
@@ -158,13 +169,13 @@ export function EcosystemWheel() {
               focusable) and only the active one renders the card. */}
           <div>
             {ITEMS.map((it, i) => i === active ? (
-              // A stable key keeps one card mounted across selections; only the
-              // key word re-keys, so it alone crossfades.
+              // A stable key keeps one card (and its split-flap board) mounted
+              // across selections, so the tiles still flip to the new word.
               <div key="active" id={`eco-panel-${it.id}`} role="tabpanel" aria-labelledby={`eco-tab-${it.id}`}>
-                <div className="card px-4 py-4 sm:px-6 sm:py-5">
-                  <p className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+                <div className="card relative overflow-hidden px-4 py-4 sm:px-6 sm:py-5">
+                  <p className="flex flex-wrap items-center gap-x-3 gap-y-2">
                     <span className="font-serif text-[16px] leading-tight text-ink-soft sm:text-[19px]">{it.lead}</span>
-                    <span key={it.flap} className="mj-eco-swap font-serif text-[18px] uppercase leading-tight tracking-[0.06em] text-maroon sm:text-[22px]">{it.flap}</span>
+                    <SplitFlap text={it.flap} />
                   </p>
                   <Link href={it.cta.href} className="mt-3 inline-flex items-center gap-1.5 text-[14.5px] font-semibold text-maroon underline-offset-4 hover:underline">
                     {it.cta.label} <span aria-hidden="true">→</span>
@@ -181,5 +192,45 @@ export function EcosystemWheel() {
         </div>
       </div>
     </section>
+  )
+}
+
+/**
+ * A split-flap board spelling `text`. On first render it simply shows the word
+ * (so the server and the browser agree); when the word changes, each tile
+ * that differs shuffles through a few letters and settles, left to right.
+ */
+const FLAP_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ&'
+function SplitFlap({ text }: { text: string }) {
+  const target = text.padEnd(TILES, ' ')
+  const [shown, setShown] = useState(target)
+  const last = useRef(target)
+
+  useEffect(() => {
+    const from = last.current
+    last.current = target
+    if (from === target) return
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { setShown(target); return }
+    let step = 0
+    const id = window.setInterval(() => {
+      step++
+      setShown(Array.from(target, (ch, i) => {
+        if (ch === from[i] || step >= 3 + i * 1.4) return ch
+        return FLAP_CHARS[(step * 7 + i * 5) % FLAP_CHARS.length]
+      }).join(''))
+      if (step >= 3 + TILES * 1.4) window.clearInterval(id)
+    }, 50)
+    return () => window.clearInterval(id)
+  }, [target])
+
+  return (
+    <span className="mj-flaps">
+      <span className="sr-only">{text}</span>
+      {Array.from(shown, (ch, i) => (
+        <span key={i} className="mj-flap" aria-hidden="true">
+          <span key={ch}>{ch === ' ' ? '\u00a0' : ch}</span>
+        </span>
+      ))}
+    </span>
   )
 }

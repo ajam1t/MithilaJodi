@@ -18,7 +18,7 @@ export function RelatedGuides({
 }) {
   if (guides.length === 0 && also.length === 0) return null
   return (
-    <aside aria-label={title} className={`rounded-mj border border-line bg-cream p-5 sm:p-6 ${className}`}>
+    <aside aria-label={title} className={`rounded-mj border border-gold/40 bg-cream p-5 sm:p-6 ${className}`}>
       <p className="eyebrow">Read more</p>
       <h2 className="mt-1 font-serif text-[22px] leading-snug text-maroon">{title}</h2>
       {intro && <p className="mt-1 text-[14px] leading-relaxed text-ink-soft">{intro}</p>}

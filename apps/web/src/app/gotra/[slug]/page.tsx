@@ -137,7 +137,7 @@ export default async function GotraPage({ params }: Props) {
             <ul className="mt-3 flex flex-wrap gap-2">
               {others.map(o => (
                 <li key={o.slug}>
-                  <Link href={`/gotra/${o.slug}`} className="inline-flex items-baseline gap-1.5 rounded-pill border border-line bg-cream px-3 py-1 text-[13.5px] text-maroon hover:border-gold/60">
+                  <Link href={`/gotra/${o.slug}`} className="inline-flex items-baseline gap-1.5 rounded-pill border border-gold/40 bg-cream px-3 py-1 text-[13.5px] text-maroon hover:border-gold">
                     {o.name} <span className="font-deva text-gold text-[12.5px]" lang="hi">{o.deva}</span>
                   </Link>
                 </li>

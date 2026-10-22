@@ -132,7 +132,7 @@ export default function PreferencesPage() {
         <form onSubmit={handleSave} className="space-y-5">
 
           {/* Age range */}
-          <section className="card border-line shadow-mj-xs p-5">
+          <section className="card p-5">
             <h2 className="font-semibold text-ink text-sm mb-4">Age Range</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -157,7 +157,7 @@ export default function PreferencesPage() {
           </section>
 
           {/* Gender */}
-          <section className="card border-line shadow-mj-xs p-5">
+          <section className="card p-5">
             <h2 className="font-semibold text-ink text-sm mb-4">Preferred Gender</h2>
             <div className="flex gap-3">
               {['', 'male', 'female'].map(v => (
@@ -176,7 +176,7 @@ export default function PreferencesPage() {
           </section>
 
           {/* Community */}
-          <section className="card border-line shadow-mj-xs p-5">
+          <section className="card p-5">
             <h2 className="font-semibold text-ink text-sm mb-4">Community</h2>
             <div className="space-y-4">
               <div>
@@ -209,7 +209,7 @@ export default function PreferencesPage() {
           </section>
 
           {/* Diet */}
-          <section className="card border-line shadow-mj-xs p-5">
+          <section className="card p-5">
             <h2 className="font-semibold text-ink text-sm mb-4">Diet Preference</h2>
             <div className="grid grid-cols-2 gap-2">
               {DIET_OPTIONS.map(opt => (
@@ -237,7 +237,7 @@ export default function PreferencesPage() {
           </section>
 
           {/* Notes */}
-          <section className="card border-line shadow-mj-xs p-5">
+          <section className="card p-5">
             <h2 className="font-semibold text-ink text-sm mb-3">Additional Notes</h2>
             <textarea
               rows={3} maxLength={1000}

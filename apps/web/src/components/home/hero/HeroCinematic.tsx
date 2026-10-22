@@ -83,13 +83,20 @@ export function HeroCinematic() {
                  h-[224px] sm:h-[256px] md:h-[368px] lg:h-[420px]"
       data-stage={stage}
     >
-      {/* Warm paper ground. */}
+      {/* Warm paper ground, reusing the existing brand gradients. */}
       <div className="mj-hero-ground absolute inset-0" aria-hidden="true" />
 
       <ThreadOfDestiny stage={stage} />
       <ProfileMatchDemo stage={stage} score={score} />
       <LetterAssembly stage={stage} />
 
+      {/* Sparks around the convergence point. Eight is already plenty at this
+          size; globals.css hides the last four below the sm breakpoint. */}
+      <div className="mj-hero-sparks" aria-hidden="true">
+        {Array.from({ length: 8 }, (_, i) => (
+          <span key={i} className="mj-hero-spark-dot" style={{ '--i': i } as React.CSSProperties} />
+        ))}
+      </div>
     </div>
   )
 }

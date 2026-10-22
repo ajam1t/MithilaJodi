@@ -31,7 +31,7 @@ export function ProfilePhotos({
   if (photos.length === 1 || demo) {
     return (
       <figure className="dp-rise mx-auto w-[72%] max-w-[300px]" style={style}>
-        <div className="aspect-[4/5] overflow-hidden rounded-[20px] border border-line bg-paper-2">
+        <div className="aspect-[4/5] overflow-hidden rounded-[20px] border border-gold/45 bg-paper-2 shadow-mj-sm">
           {photos[0] ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={photos[0]} alt={`${name}, photograph`} className="h-full w-full object-cover object-[center_30%]" />

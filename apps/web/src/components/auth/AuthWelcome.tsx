@@ -99,7 +99,7 @@ function Aripan({ p, open }: { p: number; open: boolean }) {
 function Diya() {
   return (
     <svg viewBox="0 0 32 32" className="h-7 w-7" aria-hidden="true">
-      <path d="M16 4.5c2.6 3 3.6 5.2 3.6 7a3.6 3.6 0 0 1-7.2 0c0-1.8 1-4 3.6-7Z" fill="#FFD27A" />
+      <path className="mj-entry-flame" d="M16 4.5c2.6 3 3.6 5.2 3.6 7a3.6 3.6 0 0 1-7.2 0c0-1.8 1-4 3.6-7Z" fill="#FFD27A" />
       <path d="M16 8.6c1 1.3 1.4 2.3 1.4 3a1.4 1.4 0 0 1-2.8 0c0-.7.4-1.7 1.4-3Z" fill="#FFF4D6" />
       <path d="M4.5 18.5h23c-.9 4.6-5.4 7.5-11.5 7.5S5.4 23.1 4.5 18.5Z" fill="#E9C977" />
       <path d="M8 21.4h16" stroke="#9B2233" strokeWidth="1.2" strokeLinecap="round" opacity=".55" />

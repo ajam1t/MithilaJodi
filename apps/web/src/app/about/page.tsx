@@ -182,11 +182,12 @@ const jsonLd = {
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 //
-// One editorial sequence, each section numbered in Devanagari (०१ …). Calm by
-// design: white cards on a hairline border, gold kept for small accents (the
-// section numbers, short rules, a single quote mark). The page's one signature
-// motion is the hero connection drawing itself once (styles/about.css); every
-// other section only fades in on scroll. Wording is unchanged.
+// Redesigned 2026-10-20 as one editorial sequence, each section numbered in
+// Devanagari (०१ …). Styles mixed deliberately, one per section: kinetic
+// headline (hero), Art Deco (difference cards, founders),
+// orbit linework (ecosystem), Madhubani paper vs blueprint glass (tradition →
+// modern). Section backgrounds stay the site's ivory and cream throughout. Motion is CSS in styles/about.css and
+// runs once; reduced motion gets the finished page. Wording is unchanged.
 
 const NUM = ['०१', '०२', '०३', '०४', '०५', '०६', '०७', '०८']
 
@@ -201,6 +202,19 @@ function Mark({ n, children, center = false, light = false }: { n: number; child
   )
 }
 
+/** Art Deco corner brackets for a framed card. */
+function DecoCorners({ light = false }: { light?: boolean }) {
+  const c = `ab-corner ${light ? 'border-gold-lt/70' : 'border-gold/60'}`
+  return (
+    <>
+      <span className={`${c} left-2.5 top-2.5 border-l border-t`} aria-hidden="true" />
+      <span className={`${c} right-2.5 top-2.5 border-r border-t`} aria-hidden="true" />
+      <span className={`${c} bottom-2.5 left-2.5 border-b border-l`} aria-hidden="true" />
+      <span className={`${c} bottom-2.5 right-2.5 border-b border-r`} aria-hidden="true" />
+    </>
+  )
+}
+
 export default function AboutPage() {
   return (
     <div className="flex min-h-screen flex-col overflow-x-clip bg-paper">
@@ -208,8 +222,9 @@ export default function AboutPage() {
       <MithilaHeader />
 
       <main id="main-content" className="flex-1">
-        {/* ── ०१ Hero ── */}
-        <section aria-labelledby="about-h1" className="relative overflow-hidden pb-14 pt-6 sm:pb-20 sm:pt-10">
+        {/* ── ०१ Hero — kinetic headline, Deco arch ── */}
+        <section aria-labelledby="about-h1" className="relative overflow-hidden bg-[radial-gradient(ellipse_70%_60%_at_85%_30%,#FBEEDF,transparent_70%)] pb-14 pt-6 sm:pb-20 sm:pt-10">
+          <span className="ab-watermark pointer-events-none absolute -right-6 top-6 font-deva text-[120px] leading-none sm:text-[200px] lg:text-[260px]" lang="hi" aria-hidden="true">मिथिला</span>
           <div className="wrap relative px-5 sm:px-6">
             <nav aria-label="Breadcrumb" className="mb-6 sm:mb-10">
               <ol className="flex items-center gap-2 text-[12.5px] text-ink-soft">
@@ -222,12 +237,12 @@ export default function AboutPage() {
               <div>
                 <Mark n={1}>About Mithila Jodi</Mark>
                 <h1 id="about-h1" className="mt-5 font-display text-[40px] leading-[1.04] text-maroon sm:text-[56px] lg:text-[64px]">
-                  <span className="block">Made for Mithila.</span>{' '}
-                  <span className="block text-[#9A6F1E]">Made for meaningful</span>{' '}
-                  <span className="block text-[#9A6F1E]">beginnings.</span>
+                  <span className="ab-kin block" style={{ animationDelay: '0.05s' }}>Made for Mithila.</span>{' '}
+                  <span className="ab-kin block text-[#9A6F1E]" style={{ animationDelay: '0.25s' }}>Made for meaningful</span>{' '}
+                  <span className="ab-kin block text-[#9A6F1E]" style={{ animationDelay: '0.4s' }}>beginnings.</span>
                 </h1>
-                <p className="mt-6 max-w-xl text-[16px] leading-relaxed text-ink sm:text-[18px]">{DEFINITION}</p>
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <p className="ab-kin mt-6 max-w-xl text-[16px] leading-relaxed text-ink sm:text-[18px]" style={{ animationDelay: '0.6s' }}>{DEFINITION}</p>
+                <div className="ab-kin mt-8 flex flex-col gap-3 sm:flex-row sm:items-center" style={{ animationDelay: '0.75s' }}>
                   <Link href="/register?start=1" className="btn-primary justify-center gap-2 rounded-full px-6 py-3.5 text-[15.5px]">
                     Create Your Free Profile<Icon d={I.arrow} className="h-4 w-4" />
                   </Link>
@@ -239,14 +254,25 @@ export default function AboutPage() {
                   Private by design <span className="text-gold" aria-hidden="true">·</span> Free to join <span className="text-gold" aria-hidden="true">·</span> Built for Mithila families
                 </p>
               </div>
-              {/* The connection illustration — the page's one signature motion. */}
-              <div className="mx-auto w-full max-w-[460px] px-4 sm:px-8"><HeroConnection /></div>
+              {/* The connection illustration, held in an Art Deco stepped arch. */}
+              <div className="ab-arch relative mx-auto w-full max-w-[460px]">
+                <svg viewBox="0 0 460 420" className="pointer-events-none absolute inset-0 h-full w-full" fill="none" aria-hidden="true">
+                  <path d="M30 410V190a200 170 0 0 1 400 0v220" stroke="#B98A2E" strokeOpacity="0.55" strokeWidth="1.4" />
+                  <path d="M48 410V196a182 154 0 0 1 364 0v214" stroke="#B98A2E" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="2 5" />
+                  <path d="M30 230h-14v-26h-10M430 230h14v-26h10" stroke="#B98A2E" strokeOpacity="0.5" strokeWidth="1.2" />
+                  {Array.from({ length: 13 }, (_, k) => {
+                    const a = Math.PI + (k / 12) * Math.PI
+                    return <path key={k} d={`M${(230 + 150 * Math.cos(a)).toFixed(1)} ${(190 + 128 * Math.sin(a)).toFixed(1)}L${(230 + 186 * Math.cos(a)).toFixed(1)} ${(190 + 158 * Math.sin(a)).toFixed(1)}`} stroke="#B98A2E" strokeOpacity="0.28" strokeWidth="1" />
+                  })}
+                </svg>
+                <div className="relative px-8 pb-6 pt-16 sm:pt-20"><HeroConnection /></div>
+              </div>
             </div>
           </div>
         </section>
 
         {/* ── ०२ Why ── */}
-        <section aria-labelledby="about-why" className="border-y border-line bg-cream py-16 sm:py-24">
+        <section aria-labelledby="about-why" className="border-y border-gold/15 bg-cream py-16 sm:py-24">
           <div className="wrap grid items-center gap-10 px-5 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
             <div data-mj-reveal>
               <Mark n={2}>Why Mithila Jodi</Mark>
@@ -263,7 +289,7 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* ── ०३ What makes it different ── */}
+        {/* ── ०३ What makes it different — Deco-framed cards with a Devanagari watermark ── */}
         <section aria-labelledby="about-different" className="py-16 sm:py-24">
           <div className="wrap px-5 sm:px-6">
             <div className="max-w-2xl" data-mj-reveal>
@@ -272,8 +298,10 @@ export default function AboutPage() {
             </div>
             <div data-mj-stagger className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {DIFFERENCE.map(c => (
-                <article key={c.title} className="ab-card rounded-[20px] border border-line bg-white p-6 shadow-mj-xs">
-                  <span className="grid h-12 w-12 place-items-center rounded-full bg-paper text-maroon">
+                <article key={c.title} className="ab-card group relative overflow-hidden rounded-[20px] border border-gold/30 bg-[#FFFBF3] p-6 shadow-mj-xs">
+                  <DecoCorners />
+                  <span className="ab-card-word pointer-events-none absolute -bottom-3 -right-1 font-deva text-[64px] leading-none text-gold/[0.13]" lang="hi" aria-hidden="true">{c.hi}</span>
+                  <span className="relative grid h-12 w-12 place-items-center rounded-full border border-gold/40 bg-paper-2 text-maroon shadow-[0_0_0_4px_rgba(255,251,243,1),0_0_0_5px_rgba(185,138,46,0.25)] transition-transform duration-500 group-hover:rotate-[-8deg] motion-reduce:transform-none">
                     <Icon d={c.icon} />
                   </span>
                   <h3 className="relative mt-5 font-serif text-[21px] text-maroon">{c.title}</h3>
@@ -289,8 +317,8 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* ── ०४ Ecosystem — matrimony at the centre, the rest around it ── */}
-        <section aria-labelledby="about-ecosystem" className="relative overflow-hidden border-t border-line bg-[#FBF3E6] py-16 sm:py-24">
+        {/* ── ०४ Ecosystem — matrimony at the centre, orbit lines out to the rest ── */}
+        <section aria-labelledby="about-ecosystem" className="relative overflow-hidden border-t border-gold/15 bg-[#FBF3E6] py-16 sm:py-24">
           <div className="wrap relative px-5 sm:px-6">
             <div className="max-w-2xl" data-mj-reveal>
               <Mark n={4}>More than a matrimonial profile</Mark>
@@ -302,7 +330,15 @@ export default function AboutPage() {
 
             <div className="mt-10 grid gap-4 lg:grid-cols-[0.95fr_1.6fr]">
               {/* Primary */}
-              <article data-mj-reveal className="ab-primary relative flex flex-col overflow-hidden rounded-[22px] p-6 text-cream shadow-mj-xs sm:p-8">
+              <article data-mj-reveal className="ab-primary relative flex flex-col overflow-hidden rounded-[22px] p-6 text-cream shadow-mj sm:p-8">
+                <svg viewBox="0 0 300 300" className="pointer-events-none absolute -right-16 -top-16 h-72 w-72 opacity-60" fill="none" aria-hidden="true">
+                  <circle cx="150" cy="150" r="140" stroke="#E4C572" strokeOpacity="0.35" strokeDasharray="2 6" />
+                  <ellipse cx="150" cy="150" rx="140" ry="54" stroke="#E4C572" strokeOpacity="0.3" transform="rotate(-24 150 150)" />
+                  <ellipse cx="150" cy="150" rx="100" ry="40" stroke="#E4C572" strokeOpacity="0.25" transform="rotate(30 150 150)" />
+                  <circle cx="270" cy="96" r="4" fill="#E4C572" />
+                  <circle cx="64" cy="210" r="3" fill="#E4C572" fillOpacity="0.8" />
+                </svg>
+                <DecoCorners light />
                 <span className="relative text-[10.5px] font-semibold uppercase tracking-[0.26em] text-gold-lt">At the heart of it</span>
                 <span className="relative mt-5 grid h-12 w-12 place-items-center rounded-full border border-gold-lt/50 text-gold-lt"><Icon d={I.heart} className="h-6 w-6" /></span>
                 <h3 className="relative mt-5 font-serif text-[28px] leading-tight">Mithila Matrimony</h3>
@@ -322,9 +358,9 @@ export default function AboutPage() {
               {/* Supporting */}
               <div data-mj-stagger className="grid gap-4 sm:grid-cols-2">
                 {SUPPORTING.map(s => (
-                  <article key={s.title} className="ab-card group relative flex flex-col rounded-[18px] border border-line bg-white p-5 shadow-mj-xs">
+                  <article key={s.title} className="ab-card group relative flex flex-col rounded-[18px] border border-gold/30 bg-cream/90 p-5 shadow-mj-xs backdrop-blur-[2px]">
                     <div className="flex items-center gap-3">
-                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-paper text-maroon">
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-maroon text-gold-lt transition-transform duration-300 group-hover:-translate-y-0.5 motion-reduce:transform-none">
                         <Icon d={s.icon} className="h-[18px] w-[18px]" />
                       </span>
                       <h3 className="font-serif text-[18px] leading-tight text-maroon">
@@ -337,7 +373,7 @@ export default function AboutPage() {
                     </div>
                     <p className="mt-3 text-[14px] leading-relaxed text-ink-soft">{s.body}</p>
                     {s.note && (
-                      <p className="mt-3 border-t border-line pt-3 text-[12.5px] italic leading-relaxed text-ink-soft">{s.note}</p>
+                      <p className="mt-3 border-t border-gold/20 pt-3 text-[12.5px] italic leading-relaxed text-ink-soft">{s.note}</p>
                     )}
                   </article>
                 ))}
@@ -353,7 +389,7 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* ── ०५ Tradition → Modern ── */}
+        {/* ── ०५ Tradition → Modern — Madhubani paper meets blueprint glass ── */}
         <section aria-labelledby="about-tradition" className="py-16 sm:py-24">
           <div className="wrap px-5 sm:px-6">
             <div className="mx-auto max-w-2xl text-center" data-mj-reveal>
@@ -369,7 +405,7 @@ export default function AboutPage() {
             </div>
 
             <div data-mj-reveal className="mx-auto mt-12 grid max-w-4xl items-stretch gap-0 md:grid-cols-[1fr_auto_1fr]">
-              <div className="rounded-[22px] border border-line bg-cream p-7 shadow-mj-xs">
+              <div className="ab-roots ab-madhubani relative overflow-hidden rounded-[22px] p-7 shadow-mj-sm">
                 <p className="relative text-[11px] font-semibold uppercase tracking-[0.26em] text-maroon">Mithila Roots</p>
                 <ul className="relative mt-5 grid grid-cols-2 gap-x-4 gap-y-4">
                   {ROOTS.map(r => (
@@ -382,17 +418,17 @@ export default function AboutPage() {
               </div>
 
               {/* The bridge: across on wide screens, down on phones */}
-              <div aria-hidden="true" className="flex flex-col items-center justify-center py-3 md:flex-row md:px-3 md:py-0">
-                <span className="block h-6 w-px bg-line md:hidden" />
-                <span className="hidden h-px w-8 bg-line md:block" />
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-maroon text-cream">
+              <div aria-hidden="true" className="ab-bridge flex flex-col items-center justify-center py-3 md:flex-row md:px-3 md:py-0">
+                <span className="ab-bridge-y block h-10 w-px bg-gradient-to-b from-gold/30 to-gold md:hidden" />
+                <span className="ab-bridge-x hidden h-px w-14 bg-gradient-to-r from-gold/30 to-gold md:block" />
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-gold bg-maroon text-gold-lt shadow-mj-sm">
                   <Icon d={I.arrow} className="h-4 w-4 rotate-90 md:rotate-0" />
                 </span>
-                <span className="hidden h-px w-8 bg-line md:block" />
-                <span className="block h-6 w-px bg-line md:hidden" />
+                <span className="ab-bridge-x hidden h-px w-14 bg-gradient-to-r from-gold to-[#2E3A6E]/50 md:block" />
+                <span className="ab-bridge-y block h-10 w-px bg-gradient-to-b from-gold to-[#2E3A6E]/50 md:hidden" />
               </div>
 
-              <div className="rounded-[22px] border border-line bg-white p-7 shadow-mj-xs">
+              <div className="ab-modern ab-blueprint relative overflow-hidden rounded-[22px] p-7 shadow-mj-sm">
                 <p className="relative text-[11px] font-semibold uppercase tracking-[0.26em] text-[#2E3A6E]">Modern Experience</p>
                 <ul className="relative mt-5 flex flex-col gap-3">
                   {MODERN.map((m, i) => (
@@ -409,7 +445,7 @@ export default function AboutPage() {
         </section>
 
         {/* ── ०६ Privacy ── */}
-        <section aria-labelledby="about-privacy" className="relative overflow-hidden border-y border-line bg-cream py-16 sm:py-20">
+        <section aria-labelledby="about-privacy" className="relative overflow-hidden border-y border-gold/15 bg-cream py-16 sm:py-20">
           <div className="wrap relative grid gap-8 px-5 sm:px-6 lg:grid-cols-[0.9fr_1.4fr] lg:items-center lg:gap-12">
             <div data-mj-reveal>
               <Mark n={6}>Privacy</Mark>
@@ -423,8 +459,8 @@ export default function AboutPage() {
             </div>
             <ol data-mj-stagger className="grid gap-3 sm:grid-cols-3">
               {PRIVACY.map((p, i) => (
-                <li key={p.title} className="ab-card relative rounded-[18px] border border-line bg-white p-5 shadow-mj-xs">
-                  <span className="ab-num absolute right-4 top-3 text-[13px] text-gold" aria-hidden="true">{NUM[i]}</span>
+                <li key={p.title} className="ab-card relative rounded-[18px] border border-gold/30 bg-[#FFFBF3] p-5 shadow-mj-xs">
+                  <span className="absolute right-4 top-3 text-[13px] text-gold" style={{ fontFamily: 'var(--font-mukta), Mukta, sans-serif' }} aria-hidden="true">{NUM[i]}</span>
                   <div className="flex items-center gap-3 sm:flex-col sm:items-start">
                     <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-maroon text-cream"><Icon d={p.icon} className="h-[18px] w-[18px]" /></span>
                     <h3 className="text-[15px] font-semibold leading-snug text-ink">
@@ -438,7 +474,7 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* ── ०७ Founders ── */}
+        {/* ── ०७ Founders — Art Deco medallions ── */}
         <section aria-labelledby="about-founder" className="py-16 sm:py-24">
           <div className="wrap px-5 sm:px-6">
             <div className="text-center" data-mj-reveal>
@@ -446,13 +482,20 @@ export default function AboutPage() {
               <h2 id="about-founder" className={`mt-5 ${H2}`}>Meet the Founders</h2>
             </div>
 
-            <article data-mj-reveal className="mx-auto mt-10 max-w-4xl rounded-[24px] border border-line bg-white shadow-mj-xs">
+            <article data-mj-reveal className="relative mx-auto mt-10 max-w-4xl overflow-hidden rounded-[24px] border border-gold/40 bg-[#FFFBF3] shadow-mj-sm">
+              <DecoCorners />
+              <div className="h-[3px] bg-gradient-to-r from-maroon-deep/20 via-gold to-maroon-deep/20" aria-hidden="true" />
               <div className="p-6 sm:p-10">
                 <ul className="grid gap-6 sm:grid-cols-2" aria-label="Founders">
                   {FOUNDERS.map(f => (
                     <li key={f.id} className="flex items-center gap-5">
-                      <span className="grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full bg-maroon font-serif text-[26px] font-bold text-gold-lt sm:h-[80px] sm:w-[80px] sm:text-[29px]" aria-hidden="true">
-                        {f.initials}
+                      <span className="ab-medal relative grid h-[92px] w-[92px] shrink-0 place-items-center sm:h-[104px] sm:w-[104px]" aria-hidden="true">
+                        <svg viewBox="0 0 104 104" className="absolute inset-0 h-full w-full" fill="none">
+                          <path d="M52 2 64 8l14-2 6 12 12 6-2 14 6 12-6 12 2 14-12 6-6 12-14-2-12 6-12-6-14 2-6-12-12-6 2-14-6-12 6-12-2-14 12-6 6-12 14 2Z" fill="#B98A2E" fillOpacity="0.16" stroke="#B98A2E" strokeOpacity="0.6" />
+                        </svg>
+                        <span className="ab-foil relative grid h-[72px] w-[72px] place-items-center overflow-hidden rounded-full bg-maroon-gradient font-serif text-[26px] font-bold text-gold-lt ring-[3px] ring-gold/60 ring-offset-[3px] ring-offset-[#FFFBF3] sm:h-[80px] sm:w-[80px] sm:text-[29px]">
+                          {f.initials}
+                        </span>
                       </span>
                       <div>
                         <h3 className="font-serif text-[23px] leading-tight text-maroon">{f.name}</h3>
@@ -464,7 +507,7 @@ export default function AboutPage() {
 
                 <div className="mt-8 min-w-0">
                   <blockquote className="relative pl-8 font-serif text-[20px] italic leading-snug text-maroon sm:text-[24px]">
-                    <span className="absolute -top-3 left-0 font-serif text-[56px] not-italic leading-none text-gold/50" aria-hidden="true">&ldquo;</span>
+                    <span className="absolute -top-3 left-0 font-serif text-[56px] not-italic leading-none text-gold/60" aria-hidden="true">&ldquo;</span>
                     In Mithila, a marriage begins when two families sit together. We built Mithila Jodi to keep that warmth, and to make the search a little easier.
                   </blockquote>
                   <div className="mt-6 space-y-3 text-[15px] leading-relaxed text-ink-soft">
@@ -484,7 +527,7 @@ export default function AboutPage() {
                   <p className="mt-1 text-[13px] text-ink-soft">The right match for your family: that is our promise.</p>
                   <ul className="mt-6 flex flex-wrap gap-2" aria-label="Focus areas">
                     {FOUNDER_CHIPS.map(c => (
-                      <li key={c} className="rounded-full border border-line bg-cream px-3 py-1 text-[12px] font-medium text-ink">{c}</li>
+                      <li key={c} className="rounded-full border border-gold/40 bg-cream px-3 py-1 text-[12px] font-medium text-ink">{c}</li>
                     ))}
                   </ul>
                 </div>
@@ -494,18 +537,18 @@ export default function AboutPage() {
         </section>
 
         {/* ── ०८ FAQ — heading beside the questions on wide screens ── */}
-        <section aria-labelledby="about-faq" className="border-t border-line bg-[#FBF3E6] py-16 sm:py-24">
+        <section aria-labelledby="about-faq" className="border-t border-gold/15 bg-[#FBF3E6] py-16 sm:py-24">
           <div className="wrap grid gap-8 px-5 sm:px-6 lg:grid-cols-[0.8fr_1.4fr] lg:gap-14">
             <div data-mj-reveal className="lg:sticky lg:top-28 lg:self-start">
               <Mark n={8}>Questions</Mark>
               <h2 id="about-faq" className={`mt-5 ${H2}`}>A little more about Mithila Jodi</h2>
             </div>
-            <div className="divide-y divide-line overflow-hidden rounded-[20px] border border-line bg-white shadow-mj-xs">
+            <div className="divide-y divide-gold/20 overflow-hidden rounded-[20px] border border-gold/30 bg-cream shadow-mj-xs">
               {FAQ.map((f, i) => (
                 <details key={f.q} className="ab-faq group" {...(i === 0 ? { open: true } : {})}>
                   <summary className="flex min-h-[60px] cursor-pointer list-none items-center gap-4 px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-maroon/40 sm:px-6">
                     <h3 className="flex-1 text-[15.5px] font-semibold leading-snug text-ink sm:text-[16px]">{f.q}</h3>
-                    <span className="ab-faq-plus grid h-8 w-8 shrink-0 place-items-center rounded-full border border-line text-maroon transition-transform duration-200" aria-hidden="true">
+                    <span className="ab-faq-plus grid h-8 w-8 shrink-0 place-items-center rounded-full border border-gold/40 text-maroon transition-transform duration-200" aria-hidden="true">
                       <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
                     </span>
                   </summary>
@@ -516,20 +559,21 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* ── Final CTA ── */}
+        {/* ── Final CTA — lines rise in ── */}
         <section aria-labelledby="about-final" className="py-16 sm:py-20">
           <div className="wrap px-5 sm:px-6">
-            <div data-mj-reveal className="mx-auto max-w-3xl rounded-[26px] border border-line bg-white px-6 py-12 text-center shadow-mj-xs sm:px-12 sm:py-14">
-              <h2 id="about-final" className="font-display text-[34px] leading-[1.1] text-maroon sm:text-[46px]">
-                <span className="block">Your roots.</span>{' '}
-                <span className="block text-[#9A6F1E]">Your family.</span>{' '}
-                <span className="block">Your journey.</span>
+            <div data-mj-reveal className="relative mx-auto max-w-3xl overflow-hidden rounded-[26px] border border-gold/35 bg-cream px-6 py-12 text-center shadow-mj-xs sm:px-12 sm:py-14">
+              <DecoCorners />
+              <h2 id="about-final" className="relative font-display text-[34px] leading-[1.1] text-maroon sm:text-[46px]">
+                <span className="ab-rise block">Your roots.</span>{' '}
+                <span className="ab-rise block text-[#9A6F1E]" style={{ animationDelay: '0.15s' }}>Your family.</span>{' '}
+                <span className="ab-rise block" style={{ animationDelay: '0.3s' }}>Your journey.</span>
               </h2>
-              <p className="mt-4 text-[16px] text-ink-soft">Find meaningful connections with Mithila Jodi.</p>
-              <Link href="/register?start=1" className="btn-primary mt-7 inline-flex gap-2 rounded-full px-7 py-3.5 text-[15.5px]">
+              <p className="relative mt-4 text-[16px] text-ink-soft">Find meaningful connections with Mithila Jodi.</p>
+              <Link href="/register?start=1" className="btn-primary relative mt-7 inline-flex gap-2 rounded-full px-7 py-3.5 text-[15.5px]">
                 Create Your Free Profile<Icon d={I.arrow} className="h-4 w-4" />
               </Link>
-              <p className="mt-3 text-[12.5px] text-ink-soft">Currently free for all members</p>
+              <p className="relative mt-3 text-[12.5px] text-ink-soft">Currently free for all members</p>
             </div>
           </div>
         </section>

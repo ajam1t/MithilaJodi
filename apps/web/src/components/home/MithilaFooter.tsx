@@ -52,7 +52,7 @@ const GROUPS = [
  */
 /**
  * The four official channels, one treatment for all: each platform's own
- * app-icon logo in its own colours, and the verb for
+ * app-icon logo in its own colours, framed by a gold ring, and the verb for
  * what you do there. `target="_blank"` with `rel="noopener noreferrer"` so the
  * new tab cannot reach back into this one via window.opener; the WhatsApp
  * invite is also nofollow. Each goes through /go/… so Admin → Community can
@@ -68,12 +68,12 @@ const SOCIALS = [
 export function MithilaFooter({ className = '' }: { className?: string }) {
   return (
     <footer className={`mj-footer ${className}`} role="contentinfo">
-      {/* A single thin gold rule along the top edge */}
-      <div className="h-px bg-gradient-to-r from-transparent via-gold/70 to-transparent" aria-hidden="true" />
+      {/* Gold top border */}
+      <div className="h-[3px] bg-gradient-to-r from-transparent via-gold to-transparent" aria-hidden="true" />
 
       {/* Compact main area */}
       <div className="wrap py-4">
-        {/* Community channels — four tiles that rise in once. */}
+        {/* Community channels — four tiles that rise in and trace their gold ring once. */}
         <div className="mx-auto mb-5 max-w-lg">
           <p className="mb-2.5 flex items-center justify-center gap-2 text-center text-[10.5px] font-semibold uppercase tracking-[0.2em] text-gold-lt">
             <span className="h-px w-8 bg-gradient-to-r from-transparent to-gold-lt/70" aria-hidden="true" />
@@ -85,6 +85,9 @@ export function MithilaFooter({ className = '' }: { className?: string }) {
               <li key={sc.name} data-mj-reveal>
                 <a href={sc.href} target="_blank" rel={sc.rel} aria-label={sc.label} className="mj-soc">
                   <span className="mj-soc-disc">
+                    <svg viewBox="0 0 64 64" className="mj-soc-ring" aria-hidden="true">
+                      <rect x="1" y="1" width="62" height="62" rx="17" pathLength={1} />
+                    </svg>
                     <BrandIcon brand={sc.brand} className="mj-soc-icon" />
                   </span>
                   <span className="mj-soc-name">{sc.name}</span>
@@ -136,6 +139,17 @@ export function MithilaFooter({ className = '' }: { className?: string }) {
           <p>India only · No data transferred outside India</p>
         </div>
       </div>
+
+      {/* Bottom Madhubani strip — 120 alternating maroon blocks under a gold
+          thread, drawn by CSS (it was 122 SVG nodes on every page). */}
+      <div
+        aria-hidden="true"
+        className="h-2 w-full"
+        style={{
+          background:
+            'linear-gradient(to bottom, transparent 62.5%, rgba(185,138,46,0.6) 62.5%, rgba(185,138,46,0.6) calc(62.5% + 1px), transparent calc(62.5% + 1px)), repeating-linear-gradient(90deg, #6B0A0A 0 0.8333%, #8A1414 0.8333% 1.6667%)',
+        }}
+      />
     </footer>
   )
 }

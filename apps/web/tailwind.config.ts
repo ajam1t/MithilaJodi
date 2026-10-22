@@ -35,9 +35,6 @@ const config: Config = {
           3: '#ECDCC0',
         },
         cream: '#FFFAF0',
-        // The one card/divider border: a warm hairline. Gold is for accents
-        // (active states, a star, a short rule) — not for every edge.
-        line: '#EADFCB',
         maroon: {
           DEFAULT: '#7A1220',
           2: '#9B2233',

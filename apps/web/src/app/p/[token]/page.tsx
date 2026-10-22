@@ -152,7 +152,7 @@ export default async function SharedProfilePage({ params }: Props) {
           difference is this one compact note with their two actions. */}
       {viewerIsOwner && (
         <div className="mx-auto max-w-2xl px-4 pt-4">
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-mj border border-line bg-cream px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-mj border border-gold/35 bg-cream px-4 py-3">
             <p className="text-[13px] text-ink">This is how your profile appears to others. <span className="text-ink-soft">Your own visits are not counted.</span></p>
             <span className="flex gap-2">
               <Link href="/profile/edit" className="btn-primary px-4 py-1.5 text-[13px]">Edit Profile</Link>

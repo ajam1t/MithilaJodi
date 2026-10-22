@@ -53,7 +53,7 @@ export async function FeaturedProfiles() {
           />
           <Link
             href="/explore"
-            className="group inline-flex shrink-0 items-center gap-1.5 rounded-pill border border-line bg-cream px-4 py-2 text-[14px] font-semibold text-maroon transition-colors hover:border-gold/60 hover:bg-white"
+            className="group inline-flex shrink-0 items-center gap-1.5 rounded-pill border border-gold/50 bg-cream px-4 py-2 text-[14px] font-semibold text-maroon transition-colors hover:border-gold hover:bg-white"
           >
             Explore all profiles
             <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">→</span>

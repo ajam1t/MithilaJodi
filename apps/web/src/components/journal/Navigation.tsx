@@ -79,7 +79,7 @@ export function JournalSearch({ defaultValue = '' }: { defaultValue?: string }) 
   return (
     <form action="/blogs" method="get" role="search" className="mx-auto w-full max-w-xl">
       <label htmlFor="journal-q" className="sr-only">Search the Journal</label>
-      <div className="flex items-center gap-2 rounded-pill border border-line bg-cream p-1.5 pl-4 shadow-mj-xs focus-within:border-maroon">
+      <div className="flex items-center gap-2 rounded-pill border border-gold/50 bg-cream p-1.5 pl-4 shadow-mj-xs focus-within:border-maroon">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 text-ink-soft" aria-hidden="true">
           <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" strokeLinecap="round" />
         </svg>
@@ -113,7 +113,7 @@ export function Pagination({ page, pages, hrefFor }: { page: number; pages: numb
           aria-current={n === page ? 'page' : undefined}
           aria-label={`Page ${n}`}
           className={`grid h-9 w-9 place-items-center rounded-full text-[14px] tabular-nums transition-colors ${
-            n === page ? 'bg-maroon text-cream' : 'border border-line bg-cream text-maroon hover:border-gold'
+            n === page ? 'bg-maroon text-cream' : 'border border-paper-3 bg-cream text-maroon hover:border-gold'
           }`}
         >
           {n}

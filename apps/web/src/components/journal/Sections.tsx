@@ -33,7 +33,7 @@ export function StartHere({ posts }: { posts: JournalPost[] }) {
   if (posts.length === 0) return null
   return (
     <section aria-labelledby="start-here" className="wrap py-12">
-      <div className="grid gap-8 rounded-mj border border-line bg-cream p-6 sm:p-8 lg:grid-cols-[1fr_1.6fr]">
+      <div className="grid gap-8 rounded-mj border border-gold/40 bg-cream p-6 sm:p-8 lg:grid-cols-[1fr_1.6fr]">
         <div>
           <p className="eyebrow mb-2">New to the Journal?</p>
           <h2 id="start-here" className="font-serif text-[26px] leading-tight text-maroon sm:text-[30px]">Start here</h2>
@@ -96,7 +96,7 @@ export function Mithila101({ posts }: { posts: JournalPost[] }) {
         <ul className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
           {items.map(it => (
             <li key={it.href}>
-              <Link href={it.href} className="group flex h-full items-center justify-between gap-2 rounded-mj border border-line bg-cream px-3.5 py-3.5 transition-colors hover:border-gold sm:gap-3 sm:px-4 sm:py-4">
+              <Link href={it.href} className="group flex h-full items-center justify-between gap-2 rounded-mj border border-paper-3 bg-cream px-3.5 py-3.5 transition-colors hover:border-gold sm:gap-3 sm:px-4 sm:py-4">
                 <span>
                   <span className="block font-serif text-[15px] leading-snug text-maroon sm:text-[16px]">{it.q}</span>
                   <span className="mt-0.5 block text-[12px] text-ink-soft">{it.sub}</span>

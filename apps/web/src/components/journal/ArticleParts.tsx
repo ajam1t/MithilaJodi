@@ -90,7 +90,7 @@ export function ArticleToolLinks({ tools }: { tools: JournalTool[] }) {
       <ul className="mt-3 grid gap-2 sm:grid-cols-2">
         {tools.map(t => (
           <li key={t.slug}>
-            <Link href={t.href} className="group flex items-center justify-between gap-3 rounded-mj-sm border border-line bg-cream px-4 py-3 transition-colors hover:border-gold">
+            <Link href={t.href} className="group flex items-center justify-between gap-3 rounded-mj-sm border border-paper-3 bg-cream px-4 py-3 transition-colors hover:border-gold">
               <span>
                 <span className="block font-serif text-[16px] text-maroon">{t.title}</span>
                 <span className="block text-[12px] text-ink-soft">{t.subtitle}</span>
@@ -124,7 +124,7 @@ export function ArticleToolLinks({ tools }: { tools: JournalTool[] }) {
 export function JournalCTA({ cta }: { cta: JournalCta }) {
   if (!cta) return null
   return (
-    <aside className="mt-10 flex flex-col gap-4 rounded-mj border border-line bg-cream p-6 sm:flex-row sm:items-center sm:justify-between">
+    <aside className="mt-10 flex flex-col gap-4 rounded-mj border border-gold/50 bg-cream p-6 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <p className="eyebrow">{cta.eyebrow}</p>
         <p className="mt-1 font-serif text-[20px] leading-snug text-maroon">{cta.title}</p>

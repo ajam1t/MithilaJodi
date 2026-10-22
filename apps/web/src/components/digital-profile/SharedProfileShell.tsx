@@ -40,7 +40,7 @@ export function SharedProfileShell({
 
       {children}
 
-      <footer className="border-t border-line bg-cream px-4 py-4 text-center">
+      <footer className="border-t border-gold/20 bg-cream px-4 py-4 text-center">
         <p className="text-[12.5px] text-ink-soft">
           Made with <span aria-hidden="true">♥</span> on{' '}
           <Link href="/" className="font-semibold text-maroon">Mithila Jodi</Link>

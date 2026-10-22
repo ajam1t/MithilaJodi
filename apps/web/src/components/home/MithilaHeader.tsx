@@ -50,6 +50,25 @@ const AUTH_NAV_LINKS = [
   { href: '/profile', label: 'Profile' },
 ]
 
+/* Subtle Mithila-inspired floral line-art for the header edges (mobile). */
+function FloralEdge({ side }: { side: 'left' | 'right' }) {
+  return (
+    <div
+      aria-hidden="true"
+      className={`pointer-events-none absolute top-1/2 -translate-y-1/2 opacity-40 ${
+        side === 'left' ? 'left-1' : 'right-1 scale-x-[-1]'
+      }`}
+    >
+      <svg width="24" height="46" viewBox="0 0 24 46" fill="none" stroke="#B98A2E" strokeWidth="1" strokeLinecap="round">
+        <path d="M12 2 C12 12, 6 16, 8 24 C10 32, 15 34, 12 44" />
+        <path d="M8 12 C3 10, 1 13, 4 16 C7 18, 10 15, 8 12 Z" fill="#E4C572" fillOpacity="0.5" />
+        <path d="M15 22 C20 20, 22 23, 19 26 C16 28, 13 25, 15 22 Z" fill="#E4C572" fillOpacity="0.5" />
+        <path d="M8 34 C3 32, 1 35, 4 38 C7 40, 10 37, 8 34 Z" fill="#E4C572" fillOpacity="0.5" />
+      </svg>
+    </div>
+  )
+}
+
 function SearchIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
@@ -113,8 +132,15 @@ export function MithilaHeader() {
 
   return (
     <header className="sticky top-0 z-50 bg-cream shadow-mj-xs">
+      {/* ── Decorative hairline ABOVE the branding ──
+          Lives inside the sticky <header>, so it stays pinned to the top of the
+          viewport for the whole page rather than scrolling away. */}
+      <div className="mj-line h-[3px] w-full bg-gradient-to-r from-cream via-gold to-cream" />
+
       {/* ── Mobile: centered brand ── */}
       <div className="lg:hidden relative px-12 py-2">
+        <FloralEdge side="right" />
+
         {/* Search — members search, visitors browse profiles */}
         <Link
           href={auth.loggedIn ? '/search' : '/explore'}
@@ -154,6 +180,9 @@ export function MithilaHeader() {
             Where tradition meets love.
           </span>
         </Link>
+
+        {/* Thin gold divider */}
+        <div className="mj-line mx-auto mt-1.5 h-px w-24 bg-gradient-to-r from-transparent via-gold to-transparent" />
       </div>
 
       {/* ── Desktop: brand + nav row ── */}
@@ -170,13 +199,13 @@ export function MithilaHeader() {
                   {label}
                 </Link>
               ))}
-              <div className="h-4 w-px bg-line" />
+              <div className="h-4 w-px bg-gold opacity-40" />
               {MEMBER_CONTENT_LINKS.map(({ href, label }) => (
                 <Link key={label} href={href} className={deskLink(href)} aria-current={isActive(href) ? 'page' : undefined}>
                   {label}
                 </Link>
               ))}
-              <div className="h-4 w-px bg-line" />
+              <div className="h-4 w-px bg-gold opacity-40" />
               <button
                 onClick={handleLogout}
                 className="text-[13px] text-maroon hover:text-terra transition-colors tracking-wide font-medium whitespace-nowrap"
@@ -197,7 +226,7 @@ export function MithilaHeader() {
                   <Link href="/explore" className="text-ink hover:text-terra transition-colors p-1 -mx-1" aria-label="Browse profiles">
                     <SearchIcon />
                   </Link>
-                  <div className="h-4 w-px bg-line" />
+                  <div className="h-4 w-px bg-gold opacity-40" />
                   <Link href="/login" className="text-[13px] text-maroon hover:text-terra transition-colors tracking-wide font-medium whitespace-nowrap">
                     Login
                   </Link>
@@ -215,9 +244,14 @@ export function MithilaHeader() {
         </nav>
       </div>
 
-      {/* One thin, still gold rule under the branding. Inside the sticky
-          <header>, so it stays with the brand at every scroll position. */}
-      <div className="h-px w-full bg-gradient-to-r from-cream via-gold/70 to-cream" aria-hidden="true" />
+      {/* ── Decorative hairline BELOW the branding ──
+          The frame under the brand used to be supplied by the announcement /
+          festivals strips that sit either side of this header. Those are
+          non-sticky siblings, so scrolling carried them off-screen and the
+          branding lost its lower rule. Rendering it here — inside the sticky
+          element, after the nav and before the mobile menu — keeps the frame
+          intact at every scroll position. */}
+      <div className="mj-line mj-line--delayed h-[2px] w-full bg-gradient-to-r from-cream via-gold to-cream" />
 
       <MenuDrawer
         open={open}

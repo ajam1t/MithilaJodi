@@ -174,7 +174,7 @@ function LotusPlaceholder({ initial }: { initial: string }) {
 function DetailRow({ label, value }: { label: string; value: string | null | undefined }) {
   if (!value) return null
   return (
-    <div className="flex items-start gap-2.5 py-1.5 border-b border-line/70 last:border-0">
+    <div className="flex items-start gap-2.5 py-1.5 border-b border-gold/10 last:border-0">
       <span className="text-[10px] text-ink-soft uppercase tracking-wide w-[76px] flex-shrink-0 pt-0.5 leading-tight">
         {label}
       </span>
@@ -287,11 +287,13 @@ export function ProfileCard3D({
       >
         {/* ── FRONT ─────────────────────────────────────────── */}
         <div
-          className="absolute inset-0 flex flex-col rounded-mj-lg overflow-hidden bg-cream border border-line shadow-mj-xs"
+          className="absolute inset-0 flex flex-col rounded-mj-lg overflow-hidden bg-cream border border-paper-3 shadow-mj-sm"
           style={{ backfaceVisibility: 'hidden' }}
           aria-hidden={flipped}
           inert={flipped}
         >
+          <div className="gold-strip flex-shrink-0" />
+
           {/* Photo — a 4:5 portrait frame.
 
               This was 3:2 landscape while essentially every photo uploaded is a
@@ -325,7 +327,7 @@ export function ProfileCard3D({
               </div>
             )}
             {match && (
-              <div className="absolute top-2 right-2 rounded-mj-sm bg-cream/95 backdrop-blur-[2px] border border-line px-1.5 py-1 flex items-center gap-1.5">
+              <div className="absolute top-2 right-2 rounded-mj-sm bg-cream/95 backdrop-blur-[2px] border border-gold/40 shadow-mj-xs px-1.5 py-1 flex items-center gap-1.5">
                 <MatchRing score={match.score} blocked={blocked} size={compact ? 38 : 44} />
                 <span className="pr-0.5 text-left">
                   <span className="block text-[9px] uppercase tracking-wider text-ink-soft leading-none">
@@ -380,7 +382,7 @@ export function ProfileCard3D({
                   </span>
                 ))}
                 {timelineLabel && (
-                  <span className={cn('rounded-pill border border-line bg-paper text-maroon', compact ? 'text-[9px] px-1.5 py-0.5' : 'text-[10px] px-2 py-0.5')}>
+                  <span className={cn('rounded-pill border border-gold/40 bg-gold/[0.08] text-maroon', compact ? 'text-[9px] px-1.5 py-0.5' : 'text-[10px] px-2 py-0.5')}>
                     Marriage: {timelineLabel}
                   </span>
                 )}
@@ -448,7 +450,7 @@ export function ProfileCard3D({
                         className={cn(
                           'flex flex-1 items-center justify-center gap-1.5 rounded-mj-sm font-semibold border transition-all disabled:opacity-70',
                           compact ? 'py-1.5 text-[12px]' : 'py-1.5 text-[12.5px]',
-                          shortlisted ? 'bg-gold/20 border-gold text-maroon' : 'bg-cream border-line text-ink-soft hover:text-maroon hover:border-gold/60'
+                          shortlisted ? 'bg-gold/20 border-gold text-maroon' : 'bg-cream border-gold/40 text-ink-soft hover:text-maroon hover:border-gold'
                         )}
                       >
                         <StarIcon />
@@ -460,7 +462,7 @@ export function ProfileCard3D({
                         type="button"
                         onClick={() => setFlipped(true)}
                         aria-expanded={flipped}
-                        className={cn('flex-1 rounded-mj-sm font-semibold border border-line text-ink-soft hover:text-maroon hover:border-gold/60 transition-colors', compact ? 'px-2 py-1.5 text-[12px]' : 'px-3 py-1.5 text-[12.5px]')}
+                        className={cn('flex-1 rounded-mj-sm font-semibold border border-gold/40 text-ink-soft hover:text-maroon hover:border-gold transition-colors', compact ? 'px-2 py-1.5 text-[12px]' : 'px-3 py-1.5 text-[12.5px]')}
                       >
                         Details
                       </button>
@@ -481,7 +483,7 @@ export function ProfileCard3D({
                       type="button"
                       onClick={() => setFlipped(true)}
                       aria-expanded={flipped}
-                      className={cn('rounded-mj-sm font-semibold border border-line text-ink-soft hover:text-maroon hover:border-gold/60 transition-colors', compact ? 'px-2 py-1.5 text-[12px]' : 'px-3 py-2 text-[13px]')}
+                      className={cn('rounded-mj-sm font-semibold border border-gold/40 text-ink-soft hover:text-maroon hover:border-gold transition-colors', compact ? 'px-2 py-1.5 text-[12px]' : 'px-3 py-2 text-[13px]')}
                     >
                       Details
                     </button>
@@ -494,12 +496,13 @@ export function ProfileCard3D({
 
         {/* ── BACK ──────────────────────────────────────────── */}
         <div
-          className="absolute inset-0 flex flex-col rounded-mj-lg overflow-hidden bg-cream border border-line shadow-mj-xs"
+          className="absolute inset-0 flex flex-col rounded-mj-lg overflow-hidden bg-cream border border-gold shadow-mj"
           style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
           aria-hidden={!flipped}
           inert={!flipped}
         >
-          <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-line flex-shrink-0">
+          <div className="gold-strip flex-shrink-0" />
+          <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-gold/20 flex-shrink-0">
             <h3 className="font-serif text-[17px] text-maroon truncate">{profile.display_name}</h3>
             <button
               type="button"
@@ -516,14 +519,14 @@ export function ProfileCard3D({
 
           <div className="flex-1 min-h-0 overflow-y-auto px-4 py-2.5">
             {unscored && rawMatch?.blockers[0] && (
-              <p className="mb-2.5 pb-2.5 border-b border-line text-[12px] leading-snug text-ink-soft">
+              <p className="mb-2.5 pb-2.5 border-b border-gold/25 text-[12px] leading-snug text-ink-soft">
                 {rawMatch.blockers[0]}
               </p>
             )}
 
             {/* Why this score — first, because it is the reason to read the rest. */}
             {match && (
-              <div className="mb-2.5 pb-2.5 border-b border-line">
+              <div className="mb-2.5 pb-2.5 border-b border-gold/25">
                 <div className="flex items-center gap-2.5">
                   <MatchRing score={match.score} blocked={blocked} size={40} />
                   <div className="min-w-0">
@@ -580,7 +583,7 @@ export function ProfileCard3D({
             <DetailRow label="Marriage" value={timelineLabel} />
           </div>
 
-          <div className="p-3 flex-shrink-0 border-t border-line">
+          <div className="p-3 flex-shrink-0 border-t border-gold/15">
             <Link
               href={profileHref}
               rel={linkRel}

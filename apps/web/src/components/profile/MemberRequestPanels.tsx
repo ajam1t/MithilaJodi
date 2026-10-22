@@ -82,7 +82,7 @@ export function PhotoRequestPanel({ profileId, firstName, gate, canAct, onChange
 
   if (gate.level === 'connected') {
     return (
-      <section className="rounded-mj border border-line bg-cream px-5 py-5 text-center" aria-label="Photos">
+      <section className="rounded-mj border border-gold/30 bg-cream px-5 py-5 text-center" aria-label="Photos">
         <p className="font-serif text-[18px] text-maroon">Photos are visible to matches</p>
         <p className="mt-1 text-[13px] text-ink-soft">{firstName} shares photographs with accepted matches.</p>
       </section>
@@ -107,7 +107,7 @@ export function PhotoRequestPanel({ profileId, firstName, gate, canAct, onChange
   }
 
   return (
-    <section className="rounded-mj border border-line bg-cream px-5 py-5 text-center" aria-label="Photos">
+    <section className="rounded-mj border border-gold/30 bg-cream px-5 py-5 text-center" aria-label="Photos">
       <p className="font-serif text-[18px] text-maroon">Photos are shared on request</p>
       <p className="mx-auto mt-1 max-w-sm text-[13px] text-ink-soft">
         {firstName}&rsquo;s family shows photographs to matches and to members they approve.
@@ -194,7 +194,7 @@ export function ContactRequestPanel({ profileId, firstName, info, partner, onCha
   }
 
   return (
-    <section id="contact-details" className="card border-line shadow-mj-xs p-5 space-y-3 scroll-mt-28" aria-label="Contact details">
+    <section id="contact-details" className="card p-5 space-y-3 scroll-mt-28" aria-label="Contact details">
       <h2 className="font-semibold text-ink text-sm">Contact details</h2>
 
       {info.theyAsked && (

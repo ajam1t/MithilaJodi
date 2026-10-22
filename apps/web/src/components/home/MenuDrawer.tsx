@@ -143,6 +143,7 @@ export function MenuDrawer({
   // Open on the section holding the current page, else Explore.
   const home = Math.max(0, all.findIndex(sec => sec.items.some(it => isActive(it.href))))
   const [tab, setTab] = useState(home)
+  const [burst, setBurst] = useState(0)
   const swipe = useRef<{ x: number; y: number } | null>(null)
   const drag = useRef<number | null>(null)
   const [pull, setPull] = useState(0)
@@ -187,7 +188,7 @@ export function MenuDrawer({
   if (!open) return null
 
   const N = all.length
-  const pick = (i: number) => { const k = (i + N) % N; if (k !== tab) setTab(k) }
+  const pick = (i: number) => { const k = (i + N) % N; if (k !== tab) { setTab(k); setBurst(b => b + 1) } }
   const sec = all[tab]
   const on = (href: string) => isActive(href) || undefined
 
@@ -223,6 +224,9 @@ export function MenuDrawer({
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
+        {/* gradient-mesh glow and a faint blueprint grid behind everything */}
+        <div className="mj-orb-mesh" aria-hidden="true"><i /><i /><i /></div>
+
         {/* ── Handle + top row ── */}
         <div
           className="relative flex shrink-0 touch-none cursor-grab items-center justify-between px-4 pb-1 pt-2.5"
@@ -243,9 +247,10 @@ export function MenuDrawer({
 
         {/* ── The dial: the sections on an arc ── */}
         <div className="relative shrink-0 px-3">
-          <SectionDial sections={all} active={tab} onPick={pick} onKey={onTabKey} />
-          {/* The chosen section's name; a soft fade when it changes. */}
-          <p key={sec.id} className="mj-orb-title" aria-hidden="true">{sec.title}</p>
+          <OrbitDial sections={all} active={tab} onPick={pick} onKey={onTabKey} burst={burst} />
+          <div className="pointer-events-none relative -mt-1 flex justify-center" aria-hidden="true">
+            <FlapWord text={sec.title.toUpperCase()} />
+          </div>
         </div>
 
         {/* ── The chosen section's links ── */}
@@ -269,7 +274,7 @@ export function MenuDrawer({
         </div>
 
         {/* ── Account + channels, always within thumb reach ── */}
-        <div className="relative shrink-0 border-t border-line px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3">
+        <div className="relative shrink-0 border-t border-gold/25 px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3">
           {authLoaded && (loggedIn ? (
             <div className="flex gap-2">
               <Link href="/profile" onClick={onClose} className="mj-orb-cta flex-1">
@@ -311,8 +316,8 @@ const r1 = (n: number) => Math.round(n * 10) / 10
 const pt = (r: number, deg: number) => { const a = ((deg - 90) * Math.PI) / 180; return [r1(DCX + r * Math.cos(a)), r1(DCY + r * Math.sin(a))] as const }
 const SPAN = 116 // degrees the arc covers, centred on the top
 
-function SectionDial({ sections: secs, active, onPick, onKey }: {
-  sections: Section[]; active: number; onPick: (i: number) => void; onKey: (e: React.KeyboardEvent, i: number) => void
+function OrbitDial({ sections: secs, active, onPick, onKey, burst }: {
+  sections: Section[]; active: number; onPick: (i: number) => void; onKey: (e: React.KeyboardEvent, i: number) => void; burst: number
 }) {
   const n = secs.length, step = SPAN / n
   const mid = (i: number) => -SPAN / 2 + step * (i + 0.5)
@@ -321,10 +326,24 @@ function SectionDial({ sections: secs, active, onPick, onKey }: {
     const [x0, y0] = pt(RO, a0), [x1, y1] = pt(RO, a1), [x2, y2] = pt(RI, a1), [x3, y3] = pt(RI, a0)
     return `M${x0} ${y0}A${RO} ${RO} 0 0 1 ${x1} ${y1}L${x2} ${y2}A${RI} ${RI} 0 0 0 ${x3} ${y3}Z`
   }
+  const [mx, my] = pt(RO + 8, mid(active))
   return (
     <div className="relative mx-auto w-full max-w-[380px]" style={{ aspectRatio: `${DW} / 136` }}>
       <svg viewBox={`0 6 ${DW} 136`} className="absolute inset-0 h-full w-full overflow-visible" aria-hidden="true">
+        {/* wireframe orbits */}
+        <path d={`M${pt(RO + 8, -SPAN / 2 - 4).join(' ')}A${RO + 8} ${RO + 8} 0 0 1 ${pt(RO + 8, SPAN / 2 + 4).join(' ')}`} fill="none" stroke="#B98A2E" strokeOpacity=".35" strokeDasharray="2 5" />
+        <path d={`M${pt(RI - 10, -SPAN / 2).join(' ')}A${RI - 10} ${RI - 10} 0 0 1 ${pt(RI - 10, SPAN / 2).join(' ')}`} fill="none" stroke="#B98A2E" strokeOpacity=".3" />
         {secs.map((_, i) => <path key={i} d={seg(i)} className="mj-orb-seg" data-on={i === active || undefined} onClick={() => onPick(i)} />)}
+        {/* the gold marker that travels to the chosen section */}
+        <circle cx={mx} cy={my} r="4" fill="#E9C977" className="mj-orb-marker" />
+        <circle cx={mx} cy={my} r="9" fill="none" stroke="#E9C977" strokeOpacity=".6" className="mj-orb-marker" />
+        {/* particles thrown from the chosen segment */}
+        <g key={burst} className="mj-orb-burst">
+          {Array.from({ length: 10 }, (_, k) => {
+            const [px, py] = pt((RO + RI) / 2, mid(active) + (k - 4.5) * 2.2)
+            return <circle key={k} cx={px} cy={py} r={1.6 + (k % 3) * 0.6} fill="#E9C977" style={{ '--dx': `${(k - 4.5) * 5}px`, '--dy': `${-12 - (k % 4) * 6}px` } as React.CSSProperties} />
+          })}
+        </g>
       </svg>
       <div role="tablist" aria-label="Menu sections" className="absolute inset-0">
         {secs.map((s2, i) => {
@@ -355,3 +374,28 @@ function SectionDial({ sections: secs, active, onPick, onKey }: {
 }
 const SECTION_ICON: Record<string, string> = { explore: 'search', member: 'shortlist', wedding: 'invitation', astrology: 'rashi', culture: 'festivals', support: 'safety' }
 
+/** The section's name on split-flap tiles; the tiles that change flip through letters and settle. */
+const FLAP = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ&'
+function FlapWord({ text }: { text: string }) {
+  const L = 15
+  const centred = (' '.repeat(Math.floor((L - text.length) / 2)) + text).padEnd(L, ' ').slice(0, L)
+  const [shown, setShown] = useState(centred)
+  const last = useRef(centred)
+  useEffect(() => {
+    const from = last.current; last.current = centred
+    if (from === centred) return
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { setShown(centred); return }
+    let step = 0
+    const id = window.setInterval(() => {
+      step++
+      setShown(Array.from(centred, (ch, i) => (ch === from[i] || step >= 2 + i * 0.9 ? ch : FLAP[(step * 7 + i * 5) % FLAP.length])).join(''))
+      if (step >= 2 + L * 0.9) window.clearInterval(id)
+    }, 45)
+    return () => window.clearInterval(id)
+  }, [centred])
+  return (
+    <span className="mj-flaps mj-flaps-sm">
+      {Array.from(shown, (ch, i) => <span key={i} className="mj-flap"><span key={ch}>{ch === ' ' ? '\u00a0' : ch}</span></span>)}
+    </span>
+  )
+}

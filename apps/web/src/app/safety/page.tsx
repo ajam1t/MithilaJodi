@@ -179,7 +179,7 @@ export default function SafetyPage() {
             </nav>
 
             <div className="flex items-center justify-center mb-5">
-              <div className="w-14 h-14 rounded-full bg-maroon/8 border border-line flex items-center justify-center">
+              <div className="w-14 h-14 rounded-full bg-maroon/8 border border-gold/30 flex items-center justify-center">
                 <ShieldIcon size={28} />
               </div>
             </div>
@@ -277,7 +277,7 @@ export default function SafetyPage() {
                   The member confirmed their mobile number via a one-time password (OTP) at
                   registration. Every registered member on Mithila Jodi has completed this step.
                 </p>
-                <p className="text-[11px] text-ink-soft/70 border-t border-line pt-3 leading-relaxed">
+                <p className="text-[11px] text-ink-soft/70 border-t border-gold/20 pt-3 leading-relaxed">
                   This confirms the mobile number was active at registration. It does not verify
                   personal identity beyond phone number ownership.
                 </p>
@@ -300,7 +300,7 @@ export default function SafetyPage() {
                   appearing on any profile. Photos that do not meet community guidelines are
                   rejected and not displayed.
                 </p>
-                <p className="text-[11px] text-ink-soft/70 border-t border-line pt-3 leading-relaxed">
+                <p className="text-[11px] text-ink-soft/70 border-t border-gold/20 pt-3 leading-relaxed">
                   Photos are reviewed for appropriateness. This is not an identity authentication
                   or facial verification process.
                 </p>
@@ -323,7 +323,7 @@ export default function SafetyPage() {
                   active on the platform. Profiles that do not meet guidelines may be rejected or
                   returned for correction.
                 </p>
-                <p className="text-[11px] text-ink-soft/70 border-t border-line pt-3 leading-relaxed">
+                <p className="text-[11px] text-ink-soft/70 border-t border-gold/20 pt-3 leading-relaxed">
                   This is an internal quality and guideline check. It is not an identity document
                   verification or background check.
                 </p>
@@ -332,7 +332,7 @@ export default function SafetyPage() {
             </div>
 
             {/* Not offered notice */}
-            <div className="mt-6 flex gap-3 items-start rounded-mj-sm border border-line bg-paper px-5 py-4">
+            <div className="mt-6 flex gap-3 items-start rounded-mj-sm border border-gold/30 bg-paper px-5 py-4">
               <WarnDiamond />
               <p className="text-[13px] text-ink-soft leading-relaxed">
                 <strong className="text-ink">Not currently offered:</strong> Mithila Jodi does not
@@ -526,8 +526,9 @@ export default function SafetyPage() {
         <section className="bg-cream py-12 sm:py-16" aria-labelledby="s8-heading">
           <div className="wrap max-w-3xl">
             <div className="card p-7 sm:p-10">
+              <div className="h-[3px] bg-gradient-to-r from-maroon-deep/20 via-gold to-maroon-deep/20 -mx-7 sm:-mx-10 -mt-7 sm:-mt-10 mb-8 rounded-t-mj" />
               <div className="flex items-start gap-5">
-                <div className="shrink-0 w-12 h-12 rounded-full bg-maroon/8 border border-line flex items-center justify-center">
+                <div className="shrink-0 w-12 h-12 rounded-full bg-maroon/8 border border-gold/30 flex items-center justify-center">
                   <ShieldIcon size={22} />
                 </div>
                 <div>

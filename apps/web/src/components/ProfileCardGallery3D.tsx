@@ -58,7 +58,7 @@ function Field({ label, value }: { label: string; value: string | number | null 
   const hideEmpty = useContext(HideEmpty)
   if (hideEmpty && (value == null || value === '')) return null
   return (
-    <div className="flex items-start justify-between gap-3 border-b border-line py-2 last:border-0">
+    <div className="flex items-start justify-between gap-3 border-b border-gold/15 py-2 last:border-0">
       <span className="shrink-0 text-[10px] uppercase tracking-wide text-ink-soft">{label}</span>
       <span className="text-right text-[13px] leading-snug text-ink">{text(value)}</span>
     </div>
@@ -77,7 +77,8 @@ function deckStyleForOffset(offset: number) {
 
 function DeckFrame({ children, active }: { children: ReactNode; active: boolean }) {
   return (
-    <div className={`flex h-full w-full flex-col overflow-hidden rounded-[20px] border bg-cream transition-colors ${active ? 'border-gold/50 shadow-mj-xs' : 'border-line'}`}>
+    <div className={`flex h-full w-full flex-col overflow-hidden rounded-[20px] border bg-cream transition-shadow ${active ? 'border-gold/60 shadow-mj-sm' : 'border-gold/25'}`}>
+      <div className="h-[3px] shrink-0 bg-gradient-to-r from-maroon via-gold to-maroon" />
       <div className="min-h-0 flex-1 px-4 py-4">{children}</div>
     </div>
   )
@@ -85,8 +86,10 @@ function DeckFrame({ children, active }: { children: ReactNode; active: boolean 
 
 function CardFrame({ children, active }: { children: ReactNode; active: boolean }) {
   return (
-    <div className={`flex h-full w-full flex-col overflow-hidden rounded-mj border bg-paper transition-colors ${active ? 'border-gold/50 shadow-mj-xs' : 'border-line'}`}>
+    <div className={`flex h-full w-full flex-col overflow-hidden rounded-mj border bg-paper ${active ? 'border-gold shadow-mj ring-1 ring-gold/30' : 'border-gold/20 shadow-mj-sm'}`}>
+      <div className="h-1.5 shrink-0 bg-gradient-to-r from-maroon via-gold to-maroon" />
       <div className="min-h-0 flex-1 px-4 py-3.5">{children}</div>
+      <div className="h-1 shrink-0 bg-gradient-to-r from-maroon via-gold to-maroon" />
     </div>
   )
 }
@@ -111,7 +114,7 @@ function Face({ card, profile }: { card: string; profile: SearchCard }) {
     return (
       <div className="flex h-full flex-col">
         <p className="mb-2 text-[10px] uppercase tracking-widest text-terra">Profile</p>
-        <div className="relative mx-auto mb-3 h-24 w-24 overflow-hidden rounded-full border border-line bg-cream">
+        <div className="relative mx-auto mb-3 h-24 w-24 overflow-hidden rounded-full border-2 border-gold/60 bg-cream">
           {profile.primary_photo_url ? (
             <Image src={profile.primary_photo_url} alt={profile.display_name} fill sizes="96px" className="object-cover object-[center_35%]" />
           ) : (
@@ -176,7 +179,7 @@ function Face({ card, profile }: { card: string; profile: SearchCard }) {
         <Field label="Marital status" value={humanize(profile.marital_status)} />
         <Field label="Family" value={humanize(profile.family_type)} />
         <Field label="Profile status" value={humanize(profile.profile_status)} />
-        <div className="mt-4 rounded-mj-sm border border-line bg-cream px-3 py-2.5 text-center">
+        <div className="mt-4 rounded-mj-sm border border-gold/25 bg-cream px-3 py-2.5 text-center">
           <p className="font-serif text-[15px] text-maroon">A thoughtful beginning</p>
           <p className="mt-0.5 text-[11px] leading-relaxed text-ink-soft">Review the full profile to see more details and connect respectfully.</p>
         </div>
@@ -209,7 +212,7 @@ function Face({ card, profile }: { card: string; profile: SearchCard }) {
           )}
         </div>
         {q.gotraSafe && (
-          <p className="mt-2 pt-2 border-t border-line text-[10px] leading-snug text-ink-soft">
+          <p className="mt-2 pt-2 border-t border-gold/20 text-[10px] leading-snug text-ink-soft">
             Gotra-safe matches only
           </p>
         )}
@@ -367,17 +370,17 @@ export default function ProfileCardGallery3D({ profile, autoRotate = true, varia
         <>
           <div className="mt-3 flex items-center justify-center gap-4">
             <button type="button" onClick={() => stopAndNavigate(-1)} aria-label="Previous card"
-              className="grid h-10 w-10 place-items-center rounded-full border border-line bg-cream text-maroon transition-colors hover:border-gold/60 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40">
+              className="grid h-10 w-10 place-items-center rounded-full border border-gold/40 bg-cream text-maroon transition-colors hover:border-gold active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40">
               <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true"><path d="m15 6-6 6 6 6" /></svg>
             </button>
             <div className="flex items-center gap-1.5" role="group" aria-label="Choose a card">
               {CARDS.map((label, index) => (
                 <button key={label} type="button" onClick={() => { setStopped(true); setActive(index) }} aria-label={label} aria-current={active === index}
-                  className={`h-2 rounded-full transition-all ${active === index ? 'w-5 bg-maroon' : 'w-2 bg-paper-3 hover:bg-gold/60'}`} />
+                  className={`h-2 rounded-full transition-all ${active === index ? 'w-5 bg-maroon' : 'w-2 bg-gold/45 hover:bg-gold'}`} />
               ))}
             </div>
             <button type="button" onClick={() => stopAndNavigate(1)} aria-label="Next card"
-              className="grid h-10 w-10 place-items-center rounded-full border border-line bg-cream text-maroon transition-colors hover:border-gold/60 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40">
+              className="grid h-10 w-10 place-items-center rounded-full border border-gold/40 bg-cream text-maroon transition-colors hover:border-gold active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40">
               <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
             </button>
           </div>
@@ -388,13 +391,13 @@ export default function ProfileCardGallery3D({ profile, autoRotate = true, varia
       ) : (
         <>
         <div className="mt-2 flex items-center justify-center gap-4">
-          <button type="button" onClick={() => stopAndNavigate(-1)} className="rounded-full border border-line p-1.5 text-maroon hover:border-gold/60 focus:outline-none focus:ring-1 focus:ring-gold" aria-label="Previous information card">←</button>
+          <button type="button" onClick={() => stopAndNavigate(-1)} className="rounded-full border border-gold/40 p-1.5 text-maroon hover:border-gold focus:outline-none focus:ring-1 focus:ring-gold" aria-label="Previous information card">←</button>
           <div className="flex items-center gap-1.5" aria-label="Choose profile information card">
             {CARDS.map((label, index) => (
-              <button key={label} type="button" onClick={() => { setStopped(true); setActive(index) }} aria-label={label} aria-current={active === index} className={`rounded-full transition-all ${active === index ? 'h-2 w-5 bg-maroon' : 'h-2 w-2 bg-paper-3 hover:bg-gold/60'}`} />
+              <button key={label} type="button" onClick={() => { setStopped(true); setActive(index) }} aria-label={label} aria-current={active === index} className={`rounded-full transition-all ${active === index ? 'h-2 w-5 bg-maroon' : 'h-2 w-2 bg-gold/50 hover:bg-gold'}`} />
             ))}
           </div>
-          <button type="button" onClick={() => stopAndNavigate(1)} className="rounded-full border border-line p-1.5 text-maroon hover:border-gold/60 focus:outline-none focus:ring-1 focus:ring-gold" aria-label="Next information card">→</button>
+          <button type="button" onClick={() => stopAndNavigate(1)} className="rounded-full border border-gold/40 p-1.5 text-maroon hover:border-gold focus:outline-none focus:ring-1 focus:ring-gold" aria-label="Next information card">→</button>
         </div>
         <p className="mt-1.5 text-center text-[11px] text-ink-soft">{active + 1} / {CARDS.length} · <span className="text-maroon">{CARDS[active]}</span> · swipe or use arrows</p>
         </>

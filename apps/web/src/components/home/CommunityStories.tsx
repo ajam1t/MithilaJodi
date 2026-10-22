@@ -58,8 +58,8 @@ const STORIES: Story[] = [
 const shortName = (family: string) => family.replace(/^The\s+/i, '').replace(/family$/i, 'Family')
 
 /**
- * Laid out as a letter: the chosen family's words sit on a plain white card
- * in large editorial type under a single quote mark, and the
+ * Laid out as a letter: the chosen family's words sit on a paper card, in
+ * large editorial type with a faint gold halftone in one corner, and the
  * four families stay a compact selector beneath it (a tab list — arrow keys
  * move between them). Changing family fades the new words in; nothing
  * changes on its own.
@@ -93,9 +93,9 @@ export function CommunityStories() {
             id="story-panel"
             role="tabpanel"
             aria-labelledby={`story-tab-${active}`}
-            className="relative overflow-hidden rounded-[22px] border border-line bg-white px-6 pb-7 pt-9 shadow-mj-xs sm:px-12 sm:pb-9 sm:pt-11"
+            className="mj-letter relative overflow-hidden rounded-[22px] border border-gold/40 bg-cream px-6 pb-7 pt-9 shadow-mj-sm sm:px-12 sm:pb-9 sm:pt-11"
           >
-            <span className="pointer-events-none absolute left-5 top-1 font-serif text-[96px] leading-none text-gold/30 sm:left-8 sm:text-[120px]" aria-hidden="true">&ldquo;</span>
+            <span className="pointer-events-none absolute left-5 top-1 font-serif text-[96px] leading-none text-gold/35 sm:left-8 sm:text-[120px]" aria-hidden="true">&ldquo;</span>
             <span className="pointer-events-none absolute right-6 top-4 font-deva text-[14px] text-gold/70 sm:right-8 sm:top-5 sm:text-[15px]" lang="mai" aria-hidden="true">परिवारक बात</span>
             <figure key={active} className="mj-letter-in relative">
               <blockquote className="font-serif text-[19px] leading-[1.55] text-ink sm:text-[23px]">{s.quote}</blockquote>
@@ -121,10 +121,11 @@ export function CommunityStories() {
                   tabIndex={on ? 0 : -1}
                   onClick={() => setActive(i)}
                   onKeyDown={e => onKey(e, i)}
-                  className={`group flex flex-col items-center rounded-mj-sm border px-1 py-2.5 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold sm:py-3 ${on ? 'border-gold bg-white' : 'border-line bg-cream hover:border-gold/50'}`}
+                  className={`group flex flex-col items-center rounded-mj-sm border px-1 py-2.5 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold sm:py-3 ${on ? 'border-gold bg-cream shadow-mj-xs' : 'border-paper-3 bg-paper-2/60 hover:border-gold/60'}`}
                 >
-                  <span className={`grid h-10 w-10 place-items-center rounded-full font-serif text-[17px] leading-none transition-colors sm:h-11 sm:w-11 sm:text-[19px] ${on ? 'bg-maroon text-cream' : 'bg-paper text-maroon'}`} aria-hidden="true">
+                  <span className={`relative grid h-10 w-10 place-items-center rounded-full font-serif text-[17px] leading-none transition-colors sm:h-11 sm:w-11 sm:text-[19px] ${on ? 'bg-maroon text-cream' : 'border border-gold/50 bg-cream text-maroon'}`} aria-hidden="true">
                     {st.initial}
+                    <span className={`absolute -inset-[5px] rounded-full border border-dashed border-gold/60 transition-opacity ${on ? 'opacity-100' : 'opacity-0'}`} />
                   </span>
                   <span className="mt-2 block font-serif text-[12.5px] leading-tight text-maroon sm:text-[14.5px]">{shortName(st.family)}</span>
                   <span className="mt-0.5 block text-[10.5px] leading-tight text-ink-soft sm:text-[12px]">{st.place}</span>

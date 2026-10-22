@@ -96,9 +96,9 @@ export function MatchCard({ c, note, children }: {
   children: React.ReactNode
 }) {
   return (
-    <article className="rounded-mj border border-line bg-cream p-3.5 shadow-mj-xs sm:p-4">
+    <article className="rounded-mj border border-gold/25 bg-cream p-3.5 shadow-mj-xs sm:p-4">
       <div className="flex gap-3.5">
-        <Link href={`/profile/${c.id}`} className="relative h-[92px] w-[76px] shrink-0 overflow-hidden rounded-mj-sm border border-line bg-paper-2" tabIndex={-1} aria-hidden="true">
+        <Link href={`/profile/${c.id}`} className="relative h-[92px] w-[76px] shrink-0 overflow-hidden rounded-mj-sm border border-gold/25 bg-paper-2" tabIndex={-1} aria-hidden="true">
           {c.photo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={c.photo} alt="" className="h-full w-full object-cover object-[center_30%]" loading="lazy" decoding="async" />
@@ -153,7 +153,7 @@ export function MatchedActions({ id, conversationId }: { id: string; conversatio
 
 export function EmptyCard({ children, cta }: { children: React.ReactNode; cta?: React.ReactNode }) {
   return (
-    <div className="rounded-mj border border-line bg-cream px-6 py-9 text-center">
+    <div className="rounded-mj border border-gold/25 bg-cream px-6 py-9 text-center">
       <p className="text-[14px] text-ink-soft">{children}</p>
       {cta && <div className="mt-4">{cta}</div>}
     </div>

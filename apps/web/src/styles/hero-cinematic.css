@@ -24,9 +24,13 @@
 @media (min-width: 640px)  { .mj-hero-stage { --mj-fly: 42px; } }
 @media (min-width: 1024px) { .mj-hero-stage { --mj-fly: 64px; } }
 
-/* Plain warm paper ground — a soft vertical wash, no glows. */
+/* Warm paper ground assembled from the existing brand gradient recipe. */
 .mj-hero-ground {
-  background: linear-gradient(180deg, #FFFAF0 0%, #FCF5E7 100%);
+  background:
+    radial-gradient(circle at 50% 42%, rgba(228, 197, 114, 0.26), transparent 58%),
+    radial-gradient(circle at 12% 16%, rgba(232, 145, 42, 0.13), transparent 46%),
+    radial-gradient(circle at 88% 84%, rgba(122, 18, 32, 0.10), transparent 48%),
+    linear-gradient(180deg, #FFFAF0 0%, #FCF5E7 55%, #F7EBD3 100%);
 }
 
 /* ── Stage 1 → 2: glyph assembly and brand settle ──────────────────────── */
@@ -60,6 +64,7 @@
   letter-spacing: 0.02em;
   font-size: clamp(30px, 8.2vw, 74px);
   line-height: 1;
+  filter: drop-shadow(0 2px 10px rgba(185, 138, 46, 0.28));
 }
 
 .mj-hero-glyph {
@@ -104,6 +109,76 @@
     opacity: 1;
     transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
     filter: blur(0);
+  }
+}
+
+/* Golden energy pulse + ripple, peaking as the glyphs converge. */
+.mj-hero-pulse,
+.mj-hero-ripple {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 999px;
+  transform: translate3d(-50%, -50%, 0) scale(0);
+  opacity: 0;
+  pointer-events: none;
+}
+.mj-hero-pulse {
+  width: 190px;
+  height: 190px;
+  background: radial-gradient(circle, rgba(228, 197, 114, 0.5), transparent 68%);
+  animation: mjPulse 1500ms cubic-bezier(0.2, 0.8, 0.3, 1) 1150ms forwards;
+}
+.mj-hero-ripple {
+  width: 128px;
+  height: 128px;
+  border: 1.5px solid rgba(185, 138, 46, 0.5);
+  animation: mjRipple 1600ms cubic-bezier(0.2, 0.8, 0.3, 1) 1400ms forwards;
+}
+@keyframes mjPulse {
+  0%   { opacity: 0;    transform: translate3d(-50%, -50%, 0) scale(0.2); }
+  42%  { opacity: 0.95; transform: translate3d(-50%, -50%, 0) scale(1); }
+  100% { opacity: 0;    transform: translate3d(-50%, -50%, 0) scale(1.5); }
+}
+@keyframes mjRipple {
+  0%   { opacity: 0;   transform: translate3d(-50%, -50%, 0) scale(0.3); }
+  30%  { opacity: 0.8; }
+  100% { opacity: 0;   transform: translate3d(-50%, -50%, 0) scale(2.6); }
+}
+
+/* Convergence sparks — eight small dots pushed radially outward. */
+.mj-hero-sparks {
+  position: absolute;
+  inset: 0;
+  z-index: 21;
+  pointer-events: none;
+}
+.mj-hero-spark-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: #E4C572;
+  opacity: 0;
+  transform: translate3d(-50%, -50%, 0);
+  animation: mjSparkOut 1250ms ease-out calc(1250ms + var(--i) * 55ms) forwards;
+}
+/* Halve the particle count on phones, per the performance brief. */
+@media (max-width: 639px) {
+  .mj-hero-spark-dot:nth-child(n + 5) { display: none; }
+}
+@keyframes mjSparkOut {
+  0%   { opacity: 0; transform: translate3d(-50%, -50%, 0) scale(0.4); }
+  25%  { opacity: 1; }
+  100% {
+    opacity: 0;
+    transform:
+      translate3d(
+        calc(-50% + cos(var(--i) * 45deg) * var(--mj-fly) * 1.7),
+        calc(-50% + sin(var(--i) * 45deg) * var(--mj-fly) * 1.7), 0)
+      scale(0.9);
   }
 }
 
@@ -215,15 +290,17 @@
   padding: 8px 14px;
   border-radius: 18px; /* rounded-mj */
   background: #FFFAF0;
-  border: 1px solid #EADFCB; /* border-line */
-  box-shadow: 0 4px 12px -4px rgba(58, 20, 12, 0.25); /* shadow-mj-xs */
+  border: 1px solid rgba(185, 138, 46, 0.42);
+  box-shadow:
+    0 10px 28px -14px rgba(90, 40, 20, 0.28),
+    0 2px 6px -3px rgba(90, 40, 20, 0.14); /* shadow-mj-soft */
   color: #7A1220;
-  transition: background 600ms ease, color 600ms ease, border-color 600ms ease;
+  transition: background 600ms ease, color 600ms ease, box-shadow 600ms ease;
 }
 .mj-hero-match[data-connected="true"] .mj-hero-compat-badge {
-  background: #7A1220;
-  border-color: #7A1220;
+  background: linear-gradient(180deg, #9B2233, #7A1220); /* bg-maroon-gradient */
   color: #E4C572;
+  box-shadow: 0 14px 30px -18px rgba(58, 20, 12, 0.4); /* shadow-mj-sm */
 }
 
 .mj-hero-signals {
@@ -255,6 +332,12 @@
 
 /* ── Stage 3: Thread of Destiny ────────────────────────────────────────── */
 
+/* Cultural motifs stay background texture — felt, not illustrated. */
+.mj-hero-motifs { opacity: 0; transition: opacity 1200ms ease; }
+[data-stage="thread"] .mj-hero-motifs,
+[data-stage="connected"] .mj-hero-motifs,
+[data-stage="final"] .mj-hero-motifs { opacity: 0.09; }
+
 /* One route per breakpoint — the stacked and flanking layouts need different
    paths, not one path stretched. */
 .mj-hero-route--wide { display: none; }
@@ -264,15 +347,43 @@
   .mj-hero-route--tall { display: none; }
 }
 
-.mj-hero-thread-line {
+.mj-hero-thread-line,
+.mj-hero-thread-glow {
   stroke-dasharray: 1;      /* paths declare pathLength="1" */
   stroke-dashoffset: 1;
 }
+.mj-hero-thread-glow { opacity: 0; }
 
 .mj-hero-thread[data-drawing="true"] .mj-hero-thread-line {
   animation: mjDraw 1800ms cubic-bezier(0.32, 0.06, 0.28, 1) forwards;
 }
+.mj-hero-thread[data-drawing="true"] .mj-hero-thread-glow {
+  animation:
+    mjDraw 1800ms cubic-bezier(0.32, 0.06, 0.28, 1) forwards,
+    mjGlowIn 1800ms ease forwards;
+}
 @keyframes mjDraw { to { stroke-dashoffset: 0; } }
+@keyframes mjGlowIn {
+  0%   { opacity: 0; }
+  30%  { opacity: 0.5; }
+  100% { opacity: 0.34; }
+}
+
+/* Short bright dash riding the same path as a leading-edge spark. */
+.mj-hero-spark {
+  stroke-dasharray: 0.012 0.988;
+  stroke-dashoffset: 1;
+  opacity: 0;
+}
+.mj-hero-thread[data-drawing="true"] .mj-hero-spark {
+  animation: mjSparkRide 1800ms cubic-bezier(0.32, 0.06, 0.28, 1) forwards;
+}
+@keyframes mjSparkRide {
+  0%   { stroke-dashoffset: 1;    opacity: 0; }
+  8%   { opacity: 0.9; }
+  88%  { opacity: 0.9; }
+  100% { stroke-dashoffset: 0.02; opacity: 0; }
+}
 
 /* Centre knot — an infinity-style loop, deliberately not a heart. */
 /* Sits behind the compatibility badge, centred, with the loops reaching out
@@ -300,14 +411,22 @@
    The orchestrator already jumps straight to stage 'final' when reduced motion
    is set, and the global rule collapses durations so keyframes park on their
    100% state. These rules cover what is transition- or opacity-driven rather
-   than keyframe-driven — the result is a clean static composition: brand
-   settled, both cards in place, thread fully drawn, knot tied. */
+   than keyframe-driven, and switch off the purely ornamental particles — the
+   result is a clean static composition: brand settled, both cards in place,
+   thread fully drawn, knot tied. */
 @media (prefers-reduced-motion: reduce) {
   .mj-hero-glyph,
   .mj-hero-card,
   .mj-hero-compat,
   .mj-hero-signal { opacity: 1; }
 
+  .mj-hero-pulse,
+  .mj-hero-ripple,
+  .mj-hero-sparks,
+  .mj-hero-spark { display: none; }
+
   .mj-hero-thread-line { stroke-dashoffset: 0; }
+  .mj-hero-thread-glow { stroke-dashoffset: 0; opacity: 0.3; }
   .mj-hero-knot        { stroke-dashoffset: 0; opacity: 0.85; }
+  .mj-hero-motifs      { opacity: 0.09; }
 }

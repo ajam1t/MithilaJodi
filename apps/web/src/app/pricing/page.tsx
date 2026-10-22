@@ -65,7 +65,7 @@ export default function PricingPage() {
             <h1 className="font-serif text-maroon text-[26px] sm:text-[34px] leading-tight">
               Mithila Jodi is free for every member
             </h1>
-            <div className="ornament-line w-16 mx-auto my-4" />
+            <div className="ornament-line mj-line w-16 mx-auto my-4" />
             <p className="font-sans text-ink-soft text-[15px] sm:text-[16px] leading-relaxed mx-auto max-w-[52ch]">
               There is no membership fee, no paid tier and no payment step. We do not ask for card or
               bank details at any point, because there is nothing to pay for.
@@ -86,7 +86,7 @@ export default function PricingPage() {
             </ul>
           </div>
 
-          <div className="mt-6 rounded-mj border border-line bg-cream p-5 sm:p-6">
+          <div className="mt-6 rounded-mj border border-gold/40 bg-cream p-5 sm:p-6">
             <h2 className="font-serif text-maroon text-[17px] sm:text-[19px] mb-2">
               Will it always be free?
             </h2>

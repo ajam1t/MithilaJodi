@@ -39,7 +39,7 @@ export function FeaturedCarousel({ profiles }: { profiles: SearchCard[] }) {
             type="button"
             onClick={() => scrollByCard(-1)}
             aria-label="Previous profiles"
-            className="w-10 h-10 rounded-full border border-line text-maroon bg-cream hover:bg-white hover:border-gold/60 transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-gold/40"
+            className="w-10 h-10 rounded-full border border-gold/40 text-maroon bg-cream hover:bg-gold/10 hover:border-gold transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-gold/40"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
               <polyline points="15 18 9 12 15 6" />
@@ -49,7 +49,7 @@ export function FeaturedCarousel({ profiles }: { profiles: SearchCard[] }) {
             type="button"
             onClick={() => scrollByCard(1)}
             aria-label="Next profiles"
-            className="w-10 h-10 rounded-full border border-line text-maroon bg-cream hover:bg-white hover:border-gold/60 transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-gold/40"
+            className="w-10 h-10 rounded-full border border-gold/40 text-maroon bg-cream hover:bg-gold/10 hover:border-gold transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-gold/40"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
               <polyline points="9 18 15 12 9 6" />

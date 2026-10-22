@@ -51,6 +51,27 @@ const ICON = {
   question: 'M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01',
 }
 
+/** Madhubani-style lotus spray for corners. Decorative. */
+function FloralSpray({ className = '', flip = false }: { className?: string; flip?: boolean }) {
+  return (
+    <svg viewBox="0 0 160 160" className={className} style={flip ? { transform: 'scaleX(-1)' } : undefined} aria-hidden="true">
+      <g fill="none" stroke={GOLD} strokeWidth="1.2" strokeOpacity="0.7">
+        <path d="M20 150C50 120 70 90 80 40" />
+        <path d="M80 40c10 30 30 60 60 90" strokeOpacity="0.45" />
+      </g>
+      {[[34, 128, -30], [52, 104, -20], [66, 78, -12], [104, 92, 22], [122, 112, 30]].map(([x, y, r], i) => (
+        <path key={i} d="M0 0C-8-6-10-16-4-24 2-16 4-6 0 0Z" transform={`translate(${x} ${y}) rotate(${r}) scale(1.6)`} fill="#C9A24A" fillOpacity="0.35" stroke={GOLD} strokeWidth="0.8" />
+      ))}
+      <g transform="translate(80 40)">
+        <path d="M0 0C-6-8-6-20 0-30 6-20 6-8 0 0Z" fill="#9E1C3E" />
+        <path d="M0 0C-11-3-17-11-18-21-9-19-3-11 0 0ZM0 0C11-3 17-11 18-21 9-19 3-11 0 0Z" fill="#7A1220" />
+        <path d="M0 0C-15 0-23-6-27-13-17-14-8-8 0 0ZM0 0C15 0 23-6 27-13 17-14 8-8 0 0Z" fill="#B8323F" />
+        <circle cx="0" cy="-3" r="2.4" fill="#E4C572" />
+      </g>
+    </svg>
+  )
+}
+
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-terra sm:text-[12px]">{children}</p>
 }
@@ -60,7 +81,7 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 function PhonePreview() {
   return (
     <div className="relative mx-auto w-[260px] sm:w-[290px]" aria-hidden="true">
-      <div className="overflow-hidden rounded-[40px] border-[9px] border-[#211915] bg-[#211915] shadow-mj-xs">
+      <div className="overflow-hidden rounded-[40px] border-[9px] border-[#211915] bg-[#211915] shadow-[0_30px_60px_-24px_rgba(58,20,12,0.6)]">
         <div className="relative overflow-hidden rounded-[31px] bg-cream">
           {/* app bar */}
           <div className="flex items-center justify-between px-3.5 pb-2 pt-3">
@@ -76,7 +97,7 @@ function PhonePreview() {
             <Image src={P.photos[0]} alt="" width={640} height={800} className="aspect-[5/4] w-full object-cover object-[center_22%]" priority />
           </div>
           <div className="relative -mt-4 flex justify-center">
-            <span className="grid h-8 w-8 place-items-center rounded-full border border-line bg-cream text-maroon"><Icon d={ICON.lotus} className="h-4 w-4" /></span>
+            <span className="grid h-8 w-8 place-items-center rounded-full border border-gold/60 bg-cream text-maroon"><Icon d={ICON.lotus} className="h-4 w-4" /></span>
           </div>
           {/* identity */}
           <div className="px-4 pb-3 pt-1 text-center">
@@ -85,12 +106,12 @@ function PhonePreview() {
             <p className="mt-1 flex items-center justify-center gap-1 text-[11.5px] text-ink"><Icon d={ICON.pin} className="h-3 w-3 text-maroon" />{P.location?.current}</p>
             <p className="text-[11px] italic text-[#9A6F1E]">Originally from {P.location?.native}</p>
             <div className="mt-2 flex flex-wrap justify-center gap-1.5">
-              {PILLS.map(x => <span key={x} className="rounded-full border border-line bg-paper px-2 py-0.5 text-[10px] text-maroon">{x}</span>)}
+              {PILLS.map(x => <span key={x} className="rounded-full border border-gold/50 bg-paper px-2 py-0.5 text-[10px] text-maroon">{x}</span>)}
             </div>
             <span className="mt-3 inline-block w-full rounded-full bg-maroon-gradient py-2 text-[12px] font-semibold text-cream">View Full Profile</span>
           </div>
           {/* tabs */}
-          <div className="grid grid-cols-4 border-t border-line bg-paper-2/60 px-1 py-1.5 text-center text-[9.5px] text-ink-soft">
+          <div className="grid grid-cols-4 border-t border-gold/25 bg-paper-2/60 px-1 py-1.5 text-center text-[9.5px] text-ink-soft">
             {[['About', ICON.user], ['Education', ICON.doc], ['Family', ICON.lotus], ['Lifestyle', ICON.clock]].map(([l, d], i) => (
               <span key={l} className={`flex flex-col items-center gap-0.5 ${i === 0 ? 'text-maroon' : ''}`}><Icon d={d} className="h-3.5 w-3.5" />{l}</span>
             ))}
@@ -104,7 +125,7 @@ function PhonePreview() {
 /** The compact card in "Here's what your family will see". */
 function PreviewCard() {
   return (
-    <div className="overflow-hidden rounded-[18px] border border-line bg-white p-2.5">
+    <div className="overflow-hidden rounded-[18px] border border-gold/35 bg-white p-2.5 shadow-mj-sm">
       <Image src={P.photos[0]} alt={`${P.displayName}, sample Digital Profile`} width={640} height={800} className="aspect-[16/10] w-full rounded-[12px] object-cover object-[center_22%]" />
       <div className="px-1.5 pb-1.5 pt-2.5">
         <p className="font-serif text-[18px] leading-tight text-maroon">{P.displayName}</p>
@@ -112,7 +133,7 @@ function PreviewCard() {
         <p className="mt-1 flex items-center gap-1 text-[12px] text-ink"><Icon d={ICON.pin} className="h-3.5 w-3.5 text-maroon" />{P.location?.current}</p>
         <p className="flex items-center gap-1 text-[12px] italic text-[#9A6F1E]"><Icon d={ICON.pin} className="h-3.5 w-3.5" />Originally from {P.location?.native}</p>
         <div className="mt-2 flex flex-wrap gap-1.5">
-          {PILLS.map(x => <span key={x} className="rounded-full border border-line bg-paper px-2.5 py-0.5 text-[11px] text-maroon">{x}</span>)}
+          {PILLS.map(x => <span key={x} className="rounded-full border border-gold/45 bg-paper px-2.5 py-0.5 text-[11px] text-maroon">{x}</span>)}
         </div>
       </div>
     </div>
@@ -174,6 +195,7 @@ export function DigitalProfileLanding({ ctaHref, member }: { ctaHref: string; me
     <div className="overflow-x-clip">
       {/* ── Hero ── */}
       <section className="relative bg-[radial-gradient(ellipse_80%_70%_at_80%_20%,#FBEEDF,transparent_70%)] pb-10 pt-8 sm:pb-14 sm:pt-12" aria-labelledby="dp-h1">
+        <FloralSpray className="pointer-events-none absolute -right-6 bottom-0 hidden h-56 w-56 opacity-80 lg:block" />
         <div className="wrap grid items-center gap-9 lg:grid-cols-[1.08fr_0.92fr]">
           <div>
             {/* For visitors: a 29-second explainer, playing in a small circle. */}
@@ -223,7 +245,7 @@ export function DigitalProfileLanding({ ctaHref, member }: { ctaHref: string; me
 
       {/* ── See it before you create it ── */}
       <section className="wrap" aria-labelledby="dp-see">
-        <div className="grid items-center gap-6 rounded-[24px] border border-line bg-[#FBF0EA] p-5 shadow-mj-xs sm:p-7 lg:grid-cols-[1fr_minmax(0,300px)_minmax(0,250px)]">
+        <div className="grid items-center gap-6 rounded-[24px] border border-gold/30 bg-[#FBF0EA] p-5 shadow-mj-xs sm:p-7 lg:grid-cols-[1fr_minmax(0,300px)_minmax(0,250px)]">
           <div>
             <Eyebrow>See it before you create it</Eyebrow>
             <h2 id="dp-see" className="mt-2 font-display text-[28px] leading-tight text-maroon sm:text-[34px]">Here’s what your family will see.</h2>
@@ -235,7 +257,7 @@ export function DigitalProfileLanding({ ctaHref, member }: { ctaHref: string; me
           <PreviewCard />
           <ul className="grid gap-2">
             {BENEFITS.map(([t, d]) => (
-              <li key={t} className="flex items-center gap-3 rounded-[12px] border border-line bg-cream px-3.5 py-2.5 text-[14px] text-ink">
+              <li key={t} className="flex items-center gap-3 rounded-[12px] border border-gold/25 bg-cream px-3.5 py-2.5 text-[14px] text-ink">
                 <span className="text-[#9A6F1E]"><Icon d={d} /></span>{t}
               </li>
             ))}
@@ -245,13 +267,15 @@ export function DigitalProfileLanding({ ctaHref, member }: { ctaHref: string; me
 
       {/* ── Mithila fields ── */}
       <section className="relative py-10 sm:py-14" aria-labelledby="dp-roots">
+        <FloralSpray className="pointer-events-none absolute left-0 top-2 hidden h-28 w-28 opacity-40 sm:block" />
+        <FloralSpray flip className="pointer-events-none absolute right-0 top-2 hidden h-28 w-28 opacity-40 sm:block" />
         <div className="wrap">
           <h2 id="dp-roots" className="text-center font-display text-[24px] leading-tight text-ink sm:text-[30px]">
             Built for the way <span className="text-[#9A6F1E]">Mithila families</span> look at a biodata
           </h2>
           <ul className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             {ROOTS.map(r => (
-              <li key={r.title} className="flex flex-col items-center rounded-[16px] border border-line bg-white px-3 py-5 text-center shadow-mj-xs">
+              <li key={r.title} className="flex flex-col items-center rounded-[16px] border border-gold/40 bg-white px-3 py-5 text-center shadow-mj-xs">
                 <span className="text-[#9A6F1E]">{r.icon}</span>
                 <span className={`mt-2 text-[20px] leading-tight text-maroon sm:text-[22px] ${r.deva ? 'font-deva' : 'font-serif'}`}>{r.title}</span>
                 <span className="mt-1 text-[13px] text-ink-soft">{r.sub}</span>
@@ -264,7 +288,7 @@ export function DigitalProfileLanding({ ctaHref, member }: { ctaHref: string; me
       {/* ── Sharing ── */}
       <section className="wrap" aria-label="Sharing">
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-0">
-          <div className="lg:border-r lg:border-line lg:pr-10">
+          <div className="lg:border-r lg:border-gold/30 lg:pr-10">
             <h2 className="font-display text-[26px] text-maroon sm:text-[30px]">One link. Send it anywhere.</h2>
             <p className="mt-2 text-[15.5px] text-ink">No PDF attachment. No complicated forms. Just send your Mithila Jodi profile link.</p>
             <ol className="mt-6 flex items-start justify-between gap-2 text-center text-[13.5px] text-ink">
@@ -287,7 +311,7 @@ export function DigitalProfileLanding({ ctaHref, member }: { ctaHref: string; me
             <h2 className="font-display text-[26px] text-maroon sm:text-[30px]">One link. More than a biodata.</h2>
             <ul className="mt-5 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
               {MORE.map(([t, b, d]) => (
-                <li key={t} className="flex items-start gap-3 rounded-[14px] border border-line bg-white p-3.5 shadow-mj-xs">
+                <li key={t} className="flex items-start gap-3 rounded-[14px] border border-gold/25 bg-white p-3.5 shadow-mj-xs">
                   <span className="mt-0.5 text-[#9A6F1E]"><Icon d={d} className="h-6 w-6" /></span>
                   <span><span className="block text-[15px] font-semibold text-ink">{t}</span><span className="block text-[13px] leading-snug text-ink-soft">{b}</span></span>
                 </li>
@@ -299,7 +323,7 @@ export function DigitalProfileLanding({ ctaHref, member }: { ctaHref: string; me
 
       {/* ── How it works ── */}
       <section className="wrap mt-10 sm:mt-14" aria-labelledby="dp-how">
-        <div className="rounded-[24px] border border-line bg-[#FBF0EA] px-4 py-6 sm:px-6">
+        <div className="rounded-[24px] border border-gold/25 bg-[#FBF0EA] px-4 py-6 sm:px-6">
           <h2 id="dp-how" className="text-center font-display text-[26px] text-maroon sm:text-[30px]">How It Works</h2>
           <ol className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] lg:items-center">
             {STEPS.map(([n, t, d], i) => (
@@ -317,7 +341,8 @@ export function DigitalProfileLanding({ ctaHref, member }: { ctaHref: string; me
 
       {/* ── Privacy ── */}
       <section className="wrap mt-5" aria-labelledby="dp-privacy">
-        <div className="relative overflow-hidden rounded-[20px] border border-line bg-white px-5 py-5 shadow-mj-xs sm:px-7">
+        <div className="relative overflow-hidden rounded-[20px] border border-gold/30 bg-white px-5 py-5 shadow-mj-xs sm:px-7">
+          <FloralSpray flip className="pointer-events-none absolute -bottom-6 -right-4 hidden h-28 w-28 opacity-40 sm:block" />
           <div className="flex items-start gap-4">
             <span className="hidden h-12 w-12 shrink-0 place-items-center rounded-full bg-maroon text-cream sm:grid"><Icon d={ICON.lock} className="h-6 w-6" /></span>
             <div className="min-w-0">
@@ -335,7 +360,7 @@ export function DigitalProfileLanding({ ctaHref, member }: { ctaHref: string; me
       <section className="wrap mt-10 grid gap-5 pb-8 sm:mt-14 sm:pb-10 lg:grid-cols-[1.55fr_1fr]" aria-label="Comparison and questions">
         <div className="min-w-0">
           <h2 className="font-display text-[24px] text-maroon sm:text-[28px]">Digital Profile vs Traditional Biodata</h2>
-          <div className="mt-3 overflow-x-auto rounded-[14px] border border-line bg-white">
+          <div className="mt-3 overflow-x-auto rounded-[14px] border border-gold/30 bg-white">
             <table className="w-full text-left text-[12.5px] sm:text-[13.5px]">
               <thead>
                 <tr>
@@ -356,7 +381,8 @@ export function DigitalProfileLanding({ ctaHref, member }: { ctaHref: string; me
             </table>
           </div>
         </div>
-        <div className="relative overflow-hidden rounded-[20px] border border-line bg-white p-5 shadow-mj-xs sm:p-6">
+        <div className="relative overflow-hidden rounded-[20px] border border-gold/30 bg-white p-5 shadow-mj-xs sm:p-6">
+          <FloralSpray flip className="pointer-events-none absolute -bottom-6 -right-6 h-32 w-32 opacity-35" />
           <div className="relative flex items-start gap-3">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-maroon text-cream"><Icon d={ICON.question} className="h-6 w-6" /></span>
             <div>
@@ -372,9 +398,9 @@ export function DigitalProfileLanding({ ctaHref, member }: { ctaHref: string; me
 
       {/* ── Marriage Biodata ── a small pointer to the PDF maker, not a banner. */}
       <section className="wrap pb-10 sm:pb-14" aria-labelledby="dp-biodata">
-        <div className="mx-auto flex max-w-3xl flex-col gap-2.5 rounded-[16px] border border-line bg-cream px-4 py-3.5 shadow-mj-xs sm:flex-row sm:items-center sm:gap-5 sm:px-6 sm:py-5">
+        <div className="mx-auto flex max-w-3xl flex-col gap-2.5 rounded-[16px] border border-gold/40 bg-cream px-4 py-3.5 shadow-mj-xs sm:flex-row sm:items-center sm:gap-5 sm:px-6 sm:py-5">
           <div className="flex min-w-0 items-start gap-3 sm:items-center">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-line bg-paper-2 text-maroon" aria-hidden="true">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-gold/40 bg-paper-2 text-maroon" aria-hidden="true">
               <Icon d={ICON.doc} className="h-5 w-5" />
             </span>
             <div className="min-w-0">

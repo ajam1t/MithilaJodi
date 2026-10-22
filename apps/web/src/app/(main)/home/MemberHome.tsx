@@ -67,7 +67,7 @@ export function MemberHome({ summary, siteUrl }: { summary: HomeSummary; siteUrl
             <Link
               key={t.label}
               href={t.href}
-              className="group rounded-mj border border-line bg-cream p-3.5 shadow-mj-xs transition-colors hover:border-gold/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40"
+              className="group rounded-mj border border-gold/30 bg-cream p-3.5 shadow-mj-xs transition-colors hover:border-gold/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40"
             >
               <span className="flex items-center justify-between">
                 <span className="font-serif text-[28px] leading-none text-maroon">{t.value}</span>
@@ -91,7 +91,7 @@ export function MemberHome({ summary, siteUrl }: { summary: HomeSummary; siteUrl
         </section>
 
         {/* Digital Profile — a prompt, not the dashboard. */}
-        <section aria-label="Share your Digital Profile" className="mt-7 flex flex-col gap-3 rounded-mj border border-line bg-[#FFF8EC] p-4 shadow-mj-xs sm:flex-row sm:items-center">
+        <section aria-label="Share your Digital Profile" className="mt-7 flex flex-col gap-3 rounded-mj border border-gold/40 bg-[#FFF8EC] p-4 shadow-mj-xs sm:flex-row sm:items-center">
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8A6516]">Your Digital Profile</p>
             <p className="mt-1 font-serif text-[17px] leading-snug text-maroon">Share your Mithila Jodi profile with family and friends.</p>

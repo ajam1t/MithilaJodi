@@ -6,13 +6,13 @@ import { usePathname } from 'next/navigation'
 import { useAuthState } from '@/lib/hooks/useAuthState'
 import { AuthBottomNav } from '@/components/AuthBottomNav'
 
-/** Two figures with a heart between them — a jodi. */
+/** Two figures who meet, and a heart between them. Static under reduced motion. */
 function JodiIcon() {
   return (
-    <svg width="26" height="22" viewBox="0 0 30 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="relative">
-      <circle cx="6.4" cy="8.6" r="3.1" /><path d="M1.2 21.4c.4-3.8 2.5-6.2 5.2-6.2s4.8 2.4 5.2 6.2" />
-      <circle cx="23.6" cy="8.6" r="3.1" /><path d="M18.4 21.4c.4-3.8 2.5-6.2 5.2-6.2s4.8 2.4 5.2 6.2" />
-      <path d="M15 9.4c-2.4-1.7-3.9-3.1-3.9-4.8a2 2 0 0 1 3.9-1 2 2 0 0 1 3.9 1c0 1.7-1.5 3.1-3.9 4.8Z" fill="#E9C977" stroke="none" />
+    <svg width="26" height="22" viewBox="0 0 30 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mj-jodi relative">
+      <g className="mj-jodi-l"><circle cx="6.4" cy="8.6" r="3.1" /><path d="M1.2 21.4c.4-3.8 2.5-6.2 5.2-6.2s4.8 2.4 5.2 6.2" /></g>
+      <g className="mj-jodi-r"><circle cx="23.6" cy="8.6" r="3.1" /><path d="M18.4 21.4c.4-3.8 2.5-6.2 5.2-6.2s4.8 2.4 5.2 6.2" /></g>
+      <path className="mj-jodi-h" d="M15 9.4c-2.4-1.7-3.9-3.1-3.9-4.8a2 2 0 0 1 3.9-1 2 2 0 0 1 3.9 1c0 1.7-1.5 3.1-3.9 4.8Z" fill="#E9C977" stroke="none" />
     </svg>
   )
 }
@@ -55,9 +55,12 @@ export function MobileBottomNav() {
 
   return (
     <nav
-      className="mj-bottom-nav fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-cream border-t border-line shadow-[0_-4px_16px_-4px_rgba(58,20,12,0.18)] pb-[env(safe-area-inset-bottom)]"
+      className="mj-bottom-nav fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-cream border-t-2 border-gold border-opacity-40 shadow-[0_-4px_16px_-4px_rgba(58,20,12,0.18)] pb-[env(safe-area-inset-bottom)]"
       aria-label="Mobile quick navigation"
     >
+      {/* Top Madhubani accent line */}
+      <div className="h-[2px] w-full bg-gradient-to-r from-cream via-gold to-cream" />
+
       {
         /* Public / not-yet-loaded bottom nav — Home · Digital Profile · Join / Login · Search · Astrology */
         <div className="flex items-stretch">
@@ -87,8 +90,10 @@ export function MobileBottomNav() {
             <span className={`text-[10px] font-medium tracking-wide leading-tight text-center ${isActive('/digital-profile') ? 'font-semibold' : ''}`}>Digital Profile</span>
           </Link>
 
-          {/* Join / Login — primary CTA centre, the same size as every tab. */}
-          <Link href="/register" className={navCls('/register', true)} aria-current={isActive('/register') ? 'page' : undefined}>
+          {/* Join / Login — primary CTA centre, the same size as every tab. Its
+              icon tells the site's story: two people draw together and a gold
+              heart appears between them — a jodi — then they rest and repeat. */}
+          <Link href="/register" className={`${navCls('/register', true)} mj-cta-tab`} aria-current={isActive('/register') ? 'page' : undefined}>
             <JodiIcon />
             <span className="relative text-[10px] font-semibold tracking-wide leading-tight text-center">Join / Login</span>
           </Link>

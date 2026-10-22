@@ -68,7 +68,7 @@ export default function ShortlistsContent() {
           {loading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 animate-pulse">
               {[1, 2, 3, 4, 5, 6].map(i => (
-                <div key={i} className="card border-line shadow-mj-xs p-3 space-y-2">
+                <div key={i} className="card p-3 space-y-2">
                   <div className="w-full aspect-[3/4] bg-paper-3 rounded-mj-sm" />
                   <div className="h-4 bg-paper-3 rounded w-3/4" />
                   <div className="h-3 bg-paper-3 rounded w-1/2" />
@@ -76,7 +76,7 @@ export default function ShortlistsContent() {
               ))}
             </div>
           ) : items.length === 0 ? (
-            <div className="card border-line shadow-mj-xs p-10 text-center">
+            <div className="card p-10 text-center">
               <p className="text-ink-soft text-sm">Your shortlist is empty.</p>
               <Link href="/search" className="text-maroon text-sm underline mt-2 inline-block">
                 Browse profiles
@@ -87,7 +87,7 @@ export default function ShortlistsContent() {
               {items.map(item => {
                 const p = item.profile
                 return (
-                  <div key={p.id} className="card border-line shadow-mj-xs p-3 space-y-2 relative group">
+                  <div key={p.id} className="card p-3 space-y-2 relative group">
                     {/* Remove button */}
                     <button
                       type="button"
