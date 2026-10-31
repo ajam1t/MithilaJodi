@@ -39,3 +39,65 @@
 
 /* ०४ Ecosystem — the matrimony card in the site's maroon */
 .ab-primary { background: #7A1220; }
+
+/* ── Founder ──────────────────────────────────────────────────────────────
+   The portrait sits in a Mithila arch with a double gold rim. Behind it, a
+   soft warm halo breathes and a dotted gold ring turns very slowly. When the
+   card scrolls in (.mj-in from RevealOnScroll), the arch rises, a single gold
+   shine crosses the photo, and the name's underline draws itself. Nothing is
+   hidden by default, so if the reveal script never runs the section is simply
+   static. */
+.fd-section { background: radial-gradient(60% 50% at 50% 0%, rgba(233, 201, 119, 0.14), transparent 70%); }
+.fd-card { transition: border-color 0.3s ease, box-shadow 0.3s ease; }
+.fd-card:hover { border-color: rgba(185, 138, 46, 0.45); box-shadow: 0 24px 60px -28px rgba(122, 18, 32, 0.28); }
+
+.fd-visual { position: relative; aspect-ratio: 4 / 5; display: grid; place-items: center; }
+.fd-halo {
+  position: absolute; inset: -8% -14%; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(233, 201, 119, 0.42), rgba(233, 201, 119, 0.12) 60%, transparent 72%);
+  animation: fdBreathe 7s ease-in-out infinite;
+}
+.fd-orbit { position: absolute; width: 118%; left: -9%; top: 50%; translate: 0 -50%; animation: fdSpin 48s linear infinite; }
+
+.fd-arch {
+  position: relative; z-index: 1; width: 86%; aspect-ratio: 4 / 5; overflow: hidden;
+  border-radius: 999px 999px 22px 22px;
+  border: 3px solid #B98A2E;
+  box-shadow: 0 0 0 7px #FFFAF0, 0 0 0 8px rgba(185, 138, 46, 0.45), 0 26px 50px -22px rgba(122, 18, 32, 0.45);
+  background: #F4ECDD;
+}
+.fd-arch img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; transition: scale 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+.fd-card:hover .fd-arch img { scale: 1.04; }
+.fd-shine {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(115deg, transparent 38%, rgba(255, 244, 214, 0.55) 50%, transparent 62%);
+  translate: -120% 0;
+}
+
+.fd-badge {
+  position: absolute; z-index: 2; bottom: 4%; left: 50%; translate: -50% 0;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 8px 18px; border-radius: 999px;
+  background: linear-gradient(180deg, #9B2233, #7A1220);
+  border: 1px solid rgba(233, 201, 119, 0.6);
+  box-shadow: 0 10px 24px -10px rgba(122, 18, 32, 0.6);
+  animation: fdFloat 6s ease-in-out infinite;
+}
+
+.fd-underline path { stroke-dasharray: 1; stroke-dashoffset: 0; }
+
+.fd-card.mj-in .fd-arch      { animation: fdRise 0.9s 0.1s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.fd-card.mj-in .fd-shine     { animation: fdShine 1.4s 0.7s ease-in-out both; }
+.fd-card.mj-in .fd-underline path { animation: abDraw 1s 0.5s ease-in-out both; }
+
+@keyframes fdBreathe { 0%, 100% { opacity: 0.75; scale: 1; } 50% { opacity: 1; scale: 1.04; } }
+@keyframes fdSpin    { to { rotate: 360deg; } }
+@keyframes fdFloat   { 0%, 100% { translate: -50% 0; } 50% { translate: -50% -6px; } }
+@keyframes fdRise    { from { opacity: 0; transform: translateY(18px) scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes fdShine   { from { translate: -120% 0; } to { translate: 120% 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .fd-halo, .fd-orbit, .fd-badge { animation: none; }
+  .fd-card.mj-in .fd-arch, .fd-card.mj-in .fd-shine, .fd-card.mj-in .fd-underline path { animation: none; }
+  .fd-card:hover .fd-arch img { scale: 1; }
+}

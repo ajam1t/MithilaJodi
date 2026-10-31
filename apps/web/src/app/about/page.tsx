@@ -29,14 +29,18 @@ export const metadata: Metadata = pageMetadata({
     'Mithila Jodi is a matrimonial platform for the Mithila and Maithili community — matchmaking, digital profiles, marriage biodata and wedding tools in one place.',
 })
 
-// Mithila Jodi's founders, and this page is the ONE place the site states who
-// they are — search engines and AI assistants should read it from here. Only
-// their names and roles are asserted. There are no approved photos, so the
-// cards use initials.
-const FOUNDERS = [
-  { name: 'Manoj Jha', initials: 'MJ', role: 'Co-Founder · Mithila Jodi', id: 'founder-manoj-jha' },
-  { name: 'Babita Jha', initials: 'BJ', role: 'Co-Founder · Mithila Jodi', id: 'founder-babita-jha' },
-]
+// Mithila Jodi's founder. This page is the ONE place the site states who
+// founded it — search engines and AI assistants should read it from here, and
+// no other page, footer or schema block should name a founder. Only what the
+// founder has approved is asserted: her name, role and studies.
+const FOUNDER = {
+  name: 'Resham Chaudhary',
+  role: 'Founder · Mithila Jodi',
+  studies: 'MBA (Finance) · NMIMS',
+  photo: '/founder-resham.webp',
+  photoSmall: '/founder-resham-300.webp',
+  id: 'founder-resham-chaudhary',
+}
 
 const FAQ = [
   {
@@ -148,7 +152,7 @@ const PRIVACY = [
   { icon: I.lock, title: 'You stay in control', body: 'Use available privacy settings and control shareable profile links.' },
 ]
 
-const FOUNDER_CHIPS = ['Vision & Direction', 'Mithila Community', 'Product Experience', 'Trust & Privacy']
+const FOUNDER_CHIPS = ['Vision & Direction', 'Finance & Sustainability', 'Mithila Community', 'Trust & Privacy']
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -166,15 +170,17 @@ const jsonLd = {
       mainEntity: { '@id': ORGANIZATION_ID },
     },
     // The single statement of who founded Mithila Jodi.
-    ...FOUNDERS.map(f => ({
+    {
       '@type': 'Person',
-      '@id': `${canonicalUrl('/about')}#${f.id}`,
-      name: f.name,
-      jobTitle: 'Co-Founder',
+      '@id': `${canonicalUrl('/about')}#${FOUNDER.id}`,
+      name: FOUNDER.name,
+      jobTitle: 'Founder',
+      description: 'Founder of Mithila Jodi. MBA (Finance) student at NMIMS.',
+      image: `${SITE_URL}${FOUNDER.photo}`,
       worksFor: { '@id': ORGANIZATION_ID },
       url: canonicalUrl('/about'),
-    })),
-    { '@type': 'Organization', '@id': ORGANIZATION_ID, founder: FOUNDERS.map(f => ({ '@id': `${canonicalUrl('/about')}#${f.id}` })) },
+    },
+    { '@type': 'Organization', '@id': ORGANIZATION_ID, founder: { '@id': `${canonicalUrl('/about')}#${FOUNDER.id}` } },
     { ...breadcrumbJsonLd([{ name: 'Home', path: '/' }, { name: 'About', path: '/about' }]), '@context': undefined },
     { ...faqJsonLd(FAQ), '@context': undefined },
   ],
@@ -438,51 +444,78 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* ── ०७ Founders ── */}
-        <section aria-labelledby="about-founder" className="py-16 sm:py-24">
+        {/* ── ०७ Founder ── */}
+        <section aria-labelledby="about-founder" className="fd-section relative overflow-hidden py-16 sm:py-24">
           <div className="wrap px-5 sm:px-6">
             <div className="text-center" data-mj-reveal>
-              <Mark n={7} center>The family behind Mithila Jodi</Mark>
-              <h2 id="about-founder" className={`mt-5 ${H2}`}>Meet the Founders</h2>
+              <Mark n={7} center>The person behind Mithila Jodi</Mark>
+              <h2 id="about-founder" className={`mt-5 ${H2}`}>Meet the Founder</h2>
             </div>
 
-            <article data-mj-reveal className="mx-auto mt-10 max-w-4xl rounded-[24px] border border-line bg-white shadow-mj-xs">
-              <div className="p-6 sm:p-10">
-                <ul className="grid gap-6 sm:grid-cols-2" aria-label="Founders">
-                  {FOUNDERS.map(f => (
-                    <li key={f.id} className="flex items-center gap-5">
-                      <span className="grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full bg-maroon font-serif text-[26px] font-bold text-gold-lt sm:h-[80px] sm:w-[80px] sm:text-[29px]" aria-hidden="true">
-                        {f.initials}
-                      </span>
-                      <div>
-                        <h3 className="font-serif text-[23px] leading-tight text-maroon">{f.name}</h3>
-                        <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8A6516]">{f.role}</p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+            <article data-mj-reveal className="fd-card mx-auto mt-10 max-w-5xl rounded-[28px] border border-line bg-white shadow-mj-xs">
+              <div className="grid items-center gap-10 p-6 sm:p-10 md:grid-cols-[minmax(0,300px)_minmax(0,1fr)] md:gap-14 lg:p-12">
+                {/* Portrait in a Mithila arch: a slow gold ring and a soft halo behind it */}
+                <figure className="fd-visual mx-auto w-full max-w-[300px]">
+                  <span className="fd-halo" aria-hidden="true" />
+                  <svg className="fd-orbit" viewBox="0 0 320 320" aria-hidden="true">
+                    <circle cx="160" cy="160" r="152" fill="none" stroke="#B98A2E" strokeOpacity=".45" strokeWidth="1" strokeDasharray="2 7" />
+                    <circle cx="160" cy="8" r="4" fill="#D6A83C" />
+                    <circle cx="160" cy="312" r="3" fill="#B98A2E" fillOpacity=".7" />
+                  </svg>
+                  <div className="fd-arch">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={FOUNDER.photo}
+                      srcSet={`${FOUNDER.photoSmall} 300w, ${FOUNDER.photo} 600w`}
+                      sizes="(min-width: 768px) 260px, 70vw"
+                      width={600}
+                      height={750}
+                      alt={`${FOUNDER.name}, Founder of Mithila Jodi`}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <span className="fd-shine" aria-hidden="true" />
+                  </div>
+                  <figcaption className="fd-badge">
+                    <span className="font-deva text-[15px] leading-none text-gold-lt" lang="hi">संस्थापिका</span>
+                    <span className="text-[10.5px] font-semibold uppercase tracking-[0.2em] text-cream/90">Founder</span>
+                  </figcaption>
+                </figure>
 
-                <div className="mt-8 min-w-0">
-                  <blockquote className="relative pl-8 font-serif text-[20px] italic leading-snug text-maroon sm:text-[24px]">
+                <div className="min-w-0 text-center md:text-left">
+                  <h3 className="font-serif text-[34px] leading-tight text-maroon sm:text-[42px]">{FOUNDER.name}</h3>
+                  <svg className="fd-underline mx-auto mt-2 h-3 w-48 md:mx-0" viewBox="0 0 200 12" aria-hidden="true">
+                    <path d="M2 8 C 50 2, 120 2, 198 7" fill="none" stroke="#B98A2E" strokeWidth="2" strokeLinecap="round" pathLength={1} />
+                  </svg>
+                  <p className="mt-3 text-[11.5px] font-semibold uppercase tracking-[0.2em] text-[#8A6516]">{FOUNDER.role}</p>
+                  <p className="mt-3 inline-flex items-center gap-2 rounded-full border border-line bg-cream px-3.5 py-1.5 text-[13px] font-medium text-ink">
+                    <svg viewBox="0 0 24 24" className="h-4 w-4 text-gold" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M2 9l10-5 10 5-10 5z" /><path d="M6 11v5c3 2.5 9 2.5 12 0v-5" /><path d="M22 9v6" />
+                    </svg>
+                    {FOUNDER.studies}
+                  </p>
+
+                  <blockquote className="relative mt-7 pl-8 text-left font-serif text-[20px] italic leading-snug text-maroon sm:text-[23px]">
                     <span className="absolute -top-3 left-0 font-serif text-[56px] not-italic leading-none text-gold/50" aria-hidden="true">&ldquo;</span>
-                    In Mithila, a marriage begins when two families sit together. We built Mithila Jodi to keep that warmth, and to make the search a little easier.
+                    In Mithila, a marriage begins when two families sit together. I started Mithila Jodi to keep that warmth, and to make the search a little easier and safer for every family.
                   </blockquote>
-                  <div className="mt-6 space-y-3 text-[15px] leading-relaxed text-ink-soft">
+                  <div className="mt-6 space-y-3 text-left text-[15px] leading-relaxed text-ink-soft">
                     <p>
-                      Manoj Jha and Babita Jha founded Mithila Jodi on a belief that has guided Maithil families for generations:
+                      Resham Chaudhary founded Mithila Jodi on a belief that has guided Maithil families for generations:
                       a marriage is not only the union of two people, but the coming together of two families, with their gram,
                       their traditions and their blessings.
                     </p>
                     <p>
-                      For a long time, families have looked for the right match through relatives, trusted elders and word of mouth.
-                      Manoj and Babita wanted to give the Mithila community a place that keeps those values: gotra, mool and native
-                      roots, a real voice for the family, and the dignity with which a biodata is shared. At the same time, it should
-                      make the search simpler and safer, for every Maithil family, wherever in the world they live.
+                      She wanted to give the Mithila community a place that keeps those values: gotra, mool and native roots,
+                      a real voice for the family, and the dignity with which a biodata is shared. Alongside building it, Resham is
+                      pursuing an MBA in Finance at NMIMS, and that shapes how Mithila Jodi is run: carefully, transparently and
+                      for the long term. Every member feature is free today, and nothing will be charged for without being
+                      explained here first.
                     </p>
                   </div>
-                  <p className="mt-6 font-deva text-[20px] text-maroon" lang="mai">अहाँक परिवार लेल उचित जोड़ी, इएह हमर संकल्प अछि।</p>
-                  <p className="mt-1 text-[13px] text-ink-soft">The right match for your family: that is our promise.</p>
-                  <ul className="mt-6 flex flex-wrap gap-2" aria-label="Focus areas">
+                  <p className="mt-6 text-left font-deva text-[20px] text-maroon" lang="mai">अहाँक परिवार लेल उचित जोड़ी, इएह हमर संकल्प अछि।</p>
+                  <p className="mt-1 text-left text-[13px] text-ink-soft">The right match for your family: that is our promise.</p>
+                  <ul className="mt-6 flex flex-wrap justify-center gap-2 md:justify-start" aria-label="Focus areas">
                     {FOUNDER_CHIPS.map(c => (
                       <li key={c} className="rounded-full border border-line bg-cream px-3 py-1 text-[12px] font-medium text-ink">{c}</li>
                     ))}
