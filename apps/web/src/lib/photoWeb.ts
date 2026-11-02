@@ -1,4 +1,5 @@
 import 'server-only'
+import { after } from 'next/server'
 import sharp from 'sharp'
 
 /*
@@ -120,6 +121,35 @@ function remember(key: string, url: string) {
   cache.set(key, { url, exp: Date.now() + TTL * 1000 })
 }
 
+/*
+ * Self-healing backfill. A photo uploaded before web copies existed is served
+ * as its original until a copy is made; rather than wait for an admin to run
+ * the Storage backfill, the first page that signs such a photo makes its copy
+ * after the response has been sent. That visitor still gets the original; the
+ * next signing finds the copy. Only the private web bucket is written — the
+ * original is read, never changed — and access is unchanged, since copies are
+ * signed only by the same callers, after the same checks. Each server tries a
+ * path at most once per RETRY_MS (a photo sharp cannot read is not retried on
+ * every view), a few paths per request.
+ */
+const HEAL_PER_CALL = 4
+const RETRY_MS = 6 * 60 * 60 * 1000
+const tried = new Map<string, number>()
+
+function healLater(admin: any, paths: string[]) {
+  const now = Date.now()
+  const todo = paths.filter(p => !isHeicPath(p) && now - (tried.get(p) ?? 0) > RETRY_MS).slice(0, HEAL_PER_CALL)
+  if (todo.length === 0) return
+  if (tried.size > 5000) tried.clear()
+  todo.forEach(p => tried.set(p, now))
+  try {
+    after(async () => { for (const p of todo) await makeWebCopy(admin, p) })
+  } catch {
+    // Outside a request (nothing to run after): leave it for the next signing.
+    todo.forEach(p => tried.delete(p))
+  }
+}
+
 type Signed = { path: string; signedUrl: string | null; error: string | null }
 
 /**
@@ -149,6 +179,7 @@ export async function signPhotos(admin: any, paths: string[]): Promise<{ data: S
     else missing.push(p)
   })
   if (missing.length === 0) return { data: out, error: null }
+  healLater(admin, missing)
 
   const { data: orig, error } = await admin.storage.from('profile-photos').createSignedUrls(missing, TTL)
   if (error) return { data: out.some(o => o.signedUrl) ? out : null, error }
