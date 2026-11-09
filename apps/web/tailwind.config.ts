@@ -95,11 +95,16 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ['Mukta', 'system-ui', 'sans-serif'],
-        serif: ['Marcellus', 'Georgia', 'serif'],
-        display: ['Rozha One', 'Marcellus', 'serif'],
-        deva: ['Rozha One', 'Tiro Devanagari Hindi', 'serif'],
-        hand: ['Kalam', 'cursive'],
+        // Each web font is followed by its "<Name> Fallback": a local font that
+        // next/font size-matches to it (app/layout.tsx). Text is laid out in the
+        // fallback until the web font arrives; without it in the stack the
+        // browser used plain system-ui, lines wrapped differently, and the swap
+        // moved the page (0.17 CLS on /explore on a slow connection).
+        sans: ['Mukta', 'Mukta Fallback', 'system-ui', 'sans-serif'],
+        serif: ['Marcellus', 'Marcellus Fallback', 'Georgia', 'serif'],
+        display: ['Rozha One', 'Rozha One Fallback', 'Marcellus', 'Marcellus Fallback', 'serif'],
+        deva: ['Rozha One', 'Rozha One Fallback', 'Tiro Devanagari Hindi', 'serif'],
+        hand: ['Kalam', 'Kalam Fallback', 'cursive'],
       },
       fontSize: {
         'display-xl': ['clamp(48px,7vw,96px)', { lineHeight: '1.05' }],

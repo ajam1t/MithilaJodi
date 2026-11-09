@@ -250,8 +250,8 @@
     }
   }
 
-  .font-deva { font-family: 'Rozha One', 'Tiro Devanagari Hindi', serif; }
-  .font-hand { font-family: 'Kalam', cursive; }
+  .font-deva { font-family: 'Rozha One', 'Rozha One Fallback', 'Tiro Devanagari Hindi', serif; }
+  .font-hand { font-family: 'Kalam', 'Kalam Fallback', cursive; }
 
   /* Hide scrollbar while keeping scroll (carousels, filter rails) */
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -926,7 +926,7 @@ footer :focus-visible {
   border-radius: 9999px; background: #FFFAF0;
   box-shadow: 0 0 0 5px #FCF5E7, 0 8px 22px -10px rgba(122, 18, 32, 0.45);
 }
-.mj-auth-card h1 { font-family: 'Marcellus', Georgia, serif; color: #7A1220; font-size: 25px; line-height: 1.15; }
+.mj-auth-card h1 { font-family: 'Marcellus', 'Marcellus Fallback', Georgia, serif; color: #7A1220; font-size: 25px; line-height: 1.15; }
 .mj-auth-card .rounded-mj.border {
   border-color: rgba(185, 138, 46, 0.45);
   border-radius: 14px;
