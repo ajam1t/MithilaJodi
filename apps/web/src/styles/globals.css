@@ -1459,3 +1459,14 @@ footer :focus-visible {
   .mjs-ring-fill { animation: mjsRing 1.6s cubic-bezier(0.45, 0, 0.2, 1) 0.3s backwards; }
   .mjs-bar i { animation: mjsBar 1s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i, 0) * 80ms + 300ms); }
 }
+
+/* ── Readable small print on phones ───────────────────────────────────────────
+   A lot of labels, hints and captions were set at 11–11.5px, which is below
+   what reads comfortably on a small phone (and below the 12px Lighthouse treats
+   as legible — 44% of the homepage's text failed it). On phones they are 12px;
+   from the `sm` breakpoint up they keep their designed size. Kept outside
+   @layer and last in the file so it wins over the utilities it adjusts.
+   Badges and counters at 9–10.5px are left alone: they are sized to fit. */
+@media (max-width: 639px) {
+  .text-\[11px\], .text-\[11\.5px\], .eyebrow { font-size: 12px; }
+}
