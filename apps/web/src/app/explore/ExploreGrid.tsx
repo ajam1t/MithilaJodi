@@ -77,8 +77,8 @@ export function ExploreGrid({ initialProfiles, initialError = false }: ExploreGr
         </div>
       ) : (
         <div className="grid gap-8 sm:gap-10 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-          {results.map((card) => (
-            <ProfileCard3D key={card.id} profile={card} hideActions publicLinks />
+          {results.map((card, i) => (
+            <ProfileCard3D key={card.id} profile={card} hideActions publicLinks eager={i < 2} />
           ))}
         </div>
       )}

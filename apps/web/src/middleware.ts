@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { SESSION_COOKIE } from '@/lib/constants'
+import { checkLimit, isCrossSiteWrite } from '@/lib/edgeGuards'
 
 // Full session validity (expiry/revocation) is checked server-side in each
 // protected page/route via getSessionAccount(). Middleware only does a fast
@@ -18,6 +19,28 @@ export function middleware(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = `/Invitation/${pathname.slice('/invitation/'.length)}`
     return NextResponse.redirect(url, 308)
+  }
+
+  // API routes: refuse cross-site writes and runaway clients before any route
+  // code runs (see lib/edgeGuards). Each route still checks its own session.
+  if (pathname.startsWith('/api/')) {
+    const method = request.method
+    if (isCrossSiteWrite(method, request.headers.get('origin'), request.headers.get('x-forwarded-host') ?? request.headers.get('host'))) {
+      return NextResponse.json({ ok: false, message: 'This request did not come from Mithila Jodi.' }, { status: 403 })
+    }
+    const client =
+      request.cookies.get(SESSION_COOKIE)?.value ||
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      request.headers.get('x-real-ip')?.trim() ||
+      'unknown'
+    const limited = checkLimit(method, pathname, client)
+    if (!limited.ok) {
+      return NextResponse.json(
+        { ok: false, message: 'Too many requests. Please wait a moment and try again.' },
+        { status: 429, headers: { 'Retry-After': String(limited.retryAfterSeconds) } },
+      )
+    }
+    return NextResponse.next()
   }
 
   const hasSession = request.cookies.has(SESSION_COOKIE)

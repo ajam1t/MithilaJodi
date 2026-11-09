@@ -1,6 +1,8 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  // Do not advertise the framework in every response.
+  poweredByHeader: false,
   images: {
     // Served as-is, never through Vercel's image optimiser. Member photos are
     // signed URLs that change every hour, so each one counted as a new source
@@ -46,6 +48,14 @@ const nextConfig: NextConfig = {
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          // Vercel adds HSTS on the production domain; set here too so it holds on any host.
+          { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
+          // A deliberately narrow policy: nothing here limits scripts, styles or
+          // images (the pages use inline JSON-LD and styles), so it cannot break
+          // rendering. It stops the site being framed, plugins being embedded, a
+          // <base> tag being injected, and forms posting to another site.
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'" },
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
           {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',

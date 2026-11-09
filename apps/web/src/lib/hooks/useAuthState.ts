@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 
 /**
  * Shared client-side auth state.
@@ -54,19 +54,25 @@ export function resetAuthState() {
   inflight = null
 }
 
+const subscribe = (onChange: () => void) => {
+  const fn = () => onChange()
+  subscribers.add(fn)
+  return () => { subscribers.delete(fn) }
+}
+const getSnapshot = () => cache
+// The server never knows who is signed in, and the HTML it sent says so. While
+// React is hydrating it must see the same thing — reading `cache` here made the
+// homepage header hydrate with the "Login / Join Free" buttons the server HTML
+// did not have whenever another component had already resolved the session
+// (React error #418, and the whole page rendered a second time in the browser).
+const getServerSnapshot = (): Resolved | null => null
+
 export function useAuthState(): { auth: AuthState; authLoaded: boolean } {
-  const [state, setState] = useState<Resolved | null>(cache)
+  // After hydration this returns the cached answer straight away, so moving
+  // between pages does not flash the signed-out header.
+  const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 
-  useEffect(() => {
-    if (cache) { setState(cache); return }
-
-    let alive = true
-    const onResolved = (r: Resolved) => { if (alive) setState(r) }
-    subscribers.add(onResolved)
-    void fetchAuth()
-
-    return () => { alive = false; subscribers.delete(onResolved) }
-  }, [])
+  useEffect(() => { if (!cache) void fetchAuth() }, [])
 
   return { auth: state?.auth ?? { loggedIn: false }, authLoaded: state?.loaded ?? false }
 }

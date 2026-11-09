@@ -10,6 +10,7 @@
         "type-check": "tsc --noEmit",
         "test:astrology": "node -e \"require('fs').rmSync('.astrology-test',{recursive:true,force:true})\" && tsc -p tsconfig.astrology-test.json && node --test \".astrology-test/__tests__/*.test.js\"",
         "test:notifications": "node tests/notifications/build.js && node --test tests/notifications/notifications.test.js",
+        "test:guards": "node -e \"require('fs').rmSync('.guards-test',{recursive:true,force:true})\" && tsc -p tsconfig.guards-test.json && node --test tests/guards/edgeGuards.test.js",
         "test:biodata": "node -e \"require('fs').rmSync('.biodata-test',{recursive:true,force:true})\" && tsc -p tsconfig.biodata-test.json && node --test tests/biodata/biodataProfile.test.js"
     },
     "dependencies": {

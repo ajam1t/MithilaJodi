@@ -11,6 +11,8 @@ import { InterestNoteSheet } from '@/components/interests/InterestNoteSheet'
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 interface ProfileCardProps {
+  /** Load the photograph at once: for the first card or two on a page, where it is the largest thing painted. */
+  eager?: boolean
   profile: SearchCard
   onShortlist?: (id: string) => Promise<void> | void
   /**
@@ -192,6 +194,7 @@ export function ProfileCard3D({
   hideActions,
   compact = false,
   publicLinks = false,
+  eager = false,
   className,
 }: ProfileCardProps) {
   const [flipped, setFlipped] = useState(false)
@@ -313,6 +316,7 @@ export function ProfileCard3D({
                 src={profile.primary_photo_url}
                 alt={profile.display_name}
                 fill
+                priority={eager}
                 sizes={compact ? '(max-width: 640px) 80vw, 280px' : '(max-width: 640px) 90vw, 320px'}
                 className="object-cover object-[center_35%]"
               />
@@ -497,7 +501,16 @@ export function ProfileCard3D({
         {/* ── BACK ──────────────────────────────────────────── */}
         <div
           className="absolute inset-0 flex flex-col rounded-mj-lg overflow-hidden bg-cream border border-gold shadow-mj"
-          style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+          style={{
+            backfaceVisibility: 'hidden',
+            transform: 'rotateY(180deg)',
+            // Hidden outright while it faces away, not just back-face culled:
+            // Chrome counts text reflowing on a culled face (when the web fonts
+            // arrive) as layout shift — it was 0.18 of CLS on /explore. Hiding
+            // waits for the half-way point of the turn back, when the face is edge-on.
+            visibility: flipped ? 'visible' : 'hidden',
+            transition: flipped ? 'visibility 0s' : 'visibility 0s linear .25s',
+          }}
           aria-hidden={!flipped}
           inert={!flipped}
         >
