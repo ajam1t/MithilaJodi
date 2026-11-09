@@ -18,7 +18,7 @@ export const metadata = pageMetadata({
   path: '/match-score',
   title: 'Match Score — How Mithila Jodi Scores Every Rishta',
   description:
-    'A match percentage built for Maithil families: location, gotra, age, community, roots, timeline, lifestyle, education and family — with sagotra matches never shown as good, and every score explained.',
+    'A match percentage built for Maithil families — gotra, roots, age, location and more. Sagotra matches are never shown as good, and every score is explained.',
   keywords: [
     'matrimony match score', 'match percentage matrimony', 'maithil matrimony compatibility', 'mithila matrimony match',
     'gotra match score', 'sagotra check', 'maithil brahmin matrimony matching', 'compatibility score marriage',

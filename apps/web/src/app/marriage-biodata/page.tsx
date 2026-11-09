@@ -11,7 +11,7 @@ import { RelatedGuides } from '@/components/journal/RelatedGuides'
 
 export const metadata = pageMetadata({
   path: '/marriage-biodata',
-  title: 'Mithila Marriage Biodata Maker — Maithili, Hindi, English, Sanskrit',
+  title: 'Marriage Biodata Maker — Maithili, Hindi & English',
   description:
     'Build a marriage biodata free in your browser — gotra, mool and gram included, in Maithili, Hindi, English or Sanskrit. Download a PDF, no login needed.',
   keywords: [

@@ -8,6 +8,8 @@ const GROUPS = [
     label: 'Platform',
     links: [
       { href: '/explore', label: 'Browse Profiles' },
+      { href: '/maithil-brides', label: 'Maithil Brides' },
+      { href: '/maithil-grooms', label: 'Maithil Grooms' },
       { href: '/register', label: 'Create Free Account' },
       { href: '/login', label: 'Login' },
       { href: '/about', label: 'About' },

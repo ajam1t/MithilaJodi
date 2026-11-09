@@ -24,7 +24,7 @@ const CANONICAL = `${SITE_URL}${PRODUCT.path}`
 const META: Metadata = {
   title: 'MJ Scratch & Reveal Wedding Invitation',
   description:
-    'A free premium wedding invitation: an ivory card sealed with the gold Mithila Jodi monogram. Guests scratch gold foil to reveal your date, then open your invitation webpage.',
+    'A free premium wedding invitation: an ivory card sealed with a gold monogram. Guests scratch gold foil to reveal your date, then open your invitation page.',
   keywords: [
     'scratch to reveal wedding invitation', 'scratch card wedding invite', 'digital wedding invitation', 'Mithila wedding invitation',
     'premium wedding invitation online', 'interactive wedding invitation', 'wedding date reveal', 'free wedding website India',

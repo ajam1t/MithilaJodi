@@ -43,6 +43,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...BIODATA_LANGUAGE_PAGES.map(l => ({ path: `/marriage-biodata/${l.slug}`, priority: 0.7, changeFrequency: 'monthly' as const })),
     { path: '/about', priority: 0.6, changeFrequency: 'monthly' },
     { path: '/explore', priority: 0.7, changeFrequency: 'daily' },
+    { path: '/maithil-brides', priority: 0.8, changeFrequency: 'daily' },
+    { path: '/maithil-grooms', priority: 0.8, changeFrequency: 'daily' },
     { path: '/safety', priority: 0.6, changeFrequency: 'monthly' },
     { path: '/contact', priority: 0.5, changeFrequency: 'yearly' },
     { path: '/help', priority: 0.4, changeFrequency: 'monthly' },
