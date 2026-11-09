@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { SESSION_COOKIE } from '@/lib/constants'
-import { checkLimit, isCrossSiteWrite } from '@/lib/edgeGuards'
+import { checkLimit, isCrossSiteWrite, ruleFor, sharedLimit } from '@/lib/edgeGuards'
 
 // Full session validity (expiry/revocation) is checked server-side in each
 // protected page/route via getSessionAccount(). Middleware only does a fast
@@ -9,7 +9,7 @@ import { checkLimit, isCrossSiteWrite } from '@/lib/edgeGuards'
 const PROTECTED_PATHS = ['/home', '/inbox', '/notifications', '/profile', '/search', '/messages', '/biodata', '/interests', '/shortlists', '/settings', '/welcome']
 const ADMIN_PATHS = ['/admin']
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // Short invitation links live at /Invitation/<slug>. Routes are case-sensitive,
@@ -38,6 +38,14 @@ export function middleware(request: NextRequest) {
       return NextResponse.json(
         { ok: false, message: 'Too many requests. Please wait a moment and try again.' },
         { status: 429, headers: { 'Retry-After': String(limited.retryAfterSeconds) } },
+      )
+    }
+    // Sensitive writes are also counted across all server instances.
+    const rule = ruleFor(method, pathname)
+    if (rule?.shared && !(await sharedLimit(rule, client, { url: process.env.NEXT_PUBLIC_SUPABASE_URL, key: process.env.SUPABASE_SERVICE_ROLE_KEY }))) {
+      return NextResponse.json(
+        { ok: false, message: 'Too many requests. Please wait a while and try again.' },
+        { status: 429, headers: { 'Retry-After': String(Math.round(rule.windowMs / 1000)) } },
       )
     }
     return NextResponse.next()

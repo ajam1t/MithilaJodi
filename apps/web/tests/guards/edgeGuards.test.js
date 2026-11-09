@@ -3,7 +3,7 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
 const path = require('path')
-const { checkLimit, isCrossSiteWrite, _resetLimits } = require(path.join(__dirname, '..', '..', '.guards-test', 'edgeGuards.js'))
+const { checkLimit, isCrossSiteWrite, ruleFor, sharedLimit, _resetLimits } = require(path.join(__dirname, '..', '..', '.guards-test', 'edgeGuards.js'))
 
 test('same-origin and origin-less writes pass', () => {
   assert.equal(isCrossSiteWrite('POST', 'https://mithilajodi.com', 'mithilajodi.com'), false)
@@ -43,4 +43,25 @@ test('search is limited separately from writes', () => {
   for (let i = 0; i < 90; i++) assert.equal(checkLimit('GET', '/api/search', 'c', 100 + i).ok, true)
   assert.equal(checkLimit('GET', '/api/search', 'c', 300).ok, false)
   assert.equal(checkLimit('POST', '/api/interests', 'c', 301).ok, true)
+})
+
+test('shared limit: asks the database only for shared rules, and fails open', async () => {
+  const env = { url: 'https://db.example', key: 'k' }
+  const calls = []
+  const ok = v => async (u, o) => { calls.push([u, JSON.parse(o.body)]); return { ok: true, json: async () => v } }
+  const msg = ruleFor('POST', '/api/conversations/x/messages')
+  assert.equal(await sharedLimit(msg, 'alice', env, ok(true)), true)
+  assert.equal(calls[0][0], 'https://db.example/rest/v1/rpc/rate_limit_hit')
+  assert.deepEqual([calls[0][1].p_limit, calls[0][1].p_window_seconds], [30, 60])
+  assert.match(calls[0][1].p_key, /^msg:[0-9a-f]{32}$/)
+  assert.ok(!calls[0][1].p_key.includes('alice'), 'the client id is hashed')
+  assert.equal(await sharedLimit(msg, 'alice', env, ok(false)), false, 'over the limit')
+  // Not a shared rule: no call at all.
+  const n = calls.length
+  assert.equal(await sharedLimit(ruleFor('GET', '/api/search'), 'alice', env, ok(false)), true)
+  assert.equal(calls.length, n)
+  // Fail open: function missing (404), network error, no configuration.
+  assert.equal(await sharedLimit(msg, 'a', env, async () => ({ ok: false, json: async () => ({}) })), true)
+  assert.equal(await sharedLimit(msg, 'a', env, async () => { throw new Error('down') }), true)
+  assert.equal(await sharedLimit(msg, 'a', {}, ok(false)), true)
 })

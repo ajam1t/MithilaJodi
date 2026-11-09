@@ -33,6 +33,23 @@ const mukta = Mukta({
 })
 
 /**
+ * The one Mukta file nearly every page needs for its first screen: regular
+ * weight, Latin. Preloaded on its own (about 20 KB) so body text is laid out in
+ * Mukta from the first paint. The size-matched "Mukta Fallback" is built on
+ * Arial, which Android and Linux do not have, so there the text was laid out in
+ * the system font, wrapped onto an extra line, and jumped when Mukta arrived —
+ * 0.17 CLS on /explore. Same family name and file as `mukta` above; this only
+ * adds the preload.
+ */
+const muktaFirstPaint = Mukta({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-mukta-first',
+  display: 'swap',
+  preload: true,
+})
+
+/**
  * Rozha One — the Devanagari display face behind `.font-deva` and `font-display`.
  *
  * It was declared in tailwind.config.ts and in globals.css but never actually
@@ -176,7 +193,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${marcellus.variable} ${mukta.variable} ${rozhaOne.variable} ${kalam.variable}`}
+      className={`${marcellus.variable} ${mukta.variable} ${muktaFirstPaint.variable} ${rozhaOne.variable} ${kalam.variable}`}
     >
       <body>
         {/* First focusable element on every page, so a keyboard user can

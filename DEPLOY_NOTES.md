@@ -22,6 +22,19 @@ file is executed together.
 | 7 | `supabase/migrations/20260826000001_blog_marriage_rituals.sql` | **Publishes 10 Maithil wedding-ritual articles** in the Journal (Complete Guide to Maithil Vivah, Kohbar, Tilak, Siddhant, Sindoor Daan, Chaturthi, Dwiragaman, Parichhan, Naina Jogin, wedding songs) and renames the category to "Mithila Marriage Rituals & Traditions". Read the articles first — they go live the moment it runs, dated today. Safe to run twice (existing slugs are skipped). |
 | 8 | `supabase/migrations/20261022000001_photo_and_contact_requests.sql` | **Photos on request + contact details on request.** Creates `photo_requests` and `contact_requests` (service-role only: RLS on, no policy, `anon`/`authenticated` revoked). Members can choose "On request" for their photos and approve who sees them; matched members can ask for each other's contact number, shared only on approval. Until it runs: no request buttons on profiles, no Inbox "Requests" tab, the request APIs answer 503 "This feature is not switched on yet.", and an "On request" photo setting behaves exactly like "Matches". Safe to run twice. |
 
+### Do this one first (added 2026-11-10)
+
+| File | What it does |
+|---|---|
+| `supabase/checks/security_check.sql` | **Read-only.** Lists tables without RLS, grants still held by `anon`/`authenticated`, functions they can call, open policies and public buckets. Run it first and keep the output. |
+| `supabase/migrations/20261110000001_public_schema_lockdown.sql` | **Security.** One idempotent pass: RLS on all 49 tables, no grants for `anon`/`authenticated` on any table, sequence or function, and new tables start closed. Changes no data and no policy; supersedes migration 2 below if that was never run. Rollback is in the file. |
+
+| `supabase/migrations/20261110000002_shared_rate_limits.sql` | Optional but recommended. Lets the limits on messages, reports, contact/photo requests, share links, exports and password endpoints hold across all server instances. Until it runs, the app uses its per-instance limits and nothing breaks. |
+
+After the lockdown, run `security_check.sql` again: queries A, B and C should return no rows.
+Query D may list old policies (`profiles_public_discovery` and similar); with
+the grants gone they are inert. Query E must not list `profile-photos`.
+
 Migration 2 is the important one. Until it runs, those 13 tables are reachable
 with the `anon` key.
 

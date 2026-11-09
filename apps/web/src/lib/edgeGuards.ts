@@ -19,7 +19,11 @@
  * No imports from Node: this file runs on the Edge runtime.
  */
 
-export type LimitRule = { test: (method: string, path: string) => boolean; scope: string; limit: number; windowMs: number }
+export type LimitRule = {
+  test: (method: string, path: string) => boolean; scope: string; limit: number; windowMs: number
+  /** Also counted in the database, across every server instance (see sharedLimit). */
+  shared?: boolean
+}
 
 const MIN = 60_000
 const HOUR = 60 * MIN
@@ -28,16 +32,16 @@ const isWrite = (m: string) => m !== 'GET' && m !== 'HEAD' && m !== 'OPTIONS'
 /** First match wins. Order: specific rules, then the general ceiling. */
 export const LIMIT_RULES: LimitRule[] = [
   // Chat: a fast typist sends a message every couple of seconds; a script sends hundreds.
-  { test: (m, p) => m === 'POST' && /^\/api\/conversations\/[^/]+\/messages$/.test(p), scope: 'msg', limit: 30, windowMs: MIN },
-  { test: (m, p) => m === 'POST' && p === '/api/reports', scope: 'report', limit: 10, windowMs: HOUR },
-  { test: (m, p) => m === 'POST' && (p === '/api/contact-requests' || p === '/api/photo-requests'), scope: 'request', limit: 30, windowMs: HOUR },
-  { test: (m, p) => m === 'POST' && p === '/api/profile/shares', scope: 'share', limit: 30, windowMs: HOUR },
+  { test: (m, p) => m === 'POST' && /^\/api\/conversations\/[^/]+\/messages$/.test(p), scope: 'msg', shared: true, limit: 30, windowMs: MIN },
+  { test: (m, p) => m === 'POST' && p === '/api/reports', scope: 'report', shared: true, limit: 10, windowMs: HOUR },
+  { test: (m, p) => m === 'POST' && (p === '/api/contact-requests' || p === '/api/photo-requests'), scope: 'request', shared: true, limit: 30, windowMs: HOUR },
+  { test: (m, p) => m === 'POST' && p === '/api/profile/shares', scope: 'share', shared: true, limit: 30, windowMs: HOUR },
   { test: (m, p) => m === 'POST' && p === '/api/profile/photos', scope: 'photo', limit: 40, windowMs: HOUR },
-  { test: (m, p) => m === 'POST' && p === '/api/account/export', scope: 'export', limit: 5, windowMs: HOUR },
+  { test: (m, p) => m === 'POST' && p === '/api/account/export', scope: 'export', shared: true, limit: 5, windowMs: HOUR },
   { test: (m, p) => m === 'POST' && p === '/api/biodata/generate', scope: 'biodata', limit: 60, windowMs: HOUR },
   // Each challenge costs a bcrypt hash and a row; a sign-up needs one or two.
-  { test: (m, p) => m === 'POST' && p.startsWith('/api/auth/human/'), scope: 'human', limit: 30, windowMs: 10 * MIN },
-  { test: (m, p) => m === 'POST' && p.startsWith('/api/auth/password/'), scope: 'password', limit: 20, windowMs: 15 * MIN },
+  { test: (m, p) => m === 'POST' && p.startsWith('/api/auth/human/'), scope: 'human', shared: true, limit: 30, windowMs: 10 * MIN },
+  { test: (m, p) => m === 'POST' && p.startsWith('/api/auth/password/'), scope: 'password', shared: true, limit: 20, windowMs: 15 * MIN },
   // Profile discovery: paging and filtering quickly is normal; scraping is not.
   { test: (m, p) => m === 'GET' && (p === '/api/search' || p === '/api/public/profiles'), scope: 'search', limit: 90, windowMs: MIN },
   // Page-view beacons.
@@ -74,6 +78,42 @@ export function checkLimit(method: string, path: string, client: string, now = D
   recent.push(now)
   buckets.set(key, recent)
   return { ok: true }
+}
+
+/** The rule a request falls under, if any. */
+export function ruleFor(method: string, path: string): LimitRule | undefined {
+  return LIMIT_RULES.find(r => r.test(method, path))
+}
+
+/**
+ * The same limit, counted in Postgres so it holds across serverless instances
+ * (migration 20261110000002: rate_limit_hit). One short request to Supabase,
+ * made only for rules marked `shared` — writes that are rare for a person and
+ * attractive to a script. Fails open: a missing function, a slow or failed
+ * call, or missing configuration all mean "allowed", and the in-memory limit
+ * above still applies. The key is a SHA-256 of the scope and the client, so no
+ * cookie or IP address is stored.
+ */
+export async function sharedLimit(
+  rule: LimitRule, client: string,
+  env: { url?: string; key?: string }, fetchImpl: typeof fetch = fetch,
+): Promise<boolean> {
+  if (!rule.shared || !env.url || !env.key) return true
+  try {
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${rule.scope}:${client}`))
+    const key = rule.scope + ':' + Array.from(new Uint8Array(digest).slice(0, 16), b => b.toString(16).padStart(2, '0')).join('')
+    const res = await fetchImpl(`${env.url}/rest/v1/rpc/rate_limit_hit`, {
+      method: 'POST',
+      headers: { apikey: env.key, Authorization: `Bearer ${env.key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_key: key, p_limit: rule.limit, p_window_seconds: Math.round(rule.windowMs / 1000) }),
+      signal: AbortSignal.timeout(1500),
+      cache: 'no-store',
+    })
+    if (!res.ok) return true
+    return (await res.json()) !== false
+  } catch {
+    return true
+  }
 }
 
 /** True when a write names an Origin that is not this site. */
