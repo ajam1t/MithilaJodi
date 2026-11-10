@@ -195,6 +195,14 @@ export default function RootLayout({
       lang="en"
       className={`${marcellus.variable} ${mukta.variable} ${muktaFirstPaint.variable} ${rozhaOne.variable} ${kalam.variable}`}
     >
+      <head>
+        {/* Member photos come from Supabase Storage on signed URLs. Opening the
+            connection while the HTML is still parsing saves the DNS + TLS round
+            trips before the first photograph (the largest paint on /explore). */}
+        {process.env.NEXT_PUBLIC_SUPABASE_URL && (
+          <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} />
+        )}
+      </head>
       <body>
         {/* First focusable element on every page, so a keyboard user can
             bypass the header navigation. Targets the #main-content id that
