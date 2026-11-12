@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { DEACTIVATION_REASONS } from '@/lib/deactivation'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useToast } from '@/components/ui'
@@ -123,14 +124,20 @@ export default function SettingsContent() {
     }
   }
 
+  const [deactReason, setDeactReason] = useState('')
+  const [deactOther, setDeactOther] = useState('')
+  const [deactFeedback, setDeactFeedback] = useState('')
+
   async function deleteAccount() {
+    if (!deactReason) { setDeleteError('Please choose a reason.'); return }
+    if (deactReason === 'other' && !deactOther.trim()) { setDeleteError('Please tell us the reason.'); return }
     if (deleteText !== 'DELETE') { setDeleteError('Please type DELETE to confirm.'); return }
     setDeleting(true)
     setDeleteError('')
     const res = await fetch('/api/account', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ confirm: true }),
+      body: JSON.stringify({ confirm: true, reason: deactReason, other_reason: deactOther, feedback: deactFeedback }),
     })
     const json = await res.json()
     if (json.ok) {
@@ -297,6 +304,22 @@ export default function SettingsContent() {
           </button>
         ) : (
           <div className="space-y-3">
+            <fieldset className="space-y-2">
+              <legend className="text-sm font-semibold text-ink mb-1">Why are you deactivating? <span className="text-error">*</span></legend>
+              {DEACTIVATION_REASONS.map(r => (
+                <label key={r.value} className="flex items-start gap-2.5 text-sm text-ink cursor-pointer">
+                  <input type="radio" name="deact-reason" value={r.value} checked={deactReason === r.value}
+                    onChange={() => { setDeleteError(''); setDeactReason(r.value) }} className="mt-0.5 accent-maroon" />
+                  <span>{r.en} <span className="text-ink-soft" lang="hi">· {r.hi}</span></span>
+                </label>
+              ))}
+            </fieldset>
+            {deactReason === 'other' && (
+              <input type="text" value={deactOther} onChange={e => { setDeleteError(''); setDeactOther(e.target.value) }}
+                maxLength={500} placeholder="Please tell us the reason" className="input w-full" aria-label="Other reason" />
+            )}
+            <textarea value={deactFeedback} onChange={e => setDeactFeedback(e.target.value)} maxLength={2000} rows={3}
+              placeholder="Anything else you would like to tell us? (optional)" className="input w-full" aria-label="Additional feedback" />
             <p className="text-sm font-medium text-error-fg">
               Are you sure? Type <strong>DELETE</strong> to confirm.
             </p>
@@ -319,7 +342,7 @@ export default function SettingsContent() {
               </button>
               <button
                 type="button"
-                onClick={() => { setDeleteConfirm(false); setDeleteText(''); setDeleteError('') }}
+                onClick={() => { setDeleteConfirm(false); setDeleteText(''); setDeleteError(''); setDeactReason(''); setDeactOther(''); setDeactFeedback('') }}
                 className="text-sm text-ink-soft hover:text-ink hover:underline px-4 py-2"
               >
                 Cancel

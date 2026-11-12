@@ -6,7 +6,7 @@ import { checkLimit, isCrossSiteWrite, ruleFor, sharedLimit } from '@/lib/edgeGu
 // protected page/route via getSessionAccount(). Middleware only does a fast
 // cookie-presence check so the Edge runtime stays lightweight.
 
-const PROTECTED_PATHS = ['/home', '/inbox', '/notifications', '/profile', '/search', '/messages', '/biodata', '/interests', '/shortlists', '/settings', '/welcome']
+const PROTECTED_PATHS = ['/home', '/inbox', '/notifications', '/profile', '/search', '/messages', '/biodata', '/interests', '/shortlists', '/settings', '/welcome', '/pending']
 const ADMIN_PATHS = ['/admin']
 
 export async function middleware(request: NextRequest) {
@@ -48,7 +48,7 @@ export async function middleware(request: NextRequest) {
         { status: 429, headers: { 'Retry-After': String(Math.round(rule.windowMs / 1000)) } },
       )
     }
-    return NextResponse.next()
+    return withPath(request)
   }
 
   const hasSession = request.cookies.has(SESSION_COOKIE)
@@ -75,7 +75,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  return NextResponse.next()
+  return withPath(request)
+}
+
+/**
+ * Pass the request on with its path in x-mj-path, which server code reads to
+ * decide what an account awaiting approval may reach (lib/auth). Always set
+ * here, so a value a client sends is overwritten.
+ */
+function withPath(request: NextRequest) {
+  const h = new Headers(request.headers)
+  h.set('x-mj-path', request.nextUrl.pathname)
+  return NextResponse.next({ request: { headers: h } })
 }
 
 export const config = {

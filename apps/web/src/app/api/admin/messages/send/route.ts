@@ -2,7 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
-import { getSystemProfileId } from '@/lib/systemProfile'
+import { sendOfficialMessage } from '@/lib/officialMessage'
 
 /**
  * Send a message to a member as the official "Mithila Jodi" identity.
@@ -59,108 +59,10 @@ export async function POST(request: NextRequest) {
   }
 
   const admin = await createAdminClient()
+  const sent = await sendOfficialMessage(admin, profileId, message)
+  if (!sent.ok) return NextResponse.json({ ok: false, message: sent.message }, { status: sent.status })
+  const conv = { id: sent.conversationId }
 
-  const systemProfileId = await getSystemProfileId(admin)
-  if (!systemProfileId) {
-    // A missing seed is an operator problem, not a bad request — say so plainly.
-    console.error('[admin/messages/send] system profile missing — run migration 20260912000001')
-    return NextResponse.json(
-      { ok: false, message: 'The Mithila Jodi profile is missing. Run migration 20260912000001.' },
-      { status: 500 },
-    )
-  }
-
-  if (profileId === systemProfileId) {
-    return NextResponse.json(
-      { ok: false, message: 'Cannot message the platform profile.' },
-      { status: 400 },
-    )
-  }
-
-  // The recipient must be a real, live profile.
-  const { data: recipient } = await admin
-    .from('profiles')
-    .select('id, first_name, profile_status')
-    .eq('id', profileId)
-    .is('deleted_at', null)
-    .maybeSingle()
-
-  if (!recipient) {
-    return NextResponse.json({ ok: false, message: 'Profile not found' }, { status: 404 })
-  }
-  if ((recipient.profile_status as string) === 'deleted') {
-    return NextResponse.json({ ok: false, message: 'Profile is deleted' }, { status: 404 })
-  }
-
-  // A member who blocked the platform profile has opted out of these.
-  const { data: blocked, error: blockError } = await admin
-    .from('blocks')
-    .select('blocker_id')
-    .or(
-      `and(blocker_id.eq.${profileId},blocked_id.eq.${systemProfileId}),` +
-      `and(blocker_id.eq.${systemProfileId},blocked_id.eq.${profileId})`,
-    )
-    .limit(1)
-    .maybeSingle()
-
-  // Fail closed: if the block check cannot run, nothing is sent.
-  if (blockError) {
-    console.error('[admin/messages/send] blocks query error:', blockError.message)
-    return NextResponse.json({ ok: false, message: 'Something went wrong — please try again.' }, { status: 503 })
-  }
-  if (blocked) {
-    return NextResponse.json(
-      { ok: false, message: 'This member has blocked messages from Mithila Jodi.' },
-      { status: 403 },
-    )
-  }
-
-  // Canonical ordering (profile_a < profile_b) matches the table CHECK and the
-  // unique constraint the interest-accept path upserts against, so an admin
-  // message and a member message resolve to the same conversation row.
-  const a = systemProfileId < profileId ? systemProfileId : profileId
-  const b = systemProfileId < profileId ? profileId : systemProfileId
-
-  const { error: convError } = await admin
-    .from('conversations')
-    .upsert({ profile_a: a, profile_b: b }, { onConflict: 'profile_a,profile_b', ignoreDuplicates: true })
-
-  if (convError) {
-    console.error('[admin/messages/send] conversation upsert error:', convError.message)
-    return NextResponse.json({ ok: false, message: 'Could not open the conversation.' }, { status: 500 })
-  }
-
-  const { data: conv } = await admin
-    .from('conversations')
-    .select('id, status')
-    .eq('profile_a', a)
-    .eq('profile_b', b)
-    .maybeSingle()
-
-  if (!conv) {
-    console.error('[admin/messages/send] conversation missing after upsert')
-    return NextResponse.json({ ok: false, message: 'Could not open the conversation.' }, { status: 500 })
-  }
-
-  // A conversation previously closed by a block that has since been lifted would
-  // otherwise reject the member's reply.
-  if ((conv.status as string) !== 'open') {
-    await admin.from('conversations').update({ status: 'open' }).eq('id', conv.id)
-  }
-
-  const { error: insertError } = await admin
-    .from('messages')
-    .insert({ conversation_id: conv.id, sender_id: systemProfileId, body: message })
-
-  if (insertError) {
-    console.error('[admin/messages/send] insert error:', insertError.message)
-    return NextResponse.json({ ok: false, message: 'Could not send the message.' }, { status: 500 })
-  }
-
-  await admin.from('conversations').update({ updated_at: new Date().toISOString() }).eq('id', conv.id)
-
-  // Audited like every other admin action. The body is recorded so there is a
-  // record of what members were actually told.
   await admin.from('admin_audit_logs').insert({
     actor_id: session.id,
     action: 'send_official_message',

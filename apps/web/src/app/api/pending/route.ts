@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { findOwnProfileId } from '@/lib/ownProfile'
 import { liveFilter, syncAutomaticNotifications } from '@/lib/notifications'
 import { countUnreadMessages } from '@/lib/memberActivity'
+import { maybeRunDue } from '@/lib/engagement/journey'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -31,6 +32,8 @@ export async function GET() {
   const admin = await createAdminClient()
   const myProfileId = await findOwnProfileId(admin, session.id)
   after(() => syncAutomaticNotifications(admin, session.id))
+  // Journey messages that came due since the last run (throttled, idempotent; lib/engagement/journey).
+  after(() => maybeRunDue(admin))
 
   const notificationsRes = await liveFilter(
     admin

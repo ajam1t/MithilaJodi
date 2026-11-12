@@ -1,3 +1,4 @@
+import { initialProfileStatus } from '@/lib/approval'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createAdminClient } from '@/lib/supabase/server'
@@ -116,7 +117,8 @@ export async function PATCH(request: NextRequest) {
           // Members-only by default, and hidden until onboarding is complete.
           visibility: freeMode ? 'members' : 'private',
           discoverable: false,
-          profile_status: freeMode ? 'active' : 'draft',
+          // Held at pending_review until an admin approves the account (lib/approval).
+          profile_status: initialProfileStatus(account.approval, freeMode),
         })
         .select('id')
         .single()

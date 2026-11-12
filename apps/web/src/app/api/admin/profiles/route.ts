@@ -153,11 +153,20 @@ export async function POST(request: NextRequest) {
   const { data: existing } = await admin.from('accounts').select('id').eq('mobile', mobile).maybeSingle()
   if (existing) return NextResponse.json({ ok: false, message: 'An account with this mobile already exists.' }, { status: 409 })
 
-  const { data: account, error: accountError } = await admin
+  // A profile an admin adds is approved by that act (new accounts otherwise
+  // start pending — migration 20261112000001; before it, the column is absent).
+  let { data: account, error: accountError } = await admin
     .from('accounts')
-    .insert({ mobile, mobile_verified: false, account_status: 'active', role: 'user' })
+    .insert({ mobile, mobile_verified: false, account_status: 'active', role: 'user', approval_status: 'approved' })
     .select('id')
     .single()
+  if (accountError?.code === 'PGRST204' || accountError?.code === '42703') {
+    ({ data: account, error: accountError } = await admin
+      .from('accounts')
+      .insert({ mobile, mobile_verified: false, account_status: 'active', role: 'user' })
+      .select('id')
+      .single())
+  }
   if (accountError || !account) {
     console.error('[admin/profiles POST] account insert error:', accountError?.message)
     return NextResponse.json({ ok: false, message: 'Could not create the account.' }, { status: 500 })

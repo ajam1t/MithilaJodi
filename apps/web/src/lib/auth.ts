@@ -1,5 +1,5 @@
 import 'server-only'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/server'
 import { hashSessionToken } from '@/lib/session'
 import { SESSION_COOKIE } from '@/lib/constants'
@@ -14,6 +14,8 @@ export type SessionAccount = {
   staff: boolean
   /** Set when an admin is signed in as this member from the Admin Console: the admin's account id. */
   impersonatedBy: string | null
+  /** Admin approval of the account: only 'approved' members reach member features (lib/approval). */
+  approval: 'pending' | 'approved' | 'rejected'
 }
 
 /**
@@ -63,11 +65,20 @@ export async function getSessionAccount(): Promise<SessionAccount | null> {
   if (new Date(session.expires_at) < new Date()) return null
 
   // Step 2: look up the account
-  const { data: acct, error: accountError } = await admin
+  // approval_status arrives with migration 20261112000001; until then every
+  // account counts as approved, so sign-in keeps working before it is applied.
+  let { data: acct, error: accountError } = await admin
     .from('accounts')
-    .select('id, mobile, role, account_status, deleted_at')
+    .select('id, mobile, role, account_status, deleted_at, approval_status')
     .eq('id', session.account_id)
     .single()
+  if (accountError?.code === '42703') {
+    ({ data: acct, error: accountError } = await admin
+      .from('accounts')
+      .select('id, mobile, role, account_status, deleted_at')
+      .eq('id', session.account_id)
+      .single())
+  }
 
   if (accountError) {
     console.error('[auth] account lookup error:', accountError.message)
@@ -100,6 +111,19 @@ export async function getSessionAccount(): Promise<SessionAccount | null> {
   const staff = acct.role === 'admin' || acct.role === 'moderator'
   const role = staff && session.device_hash !== 'admin-console' ? 'user' : acct.role
 
+  const approval = (['pending', 'rejected'].includes(acct.approval_status) ? acct.approval_status : 'approved') as SessionAccount['approval']
+
+  // An account awaiting approval (or rejected) is signed in, but only for the
+  // few endpoints it needs to finish its profile, see its status and manage or
+  // close its account. For every other API this returns null — exactly as if
+  // signed out — so no member feature can be reached by calling it directly.
+  // Middleware stamps the real request path (x-mj-path), overwriting anything
+  // a client sends. Staff accounts are never gated.
+  if (approval !== 'approved' && !staff) {
+    const path = (await headers()).get('x-mj-path') ?? ''
+    if (path.startsWith('/api/') && !allowedWhileUnapproved(path)) return null
+  }
+
   return {
     id: acct.id,
     mobile: acct.mobile,
@@ -108,5 +132,16 @@ export async function getSessionAccount(): Promise<SessionAccount | null> {
     session_id: session.id,
     staff,
     impersonatedBy,
+    approval,
   }
+}
+
+/** APIs an account awaiting approval may use: finishing its profile and photos, its notifications, its account. A trailing '/*' covers sub-paths. */
+export const UNAPPROVED_API = [
+  '/api/auth/*', '/api/account', '/api/account/*', '/api/onboarding', '/api/onboarding/*',
+  '/api/profile', '/api/profile/photos', '/api/profile/photos/*', '/api/profile/preferences',
+  '/api/options', '/api/locations', '/api/pincode', '/api/legal/*', '/api/notifications', '/api/notifications/*',
+]
+export function allowedWhileUnapproved(path: string): boolean {
+  return UNAPPROVED_API.some(p => p.endsWith('/*') ? path.startsWith(p.slice(0, -1)) : path === p)
 }

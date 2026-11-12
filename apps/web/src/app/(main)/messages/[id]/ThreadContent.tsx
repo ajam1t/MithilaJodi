@@ -74,6 +74,14 @@ const POLL_MS = 8000
 /** Within this many pixels of the end counts as "reading the latest". */
 const NEAR_BOTTOM_PX = 120
 
+/** Turns web addresses in a message into links (Mithila Jodi's messages carry feature links). */
+function linkify(text: string): React.ReactNode[] {
+  return text.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
+    /^https?:\/\//.test(part)
+      ? <a key={i} href={part} target={part.startsWith('https://mithilajodi.com') ? undefined : '_blank'} rel="noopener noreferrer" className="underline underline-offset-2 break-all">{part}</a>
+      : part)
+}
+
 export default function ThreadContent() {
   const params = useParams()
   const conversationId = params?.id as string
@@ -373,7 +381,7 @@ export default function ThreadContent() {
                         : 'bg-cream border border-paper-3 text-ink rounded-bl-sm'
                     }`}
                   >
-                    <p className="whitespace-pre-wrap break-words">{msg.body}</p>
+                    <p className="whitespace-pre-wrap break-words">{linkify(msg.body)}</p>
                     <p className={`text-xs mt-1 ${msg.is_mine ? 'text-white/60' : 'text-ink-soft'} text-right`}>
                       {formatTime(msg.sent_at)}
                     </p>

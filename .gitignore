@@ -44,3 +44,4 @@ npm-debug.log*
 # TypeScript incremental build cache — machine-local, must not be committed
 *.tsbuildinfo
 apps/web/.guards-test/
+apps/web/.engagement-test/

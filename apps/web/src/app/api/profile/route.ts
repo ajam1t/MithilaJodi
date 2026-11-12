@@ -1,3 +1,4 @@
+import { initialProfileStatus } from '@/lib/approval'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createAdminClient } from '@/lib/supabase/server'
@@ -381,7 +382,9 @@ export async function PUT(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const ex = existing as any
     const currentStatus = ex.profile_status as string
-    const promotedStatus = freeMode && currentStatus === 'draft' && !ex.status_reason ? 'active' : currentStatus
+    // A draft is promoted to active only once the account is approved; a
+    // pending_review profile stays there until an admin approves the account.
+    const promotedStatus = freeMode && currentStatus === 'draft' && !ex.status_reason && account.approval === 'approved' ? 'active' : currentStatus
     const { error } = await admin
       .from('profiles')
       .update({
@@ -507,7 +510,7 @@ export async function PUT(request: NextRequest) {
       discoverable: false,
       ...visibilityPatch,
       profile_complete: profileCompletion,
-      profile_status: freeMode ? 'active' : 'draft',
+      profile_status: initialProfileStatus(account.approval, freeMode),
     })
     .select('id')
     .single()

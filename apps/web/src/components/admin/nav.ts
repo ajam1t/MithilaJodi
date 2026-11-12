@@ -13,7 +13,9 @@ export const ADMIN_NAV: NavGroup[] = [
   {
     label: 'Members',
     items: [
+      { label: 'Account approvals', href: '/admin/approvals', perm: 'moderate', hint: 'Approve or reject new members' },
       { label: 'All members', href: '/admin/members', hint: 'Search, filter and manage' },
+      { label: 'Deactivations', href: '/admin/deactivations', hint: 'Why members left' },
       { label: 'Member map', href: '/admin/members/map', hint: 'Members by state' },
       { label: 'Photo review', href: '/admin/photos', perm: 'moderate' },
       { label: 'Reports', href: '/admin/reports', perm: 'moderate' },
@@ -62,6 +64,7 @@ export const ADMIN_NAV: NavGroup[] = [
       { label: 'Social links', href: '/admin/community#social' },
       { label: 'Announcements', href: '/admin/notifications', perm: 'manage_settings' },
       { label: 'Official messages', href: '/admin/messages', perm: 'moderate' },
+      { label: 'Member Engagement Manager', href: '/admin/engagement', hint: '30-day welcome messages' },
     ],
   },
   {

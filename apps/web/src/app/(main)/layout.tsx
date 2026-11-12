@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { AuthBottomNav } from '@/components/AuthBottomNav'
 import { InboxNavLink } from '@/components/InboxNavLink'
 import { NotificationBell } from '@/components/NotificationsNavLink'
@@ -55,12 +56,20 @@ function SettingsLink() {
   )
 }
 
+const UNAPPROVED_PAGES = ['/profile/edit', '/profile/preferences', '/settings']
+
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
   const account = await getSessionAccount()
   if (account) {
     const admin = await createAdminClient()
     const onboarding = await getOnboardingState(admin, account.id)
     if (!onboarding.complete) redirect('/welcome')
+    // An account still waiting for admin approval (or rejected) may only finish
+    // its profile and manage its settings; everything else shows /pending.
+    if (account.approval !== 'approved' && !account.staff) {
+      const path = (await headers()).get('x-mj-path') ?? ''
+      if (!UNAPPROVED_PAGES.some(p => path === p)) redirect('/pending')
+    }
   }
   // A missing session is left to the individual pages and middleware, which
   // already handle it — this layout only enforces profile completeness.
