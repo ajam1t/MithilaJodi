@@ -165,7 +165,8 @@ export const getAttention = cache(async () => {
   const admin = await createAdminClient()
   const [photos, profiles, reports, flags] = await Promise.all([
     admin.from('profile_photos').select('id', { count: 'exact', head: true }).eq('status', 'pending_moderation'),
-    admin.from('profiles').select('id', { count: 'exact', head: true }).eq('profile_status', 'pending_review'),
+    // New accounts waiting for approval (Admin → Account approvals).
+    admin.from('accounts').select('id', { count: 'exact', head: true }).eq('approval_status', 'pending').is('deleted_at', null).neq('mobile', '0000000000'),
     admin.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'open'),
     admin.from('moderation_flags').select('id', { count: 'exact', head: true }).eq('resolved', false),
   ])

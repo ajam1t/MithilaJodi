@@ -143,7 +143,7 @@ export function DashboardView(d: DashboardData) {
 
   const queue = [
     { label: 'Photos to review', n: att.photos, href: '/admin/photos', icon: 'photo' },
-    { label: 'Profiles to approve', n: att.profiles, href: '/admin/members?status=pending_review', icon: 'approve' },
+    { label: 'New members to approve', n: att.profiles, href: '/admin/approvals', icon: 'approve' },
     { label: 'Open reports', n: att.reports, href: '/admin/reports', icon: 'report' },
     { label: 'Unresolved flags', n: att.flags, href: '/admin/flags', icon: 'flag' },
   ]

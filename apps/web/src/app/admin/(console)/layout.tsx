@@ -18,7 +18,8 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
   // Items waiting on a person — the bell's count. Four head-only counts.
   const [photos, profiles, reports, flags, acct] = await Promise.all([
     admin.from('profile_photos').select('id', { count: 'exact', head: true }).eq('status', 'pending_moderation'),
-    admin.from('profiles').select('id', { count: 'exact', head: true }).eq('profile_status', 'pending_review'),
+    // New accounts waiting for approval (Admin → Account approvals).
+    admin.from('accounts').select('id', { count: 'exact', head: true }).eq('approval_status', 'pending').is('deleted_at', null).neq('mobile', '0000000000'),
     admin.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'open'),
     admin.from('moderation_flags').select('id', { count: 'exact', head: true }).eq('resolved', false),
     admin.from('accounts').select('email').eq('id', session.id).maybeSingle(),

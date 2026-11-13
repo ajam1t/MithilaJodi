@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { AccountBadge, Badge, PageHeader, Section, Unavailable, ago, fmt, ist } from '@/components/admin/ui'
 import { MemberActions } from '@/components/admin/MemberActions'
+import { ApprovalBox } from '@/components/admin/ApprovalBox'
 import { formatMobile } from '@/components/admin/format'
 import { can, requireAdminPage } from '@/lib/adminAuth'
 import { createAdminClient } from '@/lib/supabase/server'
@@ -45,7 +46,7 @@ export default async function MemberDetailPage({ params }: { params: Promise<{ i
 
   const { data: account } = await admin
     .from('accounts')
-    .select('id, role, mobile, mobile_verified, email, email_verified, account_status, status_reason, created_at, deleted_at, locked_until, is_demo')
+    .select('id, role, mobile, mobile_verified, email, email_verified, account_status, status_reason, created_at, deleted_at, locked_until, is_demo, approval_status')
     .eq('id', id)
     .maybeSingle()
   if (!account || account.role !== 'user' || account.mobile === '0000000000') notFound()
@@ -100,6 +101,8 @@ export default async function MemberDetailPage({ params }: { params: Promise<{ i
         description={
           <span className="flex flex-wrap items-center gap-1.5">
             <AccountBadge status={account.account_status} />
+            {account.approval_status === 'pending' && <Badge tone="warn">awaiting approval</Badge>}
+            {account.approval_status === 'rejected' && <Badge tone="bad">rejected</Badge>}
             {p && <Badge>{`profile ${humanize(p.profile_status)?.toLowerCase()}`}</Badge>}
             {p && <Badge tone={p.discoverable ? 'good' : 'neutral'}>{p.discoverable ? 'visible in search' : 'hidden from search'}</Badge>}
             {!onboarding.complete && (
@@ -173,6 +176,9 @@ export default async function MemberDetailPage({ params }: { params: Promise<{ i
         </div>
 
         <div className="space-y-4">
+          {(account.approval_status === 'pending' || account.approval_status === 'rejected') && can(session, 'moderate') && (
+            <ApprovalBox accountId={account.id} status={account.approval_status} />
+          )}
           <Section title="Admin actions">
             <MemberActions
               accountId={account.id}
