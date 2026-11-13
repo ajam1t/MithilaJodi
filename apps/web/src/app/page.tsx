@@ -7,6 +7,7 @@ import { FeaturedProfiles } from '@/components/home/FeaturedProfiles'
 import { WhyMithilaJodi } from '@/components/home/FeatureStrip'
 import { EcosystemWheel } from '@/components/home/EcosystemWheel'
 import { CommunityStories } from '@/components/home/CommunityStories'
+import { HeritageTeaser } from '@/components/home/HeritageTeaser'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { InstallBanner } from '@/components/pwa/InstallBanner'
@@ -90,6 +91,7 @@ export default function HomePage() {
         <EcosystemWheel />
         <WhyMithilaJodi />
         <CommunityStories />
+        <HeritageTeaser />
       </main>
       {/* Bottom-nav clearance lives on the footer, not on <main> — see MithilaFooter. */}
       <MithilaFooter className="pb-16 lg:pb-0" />

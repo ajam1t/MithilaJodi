@@ -34,6 +34,7 @@ const ICONS: Record<string, ReactNode> = {
   festivals: <><path d="M12 19c-2.5-1.8-3.8-4.2-3.8-7S9.5 6.8 12 5c2.5 1.8 3.8 4.2 3.8 7S14.5 17.2 12 19z" /><path d="M12 19c-3.6 0-6.6-1.6-8.5-4.7 2.3-.8 4.4-.6 6.2.4" /><path d="M12 19c3.6 0 6.6-1.6 8.5-4.7-2.3-.8-4.4-.6-6.2.4" /><path d="M7 20.5h10" /></>,
   songs: <><path d="M9 18V5.5l11-2.5V16" /><circle cx="6.5" cy="18" r="2.5" /><circle cx="17.5" cy="16" r="2.5" /></>,
   blogs: <><path d="M12 6.5C10 5 7 4.5 3 4.5v14c4 0 7 .5 9 2 2-1.5 5-2 9-2v-14c-4 0-7 .5-9 2z" /><path d="M12 6.5v14" /></>,
+  heritage: <><path d="M12 3.5c-4.9 0-8.5 3.4-8.5 7.6 0 3.3 2.4 5.4 5 5.4 1.3 0 1.9.8 1.9 1.7 0 1.5 1 2.3 2.4 2.3 4.6 0 7.7-4 7.7-8.4 0-4.8-3.8-8.6-8.5-8.6z" /><circle cx="7.6" cy="10.6" r="1.1" /><circle cx="10.4" cy="7.2" r="1.1" /><circle cx="14.6" cy="7.4" r="1.1" /><circle cx="16.9" cy="11" r="1.1" /></>,
   safety: <><path d="M12 2.5 4.5 5.5v6c0 4.6 3.2 8.4 7.5 10 4.3-1.6 7.5-5.4 7.5-10v-6z" /><path d="m8.8 12 2.2 2.2 4.2-4.4" /></>,
   about: <><circle cx="12" cy="12" r="9" /><path d="M12 11v5.5M12 7.6h.01" /></>,
   shortlist: <path d="M6.5 3.5h11a1 1 0 0 1 1 1v16l-6.5-4.2-6.5 4.2v-16a1 1 0 0 1 1-1z" />,
@@ -106,6 +107,7 @@ function sections(loggedIn: boolean): Section[] {
         { href: '/festivals', label: 'Mithila Festivals', icon: 'festivals' },
         { href: '/festival-songs', label: 'Festival Songs', icon: 'songs' },
         { href: '/blogs', label: 'Blogs', icon: 'blogs' },
+        { href: '/mithila-heritage', label: 'Mithila Heritage', icon: 'heritage' },
       ],
     },
     {

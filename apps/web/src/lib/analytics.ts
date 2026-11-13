@@ -22,6 +22,7 @@ export const EVENT_NAMES = [
   'invitation_card_made', // basic invitation card downloaded or shared
   'song_played', // k = festival slug
   'dp_shared', // a member shares their Digital Profile link; k = channel
+  'heritage_outbound', // a click from /mithila-heritage to Jhayra's Mithila collection; k = where on the page
   // Join funnel; k = step (REG_STEPS). Anonymous like every event — never the
   // number, name or any field value, only which step was reached.
   'reg_step',

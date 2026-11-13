@@ -1470,3 +1470,10 @@ footer :focus-visible {
 @media (max-width: 639px) {
   .text-\[11px\], .text-\[11\.5px\], .eyebrow { font-size: 12px; }
 }
+
+/* ── Mithila Heritage page: a gentle rise for the hero and its frames ── */
+@media (prefers-reduced-motion: no-preference) {
+  .mh-rise { animation: mhRise .8s cubic-bezier(.22, 1, .36, 1) both; }
+  .mh-frame { animation: mhRise .9s cubic-bezier(.22, 1, .36, 1) .15s both; }
+}
+@keyframes mhRise { from { opacity: 0; transform: translateY(14px); } }

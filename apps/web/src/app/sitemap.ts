@@ -32,6 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/', priority: 1.0, changeFrequency: 'weekly' },
     { path: '/blogs', priority: 0.8, changeFrequency: 'weekly' },
     { path: '/festivals', priority: 0.8, changeFrequency: 'monthly' },
+    { path: '/mithila-heritage', priority: 0.7, changeFrequency: 'monthly' },
     { path: '/marriage-invitation', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/marriage-invitation/basic', priority: 0.8, changeFrequency: 'monthly' },
     // Indexable and linked from the hub, but was missing here.

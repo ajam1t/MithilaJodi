@@ -30,6 +30,7 @@ const GROUPS = [
       { href: '/festival-songs', label: 'Festival Songs' },
       { href: '/marriage-invitation', label: 'Wedding Invitations' },
       { href: '/blogs', label: 'Blogs' },
+      { href: '/mithila-heritage', label: 'Mithila Heritage' },
       { href: '/help', label: 'Help & Support' },
       { href: '/safety', label: 'Safety & Verification' },
       { href: '/contact', label: 'Contact Us' },
