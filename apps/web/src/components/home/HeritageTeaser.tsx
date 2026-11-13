@@ -1,10 +1,10 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { HERITAGE_ARTWORKS, heritageSrc } from '@/lib/heritage'
+import { artwork, heritageSrc } from '@/lib/heritage'
 
 /** A small homepage card pointing to /mithila-heritage. Kept to one row so it does not crowd the page. */
 export function HeritageTeaser() {
-  const art = HERITAGE_ARTWORKS[0]
+  const art = artwork('p081') // Kohbar Ghar
   return (
     <section aria-labelledby="home-heritage" className="wrap py-8 sm:py-12">
       <Link href="/mithila-heritage" className="group mx-auto flex max-w-3xl items-center gap-4 rounded-mj-lg border border-gold/40 bg-cream p-3 shadow-mj-xs transition-all hover:border-gold hover:shadow-mj focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon sm:gap-6 sm:p-4">

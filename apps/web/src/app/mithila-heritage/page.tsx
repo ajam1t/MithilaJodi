@@ -4,7 +4,7 @@ import { MithilaHeader } from '@/components/home/MithilaHeader'
 import { MithilaFooter } from '@/components/home/MithilaFooter'
 import { MobileBottomNav } from '@/components/home/MobileBottomNav'
 import { HeritageLink } from '@/components/heritage/HeritageLink'
-import { HERITAGE_ARTWORKS, JHAYRA_MITHILA_URL, heritageSrc } from '@/lib/heritage'
+import { HERITAGE_ARTWORKS, JHAYRA_MITHILA_URL, artwork, heritageSrc } from '@/lib/heritage'
 import { pageMetadata, breadcrumbJsonLd, canonicalUrl, jsonLdScript } from '@/lib/seo'
 
 export const metadata = pageMetadata({
@@ -64,7 +64,8 @@ export default function MithilaHeritagePage() {
       itemListElement: HERITAGE_ARTWORKS.map((a, i) => ({ '@type': 'ListItem', position: i + 1, name: a.name, url: a.url })),
     },
   }
-  const [hero1, hero2, hero3] = [HERITAGE_ARTWORKS[0], HERITAGE_ARTWORKS[2], HERITAGE_ARTWORKS[5]]
+  // Kohbar Ghar in front, Siya Ram and Chhath behind it.
+  const [hero1, hero2, hero3] = [artwork('p081'), artwork('p082'), artwork('p086')]
 
   return (
     <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
@@ -146,14 +147,14 @@ export default function MithilaHeritagePage() {
                 Mithila paintings as framed wall art, curated by Jhayra. Browse, choose a size and frame, and order on Jhayra — prices, delivery and checkout are all there.
               </p>
             </div>
-            <ul className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
+            <ul className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
               {HERITAGE_ARTWORKS.map(a => (
                 <li key={a.id}>
                   <HeritageLink href={a.url} place={a.id} ariaLabel={`${a.name} — opens on Jhayra in a new tab`}
                     className="group block rounded-mj border border-gold/40 bg-cream p-2.5 shadow-mj-xs transition-all hover:-translate-y-0.5 hover:border-gold hover:shadow-mj focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon">
                     <div className="overflow-hidden rounded-[4px] bg-[#EFE5D4]">
                       <Image src={heritageSrc(a.id)} alt={`${a.name}, a Mithila (Madhubani) painting`} width={a.w} height={a.h} loading="lazy"
-                        sizes="(max-width: 1024px) 46vw, 360px" className="block aspect-[4/5] h-auto w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+                        sizes="(max-width: 1024px) 46vw, 280px" className="block aspect-[4/5] h-auto w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
                     </div>
                     <p className="mt-2.5 px-1 font-serif text-[15px] leading-snug text-maroon sm:text-[16.5px]">{a.name}</p>
                     <p className="px-1 pb-1 text-[12.5px] text-ink-soft">View on Jhayra ↗</p>
