@@ -20,7 +20,10 @@ import { ctaFor, extractHeadings, headingId, toolsForArticle, wasUpdated } from 
 import { card, getJournalPosts, relatedPosts } from '@/lib/journalData'
 import { organizationJsonLd, organizationRef, jsonLdScript } from '@/lib/seo'
 
-export const dynamic = 'force-dynamic'
+// Cached and re-rendered at most hourly (admin edits refresh it at once — lib/journalCache).
+// Rendering each visit, crawlers included, was the bulk of the site's server CPU.
+export const revalidate = 3600
+export async function generateStaticParams() { return [] }
 
 const OG_IMAGE = { url: '/og-card.png', width: 1200, height: 630, alt: 'Mithila Jodi Journal' }
 

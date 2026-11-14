@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
+import { refreshJournal } from '@/lib/journalCache'
 
 export async function PATCH(
   request: NextRequest,
@@ -61,6 +62,7 @@ export async function PATCH(
     payload: { changes: updates },
   })
 
+  refreshJournal()
   return NextResponse.json({ ok: true })
 }
 
@@ -122,5 +124,6 @@ export async function DELETE(
     payload: { name: existingRow.name, slug: existingRow.slug },
   })
 
+  refreshJournal()
   return NextResponse.json({ ok: true })
 }

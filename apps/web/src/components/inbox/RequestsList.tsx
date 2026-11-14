@@ -142,7 +142,7 @@ export function RequestsList({ data, onChanged }: { data: RequestsData; onChange
             ) : item.status === 'approved' ? (
               <>
                 <span className={`${BTN} border-gold bg-gold/15 text-maroon`}>Shared with you <span aria-hidden="true">✓</span></span>
-                <Link
+                <Link prefetch={false}
                   href={item.kind === 'contact' ? `/profile/${item.profile.id}#contact-details` : `/profile/${item.profile.id}`}
                   className={`${BTN} bg-maroon-gradient border-maroon text-cream`}
                 >

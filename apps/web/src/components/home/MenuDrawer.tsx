@@ -235,7 +235,7 @@ export function MenuDrawer({
           onPointerDown={onHandleDown} onPointerMove={onHandleMove} onPointerUp={onHandleUp} onPointerCancel={onHandleUp}
         >
           <span className="mj-orb-handle" aria-hidden="true" />
-          <Link href="/" onClick={onClose} className="relative mt-2 inline-flex items-center gap-2 rounded-mj-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40" aria-label="Mithila Jodi — home">
+          <Link prefetch={false} href="/" onClick={onClose} className="relative mt-2 inline-flex items-center gap-2 rounded-mj-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon/40" aria-label="Mithila Jodi — home">
             <Image src="/logo-mark-128.webp" alt="" width={40} height={37} className="h-8 w-auto" />
             <span className="flex flex-col leading-none">
               <span className="font-serif text-[16px] font-bold text-maroon">Mithila Jodi</span>
@@ -265,7 +265,7 @@ export function MenuDrawer({
           <ul key={sec.id} className={`grid gap-2 ${sec.items.length > 3 ? 'grid-cols-2' : 'grid-cols-1'}`}>
             {sec.items.map((it, k) => (
               <li key={it.label} className="mj-orb-item" style={{ '--k': k } as React.CSSProperties}>
-                <Link href={it.href} onClick={onClose} className="mj-orb-card" data-on={on(it.href)} aria-current={isActive(it.href) ? 'page' : undefined}>
+                <Link prefetch={false} href={it.href} onClick={onClose} className="mj-orb-card" data-on={on(it.href)} aria-current={isActive(it.href) ? 'page' : undefined}>
                   <span className="mj-orb-icon"><Icon name={it.icon} size={19} /></span>
                   <span className="min-w-0 flex-1 text-[14px] font-medium leading-tight">{it.label}</span>
                   <svg width="14" height="14" viewBox="0 0 24 24" {...P} strokeWidth={2.2} aria-hidden="true" className="shrink-0 opacity-50"><path d="m9 6 6 6-6 6" /></svg>
@@ -279,7 +279,7 @@ export function MenuDrawer({
         <div className="relative shrink-0 border-t border-gold/25 px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3">
           {authLoaded && (loggedIn ? (
             <div className="flex gap-2">
-              <Link href="/profile" onClick={onClose} className="mj-orb-cta flex-1">
+              <Link prefetch={false} href="/profile" onClick={onClose} className="mj-orb-cta flex-1">
                 <svg width="18" height="18" viewBox="0 0 24 24" {...P} strokeWidth={1.8} aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                 My Profile
               </Link>
@@ -288,7 +288,7 @@ export function MenuDrawer({
               </button>
             </div>
           ) : (
-            <Link href="/register" onClick={onClose} className="mj-orb-cta">
+            <Link prefetch={false} href="/register" onClick={onClose} className="mj-orb-cta">
               <svg width="18" height="18" viewBox="0 0 24 24" {...P} strokeWidth={1.8} aria-hidden="true"><circle cx="9" cy="8" r="4" /><path d="M3 20c0-3.6 2.7-6 6-6" /><line x1="18" y1="11" x2="18" y2="17" /><line x1="15" y1="14" x2="21" y2="14" /></svg>
               Join / Login <span className="font-normal opacity-75">· free</span>
             </Link>

@@ -357,7 +357,7 @@ export function ProfileCard3D({
               tall photograph clipped the "View profile" / "Details" buttons. */}
           <div className={cn('flex-shrink-0 flex flex-col', compact ? 'px-3 pt-2 pb-2.5' : 'px-4 pt-3 pb-3.5')}>
             {/* Padding out, margin back: a ≥24px tap target with no layout change. */}
-            <Link href={profileHref} rel={linkRel} className="group -my-1 block py-1">
+            <Link prefetch={false} href={profileHref} rel={linkRel} className="group -my-1 block py-1">
               <h3 className={cn('font-serif text-maroon leading-tight group-hover:text-terra transition-colors truncate', compact ? 'text-[17px]' : 'text-[19px]')}>
                 {profile.display_name}
               </h3>
@@ -412,7 +412,7 @@ export function ProfileCard3D({
                   {/* Member search: View Profile is the primary action, the
                       interest the secondary one, in whichever state it is. */}
                   <div className="grid grid-cols-2 gap-2">
-                    <Link
+                    <Link prefetch={false}
                       href={profileHref}
                       rel={linkRel}
                       className={cn(cn('flex items-center justify-center gap-1.5 rounded-mj-sm font-semibold border transition-all', compact ? 'py-1.5 text-[12px]' : 'py-2 text-[13px]'), 'bg-maroon-gradient border-maroon text-cream hover:shadow-mj-sm')}
@@ -420,14 +420,14 @@ export function ProfileCard3D({
                       View Profile
                     </Link>
                     {isMatch ? (
-                      <Link
+                      <Link prefetch={false}
                         href="/inbox?tab=mutual"
                         className={cn(cn('flex items-center justify-center gap-1.5 rounded-mj-sm font-semibold border transition-all', compact ? 'py-1.5 text-[12px]' : 'py-2 text-[13px]'), 'bg-gold/15 border-gold text-maroon')}
                       >
                         It&rsquo;s a Match! <span aria-hidden="true">❤️</span>
                       </Link>
                     ) : theyAsked ? (
-                      <Link
+                      <Link prefetch={false}
                         href="/inbox?tab=interests"
                         className={cn(cn('flex items-center justify-center gap-1.5 rounded-mj-sm font-semibold border transition-all', compact ? 'py-1.5 text-[12px]' : 'py-2 text-[13px]'), 'bg-cream border-maroon/40 text-maroon hover:bg-maroon/5')}
                       >
@@ -475,7 +475,7 @@ export function ProfileCard3D({
                 </>
               ) : (
                 <div className="flex items-center gap-2">
-                  <Link
+                  <Link prefetch={false}
                     href={profileHref}
                     rel={linkRel}
                     className={cn('flex-1 text-center rounded-mj-sm font-semibold border border-maroon/30 text-maroon hover:bg-maroon hover:text-cream transition-colors', compact ? 'py-1.5 text-[12px]' : 'py-2 text-[13px]')}
@@ -597,7 +597,7 @@ export function ProfileCard3D({
           </div>
 
           <div className="p-3 flex-shrink-0 border-t border-gold/15">
-            <Link
+            <Link prefetch={false}
               href={profileHref}
               rel={linkRel}
               className="block text-center py-2 rounded-mj-sm text-[13px] font-semibold bg-maroon-gradient text-cream hover:shadow-mj-sm transition-shadow"

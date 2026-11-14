@@ -99,7 +99,7 @@ function AstroLinks({ first, gotra, h: H }: { first: string; gotra: string | nul
       <ul className="dpa-grid">
         {tiles.map(t => (
           <li key={t.k} className={t.wide ? 'dpa-wide' : ''}>
-            <Link href={t.href} className="dpa-tile" data-k={t.k}>
+            <Link prefetch={false} href={t.href} className="dpa-tile" data-k={t.k}>
               <span className="dpa-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{ASTRO_ICON[t.k]}</svg></span>
               <span className="dpa-t">{t.title}</span>
               <span className="dpa-b">{t.body}</span>
@@ -390,9 +390,9 @@ export function DigitalProfileView({
               ? 'Join Mithila Jodi free to send an interest and find your own Jodi.'
               : 'Contact details are not part of this link. Join Mithila Jodi free, send an interest, and you can request their number once they accept.'}
           </p>
-          <Link href={joinHref} className="dpj-cta">Join Mithila Jodi free →</Link>
+          <Link prefetch={false} href={joinHref} className="dpj-cta">Join Mithila Jodi free →</Link>
           <p className="mt-2.5 text-[13px] text-ink-soft">
-            Already a member? <Link href={withNext('/login', returnPath)} className="font-semibold text-maroon underline-offset-2 hover:underline">Log in</Link>
+            Already a member? <Link prefetch={false} href={withNext('/login', returnPath)} className="font-semibold text-maroon underline-offset-2 hover:underline">Log in</Link>
           </p>
         </section>
       )}
@@ -407,7 +407,7 @@ export function DigitalProfileView({
       {mode !== 'demo' && (
         <footer className="pb-2 pt-3 text-center">
           <div className="ornament-line mx-auto mb-3 w-14" />
-          <Link href="/" className="font-serif text-[18px] leading-none text-maroon">Mithila Jodi</Link>
+          <Link prefetch={false} href="/" className="font-serif text-[18px] leading-none text-maroon">Mithila Jodi</Link>
           <p className="mt-1 font-deva text-[12px] text-ink-soft" lang="hi">जहाँ परंपरा मिले, प्रेम से</p>
           <p className="mx-auto mt-2 max-w-sm text-[12px] leading-relaxed text-ink-soft">
             Shared privately by a member. Please do not forward it without asking them first.

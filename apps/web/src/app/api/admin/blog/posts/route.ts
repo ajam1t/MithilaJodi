@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
+import { refreshJournal } from '@/lib/journalCache'
 
 const VALID_STATUSES = ['draft', 'published', 'archived'] as const
 type PostStatus = typeof VALID_STATUSES[number]
@@ -149,5 +150,6 @@ export async function POST(request: NextRequest) {
     payload: { title, slug, status: resolvedStatus },
   })
 
+  refreshJournal()
   return NextResponse.json({ ok: true, post: { id: newPost.id, slug: newPost.slug } })
 }

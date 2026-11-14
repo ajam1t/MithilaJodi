@@ -107,7 +107,7 @@ export function MithilaHeader() {
   }
 
   const Brand = (
-    <Link href="/" className="flex items-center gap-2.5 group shrink-0" aria-label="Mithila Jodi — home">
+    <Link prefetch={false} href="/" className="flex items-center gap-2.5 group shrink-0" aria-label="Mithila Jodi — home">
       {/* The symbol from the official logo; the full lockup's wordmark is
           unreadable at header height, so the name is typeset beside it. */}
       <Image
@@ -142,7 +142,7 @@ export function MithilaHeader() {
         <FloralEdge side="right" />
 
         {/* Search — members search, visitors browse profiles */}
-        <Link
+        <Link prefetch={false}
           href={auth.loggedIn ? '/search' : '/explore'}
           className="absolute top-2 left-1.5 text-maroon p-2 rounded"
           aria-label={auth.loggedIn ? 'Search profiles' : 'Browse profiles'}
@@ -166,7 +166,7 @@ export function MithilaHeader() {
           </svg>
         </button>
 
-        <Link href="/" className="flex flex-col items-center text-center" aria-label="Mithila Jodi — home">
+        <Link prefetch={false} href="/" className="flex flex-col items-center text-center" aria-label="Mithila Jodi — home">
           <span className="flex items-center gap-2">
             <Image src="/logo-mark-128.webp" alt="" width={40} height={37} priority className="h-[34px] w-auto object-contain shrink-0 sm:h-10" />
             <span className="font-serif font-bold text-[24px] sm:text-[28px] text-maroon leading-none tracking-tight">
@@ -195,13 +195,13 @@ export function MithilaHeader() {
           {auth.loggedIn ? (
             <>
               {AUTH_NAV_LINKS.map(({ href, label }) => (
-                <Link key={label} href={href} className={deskLink(href)} aria-current={isActive(href) ? 'page' : undefined}>
+                <Link prefetch={false} key={label} href={href} className={deskLink(href)} aria-current={isActive(href) ? 'page' : undefined}>
                   {label}
                 </Link>
               ))}
               <div className="h-4 w-px bg-gold opacity-40" />
               {MEMBER_CONTENT_LINKS.map(({ href, label }) => (
-                <Link key={label} href={href} className={deskLink(href)} aria-current={isActive(href) ? 'page' : undefined}>
+                <Link prefetch={false} key={label} href={href} className={deskLink(href)} aria-current={isActive(href) ? 'page' : undefined}>
                   {label}
                 </Link>
               ))}
@@ -216,21 +216,21 @@ export function MithilaHeader() {
           ) : (
             <>
               {NAV_LINKS.map(({ href, label }) => (
-                <Link key={label} href={href} className={deskLink(href)} aria-current={isActive(href) ? 'page' : undefined}>
+                <Link prefetch={false} key={label} href={href} className={deskLink(href)} aria-current={isActive(href) ? 'page' : undefined}>
                   {label}
                 </Link>
               ))}
               {/* Only show Login/Register once we know the user is not logged in */}
               {authLoaded && (
                 <>
-                  <Link href="/explore" className="text-ink hover:text-terra transition-colors p-1 -mx-1" aria-label="Browse profiles">
+                  <Link prefetch={false} href="/explore" className="text-ink hover:text-terra transition-colors p-1 -mx-1" aria-label="Browse profiles">
                     <SearchIcon />
                   </Link>
                   <div className="h-4 w-px bg-gold opacity-40" />
-                  <Link href="/login" className="text-[13px] text-maroon hover:text-terra transition-colors tracking-wide font-medium whitespace-nowrap">
+                  <Link prefetch={false} href="/login" className="text-[13px] text-maroon hover:text-terra transition-colors tracking-wide font-medium whitespace-nowrap">
                     Login
                   </Link>
-                  <Link
+                  <Link prefetch={false}
                     href="/register"
                     className="btn bg-maroon text-gold-lt text-[13px] py-2 px-4 xl:px-5 font-semibold hover:bg-maroon-deep hover:-translate-y-px transition-all whitespace-nowrap rounded-mj-sm"
                   >

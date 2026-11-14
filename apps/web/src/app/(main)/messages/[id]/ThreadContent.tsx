@@ -277,7 +277,7 @@ export default function ThreadContent() {
       <main id="main-content" className="min-h-screen bg-paper">
         <div className="wrap py-16 text-center">
           <p className="text-ink-soft text-sm">{error}</p>
-          <Link href="/inbox" className="text-maroon underline text-sm mt-3 inline-block">
+          <Link prefetch={false} href="/inbox" className="text-maroon underline text-sm mt-3 inline-block">
             Back to messages
           </Link>
         </div>
@@ -289,7 +289,7 @@ export default function ThreadContent() {
     <div className={`flex flex-col bg-paper ${THREAD_HEIGHT}`}>
       {/* Header */}
       <div className="border-b border-paper-3 bg-cream px-4 py-3 flex items-center gap-3 shrink-0">
-        <Link href="/inbox" className="text-ink-soft hover:text-ink text-lg leading-none">
+        <Link prefetch={false} href="/inbox" className="text-ink-soft hover:text-ink text-lg leading-none">
           ←
         </Link>
         {partner && (() => {
@@ -329,8 +329,8 @@ export default function ThreadContent() {
 
           return (
             <>
-              <Link href={`/profile/${partner.id}`}>{avatar}</Link>
-              <Link href={`/profile/${partner.id}`} className="font-semibold text-ink text-sm hover:text-maroon">
+              <Link prefetch={false} href={`/profile/${partner.id}`}>{avatar}</Link>
+              <Link prefetch={false} href={`/profile/${partner.id}`} className="font-semibold text-ink text-sm hover:text-maroon">
                 {partner.display_name}
               </Link>
             </>

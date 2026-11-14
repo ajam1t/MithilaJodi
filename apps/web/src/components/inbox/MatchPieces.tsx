@@ -98,7 +98,7 @@ export function MatchCard({ c, note, children }: {
   return (
     <article className="rounded-mj border border-gold/25 bg-cream p-3.5 shadow-mj-xs sm:p-4">
       <div className="flex gap-3.5">
-        <Link href={`/profile/${c.id}`} className="relative h-[92px] w-[76px] shrink-0 overflow-hidden rounded-mj-sm border border-gold/25 bg-paper-2" tabIndex={-1} aria-hidden="true">
+        <Link prefetch={false} href={`/profile/${c.id}`} className="relative h-[92px] w-[76px] shrink-0 overflow-hidden rounded-mj-sm border border-gold/25 bg-paper-2" tabIndex={-1} aria-hidden="true">
           {c.photo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={c.photo} alt="" className="h-full w-full object-cover object-[center_30%]" loading="lazy" decoding="async" />
@@ -112,7 +112,7 @@ export function MatchCard({ c, note, children }: {
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <h3 className="min-w-0 truncate font-serif text-[18px] leading-tight text-maroon">
-              <Link href={`/profile/${c.id}`} className="hover:text-terra">{c.name}</Link>
+              <Link prefetch={false} href={`/profile/${c.id}`} className="hover:text-terra">{c.name}</Link>
             </h3>
             <MatchChip match={c.match} />
           </div>
@@ -135,7 +135,7 @@ export function MatchCard({ c, note, children }: {
 }
 
 export function ViewProfile({ id }: { id: string }) {
-  return <Link href={`/profile/${id}`} className={`${BTN} border-maroon/30 bg-cream text-maroon hover:bg-maroon/5`}>View Profile</Link>
+  return <Link prefetch={false} href={`/profile/${id}`} className={`${BTN} border-maroon/30 bg-cream text-maroon hover:bg-maroon/5`}>View Profile</Link>
 }
 
 /** A mutual match: the status first, then the ways to take it forward. */
@@ -145,7 +145,7 @@ export function MatchedActions({ id, conversationId }: { id: string; conversatio
       <span className={`${BTN} basis-full border-gold bg-gold/15 text-maroon`}>It&rsquo;s a Match! <span aria-hidden="true">❤️</span></span>
       <ViewProfile id={id} />
       {conversationId && (
-        <Link href={`/messages/${conversationId}`} className={`${BTN} bg-maroon-gradient border-maroon text-cream`}>Message</Link>
+        <Link prefetch={false} href={`/messages/${conversationId}`} className={`${BTN} bg-maroon-gradient border-maroon text-cream`}>Message</Link>
       )}
     </>
   )

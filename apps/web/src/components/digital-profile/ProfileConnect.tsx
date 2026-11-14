@@ -45,18 +45,18 @@ export function ProfileConnect({
         {state === 'match' ? (
           <>
             <span className={`${btn} border border-gold bg-gold/15 text-maroon`}>It&rsquo;s a Match! <span aria-hidden="true">❤️</span></span>
-            {convId && <Link href={`/messages/${convId}`} className={`${btn} bg-maroon-gradient text-cream`}>Message {firstName}</Link>}
+            {convId && <Link prefetch={false} href={`/messages/${convId}`} className={`${btn} bg-maroon-gradient text-cream`}>Message {firstName}</Link>}
           </>
         ) : state === 'sent' ? (
           <span className={`${btn} border border-green/30 bg-green/[0.07] text-green`}>Interest Sent <span aria-hidden="true">✓</span></span>
         ) : state === 'received' ? (
-          <Link href="/inbox?tab=interests" className={`${btn} bg-maroon-gradient text-cream`}>{firstName} sent you an interest — Respond</Link>
+          <Link prefetch={false} href="/inbox?tab=interests" className={`${btn} bg-maroon-gradient text-cream`}>{firstName} sent you an interest — Respond</Link>
         ) : state === 'none' ? (
           <button type="button" onClick={() => setNoteOpen(true)} className={`${btn} bg-maroon-gradient text-cream`}>
             Send Interest <span aria-hidden="true">❤️</span>
           </button>
         ) : null}
-        <Link href={`/profile/${profileId}`} className={`${btn} border border-maroon/30 bg-cream text-maroon hover:bg-maroon/5`}>View full profile</Link>
+        <Link prefetch={false} href={`/profile/${profileId}`} className={`${btn} border border-maroon/30 bg-cream text-maroon hover:bg-maroon/5`}>View full profile</Link>
       </div>
       <InterestNoteSheet open={noteOpen} onClose={closeNote} name={firstName} onSend={send} />
     </section>

@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
+import { refreshJournal } from '@/lib/journalCache'
 
 const VALID_STATUSES = ['draft', 'published', 'archived'] as const
 type PostStatus = typeof VALID_STATUSES[number]
@@ -156,6 +157,7 @@ export async function PATCH(
     payload: { changes: updates },
   })
 
+  refreshJournal()
   return NextResponse.json({ ok: true })
 }
 
@@ -202,5 +204,6 @@ export async function DELETE(
     payload: { title: existingRow.title, slug: existingRow.slug },
   })
 
+  refreshJournal()
   return NextResponse.json({ ok: true })
 }

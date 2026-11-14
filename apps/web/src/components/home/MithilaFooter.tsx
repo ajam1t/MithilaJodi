@@ -103,7 +103,7 @@ export function MithilaFooter({ className = '' }: { className?: string }) {
           <div className="flex sm:flex-col items-center sm:items-start gap-3 sm:gap-0 flex-shrink-0">
             {/* Maroon on maroon would vanish, so the logo sits on ivory — the
                 paper it was drawn on — never recoloured. */}
-            <Link href="/" className="inline-block shrink-0 rounded-mj-sm bg-cream p-1.5 sm:mb-2.5 sm:p-2.5" aria-label="Mithila Jodi — home">
+            <Link prefetch={false} href="/" className="inline-block shrink-0 rounded-mj-sm bg-cream p-1.5 sm:mb-2.5 sm:p-2.5" aria-label="Mithila Jodi — home">
               <Image src="/logo-mark-128.webp" alt="Mithila Jodi" width={48} height={44} loading="lazy" className="h-11 w-auto object-contain sm:hidden" />
               <Image src="/logo-320.webp" alt="Mithila Jodi" width={160} height={139} loading="lazy" className="hidden h-[120px] w-auto object-contain sm:block" />
             </Link>
@@ -122,7 +122,7 @@ export function MithilaFooter({ className = '' }: { className?: string }) {
                 <ul className="flex flex-col">
                   {links.map(({ href, label: linkLabel }) => (
                     <li key={linkLabel}>
-                      <Link href={href} className="text-paper-3 text-[11px] hover:text-gold-lt transition-colors opacity-90 hover:opacity-100 leading-snug block py-1.5">
+                      <Link prefetch={false} href={href} className="text-paper-3 text-[11px] hover:text-gold-lt transition-colors opacity-90 hover:opacity-100 leading-snug block py-1.5">
                         {linkLabel}
                       </Link>
                     </li>

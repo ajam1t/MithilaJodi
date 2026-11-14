@@ -38,7 +38,7 @@ export const metadata: Metadata = {
  */
 function MemberBrand() {
   return (
-    <Link href="/home" className="flex items-center gap-2 shrink-0" aria-label="Mithila Jodi — your home">
+    <Link prefetch={false} href="/home" className="flex items-center gap-2 shrink-0" aria-label="Mithila Jodi — your home">
       <Image src="/logo-mark-128.webp" alt="" width={40} height={37} priority className="h-8 w-auto object-contain" />
       <span className="font-serif font-bold text-[19px] text-maroon leading-none tracking-tight">Mithila Jodi</span>
     </Link>
@@ -47,7 +47,7 @@ function MemberBrand() {
 
 function SettingsLink() {
   return (
-    <Link href="/settings" className="grid h-10 w-10 place-items-center rounded-full text-ink-soft hover:text-maroon transition-colors" aria-label="Settings">
+    <Link prefetch={false} href="/settings" className="grid h-10 w-10 place-items-center rounded-full text-ink-soft hover:text-maroon transition-colors" aria-label="Settings">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <circle cx="12" cy="12" r="3" />
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
@@ -88,13 +88,13 @@ export default async function MainLayout({ children }: { children: React.ReactNo
               { href: '/digital-profile', label: 'Digital Profile' },
               { href: '/search', label: 'Search' },
             ].map(({ href, label }) => (
-              <Link key={href} href={href} className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors">{label}</Link>
+              <Link prefetch={false} key={href} href={href} className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors">{label}</Link>
             ))}
             <InboxNavLink />
-            <Link href="/profile" className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors">Profile</Link>
+            <Link prefetch={false} href="/profile" className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors">Profile</Link>
             <span className="mx-1 h-4 w-px bg-paper-3" aria-hidden="true" />
-            <Link href="/shortlists" className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors">Shortlist</Link>
-            <Link href="/biodata" className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors">Biodata</Link>
+            <Link prefetch={false} href="/shortlists" className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors">Shortlist</Link>
+            <Link prefetch={false} href="/biodata" className="px-2 xl:px-3 py-1.5 text-sm font-medium text-ink hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors">Biodata</Link>
 
             {/* Content pages, on wide screens: members previously had no way
                 back to Festivals / Songs / Invitation from here. */}
@@ -104,7 +104,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
               { href: '/festival-songs', label: 'Songs' },
               { href: '/marriage-invitation', label: 'Invitation' },
             ].map(({ href, label }) => (
-              <Link
+              <Link prefetch={false}
                 key={href}
                 href={href}
                 className="hidden xl:inline-flex px-3 py-1.5 text-sm font-medium text-ink-soft hover:text-maroon hover:bg-paper rounded-mj-sm transition-colors"

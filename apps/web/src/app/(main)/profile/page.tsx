@@ -383,7 +383,7 @@ export default function ProfilePage() {
                 </p>
               )}
               {profile && (
-                <Link href="/profile/edit#visibility" className="mj-me-vis">
+                <Link prefetch={false} href="/profile/edit#visibility" className="mj-me-vis">
                   <span className={`mj-me-dot ${visible ? 'is-on' : ''}`} aria-hidden="true" />
                   {visible ? 'Visible to members' : profile.profile_status && profile.profile_status !== 'active' ? `Profile ${profile.profile_status.replace(/_/g, ' ')}` : 'Hidden from members'}
                   <span aria-hidden="true" className="text-ink-soft">›</span>
@@ -400,7 +400,7 @@ export default function ProfilePage() {
             </ul>
           )}
 
-          <Link href="/profile/edit" className="relative mt-4 flex min-h-[48px] w-full items-center justify-center rounded-full bg-maroon-gradient text-[15px] font-semibold text-cream shadow-mj-xs transition active:scale-[0.99]">
+          <Link prefetch={false} href="/profile/edit" className="relative mt-4 flex min-h-[48px] w-full items-center justify-center rounded-full bg-maroon-gradient text-[15px] font-semibold text-cream shadow-mj-xs transition active:scale-[0.99]">
             {profile ? 'Edit Profile' : 'Create Profile'}
           </Link>
 
@@ -418,7 +418,7 @@ export default function ProfilePage() {
               {missing.length > 0 && (
                 <p className="mt-1.5 text-[12.5px] text-ink-soft">Still to add: {missing.map(m => m.label).join(', ')}.</p>
               )}
-              <Link href={`/profile/edit#${missing[0]?.section ?? 'basic'}`} className="mt-2.5 inline-flex items-center gap-1 text-[13.5px] font-semibold text-maroon">
+              <Link prefetch={false} href={`/profile/edit#${missing[0]?.section ?? 'basic'}`} className="mt-2.5 inline-flex items-center gap-1 text-[13.5px] font-semibold text-maroon">
                 Complete Profile →
               </Link>
             </div>
@@ -470,7 +470,7 @@ export default function ProfilePage() {
                     diet: humanize(profile.diet), mother_tongue: humanize(profile.mother_tongue), marital_status: profile.marital_status, about_me: profile.about_me,
                   }}
                 />
-                <Link href={`/profile/${profile.id}?preview=1`} className="flex items-center justify-center gap-2 py-2 text-[13.5px] font-medium text-maroon hover:underline hover:underline-offset-4">
+                <Link prefetch={false} href={`/profile/${profile.id}?preview=1`} className="flex items-center justify-center gap-2 py-2 text-[13.5px] font-medium text-maroon hover:underline hover:underline-offset-4">
                   <Glyph d={ICON.eye} className="h-4 w-4" /> See it exactly as members do →
                 </Link>
               </>
@@ -541,7 +541,7 @@ export default function ProfilePage() {
                 <div className="rounded-[18px] border border-gold/40 bg-[#FFFBF3] p-5 text-center">
                   <p className="font-serif text-[17px] text-maroon">Add your Mithila roots</p>
                   <p className="mt-1 text-[13px] text-ink-soft">Gotra, mool and native village help families find gotra-safe matches.</p>
-                  <Link href="/profile/edit#community" className="btn-primary mt-3 inline-flex px-5 py-2 text-[14px]">Add community details</Link>
+                  <Link prefetch={false} href="/profile/edit#community" className="btn-primary mt-3 inline-flex px-5 py-2 text-[14px]">Add community details</Link>
                 </div>
               )
             )}
@@ -570,13 +570,13 @@ export default function ProfilePage() {
                   {(prefsDisplay?.notes ?? prefs?.pref_notes) && (
                     <p className="mt-2.5 border-t border-gold/15 pt-2.5 text-[13.5px] leading-relaxed text-ink">{prefsDisplay?.notes ?? prefs?.pref_notes}</p>
                   )}
-                  <Link href="/profile/preferences" className="mt-3 inline-flex text-[13.5px] font-semibold text-maroon">Edit preferences →</Link>
+                  <Link prefetch={false} href="/profile/preferences" className="mt-3 inline-flex text-[13.5px] font-semibold text-maroon">Edit preferences →</Link>
                 </Group>
               ) : (
                 <div className="rounded-[18px] border border-gold/25 bg-cream p-5 text-center">
                   <p className="font-serif text-[17px] text-maroon">Who are you hoping to meet?</p>
                   <p className="mt-1 text-[13px] text-ink-soft">Your preferences shape the matches we suggest.</p>
-                  <Link href="/profile/preferences" className="btn-primary mt-3 inline-flex px-5 py-2 text-[14px]">Set preferences</Link>
+                  <Link prefetch={false} href="/profile/preferences" className="btn-primary mt-3 inline-flex px-5 py-2 text-[14px]">Set preferences</Link>
                 </div>
               )
             )}
@@ -620,7 +620,7 @@ export default function ProfilePage() {
                     on_request: 'On request — visible to your matches, and to members whose request you approve.',
                   }[normalisePhotoVisibility(photoVisibility)]}
                 </p>
-                <Link href="/profile/edit#photos-section" className="btn-ghost mt-3 flex min-h-[44px] w-full justify-center text-[14px]">
+                <Link prefetch={false} href="/profile/edit#photos-section" className="btn-ghost mt-3 flex min-h-[44px] w-full justify-center text-[14px]">
                   Manage photos
                 </Link>
                 <p className="mt-1.5 text-center text-[11.5px] text-ink-soft">Add, remove, reorder, choose your main photo and who can see them.</p>
@@ -654,7 +654,7 @@ export default function ProfilePage() {
             { href: '/notifications', label: 'Notifications', icon: ICON.bell },
             { href: '/settings', label: 'Account Settings', icon: ICON.gear },
           ].map(r => (
-            <Link key={r.href} href={r.href} className="flex min-h-[52px] items-center gap-3 px-4 transition-colors hover:bg-paper active:bg-paper-2">
+            <Link prefetch={false} key={r.href} href={r.href} className="flex min-h-[52px] items-center gap-3 px-4 transition-colors hover:bg-paper active:bg-paper-2">
               <span className="text-maroon"><Glyph d={r.icon} /></span>
               <span className="flex-1 text-[14.5px] text-ink">{r.label}</span>
               <span aria-hidden="true" className="text-ink-soft">›</span>

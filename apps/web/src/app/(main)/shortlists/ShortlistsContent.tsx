@@ -78,7 +78,7 @@ export default function ShortlistsContent() {
           ) : items.length === 0 ? (
             <div className="card p-10 text-center">
               <p className="text-ink-soft text-sm">Your shortlist is empty.</p>
-              <Link href="/search" className="text-maroon text-sm underline mt-2 inline-block">
+              <Link prefetch={false} href="/search" className="text-maroon text-sm underline mt-2 inline-block">
                 Browse profiles
               </Link>
             </div>
@@ -105,7 +105,7 @@ export default function ShortlistsContent() {
                         <p className="text-sm text-ink-soft">Member no longer available</p>
                       </>
                     ) : (<>
-                    <Link href={`/profile/${p.id}`} className="block">
+                    <Link prefetch={false} href={`/profile/${p.id}`} className="block">
                       <div className="w-full aspect-[3/4] rounded-mj-sm overflow-hidden bg-cream border border-paper-3 flex items-center justify-center">
                         {p.photo_url ? (
                           <img src={p.photo_url} alt={p.display_name} className="w-full h-full object-cover object-[center_35%]" loading="lazy" decoding="async" />
@@ -116,7 +116,7 @@ export default function ShortlistsContent() {
                     </Link>
 
                     <div>
-                      <Link href={`/profile/${p.id}`} className="font-semibold text-ink text-sm hover:text-maroon block truncate">
+                      <Link prefetch={false} href={`/profile/${p.id}`} className="font-semibold text-ink text-sm hover:text-maroon block truncate">
                         {p.display_name}
                       </Link>
                       <p className="text-xs text-ink-soft truncate">

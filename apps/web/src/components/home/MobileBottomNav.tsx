@@ -65,7 +65,7 @@ export function MobileBottomNav() {
         /* Public / not-yet-loaded bottom nav — Home · Digital Profile · Join / Login · Search · Astrology */
         <div className="flex items-stretch">
           {/* Home */}
-          <Link href="/" className={navCls('/')}>
+          <Link prefetch={false} href="/" className={navCls('/')}>
             {isActive('/') ? (
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
@@ -81,7 +81,7 @@ export function MobileBottomNav() {
 
           {/* Digital Profile — the flagship. The biodata maker it replaced here is
               still one tap away in the hamburger menu. */}
-          <Link href="/digital-profile" className={navCls('/digital-profile')}>
+          <Link prefetch={false} href="/digital-profile" className={navCls('/digital-profile')}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <rect x="5" y="2.5" width="14" height="19" rx="2.5" />
               <circle cx="12" cy="9.5" r="2.8" />
@@ -93,13 +93,13 @@ export function MobileBottomNav() {
           {/* Join / Login — primary CTA centre, the same size as every tab. Its
               icon tells the site's story: two people draw together and a gold
               heart appears between them — a jodi — then they rest and repeat. */}
-          <Link href="/register" className={`${navCls('/register', true)} mj-cta-tab`} aria-current={isActive('/register') ? 'page' : undefined}>
+          <Link prefetch={false} href="/register" className={`${navCls('/register', true)} mj-cta-tab`} aria-current={isActive('/register') ? 'page' : undefined}>
             <JodiIcon />
             <span className="relative text-[10px] font-semibold tracking-wide leading-tight text-center">Join / Login</span>
           </Link>
 
           {/* Search Profiles (public, non-member browsing) */}
-          <Link href="/explore" className={navCls('/explore')}>
+          <Link prefetch={false} href="/explore" className={navCls('/explore')}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <circle cx="11" cy="11" r="7" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -109,7 +109,7 @@ export function MobileBottomNav() {
 
           {/* Astrology — replaces Blog in the public bottom nav.
               Blog remains in the hamburger via NAV_LINKS, so it is not lost. */}
-          <Link href="/astrology" className={navCls('/astrology')}>
+          <Link prefetch={false} href="/astrology" className={navCls('/astrology')}>
             {isActive('/astrology') ? (
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />

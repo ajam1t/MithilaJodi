@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getSessionAccount } from '@/lib/auth'
+import { refreshJournal } from '@/lib/journalCache'
 
 export async function GET() {
   const session = await getSessionAccount()
@@ -117,5 +118,6 @@ export async function POST(request: NextRequest) {
     payload: { name, slug },
   })
 
+  refreshJournal()
   return NextResponse.json({ ok: true, category: { id: newCat.id, slug: newCat.slug } })
 }
